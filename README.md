@@ -92,7 +92,7 @@ pkg install git nodejs ffmpeg imagemagick yarn -y
 
 # Download del bot
 cd ~
-git clone https://github.com/TUO-USERNAME/Gab333.git
+git clone https://github.com/TUO-USERNAME/888-BOT.git
 cd Gab333
 
 # Installazione e avvio

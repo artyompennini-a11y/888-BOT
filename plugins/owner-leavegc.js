@@ -6,10 +6,10 @@ let handler = async (m, { conn, args, command }) => {
 
     const fake = {
     contextInfo: { externalAdReply :{ mediaUrl: null, mediaType: 1,
-    title: ' ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰ ',
-    body: '𝐞𝐧𝐭𝐫𝐚 𝐧𝐞𝐥 𝐜𝐚𝐧𝐚𝐥𝐞 𝐝𝐢 𝟑𝟑𝟑 𝐁𝐎𝐓!',         
+    title: ' 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃',
+    body: '𝐞𝐧𝐭𝐫𝐚 𝐧𝐞𝐥 𝐜𝐚𝐧𝐚𝐥𝐞 𝐝𝐢 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃!',         
     previewType: 0, thumbnail: fs.readFileSync("./icone/benvenuto.png"),
-    sourceUrl: 'https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h'
+    sourceUrl: 'https://whatsapp.com/channel/0029Vb7ptH62UPBKFFgByc3C'
         }
       }
     };

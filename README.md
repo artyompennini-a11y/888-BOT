@@ -391,7 +391,7 @@ Este proyecto está liberado bajo licencia [MIT](LICENSE)
 
 <div align="center">
 
-### 🌟 Made with ❤️ by GabWT333
+### 🌟 Made with ❤️ by STAFF 888 BOT
 
 [![GitHub](https://img.shields.io/badge/GitHub-GabWT333-black?style=for-the-badge&logo=github)](https://github.com/GabWT333)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Channel-25D366?style=for-the-badge&logo=whatsapp)](https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h)
@@ -399,7 +399,7 @@ Este proyecto está liberado bajo licencia [MIT](LICENSE)
 
 **💻 JavaScript | Python Developer**
 
-📱 **WhatsApp:** +39 350 833 7404
+📱 **WhatsApp:** +39 320 603 2199
 
 **© 2024 333-Bot - All Rights Reserved**
 

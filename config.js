@@ -24,12 +24,12 @@ global.owner = [
 ]
 
 
-global.nomepack = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
-global.nomebot = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
-global.wm = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
-global.autore = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁'
+global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'
+global.nomebot = '𝟴𝟴𝟴 𝗕𝗢𝗧'
+global.wm = '𝟴𝟴𝟴 𝗕𝗢𝗧'
+global.autore = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.dev = 'elixir'
-global.testobot = `𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃`
+global.testobot = `𝟴𝟴𝟴 𝗕𝗢𝗧`
 global.versione = pkg.version
 global.errore = '⚠️ *Errore inatteso!* Usa il comando `.ticket` per avvisare gli owner.'
 

@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by The punisher, elixir & 888 staff
 
 
 
@@ -35,13 +35,13 @@ let handler = async (m, { conn, text, command }) => {
 
         let pName = `@${m.sender.split('@')[0]}`;
         let startCaption = `╔════════════════════╗\n`;
-        startCaption += `║*𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 - BOMBA*║\n`;
+        startCaption += `║   *𝟴𝟴𝟴 𝗕𝗢𝗧 - BOMBA*   ║\n`;
         startCaption += `╚═══════════════════════╝\n\n`;
         startCaption += `💣 *BOMBA ATTIVATA!*\n\n`;
         startCaption += `👤 Vittima: ${pName}\n`;
         startCaption += `⏳ Tempo restante: *${durata}s*\n`;
         startCaption += `🧨 Usa: *passa @utente* o rispondi con *passa*\n`;
-        startCaption += `❌ 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 non può ricevere la bomba!`;
+        startCaption += `❌ 𝟴𝟴𝟴 𝗕𝗢𝗧 non può ricevere la bomba!`;
 
         return conn.sendMessage(chat, { text: startCaption, mentions: [m.sender], footer: '333 BOT' }, { quoted: m });
     }
@@ -124,7 +124,7 @@ async function esplosione(chatId, conn, m) {
     await conn.sendMessage(chatId, { 
         text: finale, 
         mentions: [b.vittima, ...b.passaggi],
-        footer: '*333 BOT*',
+        footer: '*𝟴𝟴𝟴 𝗕𝗢𝗧*',
         interactiveButtons: playAgainButtons()
     });
 

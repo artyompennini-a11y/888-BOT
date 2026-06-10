@@ -1,91 +1,59 @@
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-//Codice di info-ping.js
-
-import fs from 'fs';
-import os from 'os';
-import { performance } from 'perf_hooks';
+import { performance } from 'perf_hooks'
 
 const toMathematicalAlphanumericSymbols = number => {
-  const map = {
-    '0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑', '4': '𝟒',
-    '5': '𝟓', '6': '𝟔', '7': '𝟕', '8': '𝟖', '9': '𝟗', '.': '.'
-  };
-  return number.toString().split('').map(digit => map[digit] || digit).join('');
-};
+  const map = {
+    '0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑', '4': '𝟒',
+    '5': '𝟓', '6': '𝟔', '7': '𝟕', '8': '𝟖', '9': '𝟗', '.': '.'
+  }
+
+  return number
+    .toString()
+    .split('')
+    .map(d => map[d] || d)
+    .join('')
+}
 
 const clockString = ms => {
-  const days = Math.floor(ms / 86400000);
-  const hours = Math.floor((ms % 86400000) / 3600000);
-  const minutes = Math.floor((ms % 3600000) / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
+  const days = Math.floor(ms / 86400000)
+  const hours = Math.floor((ms % 86400000) / 3600000)
+  const minutes = Math.floor((ms % 3600000) / 60000)
 
-  return `${toMathematicalAlphanumericSymbols(days.toString().padStart(2, '0'))}:${toMathematicalAlphanumericSymbols(hours.toString().padStart(2, '0'))}:${toMathematicalAlphanumericSymbols(minutes.toString().padStart(2, '0'))}:${toMathematicalAlphanumericSymbols(seconds.toString().padStart(2, '0'))}`;
-};
+  return `${toMathematicalAlphanumericSymbols(days.toString().padStart(2, '0'))}d ${toMathematicalAlphanumericSymbols(hours.toString().padStart(2, '0'))}h ${toMathematicalAlphanumericSymbols(minutes.toString().padStart(2, '0'))}m`
+}
 
-const handler = async (m, { conn }) => {
+const handler = async (m, { conn, usedPrefix }) => {
+  const start = performance.now()
+  const uptime = clockString(process.uptime() * 1000)
 
-  const _uptime = process.uptime() * 1000;
-  const uptime = clockString(_uptime);
+  const handlerStart = m.timestamp || start
+  const speed = (performance.now() - handlerStart).toFixed(2)
+  const speedWithFont = toMathematicalAlphanumericSymbols(speed)
 
-  const old = performance.now();
-  const neww = performance.now();
-  const speed = (neww - old).toFixed(4);
-  const speedWithFont = toMathematicalAlphanumericSymbols(speed);
+  const info = `
+*🏓 ᴘɪɴɢ!*
 
-  const totalMemBytes = os.totalmem();
-  const freeMemBytes = os.freemem();
-  const usedMemBytes = totalMemBytes - freeMemBytes;
-  const totalMemMB = (totalMemBytes / (1024 * 1024)).toFixed(2);
-  const usedMemMB = (usedMemBytes / (1024 * 1024)).toFixed(2);
+*🚀 ᴠᴇʟᴏᴄɪᴛᴀ ᴅɪ ʀɪꜱᴘᴏꜱᴛᴀ:* ${speedWithFont} ms
+*⏱️ ᴜᴘᴛɪᴍᴇ:* ${uptime}
+*✅ ꜱᴛᴀᴛᴜꜱ:* Online
 
-  const processMemory = process.memoryUsage();
-  const heapUsedMB = (processMemory.heapUsed / (1024 * 1024)).toFixed(2);
-  const heapTotalMB = (processMemory.heapTotal / (1024 * 1024)).toFixed(2);
+> *𝟴𝟴𝟴 𝗕𝗢𝗧*
+`.trim()
 
-  const image = fs.readFileSync('./icone/ping.png');
+  const buttons = [
+    { buttonId: `${usedPrefix}ping`, buttonText: { displayText: "📡 𝐏𝐢𝐧𝐠" }, type: 1 },
+    { buttonId: `${usedPrefix}menu`, buttonText: { displayText: "📋 Menu" }, type: 1 }
+  ]
 
-  let nomeDelBot = global.db.data.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧';
+  await conn.sendMessage(m.chat, {
+    text: info,
+    footer: "Seleziona un'opzione qui sotto 👇",
+    buttons: buttons,
+    headerType: 1
+  }, { quoted: m })
+}
 
-  const prova = {
-    key: { participants: "0@s.whatsapp.net", fromMe: false, id: "Halo" },
-    message: {
-      documentMessage: {
-        title: `${nomeDelBot} 𝐏𝕀𝐍𝐆 🏓`,
-        jpegThumbnail: image
-      }
-    },
-    participant: "0@s.whatsapp.net"
-  };
+handler.help = ['ping']
+handler.tags = ['info']
+handler.command = /^(ping)$/i
 
-  const info = `ೋೋ══ • ══ೋೋ
-𝚲𝐓𝐓𝕀𝐕𝕀𝐓𝚲: ${uptime}
-𝐕𝚵𝐋͎Ꮻ𝐂𝕀𝐓𝚲: ${speedWithFont} 𝐒𝚵𝐂Ꮻ𝐍𝐃𝕀
-𝐑𝐀𝐌 (server): ${usedMemMB} MB / ${totalMemMB} MB
-𝐌𝐄𝐌 (process): ${heapUsedMB} MB / ${heapTotalMB} MB
-ೋೋ══ • ══ೋೋ`.trim();
-
-  await conn.sendMessage(m.chat, {
-    text: info,
-    footer: "𝟴𝟴𝟴 𝗕𝗢𝗧",
-    buttons: [
-      { buttonId: ".ds", buttonText: { displayText: "🧹 Elimina Sessioni" }, type: 1 }
-    ],
-    headerType: 1
-  }, { quoted: prova });
-};
-
-handler.command = /^(ping)$/i;
-export default handler;
+export default handler   

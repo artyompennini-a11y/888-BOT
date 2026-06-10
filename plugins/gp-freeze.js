@@ -13,8 +13,8 @@ let handler = async (m, { conn, isAdmin, isBotAdmin, usedPrefix }) => {
 
   await conn.sendButton(
     m.chat,
-    `🚨 𝐅𝐑𝐄𝐄𝐙𝐄  ꙰ 𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰\n\n𝐬𝐜𝐞𝐠𝐥𝐢 𝐩𝐞𝐫 𝐪𝐮𝐚𝐧𝐭𝐨 𝐭𝐞𝐦𝐩𝐨 𝐜𝐡𝐢𝐮𝐝𝐞𝐫𝐞 𝐢𝐥 𝐠𝐫𝐮𝐩𝐩𝐨:`,
-    `> 𝟥𝟥𝟥 𝔹𝕆𝕋`,
+    `🚨 𝐅𝐑𝐄𝐄𝐙𝐄 𝟴𝟴𝟴 𝗕𝗢𝗧\n\n𝐬𝐜𝐞𝐠𝐥𝐢 𝐩𝐞𝐫 𝐪𝐮𝐚𝐧𝐭𝐨 𝐭𝐞𝐦𝐩𝐨 𝐜𝐡𝐢𝐮𝐝𝐞𝐫𝐞 𝐢𝐥 𝐠𝐫𝐮𝐩𝐩𝐨:`,
+    `> 𝟴𝟴𝟴 𝗕𝗢𝗧`,
     null,
     pulsanti,
     m

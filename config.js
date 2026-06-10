@@ -16,25 +16,25 @@ const pkg = JSON.parse(await fs.promises.readFile(new URL('./package.json', impo
 const moduleCache = new NodeCache({ stdTTL: 300 });
 
 	
-global.gab = ['393882471151',]
+global.gab = ['393206032199',]
 global.owner = [
-  ['393294241699', 'Lucifero', true],
-  ['393892430108', 'Gab', true],
-  ['66621409462', 'Matte', true],
+  ['79524931364', 'Punisher2', true],
+  ['393206032199', 'Punisher', true],
+  ['393784409415', 'Elixir', true],
 ]
 
 
-global.nomepack = '333'
-global.nomebot = ' ꙰ 𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰'
-global.wm = '333'
-global.autore = 'gab'
-global.dev = 'lucifero'
-global.testobot = `333`
+global.nomepack = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
+global.nomebot = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
+global.wm = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
+global.autore = '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁'
+global.dev = 'elixir'
+global.testobot = `𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃`
 global.versione = pkg.version
 global.errore = '⚠️ *Errore inatteso!* Usa il comando `.ticket` per avvisare gli owner.'
 
 
-global.repobot = 'https://github.com/GabWT333/Gab333'
+global.repobot = 'https//wa.me/393206032199'
 global.canale = 'https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h'
 global.gruppo = 'https://chat.whatsapp.com/KqBeKHgrc53BNdvuPTKLTL' 
 

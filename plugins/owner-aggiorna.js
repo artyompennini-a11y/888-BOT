@@ -1,32 +1,29 @@
 import { execSync } from 'child_process'
 
-let handler = async (m, { conn, text, isOwner }) => {
- 
+let handler = async (m, { conn, isOwner }) => {
   if (!isOwner) return conn.reply(m.chat, '『 ❌ 』- `Questo comando può essere utilizzato solo dal proprietario.`', m)
 
   try {
     await m.react('⏳')
 
+    execSync('git fetch origin', { stdio: 'ignore' })
     
-    execSync('git fetch', { stdio: 'ignore' })
     let status = execSync('git status -uno', { encoding: 'utf-8' })
-
  
     if (status.includes('Your branch is up to date') || status.includes('Il tuo branch è aggiornato') || status.includes('nothing to commit')) {
       await m.react('✅')
       return conn.reply(m.chat, '✅ *Il bot è già aggiornato all\'ultima versione.*', m)
     }
 
-  
-    let updateOutput = execSync('git reset --hard && git pull --stat', { encoding: 'utf-8' })
+    execSync('git reset --hard origin/main', { encoding: 'utf-8' }) 
+    let updateOutput = execSync('git diff HEAD@{1} --numstat', { encoding: 'utf-8' }).trim()
 
-    
-    let fileDetails = parseGitFileDetails(updateOutput)
     let message = ''
-
-    if (fileDetails.length > 0) {
-      let reportFiles = fileDetails.map((f, i) => {
-        return `*FILE ${i + 1}:* \`${f.name}\`\n➕ Aggiunte: ${f.ins} | ➖ Rimosse: ${f.del}`
+    if (updateOutput) {
+      let lines = updateOutput.split('\n')
+      let reportFiles = lines.map((line, i) => {
+        let [ins, del, name] = line.trim().split(/\s+/)
+        return `*FILE ${i + 1}:* \`${name}\`\n➕ Aggiunte: ${ins} | ➖ Rimosse: ${del}`
       }).join('\n\n')
 
       message = `🚀 *SISTEMA DI AGGIORNAMENTO*\n\n━━━━━━━━━━━━━━━━━━━━\n${reportFiles}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ *𝟴𝟴𝟴 𝗕𝗢𝗧 aggiornato con successo!*`
@@ -42,39 +39,6 @@ let handler = async (m, { conn, text, isOwner }) => {
     await conn.reply(m.chat, `❌ *ERRORE DURANTE L'AGGIORNAMENTO*\n\n> \`${err.message}\``, m)
     await m.react('❌')
   }
-}
-
-function parseGitFileDetails(output) {
-  const lines = output.split('\n')
-  const files = []
-
- 
-  const fileLineRegex = /^\s*(.+?)\s*\|\s*(\d+)\s+(.*)$/
-
-  for (let line of lines) {
-   
-    if (line.includes('changed') && (line.includes('insertion') || line.includes('deletion'))) continue
-
-    let match = line.match(fileLineRegex)
-    if (match) {
-      let name = match[1].trim()
-      let plusMinus = match[3].trim()
-
-     
-      let ins = (plusMinus.match(/\+/g) || []).length
-      let del = (plusMinus.match(/-/g) || []).length
-
-     
-      if (ins === 0 && del === 0) {
-        let totalChanges = parseInt(match[2])
-        
-        ins = totalChanges
-      }
-
-      files.push({ name, ins, del })
-    }
-  }
-  return files
 }
 
 handler.help = ['aggiorna', 'update']

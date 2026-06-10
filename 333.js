@@ -385,7 +385,7 @@ let opzione;
 if (!pairingMode && !hasExistingSession) {
   const menu = `
 ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
-${chalk.bgBlue.white('┃     333 BOT 2026      ┃')}
+${chalk.bgBlue.white('┃ THE PUNISHER-BOT 2026 ┃')}
 ${chalk.bgBlue.white('┃         V10           ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
 
@@ -559,7 +559,7 @@ async function connectionUpdate(update) {
 
    if (qr && pairingMode === 'qr' && !global.qrGenerated) {
     console.log(chalk.bold.hex('#8b5cf6')(`
-           333 BOT                 
+           THE PUNISHER-BOT                 
         CONNESSIONE QR           
 
 📲 Scansiona il QR qui sotto

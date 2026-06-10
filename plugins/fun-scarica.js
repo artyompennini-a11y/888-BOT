@@ -18,7 +18,7 @@ let handler = async (m, { conn, text }) => {
   await m.reply(
 `⏳ 𝐒𝐜𝐚𝐫𝐢𝐜𝐨 𝐢𝐥 𝐯𝐢𝐝𝐞𝐨...
 
-> 𝟥𝟥𝟥 𝔹𝕆𝕋 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
+> 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
   )
 
   try {
@@ -41,7 +41,7 @@ let handler = async (m, { conn, text }) => {
 
 🎵 ${json.data.title || 'TikTok Video'}
 
-> 𝟥𝟥𝟥 𝔹𝕆𝕋 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
+> 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
     }, { quoted: m })
 
   } catch (e) {

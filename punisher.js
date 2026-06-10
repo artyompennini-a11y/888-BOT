@@ -25,7 +25,7 @@ import { Low, JSONFile } from 'lowdb';
 import readline from 'readline';
 import NodeCache from 'node-cache';
 
-const authFolder = global.authFile || '333BotSession';
+const authFolder = global.authFile || '888BotSession';
 global.authFile = authFolder;
 global.authFileJB = global.authFileJB || '333bot-sub';
 global.rcanal = '120363341274693350@newsletter';

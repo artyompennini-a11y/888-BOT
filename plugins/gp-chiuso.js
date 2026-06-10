@@ -1,5 +1,6 @@
 let handler = async (m, { conn }) => {
- 
+  
+  
   await conn.sendMessage(m.chat, { react: { text: '🔒', key: m.key } })
 
   
@@ -10,12 +11,13 @@ let handler = async (m, { conn }) => {
   
   const buttons = [
     {
-      buttonId: '.aperto',
+      buttonId: '.apri',
       buttonText: { displayText: '🔓 Apri Gruppo' },
       type: 1
     }
   ]
 
+ 
   const buttonMessage = {
     text: message,
     footer: '⚙️ Pannello Rapido Amministrazione',
@@ -33,7 +35,8 @@ let handler = async (m, { conn }) => {
       forwardingScore: 999,
       isForwarded: true,
       forwardedNewsletterMessageInfo: {
-        newsletterJid: `120363427251015414@newsletter',
+       
+        newsletterJid: '120363427251015414@newsletter',
         newsletterName: `✦ ${global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧'} ✦`,
         serverMessageId: 143
       }

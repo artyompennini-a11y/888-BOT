@@ -63,7 +63,7 @@ let handler = async (m, { conn }) => {
   }
 
   let messaggio = `
-╔══『 ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰ 』══╗
+╔══『 ꙰  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝔹𝕆𝕋  ꙰ 』══╗
 ┃
 ┃   ${griglia[0]}  │  ${griglia[1]}  │  ${griglia[2]}
 ┃━━━━━━━━━━━━━━

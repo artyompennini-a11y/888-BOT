@@ -154,7 +154,7 @@ async function epicStartup() {
   console.log('\n');
   
   await sleep(200);
-  await pulse('                     #333NEVERDIES', 4);
+  await pulse('                     #888NEVERDIES', 4);
   
   console.log('\n');
   console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');

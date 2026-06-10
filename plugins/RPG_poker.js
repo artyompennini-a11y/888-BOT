@@ -55,7 +55,7 @@ let handler = async (m, { conn, text }) => {
   if (!puntata || puntata <= 0) {
     return await conn.sendMessage(m.chat, {
       text:
-`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ═╗
+`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
 ┃
 ┃ 🎴 *Poker a 5 carte*
 ┃ *Vinci in base alla mano!*
@@ -75,7 +75,7 @@ let handler = async (m, { conn, text }) => {
 ┃ 🏆 Scala Reale  → x50
 ┃
 ╚══════════════╝`,
-      footer: "𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐂𝐀𝐒𝐈𝐍𝐎",
+      footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
       buttons: [
         { buttonId: ".poker 10",  buttonText: { displayText: "💸 Punta 10€"  }, type: 1 },
         { buttonId: ".poker 50",  buttonText: { displayText: "💰 Punta 50€"  }, type: 1 },
@@ -108,7 +108,7 @@ let handler = async (m, { conn, text }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ═╗
+`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
 ┃
 ┃ 🎴 *Le tue carte:*
 ┃ ${carteStr}
@@ -120,7 +120,7 @@ let handler = async (m, { conn, text }) => {
 ┃ 💼 Saldo: *${user.money}€*
 ┃
 ╚══════════════╝`,
-    footer: "𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐂𝐀𝐒𝐈𝐍𝐎",
+    footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
     buttons: [
       { buttonId: `.poker ${puntata}`, buttonText: { displayText: "🔄 Gioca ancora" }, type: 1 },
       { buttonId: ".casino",           buttonText: { displayText: "🔙 Torna al Casino" }, type: 1 }

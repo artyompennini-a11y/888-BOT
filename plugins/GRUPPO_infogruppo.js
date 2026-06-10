@@ -15,7 +15,7 @@ const handler = async (m, { conn }) => {
   }
 
   const msg = await conn.sendMessage(m.chat,{
-    text:`╭──〔𝟑𝟑𝟑 𝔹𝕆𝕋 𝐀𝐕𝐕𝐈𝐀𝐓𝐎〕──╮
+    text:`╭──〔𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐀𝐕𝐕𝐈𝐀𝐓𝐎〕──╮
 
 ⌛ 𝐀𝐯𝐯𝐢𝐨 𝐬𝐜𝐚𝐧𝐬𝐢𝐨𝐧𝐞 𝐠𝐫𝐮𝐩𝐩𝐨...
 
@@ -24,7 +24,7 @@ ${progress(5)}`
 
   async function update(percent,text){
     await conn.sendMessage(m.chat,{
-      text:`╭──〔𝟑𝟑𝟑 𝔹𝕆𝕋 𝐀𝐕𝐕𝐈𝐀𝐓𝐎〕──╮
+      text:`╭──〔𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 𝐀𝐕𝐕𝐈𝐀𝐓𝐎〕──╮
 
 ⌛ ${text}
 
@@ -118,7 +118,7 @@ ${listaAdmin}┃
     {
       text: messaggio,
       contextInfo: { mentionedJid: mentions },
-      footer: ' ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰ ',
+      footer: '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃',
       buttons: [
         { buttonId: '.link', buttonText: { displayText: '🔗 𝐋𝐢𝐧𝐤 𝐝𝐞𝐥 𝐠𝐫𝐮𝐩𝐩𝐨' }, type: 1 },
         { buttonId: '.menu', buttonText: { displayText: '📜 𝐌𝐞𝐧𝐮 𝐩𝐫𝐢𝐧𝐜𝐢𝐩𝐚𝐥𝐞' }, type: 1 }

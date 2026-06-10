@@ -43,9 +43,9 @@ let handler = async (m, { conn }) => {
   await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
 }
 
-handler.help = ['aperto']
+handler.help = ['apri']
 handler.tags = ['group']
-handler.command = ['aperto']
+handler.command = ['apri']
 handler.admin = true
 handler.botAdmin = true
 

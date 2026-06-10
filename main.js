@@ -385,7 +385,7 @@ let opzione;
 if (!pairingMode && !hasExistingSession) {
   const menu = `
 ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
-${chalk.bgBlue.white('┃ THE PUNISHER-BOT 2026 ┃')}
+${chalk.bgBlue.white('┃     888-BOT 2026      ┃')}
 ${chalk.bgBlue.white('┃         V10           ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
 

@@ -58,8 +58,8 @@ let handler = async (m, { conn }) => {
   contextInfo: {
     externalAdReply: {
       title: '🏆 𝐓𝐎𝐏 𝟏𝟎 𝐆𝐑𝐔𝐏𝐏𝐈',
-      body: '𝐄𝐧𝐭𝐫𝐚 𝐧𝐞𝐥 𝐜𝐚𝐧𝐚𝐥𝐞 𝐝𝐢 𝟑𝟑𝟑 𝐛𝐨𝐭!',
-      sourceUrl: 'https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h',
+      body: '𝐄𝐧𝐭𝐫𝐚 𝐧𝐞𝐥 𝐜𝐚𝐧𝐚𝐥𝐞 𝐝𝐢  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃!',
+      sourceUrl: 'https://whatsapp.com/channel/0029Vb7ptH62UPBKFFgByc3C',
       mediaType: 1,
       renderLargerThumbnail: true
     }

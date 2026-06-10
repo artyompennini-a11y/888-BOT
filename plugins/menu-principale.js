@@ -12,14 +12,14 @@ let handler = async (m, { conn, usedPrefix }) => {
     profilePicBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
   }
 
-  const botName = global.db.data.nomedelbot || " ꙰ 𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰";
+  const botName = global.db.data.nomedelbot || " 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃";
   const botVersion = global.db.data.version || "10.0.0";
 
   const fake = {
     key: {
       participants: '0@s.whatsapp.net',
       fromMe: false,
-      id: '333Menu'
+      id: ' 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 MENU'
     },
     message: {
       contactMessage: {
@@ -32,7 +32,7 @@ let handler = async (m, { conn, usedPrefix }) => {
 
   const commandList = `
 ╭─────────╮  
-┃ ⚡️ 𝐌𝐄𝐍𝐔 𝐏𝐑𝐈𝐍𝐂𝐈𝐏𝐀𝐋𝐄 𝐃𝐈\n┃ ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰
+┃ ⚡️ 𝐌𝐄𝐍𝐔 𝐏𝐑𝐈𝐍𝐂𝐈𝐏𝐀𝐋𝐄 𝐃𝐈\n┃  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃
 ┃━━━━━━━━━━━━━━
 ┃⮕ ${usedPrefix}𝐒𝐓𝐀𝐅𝐅
 ┃⮕ ${usedPrefix}𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈

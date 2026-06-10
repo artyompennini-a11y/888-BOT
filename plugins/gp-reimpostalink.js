@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by The punisher, elixir & 888 staff
 
 let handler = async (m, { conn }) => {
 

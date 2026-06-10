@@ -128,7 +128,7 @@ async function epicStartup() {
   
   await sleep(300);
   
-  await typeWriterBig('ELIXIR\nBOT V10\n2026', 120);
+  await typeWriterBig('888\nBOT V10\n2026', 120);
   
   await sleep(400);
   
@@ -154,7 +154,7 @@ async function epicStartup() {
   console.log('\n');
   
   await sleep(200);
-  await pulse('                     #ELIXIRNEVERDIES', 4);
+  await pulse('                     #888NEVERDIES', 4);
   
   console.log('\n');
   console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');

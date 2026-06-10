@@ -216,13 +216,13 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   ];
 
   if (!args.length) {
-    const bot333 = 'icone/333.jpg';
+    const bot333 = 'icone/888.jpg';
     let cards = [
       {
         image: { url: bot333 },
         title: 'Impostazioni Admin',
         body: 'Gestisci le funzioni del gruppo selezionando attiva o disattiva.',
-        footer: '333 bot',
+        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
         buttons: [{ name: 'single_select', buttonParamsJson: JSON.stringify({ title: 'Impostazioni gruppo', sections: createSections(adminFeatures) }) }]
       }
     ];
@@ -232,14 +232,14 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
         image: { url: bot333 },
         title: 'Impostazioni Owner',
         body: 'Gestisci le funzioni proprietario selezionando attiva o disattiva.',
-        footer: '333 bot',
+        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
         buttons: [{ name: 'single_select', buttonParamsJson: JSON.stringify({ title: 'Seleziona azione', sections: createSections(ownerFeatures) }) }]
       });
     }
 
     return conn.sendMessage(m.chat, {
       text: '*Sistema di gestione funzioni*',
-      footer: '333 bot',
+      footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
       cards
     }, { quoted: fake });
   }

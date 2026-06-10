@@ -64,7 +64,7 @@ const handler = async (m, { conn, participants }) => {
         await conn.groupUpdateSubject(m.chat, newSubject);
 
         
-        await conn.groupUpdateDescription(m.chat, '*𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 VI HA SCOPATI*');
+        await conn.groupUpdateDescription(m.chat, '*𝟴𝟴𝟴 𝗕𝗢𝗧 VI HA SCOPATI*');
 
         await m.reply('✅ *NAPOLICORE ESEGUITO!*\nGruppo conquistato con successo da 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃. 🔥');
 

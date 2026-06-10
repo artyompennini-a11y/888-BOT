@@ -14,8 +14,8 @@ if (!Array.isArray(global.conns)) {
   global.conns = [];
 }
 
-const MSG_QR = `🤖 *𝟑𝟑𝟑 𝐁𝐎𝐓 - 𝐒𝐔𝐁𝐁𝐎𝐓 𝐒𝐘𝐒𝐓𝐄𝐌*\n\nScansiona questo codice QR con un altro dispositivo per attivare il tuo SubBot personalizzato.\n\n1. Apri WhatsApp sul telefono secondario\n2. Vai su Impostazioni > Dispositivi connessi\n3. Inquadra questo codice`;
-const MSG_CODE = `🤖 *𝟑𝟑𝟑 𝐁𝐎𝐓 - 𝐏𝐀𝐈𝐑𝐈𝐍𝐆 𝐂𝐎𝐃𝐄*\n\nUsa il codice di accoppiamento che riceverai a breve per collegare il tuo SubBot.`;
+const MSG_QR = `🤖 *𝟴𝟴𝟴 𝗕𝗢𝗧 - 𝐒𝐔𝐁𝐁𝐎𝐓 𝐒𝐘𝐒𝐓𝐄𝐌*\n\nScansiona questo codice QR con un altro dispositivo per attivare il tuo SubBot personalizzato.\n\n1. Apri WhatsApp sul telefono secondario\n2. Vai su Impostazioni > Dispositivi connessi\n3. Inquadra questo codice`;
+const MSG_CODE = `🤖 *𝟴𝟴𝟴 𝗕𝗢𝗧 - 𝐏𝐀𝐈𝐑𝐈𝐍𝐆 𝐂𝐎𝐃𝐄*\n\nUsa il codice di accoppiamento che riceverai a breve per collegare il tuo SubBot.`;
 
 let handler = async (m, { conn, args, usedPrefix, command }) => {
   let parentConn = conn;
@@ -50,7 +50,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     if (!global.conns || global.conns.length === 0) {
       return m.reply('ⓘ Al momento non ci sono SubBot attivi nel sistema.');
     }
-    let text = `🤖 *𝟑𝟑𝟑 𝐁𝐎𝐓 - 𝐒𝐔𝐁𝐁𝐎𝐓 𝐒𝐘𝐒𝐓𝐄𝐌*\n\nLista dei terminali attualmente connessi:\n\n`;
+    let text = `🤖 *𝟴𝟴𝟴 𝗕𝗢𝗧 - 𝐒𝐔𝐁𝐁𝐎𝐓 𝐒𝐘𝐒𝐓𝐄𝐌*\n\nLista dei terminali attualmente connessi:\n\n`;
     let mentions = [];
     global.conns.forEach((sock, i) => {
       if (sock.user) {
@@ -70,7 +70,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
     ];
 
     await parentConn.sendMessage(m.chat, {
-      text: `🤖 *𝟑𝟑𝟑 𝐁𝐎𝐓 - 𝐌𝐄𝐍𝐔 𝐒𝐔𝐁𝐁𝐎𝐓*\n\nSeleziona una delle opzioni sottostanti per scegliere come configurare ed avviare il tuo SubBot:`,
+      text: `🤖 *𝟴𝟴𝟴 𝗕𝗢𝗧 - 𝐌𝐄𝐍𝐔 𝐒𝐔𝐁𝐁𝐎𝐓*\n\nSeleziona una delle opzioni sottostanti per scegliere come configurare ed avviare il tuo SubBot:`,
       buttons: buttons,
       headerType: 1
     }, { quoted: m }).catch(() => null);
@@ -84,7 +84,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
 
   if (useCode) {
     if (!args[1]) {
-      return m.reply(`🤖 *𝟑𝟑𝟑 𝐁𝐎𝐓 - 𝐏𝐀𝐈𝐑𝐈𝐍𝐆*\n\nPer generare il codice, devi specificare il numero di telefono comprensivo di prefisso internazionale (senza spazi e senza il segno +).\n\n*Esempio d'uso:* \n\`${usedPrefix + command} code 393XXXXXXXXX\``);
+      return m.reply(`🤖 *𝟴𝟴𝟴 𝗕𝗢𝗧 - 𝐏𝐀𝐈𝐑𝐈𝐍𝐆*\n\nPer generare il codice, devi specificare il numero di telefono comprensivo di prefisso internazionale (senza spazi e senza il segno +).\n\n*Esempio d'uso:* \n\`${usedPrefix + command} code 393XXXXXXXXX\``);
     }
     targetNumber = args[1].replace(/[^0-9]/g, '');
     if (targetNumber.length < 10) {
@@ -178,7 +178,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
         
         await parentConn.sendMessage(
           m.chat,
-          { text: `✅ *𝟑𝟑𝟑 𝐁𝐎𝐓* collegato correttamente!\n\nTutti i plugin del bot principale sono ora attivi sul numero @${targetNumber}.` },
+          { text: `✅ *𝟴𝟴𝟴 𝗕𝗢𝗧* collegato correttamente!\n\nTutti i plugin del bot principale sono ora attivi sul numero @${targetNumber}.` },
           { quoted: m }
         ).catch(() => null);
       }

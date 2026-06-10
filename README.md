@@ -13,7 +13,7 @@
 
 [![WhatsApp Channel](https://img.shields.io/badge/WhatsApp_Channel-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h)
 [![GitHub](https://img.shields.io/badge/GitHub-GabWT333-black?style=for-the-badge&logo=github)](https://github.com/GabWT333)
-[![Instagram](https://img.shields.io/badge/Instagram-insta__gqbri-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/insta_gqbri)
+[![Instagram](https://img.shields.io/badge/Instagram-insta__arty-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/arty.340)
 [![Telegram](https://img.shields.io/badge/Telegram-Channel-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)](#)
 [![Discord](https://img.shields.io/badge/Discord-Server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](#)
 
@@ -395,7 +395,7 @@ Este proyecto está liberado bajo licencia [MIT](LICENSE)
 
 [![GitHub](https://img.shields.io/badge/GitHub-GabWT333-black?style=for-the-badge&logo=github)](https://github.com/GabWT333)
 [![WhatsApp](https://img.shields.io/badge/WhatsApp-Channel-25D366?style=for-the-badge&logo=whatsapp)](https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h)
-[![Instagram](https://img.shields.io/badge/Instagram-insta__gqbri-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/insta_gqbri)
+[![Instagram](https://img.shields.io/badge/Instagram-insta__arty-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/arty.340)
 
 **💻 JavaScript | Python Developer**
 

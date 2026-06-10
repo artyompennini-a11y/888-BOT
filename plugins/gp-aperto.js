@@ -1,13 +1,14 @@
 let handler = async (m, { conn }) => {
   
+  
   await conn.sendMessage(m.chat, { react: { text: '🔓', key: m.key } })
 
-  
+ 
   await conn.groupSettingUpdate(m.chat, 'not_announcement')
 
   const message = "« 🔓 »  *L'ARENA È APERTA*\n\n> *Il silenzio è rotto. La parola torna al popolo. Esprimetevi con saggezza.*"
 
- 
+  
   const buttons = [
     {
       buttonId: '.chiuso',
@@ -15,6 +16,7 @@ let handler = async (m, { conn }) => {
       type: 1
     }
   ]
+
 
   const buttonMessage = {
     text: message,
@@ -33,7 +35,8 @@ let handler = async (m, { conn }) => {
       forwardingScore: 999,
       isForwarded: true,
       forwardedNewsletterMessageInfo: {
-        newsletterJid: `120363427251015414@newsletter',
+        
+        newsletterJid: '120363427251015414@newsletter',
         newsletterName: `✦ ${global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧'} ✦`,
         serverMessageId: 143
       }

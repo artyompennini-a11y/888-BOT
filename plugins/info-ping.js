@@ -79,7 +79,7 @@ const handler = async (m, { conn }) => {
 
   await conn.sendMessage(m.chat, {
     text: info,
-    footer: "𝟑𝟑𝟑 𝐁𝐨𝐭 𝐯𝐞𝐫𝐬𝐢𝐨𝐧𝐞 𝐗",
+    footer: "𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃",
     buttons: [
       { buttonId: ".ds", buttonText: { displayText: "🧹 Elimina Sessioni" }, type: 1 }
     ],

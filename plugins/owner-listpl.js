@@ -32,7 +32,7 @@ let handler = async (m, { text }) => {
   attivi.sort()
   disabilitati.sort()
 
-  let msg = `╔═ 🔌 𝐏𝐋𝐔𝐆𝐈𝐍 𝐋𝐈𝐒𝐓 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ═╗\n┃\n`
+  let msg = `╔═ 🔌 𝐏𝐋𝐔𝐆𝐈𝐍 𝐋𝐈𝐒𝐓 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗\n┃\n`
 
   if (attivi.length) {
     msg += `┃ ✅ *Attivi (${attivi.length}):*\n`

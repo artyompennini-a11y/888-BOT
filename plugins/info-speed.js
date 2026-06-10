@@ -44,7 +44,7 @@ const handler = async (m, { conn }) => {
   const text = `
 ┏━━━━━━━━━━━━━━━━━━━━━
 ┃ ⚡ *PERFORMANCE MONITOR*
-┃ 「 333 BOT SYSTEM 」
+┃ 「 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 SYSTEM 」
 ┗━━━━━━━━━━━━━━━━━━━━━
 
 ╭─────────────────────
@@ -87,7 +87,7 @@ const handler = async (m, { conn }) => {
 ╰─────────────────────
 
 ┏━━━━━━━━━━━━━━━━━━━━━
-┃ ✨ Powered by *333 BOT*
+┃ ✨ Powered by *𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃*
 ┃ 🚀 Performance Optimized
 ┗━━━━━━━━━━━━━━━━━━━━━
 `.trim()

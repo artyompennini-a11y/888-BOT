@@ -85,7 +85,7 @@ let handler = async (m, { conn, text }) => {
                 }
             }
         }
-        diagnosticReport = `*[RISULTATO DIAGNOSI  ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰ ]*\n\n`
+        diagnosticReport = `*[RISULTATO DIAGNOSI  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ]*\n\n`
         
         if (errors.length > 0) {
             diagnosticReport += `Trovati ${errors.length} file con potenziali problemi:\n\n`
@@ -128,7 +128,7 @@ let handler = async (m, { conn, text }) => {
         } catch (e) {
             console.error('Errore invio a global.sam:', e)
         }
-        let chatReport = `*[RISULTATO DIAGNOSI  ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰ ]*\n\n`
+        let chatReport = `*[RISULTATO DIAGNOSI  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ]*\n\n`
         if (errors.length > 0) {
             chatReport += `⚠️ *ho trovato ${errors.length} file con problemi:*\n\n`
             errors.forEach(({ file, errors }) => {

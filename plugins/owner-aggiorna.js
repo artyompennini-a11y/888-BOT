@@ -1,6 +1,6 @@
 import { execSync } from 'child_process'
 import path from 'path'
-import { fileURLToPath } from 'url'
+import { fileURLToPath, pathToFileURL } from 'url'
 import fs from 'fs'
 
 const REPO_URL = 'https://github.com/artyompennini-a11y/888-BOT'
@@ -43,33 +43,54 @@ let handler = async (m, { conn, text, isOwner }) => {
     let fileDetails = parseGitFileDetails(updateOutput)
     let message = ''
     let moduliRicaricati = 0
+    let richiedeRiavvioCompleto = false
 
     if (fileDetails.length > 0) {
-      let reportFiles = fileDetails.map((f, i) => {
+      let reportFiles = await Promise.all(fileDetails.map(async (f, i) => {
         
         if (f.name.endsWith('.js')) {
-          try {
-            const percorsoAssoluto = path.resolve(__dirname, '../', f.name) 
+          if (!f.name.startsWith('plugins/')) {
+            richiedeRiavvioCompleto = true
+          } else {
+            try {
+              let nomePlugin = path.basename(f.name)
+              const percorsoAssoluto = path.resolve(rootDir, f.name)
+              const fileUrlConTimestamp = `${pathToFileURL(percorsoAssoluto).href}?update=${Date.now()}`
+              
+              if (global.plugins && global.plugins[nomePlugin]) {
+                delete global.plugins[nomePlugin]
+              } else if (global.plugins && global.plugins[f.name]) {
+                delete global.plugins[f.name]
+              }
 
-            if (global.plugins && global.plugins[f.name]) {
-              delete global.plugins[f.name]
+              const moduloAggiornato = await import(fileUrlConTimestamp)
+              if (global.plugins) {
+                global.plugins[nomePlugin] = moduloAggiornato.default || moduloAggiornato
+              }
+              
+              moduliRicaricati++
+            } catch (e) {
+              console.log(`[Aggiornamento] Errore ricaricamento a caldo per: ${f.name}`, e.message)
+              richiedeRiavvioCompleto = true
             }
-
-            const cacheKey = require.resolve(percorsoAssoluto)
-            if (require.cache[cacheKey]) {
-              delete require.cache[cacheKey]
-            }
-            
-            moduliRicaricati++
-          } catch (e) {
-            console.log(`[Aggiornamento] Impossibile ricaricare: ${f.name}`, e.message)
           }
         }
 
         return `*FILE ${i + 1}:* \`${f.name}\`\n➕ Aggiunte: ${f.ins} | ➖ Rimosse: ${f.del}`
-      }).join('\n\n')
+      }))
 
-      message = `🚀 *SISTEMA DI AGGIORNAMENTO*\n\n━━━━━━━━━━━━━━━━━━━━\n${reportFiles}\n━━━━━━━━━━━━━━━━━━━━\n\n🔄 *File ricaricati in memoria:* ${moduliRicaricati}\n✅ *𝟴𝟴𝟴 𝗕𝗢𝗧 aggiornato con successo senza sloggarsi!*`
+      if (richiedeRiavvioCompleto) {
+        message = `🚀 *SISTEMA DI AGGIORNAMENTO*\n\n━━━━━━━━━━━━━━━━━━━━\n${reportFiles.join('\n\n')}\n━━━━━━━━━━━━━━━━━━━━\n\n⚠️ *Rilevate modifiche al Core o errori strutturali.*\n🔄 *Il bot si sta riavviando automaticamente per applicare tutto...*`
+        await conn.reply(m.chat, message.trim(), m)
+        await m.react('🔄')
+        
+        setTimeout(() => {
+          process.exit(0)
+        }, 1500)
+        return
+      }
+
+      message = `🚀 *SISTEMA DI AGGIORNAMENTO*\n\n━━━━━━━━━━━━━━━━━━━━\n${reportFiles.join('\n\n')}\n━━━━━━━━━━━━━━━━━━━━\n\n🔄 *Moduli aggiornati a caldo:* ${moduliRicaricati}\n✅ *𝟴𝟴𝟴 𝗕𝗢𝗧 aggiornato con successo senza sloggarsi!*`
     } else {
       message = `🚀 *SISTEMA DI AGGIORNAMENTO*\n\n✅ *𝟴𝟴𝟴 𝗕𝗢𝗧 aggiornato con successo!* (Modifiche generiche alla repository)`
     }
@@ -115,5 +136,7 @@ handler.help = ['aggiorna', 'update']
 handler.tags = ['creatore']
 handler.command = ['aggiorna', 'update', 'aggiornabot']
 handler.rowner = true 
+
+export default handler
 
 export default handler

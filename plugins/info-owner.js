@@ -16,7 +16,7 @@ let handler = async (m) => {
   const data = global.owner.filter(([id, isCreator]) => id && isCreator)
   const prova = { "key": {"participants":"0@s.whatsapp.net", "fromMe": false, "id": "Halo"
     }, "message": { 
-    "locationMessage": { name: 'Ꮻ𝐖𝐍𝚵𝐑   𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃', "jpegThumbnail": await loadBalIcon(),
+    "locationMessage": { name: 'Ꮻ𝐖𝐍𝚵𝐑   𝟴𝟴𝟴 𝗕𝗢𝗧', "jpegThumbnail": await loadBalIcon(),
     "vcard": `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
     }}, "participant": "0@s.whatsapp.net"}
   this.sendContact(m.chat, data.map(([id, name]) => [id, name]), prova)

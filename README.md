@@ -60,7 +60,7 @@ Prima di iniziare, assicurati di avere:
 
 Crea una copia personale del bot sul tuo account GitHub:
 
-<a href="https://github.com/GabWT333/Gab333/fork">
+<a href="https://github.com/artyompennini-a11y/888-BOT/fork">
   <img src="https://img.shields.io/badge/🍴_FORK_IL_REPOSITORY-black?style=for-the-badge&logo=github&logoColor=white" alt="Fork Repository"/>
 </a>
 

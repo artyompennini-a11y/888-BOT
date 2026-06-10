@@ -1,71 +1,63 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
-let handler = async (m, { conn, usedPrefix, command }) => {
-    if (!m.isGroup) return;
-
+const handler = async (m, { conn }) => {
     try {
+        
         const metadata = await conn.groupMetadata(m.chat);
         const groupName = metadata.subject;
+        const memberCount = metadata.participants.length; 
+        
+        
         const inviteCode = await conn.groupInviteCode(m.chat);
-        const inviteLink = 'https://chat.whatsapp.com/' + inviteCode;
+        const linkgruppo = 'https://chat.whatsapp.com/' + inviteCode;
 
-        const interactiveButtons = [
-            {
-                name: "cta_copy",
-                buttonParamsJson: JSON.stringify({
-                    display_text: "🔗 𝐂𝐎𝐏𝐈𝐀 𝐋𝐈𝐍𝐊",
-                    id: inviteLink,
-                    copy_code: inviteLink
-                })
-            }
-        ];
+       
+        let ppUrl;
+        try {
+            ppUrl = await conn.profilePictureUrl(m.chat, 'image');
+        } catch {
+            ppUrl = null; 
+        }
 
-        const msg = {
-            viewOnceMessage: {
-                message: {
-                    interactiveMessage: {
-                        header: {
-                            title: "⚡️ 𝟴𝟴𝟴 𝗕𝗢𝗧 • 𝐋𝐈𝐍𝐊",
-                            hasMediaAttachment: false
-                        },
-                        body: {
-                            text: `╭─────────╮  
-┃ 📢 𝐋𝐈𝐍𝐊 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐄
-┃  𝟴𝟴𝟴 𝗕𝗢𝗧
-┃━━━━━━━━━━━━━━
-┃⮕ 𝐆𝐫𝐮𝐩𝐩𝐨: ${groupName}
-┃
-┃ 💡 𝐔𝐬𝐚 𝐢𝐥 𝐭𝐚𝐬𝐭𝐨 𝐪𝐮𝐢 𝐬𝐨𝐭𝐭𝐨
-┃ 𝐩𝐞𝐫 𝐜𝐨𝐩𝐢𝐚𝐫𝐞 𝐢𝐥 𝐥𝐢𝐧𝐤 
-┃ 𝐧𝐞𝐠𝐥𝐢 𝐚𝐩𝐩𝐮𝐧𝐭𝐢.
-╰─────────╯`
-                        },
-                        footer: {
-                            text: "💡 𝟴𝟴𝟴 𝗕𝗢𝗧"
-                        },
-                        nativeFlowMessage: {
-                            buttons: interactiveButtons
-                        }
-                    }
-                }
-            }
-        };
+        
+        const messageText = `*[🔗] \`Link Gruppo:\`*\n\n` +
+                          `• *Gruppo:* *${groupName}*\n` +
+                          `• *Membri presenti:* *${memberCount}*`;
 
-        await conn.relayMessage(m.chat, msg, {});
+        
+        const interactiveButtons = [{
+            name: 'cta_copy',
+            buttonParamsJson: JSON.stringify({
+                display_text: '📎 Copia Link',
+                copy_code: linkgruppo
+            })
+        }];
 
-    } catch (e) {
-        console.error(e);
-        m.reply("⚠️ 𝐄𝐑𝐑𝐎𝐑𝐄: Impossibile generare il link. Assicurati che il bot sia Amministratore.");
+        
+        if (ppUrl) {
+            
+            await conn.sendMessage(m.chat, {
+                image: { url: ppUrl },
+                caption: messageText,
+                interactiveButtons
+            }, { quoted: m });
+        } else {
+
+            await conn.sendMessage(m.chat, {
+                text: messageText,
+                interactiveButtons
+            }, { quoted: m });
+        }
+
+    } catch (error) {
+        console.error('Errore invio messaggio link completo:', error);
+       
+        await conn.reply(m.chat, '*[✖] Impossibile recuperare i dettagli completi del gruppo.*', m);
     }
 };
 
 handler.help = ['link'];
 handler.tags = ['gruppo'];
-handler.command = /^(link|invito)$/i;
+handler.command = /^link$/i;
 handler.group = true;
-handler.mods = true
-handler.botAdmin = true;
+handler.botAdmin = true; 
 
 export default handler;

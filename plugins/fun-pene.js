@@ -13,7 +13,7 @@ let number = target.split("@")[0]
 
 ━━━━━━━━━━━━━━━━
 🔍 *@${number}* 𝐡𝐚 𝐮𝐧𝐚 𝐥𝐮𝐧𝐠𝐡𝐞𝐳𝐳𝐚 𝐬𝐭𝐢𝐦𝐚𝐭𝐚 𝐝𝐢: *${Math.floor(Math.random() * 101)}* 𝐜𝐦
-━━━━━━━━━━━━━━━━\n> 𝟥𝟥𝟥 𝔹𝕆𝕋
+━━━━━━━━━━━━━━━━\n> 𝟴𝟴𝟴 𝗕𝗢𝗧
 `.trim();
 
     m.reply(message, null, { mentions: conn.parseMention(message) });

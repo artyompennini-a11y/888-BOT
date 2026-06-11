@@ -31,25 +31,34 @@ let handler = async (m, { conn }) => {
             try {
                 stiker = await sticker(img, false, packname, author)
             } catch (e) {
-                console.error(e)
-            } finally {
-                if (!stiker) {
+                console.error("Errore conversione locale:", e)
+            }
+
+            
+            if (!stiker) {
+                try {
                     if (/image|webp/g.test(mime)) out = await uploadImage(img)
                     else if (/video/g.test(mime)) out = await uploadFile(img)
-                    if (typeof out !== 'string') out = await uploadImage(img)
-                    stiker = await sticker(false, out, packname, author)
+                    
+                    if (typeof out === 'string') {
+                        stiker = await sticker(false, out, packname, author)
+                    }
+                } catch (e) {
+                    console.error("Errore durante l'upload:", e)
                 }
             }
         } else {
             return m.reply('⚠️ Rispondi a un\'immagine o a un video per creare lo sticker.')
         }
     } catch (e) {
-        console.error(e)
-        if (!stiker) stiker = e
+        console.error("Errore generale:", e)
+        stiker = false
     } finally {
-        if (stiker) {
-            
+        
+        if (stiker && Buffer.isBuffer(stiker)) {
             await conn.sendMessage(m.chat, { sticker: stiker }, { quoted: m })
+        } else {
+            m.reply('❌ Errore: Impossibile generare lo sticker. Il file potrebbe essere corrotto o non supportato.')
         }
     }
 }

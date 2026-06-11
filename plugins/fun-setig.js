@@ -51,11 +51,11 @@ Usa ''.rimuoviig'' per rimuoverlo
       forwardedNewsletterMessageInfo: {
         newsletterJid: '120363341274693350@newsletter',
         serverMessageId: '',
-        newsletterName: global.nomebot || '333'
+        newsletterName: global.nomebot || '𝟴𝟴𝟴 𝗕𝗢𝗧'
       },
       externalAdReply: {
         title: 'Instagram configurato ✅',
-        body: 'Vai al canale 333',
+        body: 'Vai al canale 𝟴𝟴𝟴 𝗕𝗢𝗧',
         mediaType: 1,
         thumbnail: thumb,
         renderLargerThumbnail: false,

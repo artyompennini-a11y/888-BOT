@@ -1,103 +1,142 @@
-import { sticker } from '../lib/sticker.js';
-import uploadFile from '../lib/uploadFile.js';
-import uploadImage from '../lib/uploadImage.js';
-
-let handler = async (m, { conn, args, usedPrefix, command }) => {
-  let stiker = false;
-
-  
-  if (!global.support) {
-    global.support = {
-      ffmpeg: true,
-      ffprobe: true,
-      ffmpegWebp: true,
-      convert: true,
-      magick: false,
-      gm: false,
-      find: false
-    };
-  }
-
-  const packName = global.authsticker || '𝟴𝟴𝟴 𝗕𝗢𝗧';
-  const authorName = global.nomepack || '𝟴𝟴𝟴 𝗕𝗢𝗧';
-
-  try {
-    let q = m.quoted ? m.quoted : m;
-    let mime = (q.msg || q).mimetype || q.mediaType || '';
-    
-    if (/webp|image|video/g.test(mime)) {
-      if (/video/g.test(mime) && (q.msg || q).seconds > 10) {
-        return m.reply('『 ⏰ 』- `Il video deve durare meno di 10 secondi per creare uno sticker.`');
-      }
-      
-      let img = await q.download?.();
-      if (!img) return conn.reply(m.chat, '『 📸 』- `Per favore, invia un\'immagine, video o GIF per creare uno sticker.`', m);
-      
-      try {
-        
-        stiker = await sticker(img, false, packName, authorName);
-      } catch (e) {
-        console.error('『 ❌ 』- Creazione sticker diretta fallita, tento il caricamento:', e);
-        try {
-          let out;
-          if (/video/g.test(mime)) {
-            out = await uploadFile(img);
-          } else {
-            out = await uploadImage(img);
-          }
-          
-          if (typeof out === 'string') {
-            stiker = await sticker(false, out, packName, authorName);
-          }
-        } catch (uploadError) {
-          console.error('『 ❌ 』- Caricamento e creazione sticker falliti:', uploadError);
-          stiker = false;
-        }
-      }
-    } else if (args[0]) {
-      if (isUrl(args[0])) {
-        stiker = await sticker(false, args[0], packName, authorName);
-      } else {
-        return m.reply('『 🔗 』- `L\'URL fornito non è valido. Assicurati che sia un link diretto a un\'immagine.`');
-      }
-    }
-  } catch (e) {
-    console.error('『 ❌ 』- Errore generale nel gestore:', e);
-    stiker = false;
-  }
-
-  
-  if (stiker) {
-    await conn.sendFile(
-      m.chat,
-      stiker,
-      'sticker.webp',
-      '『 ✅ 』- `Sticker creato con successo!`',
-      m,
-      false, // Modificato in false per evitare conflitti con l'invio asincrono se non supportato
-      { quoted: m }
-    );
-  } else {
-    return conn.reply(
-      m.chat,
-      '『 📱 』- `Rispondi a un\'immagine, video o GIF per creare uno sticker, oppure invia un URL di un\'immagine.`',
-      m
-    );
-  }
-};
-
-handler.help = ['s', 'sticker', 'stiker'];
-handler.tags = ['sticker', 'strumenti'];
-handler.command = ['s', 'sticker', 'stiker'];
-handler.register = false;
-
-export default handler;
+// Plugin by Elixir, Punisher & 888 staff
+import { sticker } from '../lib/sticker.js'
+import uploadFile from '../lib/uploadFile.js'
+import uploadImage from '../lib/uploadImage.js'
+import { createCanvas } from '@napi-rs/canvas'
 
 const isUrl = (text) => {
-  return text.match(
-    new RegExp(
-      /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)(jpe?g|gif|png|webp)/,
-      'gi'
-    )
-  );
-};
+    return text.match(new RegExp(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)(jpe?g|gif|png)/, 'gi'))
+}
+
+const createTextImage = async (text, packname, author) => {
+    try {
+        const canvas = createCanvas(500, 300)
+        const ctx = canvas.getContext('2d')
+        
+        // Sfondo bianco
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, 500, 300)
+        
+        // Testo principale - grande e centrato
+        ctx.fillStyle = '#000000'
+        ctx.font = 'bold 40px Arial'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        
+        // Word wrap con margini
+        const maxWidth = 450
+        const lineHeight = 50
+        const lines = []
+        let line = ''
+        const words = text.split(' ')
+        
+        for (let word of words) {
+            const testLine = line + (line ? ' ' : '') + word
+            const metrics = ctx.measureText(testLine)
+            
+            if (metrics.width > maxWidth && line) {
+                lines.push(line)
+                line = word
+            } else {
+                line = testLine
+            }
+        }
+        if (line) lines.push(line)
+        
+        // Disegna righe centrate
+        const totalHeight = lines.length * lineHeight
+        let startY = (300 - totalHeight) / 2
+        
+        for (let textLine of lines) {
+            ctx.fillText(textLine, 250, startY)
+            startY += lineHeight
+        }
+        
+        // Autore in basso a destra
+        ctx.font = 'bold 14px Arial'
+        ctx.fillStyle = '#666666'
+        ctx.textAlign = 'right'
+        ctx.fillText(`By: ${author}`, 480, 285)
+        
+        return canvas.toBuffer('image/png')
+    } catch (e) {
+        console.error('Errore canvas:', e)
+        return null
+    }
+}
+
+let handler = async (m, { conn, args }) => {
+    let stiker = false
+    try {
+        let q = m.quoted ? m.quoted : m
+
+        if (q.viewOnce || q.msg?.viewOnce || q.ephemeralExpiration || m.viewOnce || m.msg?.viewOnce) {
+            return m.reply('🚫 Impossibile fare sticker alle foto a una visualizzazione.')
+        }
+
+        let mime = (q.msg || q).mimetype || q.mediaType || ''
+        let text = q.text || q.body || q.caption || ''
+
+        const senderName = m.pushName || m.sender.split('@')[0] || 'Utente'
+        const packname = `${senderName}`
+        const author = `888 bot`
+
+        if (args[0] && global.screenStickerMap && global.screenStickerMap[args[0]]) {
+            m.reply('ⓘ 𝐂𝐫𝐞𝐨 𝐬𝐭𝐢𝐜𝐤𝐞𝐫...')
+            try {
+                const img = global.screenStickerMap[args[0]]
+                delete global.screenStickerMap[args[0]]
+                stiker = await sticker(img, false, packname, author)
+            } catch (e) {
+                console.error(e)
+            }
+        } else if (/webp|image|video/g.test(mime)) {
+            if (/video/g.test(mime) && (q.msg || q).seconds > 9) return
+
+            m.reply('ⓘ 𝐂𝐚𝐫𝐢𝐜𝐚𝐦𝐞𝐧𝐭𝐨 ...')
+            let img = await q.download?.()
+            if (!img) return
+
+            let out
+            try {
+                stiker = await sticker(img, false, packname, author)
+            } catch (e) {
+                console.error(e)
+            } finally {
+                if (!stiker) {
+                    if (/image|webp/g.test(mime)) out = await uploadImage(img)
+                    else if (/video/g.test(mime)) out = await uploadFile(img)
+                    if (typeof out !== 'string') out = await uploadImage(img)
+                    stiker = sticker(false, out, packname, author)
+                }
+            }
+        } else if (text && !mime) {
+            // Testo normale - crea immagine da testo
+            m.reply('ⓘ 𝐂𝐫𝐞𝐨 𝐬𝐭𝐢𝐜𝐤𝐞𝐫 𝐝𝐚 𝐭𝐞𝐬𝐭𝐨...')
+            try {
+                const textImage = await createTextImage(text, packname, author)
+                if (textImage) {
+                    stiker = await sticker(textImage, false, packname, author)
+                }
+            } catch (e) {
+                console.error(e)
+            }
+        } else if (args[0]) {
+            if (isUrl(args[0])) {
+                stiker = await sticker(false, args[0], packname, author)
+            } else return
+        }
+    } catch (e) {
+        console.error(e)
+        if (!stiker) stiker = e
+    } finally {
+        if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+        else return
+    }
+}
+
+handler.help = ['stiker (caption|reply media)', 'stiker <url>', 'stikergif (caption|reply media)', 'stikergif <url>']
+handler.tags = ['sticker']
+handler.command = /^s(tic?ker)?(gif)?(wm)?$/i
+
+export default handler

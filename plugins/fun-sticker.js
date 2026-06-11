@@ -29,13 +29,13 @@ let handler = async (m, { conn }) => {
 
             let out
             try {
-                // Tentativo 1: Conversione tramite modulo locale
+                
                 stiker = await sticker(img, false, packname, author)
             } catch (e) {
                 console.error("Errore conversione locale:", e)
             }
 
-            // Tentativo 2: Se fallisce, prova via upload URL
+            // Tentativo 2: Se fallisce, carica l'immagine/video e riprova via URL
             if (!stiker) {
                 try {
                     if (/image|webp/g.test(mime)) out = await uploadImage(img)
@@ -49,11 +49,6 @@ let handler = async (m, { conn }) => {
                 }
             }
 
-            // Tentativo 3: Fallback nativo (Usa direttamente il buffer scaricato se i metadati falliscono)
-            if (!stiker && img) {
-                stiker = img
-            }
-
         } else {
             return m.reply('⚠️ Rispondi a un\'immagine o a un video per creare lo sticker.')
         }
@@ -61,16 +56,16 @@ let handler = async (m, { conn }) => {
         console.error("Errore generale:", e)
         stiker = false
     } finally {
-        // Invio del file convertito o del buffer nativo
+        
         if (stiker && Buffer.isBuffer(stiker)) {
             try {
                 await conn.sendMessage(m.chat, { sticker: stiker }, { quoted: m })
             } catch (sendError) {
                 console.error("Errore invio sendMessage Baileys:", sendError)
-                m.reply('❌ Errore critico nell\'invio dello sticker tramite la libreria del bot.')
+                m.reply('❌ Errore critico nell\'invio dello sticker tramite Baileys.')
             }
         } else {
-            m.reply('❌ Errore: Impossibile generare lo sticker. Il file potrebbe essere corrotto o non supportato.')
+            m.reply('❌ Errore: Impossibile generare lo sticker. Assicurati che FFmpeg sia installato correttamente sul server.')
         }
     }
 }

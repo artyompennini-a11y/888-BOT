@@ -1,4 +1,3 @@
-// Plugin by Elixir, Punisher, 888 & 333 staff
 import yts from 'yt-search'
 import fg from 'api-dylux'
 import fetch from 'node-fetch'
@@ -21,7 +20,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     global.playChoice[m.sender] = vid
 
     let infoMsg = `┏━━━━━━━━━━━━━━━━━━━┓\n` +
-                  `   🎧  *𝙋𝙡𝙖𝙮 𝗧𝗛𝗘 888-𝗕𝗢𝗧* 🎧\n` +
+                  `    🎧  *𝗧𝗛𝗘 888-𝗕𝗢𝗧* 🎧\n` +
                   `┗━━━━━━━━━━━━━━━━━━━┛\n\n` +
                   `◈ 📌 *𝗧𝗶𝘁𝗼𝗹𝗼:* ${vid.title}\n` +
                   `◈ ⏱️ *𝗗𝘂𝗿𝗮𝘁𝗮:* ${vid.timestamp}\n\n` +
@@ -42,6 +41,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   const vid = global.playChoice[m.sender]
   if (!vid) return m.reply("❌ Nessuna richiesta attiva. Cerca prima una canzone con .play")
 
+  // --- SEZIONE AUDIO ---
   if (command === "playaud") {
     await conn.sendMessage(m.chat, { react: { text: "🎵", key: m.key } })
 
@@ -55,14 +55,15 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     if (!downloadUrl) {
       try {
-        let res = await fetch(`https://vreden.my.id{encodeURIComponent(url)}`)
+        // Corretto il path inserendo l'endpoint /api/ytmp3?url=
+        let res = await fetch(`https://vreden.my.id/api/ytmp3?url=${encodeURIComponent(url)}`)
         let json = await res.json()
         downloadUrl = json.result?.download?.url || json.result?.url || json.result?.downloadUrl
       } catch (e) { console.log("Vreden API failed:", e.message) }
     }
 
     if (!downloadUrl) {
-      return m.reply('🚀 *𝙋𝙡𝙖𝙮 𝙀𝙧𝙧𝙤rer:* Al momento i server di download sono sovraccarichi o offline. Riprova tra poco.')
+      return m.reply('🚀 *𝙋𝙡𝙖𝙮 𝙀𝙧𝙧𝙤𝙧:* Al momento i server di download sono sovraccarichi o offline. Riprova tra poco.')
     }
 
     const tmpDir = os.tmpdir()
@@ -103,6 +104,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     }
   }
 
+  // --- SEZIONE VIDEO ---
   if (command === "playvid") {
     await conn.sendMessage(m.chat, { react: { text: "🎬", key: m.key } })
 
@@ -116,14 +118,15 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     if (!downloadUrl) {
       try {
-        let res = await fetch(`https://vreden.my.id{encodeURIComponent(url)}`)
+        // Corretto il path inserendo l'endpoint /api/ytmp4?url=
+        let res = await fetch(`https://vreden.my.id/api/ytmp4?url=${encodeURIComponent(url)}`)
         let json = await res.json()
         downloadUrl = json.result?.download?.url || json.result?.url || json.result?.downloadUrl
       } catch (e) { console.log("Vreden API failed:", e.message) }
     }
 
     if (!downloadUrl) {
-      return m.reply('🚀 *𝙋𝙡𝙖𝙮 𝙀𝙧𝙧𝙤rer:* Al momento i server di download sono sovraccarichi o offline. Riprova tra poco.')
+      return m.reply('🚀 *𝙋𝙡𝙖𝙮 𝙀𝙧𝙧𝙤𝙧:* Al momento i server di download sono sovraccarichi o offline. Riprova tra poco.')
     }
 
     const tmpDir = os.tmpdir()
@@ -132,7 +135,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     try {
       const response = await fetch(downloadUrl)
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
       const arrayBuffer = await response.arrayBuffer()
       await fsPromises.writeFile(inputPath, Buffer.from(arrayBuffer))
 
@@ -149,12 +152,3 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     } finally {
       if (fs.existsSync(inputPath)) await fsPromises.unlink(inputPath)
       delete global.playChoice[m.sender]
-    }
-  }
-}
-
-handler.help = ['play']
-handler.tags = ['downloader']
-handler.command = /^(play|playaud|playvid)$/i
-
-export default handler

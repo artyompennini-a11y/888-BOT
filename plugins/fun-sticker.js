@@ -14,7 +14,6 @@ let handler = async (m, { conn }) => {
 
         let mime = (q.msg || q).mimetype || q.mediaType || ''
 
-    
         if (/webp|image|video/g.test(mime)) {
             if (/video/g.test(mime) && (q.msg || q).seconds > 9) {
                 return m.reply('⚠️ Il video non deve superare i 9 secondi.')
@@ -48,7 +47,10 @@ let handler = async (m, { conn }) => {
         console.error(e)
         if (!stiker) stiker = e
     } finally {
-        if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+        if (stiker) {
+            
+            await conn.sendMessage(m.chat, { sticker: stiker }, { quoted: m })
+        }
     }
 }
 

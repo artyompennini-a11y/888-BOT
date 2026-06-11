@@ -106,7 +106,7 @@ let handler = async (m, { text }) => {
 ➤ ${voto}/10
 
 ╰━━━━━━━━━━━━╯
-> *BY 333 BOT*
+> *BY 𝟴𝟴𝟴 𝗕𝗢𝗧*
 `
 
   m.reply(risposta.trim())

@@ -20,7 +20,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
   // Gestione sicura del file immagine per evitare crash se non esiste
   let imgBuffer
   try {
-    imgBuffer = fs.readFileSync('icone/333.jpg')
+    imgBuffer = fs.readFileSync('icone/888.jpg')
   } catch (e) {
     // Buffer vuoto di fallback se l'immagine non viene trovata
     imgBuffer = Buffer.alloc(0)
@@ -34,7 +34,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     },
     message: {
       locationMessage: {
-        name: '⚙️ 𝐌𝐞𝐧𝐮 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐢  𝟴𝟴𝟴 𝗕𝗢𝗧',
+        name: '⚙️ MENU FUNZIONI 888',
         jpegThumbnail: imgBuffer, // Baileys vuole il Buffer diretto, non toString('base64')
         vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;333;;;\nFN:333\nEND:VCARD'
       }
@@ -42,72 +42,67 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     participant: '0@s.whatsapp.net'
   }
 
-  const s = (val) => val ? '✅' : '❌'
+  const s = (val) => val ? '🟩' : '🟥'
   const p = usedPrefix
 
-  const catalogs = `┃━━━━━━━━━━━━━━
-┃ 📦 𝐂𝐀𝐓𝐀𝐋𝐎𝐆𝐇𝐈 𝐑𝐀𝐏𝐈𝐃𝐈
-┃━━━━━━━━━━━━━━
-┃ 🔒 ${p}attiva security
-┃    antilink + antiporno + modoadmin
-┃ 🛡️ ${p}attiva protezione
-┃    antispam + antitoxic + antibot
-┃    antivoip 
-┃ 🎬 ${p}attiva media
-┃    antimedia + antiporno + antigore
-┃ 🔗 ${p}attiva antilink
-┃    antilink + tg + ig + tiktok
-┃ 💣 ${p}attiva full
-┃    attiva tutto quanto sopra`
+  const catalogs = `┃ 
+┃ 📦 *CATALOGHI RAPIDI:*
+┃  ⮕ ${p}attiva security
+┃    _(antilink + antiporno + modoadmin)_
+┃  ⮕ ${p}attiva protezione
+┃    _(antispam + antitoxic + antibot + antivoip)_
+┃  ⮕ ${p}attiva media
+┃    _(antimedia + antiporno + antigore)_
+┃  ⮕ ${p}attiva antilink
+┃    _(antilink + tg + ig + tiktok)_
+┃  ⮕ ${p}attiva full
+┃    _(attiva tutti i moduli descritti sopra)_`
 
   const ownerSection = (isOwner || isROwner) ? `
-┃━━━━━━━━━━━━━━
-┃ 👑 𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈 𝐎𝐖𝐍𝐄𝐑
-┃━━━━━━━━━━━━━━
-┃${s(antiprivato)} ⮕ ${p}antiprivato
-┃${s(soloCreatore)} ⮕ ${p}solocreatore
-┃${s(read)} ⮕ ${p}lettura
-┃${s(anticall)} ⮕ ${p}anticall
-┃━━━━━━━━━━━━━━
-┃ 👤 Richiesto da: *${userName}*
-┃ 📱 Numero: *+${userNumber}*` : ''
+┃ 
+┃ 👑 *FUNZIONI OWNER:*
+┃  [${s(antiprivato)}] ⮕ ${p}antiprivato
+┃  [${s(soloCreatore)}] ⮕ ${p}solocreatore
+┃  [${s(read)}] ⮕ ${p}lettura
+┃  [${s(anticall)}] ⮕ ${p}anticall
+┃━━━━━━━━━━━━━━━━━━
+┃ 👤 *Operatore:* ${userName}
+┃ 📱 *ID:* +${userNumber}` : ''
 
   const menuFunzioniText =
-`╭─────────╮
-┃ ⚙️ 𝐌𝐄𝐍𝐔 𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈 𝐃𝐈
-┃   𝟴𝟴𝟴 𝗕𝗢𝗧
-┃━━━━━━━━━━━━━━
-┃ 🔧 𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈 𝐆𝐑𝐔𝐏𝐏𝐎
-┃━━━━━━━━━━━━━━
-┃${s(welcome)} ⮕ ${p}benvenuto
-┃${s(goodbye)} ⮕ ${p}addio
-┃${s(modoadmin)} ⮕ ${p}modoadmin
-┃${s(slowmode)} ⮕ ${p}slowmode
-┃${s(bestemmiometro)} ⮕ ${p}bestemmiometro
-┃${s(logrichieste)} ⮕ ${p}logrichieste
-┃━━━━━━━━━━━━━━
-┃ 🚫 𝐀𝐍𝐓𝐈
-┃━━━━━━━━━━━━━━
-┃${s(antiporno)} ⮕ ${p}antiporno
-┃${s(antigore)} ⮕ ${p}antigore
-┃${s(antispam)} ⮕ ${p}antispam
-┃${s(antitrava)} ⮕ ${p}antitrava
-┃${s(antiBot)} ⮕ ${p}antibot
-┃${s(antibusiness)} ⮕ ${p}antibusiness
-┃${s(antivoip)} ⮕ ${p}antivoip
-┃${s(antimedia)} ⮕ ${p}antimedia
-┃${s(antiLink)} ⮕ ${p}antilink
-┃${s(antilinkig)} ⮕ ${p}antilinkig
-┃${s(antilinktiktok)} ⮕ ${p}antilinktiktok
-┃${s(antilinktg)} ⮕ ${p}antilinktg
+`╭━━━〔 ⚙️ *MENU FUNZIONI* 〕━━━┈
+┃ 🤖 *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ 🛡️ *Stato Pannello:* Moduli di Sicurezza
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔧 *FUNZIONI GRUPPO:*
+┃  [${s(welcome)}] ⮕ ${p}benvenuto
+┃  [${s(goodbye)}] ⮕ ${p}addio
+┃  [${s(modoadmin)}] ⮕ ${p}modoadmin
+┃  [${s(slowmode)}] ⮕ ${p}slowmode
+┃  [${s(bestemmiometro)}] ⮕ ${p}bestemmiometro
+┃  [${s(logrichieste)}] ⮕ ${p}logrichieste
+┃ 
+┃ 🚫 *MODULI DI PROTEZIONE (ANTI):*
+┃  [${s(antiporno)}] ⮕ ${p}antiporno
+┃  [${s(antigore)}] ⮕ ${p}antigore
+┃  [${s(antispam)}] ⮕ ${p}antispam
+┃  [${s(antitrava)}] ⮕ ${p}antitrava
+┃  [${s(antiBot)}] ⮕ ${p}antibot
+┃  [${s(antibusiness)}] ⮕ ${p}antibusiness
+┃  [${s(antivoip)}] ⮕ ${p}antivoip
+┃  [${s(antimedia)}] ⮕ ${p}antimedia
+┃  [${s(antiLink)}] ⮕ ${p}antilink
+┃  [${s(antilinkig)}] ⮕ ${p}antilinkig
+┃  [${s(antilinktiktok)}] ⮕ ${p}antilinktiktok
+┃  [${s(antilinktg)}] ⮕ ${p}antilinktg
 ${catalogs}${ownerSection}
-┃━━━━━━━━━━━━━━
-┃ ✅ = Attivo   ❌ = Disattivo
-┃━━━━━━━━━━━━━━
-┃ ℹ️ 𝐔𝐒𝐎
-┃ ${p}attiva antilink
-┃ ${p}disabilita antilink
-╰─────────╯`.trim()
+┃━━━━━━━━━━━━━━━━━━
+┃ 🟩 = Attivo  |  🟥 = Disattivo
+┃━━━━━━━━━━━━━━━━━━
+┃ ℹ️ *GUIDA RAPIDA USO:*
+┃  • _Per attivare:_ ${p}attiva [modulo]
+┃  • _Per disattivare:_ ${p}disabilita [modulo]
+╰━━━━━━━━━━━━━━━━━━┈`.trim()
 
   await conn.sendMessage(m.chat, {
     text: menuFunzioniText

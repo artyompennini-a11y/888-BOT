@@ -136,7 +136,7 @@ ${testo}
 
 ━━━━━━━━━━━━
 ✍️ Firmato: *${firma}*
-🏷️ 333 Staff`
+🏷️ 888 Staff`
     })
 
     await this.sendMessage(m.chat, {

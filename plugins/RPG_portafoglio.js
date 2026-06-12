@@ -221,7 +221,7 @@ const handler = async (m, { conn, args }) => {
     __dirname,
     '..',
     'icone',
-    '333bank.jpg'
+    '888bank.jpg'
   )
 
   if (!fs.existsSync(cardImgPath)) {

@@ -71,8 +71,8 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   const menuFunzioniText =
 `╭━━━〔 ⚙️ *MENU FUNZIONI* 〕━━━┈
-┃ 🤖 *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ 🛡️ *Stato Pannello:* Moduli di Sicurezza
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato Pannello:* Moduli di Sicurezza
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 🔧 *FUNZIONI GRUPPO:*
 ┃  [${s(welcome)}] ⮕ ${p}benvenuto

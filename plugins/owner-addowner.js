@@ -14,7 +14,7 @@ let handler = async (m, { text }) => {
 
  
   const alreadyInOwner = global.owner.some(([num]) => num === clean)
-  if (alreadyInOwner) return m.reply('È già rowner')
+  if (alreadyInOwner) return m.reply('È già owner')
 
   
   global.owner.push([clean, 'Co-Owner', true])

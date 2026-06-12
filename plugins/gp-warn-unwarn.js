@@ -1,24 +1,28 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 const time = async (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
 let handler = async (m, { conn, text, args, groupMetadata, usedPrefix, command }) => {
-let reason = args.slice(1).join(' ') || 'non specificato\n┃ ma meritato'
-if (command == 'warn' || command == "ammonisci") {
-  let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.quoted
-  if (!mention) return m.reply('ⓘ 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐥𝐚 𝐩𝐞𝐫𝐬𝐨𝐧𝐚 𝐝𝐚 𝐰𝐚𝐫𝐧𝐚𝐫𝐞')
+  let reason = args.slice(1).join(' ') || 'Non specificato, ma meritato'
+  
+  if (command == 'warn' || command == "ammonisci") {
+    let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.quoted
+    if (!mention) return m.reply('⚠️ *Devi menzionare o rispondere al messaggio di un utente da ammonire.*')
+    
     let war = '2'
     let who;
-if (m.isGroup) who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : true;
-else who = m.chat;
-if (!who) return;
-if (!(who in global.db.data.users)) {
-global.db.data.users[who] = { warn: 0 };
-}
-let warn = global.db.data.users[who].warn;
+    if (m.isGroup) who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : true;
+    else who = m.chat;
+    if (!who) return;
+
+    if (!(who in global.db.data.users)) {
+      global.db.data.users[who] = { warn: 0 };
+    }
+    
+    let warn = global.db.data.users[who].warn;
     let user = global.db.data.users[who];
- let prova = {
+    
+    let prova = {
       "key": {
         "participants": "0@s.whatsapp.net",
         "fromMe": false,
@@ -26,79 +30,100 @@ let warn = global.db.data.users[who].warn;
       },
       "message": {
         "locationMessage": {
-          name: '𝐖𝐀𝐑𝐍 ⚠️',
+          name: 'WARN ⚠️',
           jpegThumbnail: await loadIcon('warn'),
           vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
         }
       },
       "participant": "0@s.whatsapp.net"
     };
-if (warn < war) {
-  global.db.data.users[who].warn += 1;
 
-  conn.reply(m.chat, `╭─────────╮
-┃ @${mention.split`@`[0]}\n┃ 𝐡𝐚𝐢 𝐫𝐢𝐜𝐞𝐯𝐮𝐭𝐨 𝐮𝐧 𝐰𝐚𝐫𝐧 𝐝𝐚\n┃ @${m.sender.split`@`[0]}
-┃━━━━━━━━━━━━━━
-┃➣ 𝐖𝐚𝐫𝐧: ${user.warn} / 3
-┃➣ 𝐌𝐨𝐭𝐢𝐯𝐨: ${reason}
-┃━━━━━━━━━━━━━━
-> 𝐀𝐭𝐭𝐞𝐧𝐳𝐢𝐨𝐧𝐞! 𝐀 𝟑 𝐰𝐚𝐫𝐧 𝐯𝐞𝐫𝐫𝐚𝐢 𝐞𝐬𝐩𝐮𝐥𝐬𝐨 𝐝𝐚𝐥 𝐠𝐫𝐮𝐩𝐩𝐨.
-╰─────────╯`, prova, { mentions: [mention, m.sender] });
+    if (warn < war) {
+      global.db.data.users[who].warn += 1;
 
-} else if (warn == war) {
+      let messaggioWarn = `╭━━━〔 ⚠️ *AVVERTIMENTO* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* Sanzione Registrata
+┃━━━━━━━━━━━━━━━━━━
+┃ 👤 *Target:* @${mention.split`@`[0]}
+┃ 👑 *Eseguito da:* @${m.sender.split`@`[0]}
+┃ 📊 *Sanzioni:* [ ${user.warn} / 3 ]
+┃ 📝 *Motivo:* _${reason}_
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ _Attenzione! Al raggiungimento del terzo_
+┃   _avvertimento verrai espulso dal gruppo._
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
-  global.db.data.users[who].warn = 0;
+      conn.reply(m.chat, messaggioWarn, prova, { mentions: [mention, m.sender] });
 
-  conn.reply(m.chat, `𝐔𝐭𝐞𝐧𝐭𝐞 𝐫𝐢𝐦𝐨𝐬𝐬𝐨 𝐝𝐨𝐩𝐨 𝟑 𝐚𝐯𝐯𝐞𝐫𝐭𝐢𝐦𝐞𝐧𝐭𝐢`, prova);
+    } else if (warn == war) {
+      global.db.data.users[who].warn = 0;
 
-  await time(1000);
-  await conn.groupParticipantsUpdate(m.chat, [who], 'remove');
+      let messaggioKick = `╭━━━〔 ❌ *UTENTE ESPULSO* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* Limite Raggiunto
+┃━━━━━━━━━━━━━━━━━━
+┃ 👤 *Target:* @${who.split('@')[0]}
+┃ ⚙️ *Azione:* Rimozione Automatica
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ _L'utente ha accumulato 3 avvertimenti_
+┃   _ed è stato rimosso dalla chat._
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
+
+      conn.reply(m.chat, messaggioKick, prova, { mentions: [who] });
+
+      await time(1000);
+      await conn.groupParticipantsUpdate(m.chat, [who], 'remove');
     }
   }
-if (command == 'unwarn' || command == "delwarn") {
 
-let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null
-if (!mention) return m.reply('ⓘ 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐥𝐚 𝐩𝐞𝐫𝐬𝐨𝐧𝐚 𝐚 𝐜𝐮𝐢 𝐭𝐨𝐠𝐥𝐢𝐞𝐫𝐞 𝐢𝐥 𝐰𝐚𝐫𝐧')
+  if (command == 'unwarn' || command == "delwarn") {
+    let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null
+    if (!mention) return m.reply('✅ *Devi menzionare o rispondere al messaggio di un utente per rimuovere un warn.*')
 
-let who = mention
+    let who = mention
 
-if (!(who in global.db.data.users)) {
-global.db.data.users[who] = { warn: 0 }
-}
-
-let user = global.db.data.users[who]
-
-if (user.warn > 0) {
-
-user.warn -= 1
-
-let prova = {
-  "key": {
-    "participants": "0@s.whatsapp.net",
-    "fromMe": false,
-    "id": "Halo"
-  },
-  "message": {
-    "locationMessage": {
-      name: '𝐔𝐧𝐰𝐚𝐫𝐧 ✅',
-      jpegThumbnail: await loadIcon('unwarn')
+    if (!(who in global.db.data.users)) {
+      global.db.data.users[who] = { warn: 0 }
     }
-  },
-  "participant": "0@s.whatsapp.net"
-}
 
-conn.reply(m.chat, `╭─────────╮
-┃ @${who.split('@')[0]},\n┃ 𝐭𝐢 𝐞̀ 𝐬𝐭𝐚𝐭𝐨 𝐭𝐨𝐥𝐭𝐨 𝐮𝐧 𝐰𝐚𝐫𝐧 𝐝𝐚\n┃ @${m.sender.split('@')[0]},\n┃ 𝐫𝐢𝐧𝐠𝐫𝐚𝐳𝐢𝐚!
-┃━━━━━━━━━━━━━━
-┃➣ 𝐖𝐚𝐫𝐧: ${user.warn} / 3
-┃━━━━━━━━━━━━━━
-> 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃
-╰─────────╯`, prova, { mentions: [who, m.sender] })
+    let user = global.db.data.users[who]
 
-} else {
+    if (user.warn > 0) {
+      user.warn -= 1
 
-m.reply('ⓘ 𝐐𝐮𝐞𝐬𝐭𝐨 𝐮𝐭𝐞𝐧𝐭𝐞 𝐧𝐨𝐧 𝐡𝐚 𝐰𝐚𝐫𝐧')
-}
+      let prova = {
+        "key": {
+          "participants": "0@s.whatsapp.net",
+          "fromMe": false,
+          "id": "Halo"
+        },
+        "message": {
+          "locationMessage": {
+            name: 'Unwarn ✅',
+            jpegThumbnail: await loadIcon('unwarn')
+          }
+        },
+        "participant": "0@s.whatsapp.net"
+      }
+
+      let messaggioUnwarn = `╭━━━〔 ✅ *SANZIONE REVOCATA* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* Warn Rimosso
+┃━━━━━━━━━━━━━━━━━━
+┃ 👤 *Target:* @${who.split('@')[0]}
+┃ 👑 *Eseguito da:* @${m.sender.split('@')[0]}
+┃ 📊 *Sanzioni Rimanenti:* [ ${user.warn} / 3 ]
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ _Un avvertimento è stato revocato._
+┃   _Comportati bene d'ora in avanti._
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
+
+      conn.reply(m.chat, messaggioUnwarn, prova, { mentions: [who, m.sender] })
+
+    } else {
+      m.reply('ⓘ _Questo utente non ha nessuna sanzione o warn a carico._')
+    }
   }
 }
 
@@ -106,4 +131,6 @@ handler.command = ['warn', 'ammonisci', 'unwarn', 'delwarn'];
 handler.group = true;
 handler.admin = true;
 handler.botAdmin = true;
+
 export default handler;
+

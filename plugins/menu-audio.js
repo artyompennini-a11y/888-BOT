@@ -1,6 +1,3 @@
-//Codice di menu-audio.js
-
-//Plugin fatto da 333 Staff.
 import 'os';
 import 'util';
 import 'human-readable';
@@ -28,43 +25,52 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
     },
     'message': {
       'locationMessage': {
-        'name': "𝐌𝐄𝐍𝐔 𝐀𝐔𝐃𝐈𝐎 🎵",
+        'name': "🎵 MENU AUDIO 888",
         'jpegThumbnail': await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
       }
     },
     'participant': "0@s.whatsapp.net"
   };
 
- let _0x2aa101 = 
-`╭─────────╮ 
-┃ 🎵 𝐌𝐄𝐍𝐔 𝐀𝐔𝐃𝐈𝐎 𝐃𝐈\n┃ 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃━━━━━━━━━━━━━━ 
-┃⮕ ${_0x3f73c1}𝐩𝐥𝐚𝐲
-┃⮕ ${_0x3f73c1}𝐩𝐥𝐚𝐲𝐥𝐢𝐬𝐭
-┃⮕ ${_0x3f73c1}𝐜𝐮𝐫
-┃⮕ ${_0x3f73c1}𝐚𝐮𝐝𝐢𝐨 (testo)
-┃⮕ ${_0x3f73c1}𝐛𝐚𝐬𝐬
-┃⮕ ${_0x3f73c1}𝐛𝐥𝐨𝐰𝐧
-┃⮕ ${_0x3f73c1}𝐝𝐞𝐞𝐩
-┃⮕ ${_0x3f73c1}𝐞𝐚𝐫𝐫𝐚𝐩𝐞
-┃⮕ ${_0x3f73c1}𝐟𝐚𝐬𝐭
-┃⮕ ${_0x3f73c1}𝐟𝐚𝐭
-┃⮕ ${_0x3f73c1}𝐧𝐢𝐠𝐡𝐭𝐜𝐨𝐫𝐞
-┃⮕ ${_0x3f73c1}𝐫𝐞𝐯𝐞𝐫𝐬𝐞
-┃⮕ ${_0x3f73c1}𝐫𝐨𝐛𝐨𝐭
-┃⮕ ${_0x3f73c1}𝐬𝐦𝐨𝐨𝐭𝐡
-┃⮕ ${_0x3f73c1}𝐬𝐥𝐨𝐰
-┃⮕ ${_0x3f73c1}𝐜𝐡𝐢𝐩𝐦𝐮𝐧𝐤
-┃⮕ ${_0x3f73c1}𝐞𝐜𝐡𝐨
-┃⮕ ${_0x3f73c1}𝐯𝐢𝐛𝐫𝐚𝐭𝐨
-┃⮕ ${_0x3f73c1}𝐫𝐞𝐯𝐞𝐫𝐛
-┃⮕ ${_0x3f73c1}𝐝𝐢𝐬𝐭𝐨𝐫𝐭
-┃⮕ ${_0x3f73c1}𝐜𝐡𝐢𝐩
-━━━━━━━━━━━━━━
-> 𝐫𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚𝐝 𝐮𝐧 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨 𝐯𝐨𝐜𝐚𝐥𝐞 𝐜𝐨𝐧 𝐥’𝐞𝐟𝐟𝐞𝐭𝐭𝐨 𝐜𝐡𝐞 𝐝𝐞𝐬𝐢𝐝𝐞𝐫𝐢 𝐮𝐬𝐚𝐫𝐞.
-╰─────────╯
-
-  `.trim();
+  let _0x2aa101 = 
+`╭━━━〔 🎵 *MENU AUDIO* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Funzione:* Modificatori Vocali ed Effetti
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔍 *Download & Ricerca:*
+┃  ⮕ ${_0x3f73c1}play
+┃  ⮕ ${_0x3f73c1}playlist
+┃  ⮕ ${_0x3f73c1}audio (testo)
+┃ 
+┃ ⚡ *Velocità & Struttura:*
+┃  ⮕ ${_0x3f73c1}fast
+┃  ⮕ ${_0x3f73c1}slow
+┃  ⮕ ${_0x3f73c1}reverse
+┃  ⮕ ${_0x3f73c1}smooth
+┃  ⮕ ${_0x3f73c1}nightcore
+┃ 
+┃ 🎛️ *Tonalità & Filtri:*
+┃  ⮕ ${_0x3f73c1}bass
+┃  ⮕ ${_0x3f73c1}deep
+┃  ⮕ ${_0x3f73c1}fat
+┃  ⮕ ${_0x3f73c1}chipmunk
+┃  ⮕ ${_0x3f73c1}chip
+┃  ⮕ ${_0x3f73c1}robot
+┃ 
+┃ 🔊 *Ambiente & Spazio:*
+┃  ⮕ ${_0x3f73c1}cur
+┃  ⮕ ${_0x3f73c1}echo
+┃  ⮕ ${_0x3f73c1}vibrato
+┃  ⮕ ${_0x3f73c1}reverb
+┃ 
+┃ 💥 *Distorsione & Overdrive:*
+┃  ⮕ ${_0x3f73c1}blown
+┃  ⮕ ${_0x3f73c1}earrape
+┃  ⮕ ${_0x3f73c1}distort
+╰━━━━━━━━━━━━━━━━━━┈
+> 💡 *Istruzioni:* Rispondi a un messaggio 
+> vocale o a un file audio inserendo il comando 
+> dell'effetto che desideri applicare.`.trim();
 
   _0x542b94.sendMessage(_0x512ed3.chat, { text: _0x2aa101 }, { quoted: _0x6bd16e });
 };

@@ -1,4 +1,4 @@
-//Codice di menu-principale.js
+import fetch from 'node-fetch';
 
 let handler = async (m, { conn, usedPrefix }) => {
   const senderName = await conn.getName(m.sender);
@@ -23,7 +23,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     },
     message: {
       contactMessage: {
-        displayName: `⚡️ 𝐌𝐞𝐧𝐮 𝐏𝐫𝐢𝐧𝐜𝐢𝐩𝐚𝐥𝐞`,
+        displayName: `⚡️ Menu Principale`,
         vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${targetJid.split('@')[0]}:${targetJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
       }
     },
@@ -31,33 +31,31 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   const commandList = `
-╭─────────╮  
-┃ ⚡️ 𝐌𝐄𝐍𝐔 𝐏𝐑𝐈𝐍𝐂𝐈𝐏𝐀𝐋𝐄 𝐃𝐈\n┃ 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃━━━━━━━━━━━━━━
-┃⮕ ${usedPrefix}𝐒𝐓𝐀𝐅𝐅
-┃⮕ ${usedPrefix}𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈
-┃⮕ ${usedPrefix}𝐀𝐃𝐌𝐈𝐍
-┃⮕ ${usedPrefix}𝐆𝐈𝐎𝐂𝐇𝐈
-┃⮕ ${usedPrefix}𝐑𝐏𝐆
-┃⮕ ${usedPrefix}𝐀𝐔𝐃𝐈𝐎
-┃⮕ ${usedPrefix}𝐎𝐖𝐍𝐄𝐑
-╰─────────╯
-🚀 𝑩𝒐𝒕: ${botName}
-🌟 *𝑽𝑬𝑹𝑺𝑰𝑶𝑵𝑬:* ${botVersion}
-`.trim();
+╭━━━〔 ⚡️ *MENU PRINCIPALE* 〕━━━┈
+┃ *Bot:* ${botName}
+┃ *Versione:* ${botVersion}
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ ${usedPrefix}staff
+┃ ⮕ ${usedPrefix}funzioni
+┃ ⮕ ${usedPrefix}admin
+┃ ⮕ ${usedPrefix}giochi
+┃ ⮕ ${usedPrefix}rpg
+┃ ⮕ ${usedPrefix}audio
+┃ ⮕ ${usedPrefix}owner
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
   const buttons = [
-    { buttonId: `${usedPrefix}funzioni`, buttonText: { displayText: "⚙️ 𝐅𝐔𝐍𝐙𝐈𝐎𝐍𝐈" }, type: 1 },
-    { buttonId: `${usedPrefix}admin`, buttonText: { displayText: "👑 𝐀𝐃𝐌𝐈𝐍" }, type: 1 },
-    { buttonId: `${usedPrefix}giochi`, buttonText: { displayText: "🎮 𝐆𝐈𝐎𝐂𝐇𝐈" }, type: 1 },
-    { buttonId: `${usedPrefix}rpg`, buttonText: { displayText: "🎰 𝐑𝐏𝐆" }, type: 1 },
-    { buttonId: `${usedPrefix}menuaudio`, buttonText: { displayText: "🎵 𝐀𝐔𝐃𝐈𝐎" }, type: 1 },
-    { buttonId: `${usedPrefix}owner`, buttonText: { displayText: "🔐 𝐎𝐖𝐍𝐄𝐑" }, type: 1 }
+    { buttonId: `${usedPrefix}funzioni`, buttonText: { displayText: "⚙️ FUNZIONI" }, type: 1 },
+    { buttonId: `${usedPrefix}admin`, buttonText: { displayText: "👑 ADMIN" }, type: 1 },
+    { buttonId: `${usedPrefix}giochi`, buttonText: { displayText: "🎮 GIOCHI" }, type: 1 },
+    { buttonId: `${usedPrefix}rpg`, buttonText: { displayText: "🎰 RPG" }, type: 1 },
+    { buttonId: `${usedPrefix}menuaudio`, buttonText: { displayText: "🎵 AUDIO" }, type: 1 },
+    { buttonId: `${usedPrefix}owner`, buttonText: { displayText: "🔐 OWNER" }, type: 1 }
   ];
 
   await conn.sendMessage(m.chat, {
     text: commandList,
-    footer: `💡 𝐒𝐜𝐡𝐢𝐚𝐜𝐜𝐢𝐚 𝐢𝐥 𝐛𝐨𝐭𝐭𝐨𝐧𝐞 𝐝𝐞𝐥 𝐦𝐞𝐧𝐮 𝐝𝐞𝐬𝐢𝐝𝐞𝐫𝐚𝐭𝐨.`,
+    footer: `💡 Schiaccia il bottone del menu desiderato o digita il relativo comando.`,
     buttons: buttons,
     headerType: 4,
     mentions: [targetJid]

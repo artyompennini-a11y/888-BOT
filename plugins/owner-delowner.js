@@ -13,7 +13,7 @@ let handler = async (m, { text }) => {
   const clean = number.split('@')[0]
 
   const exists = global.owner.some(([num]) => num === clean)
-  if (!exists) return m.reply('Non è rowner')
+  if (!exists) return m.reply('Non è owner')
 
   
   global.owner = global.owner.filter(([num]) => num !== clean)
@@ -23,7 +23,7 @@ let handler = async (m, { text }) => {
     global.db.data.owners = global.db.data.owners.filter(v => v !== number)
   }
 
-  m.reply(`❌ *${clean}* rimosso da rowner`)
+  m.reply(`❌ *${clean}* rimosso da owner`)
 }
 
 handler.command = /^delowner$/i

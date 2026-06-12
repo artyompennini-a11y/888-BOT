@@ -25,7 +25,7 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
     },
     'message': {
       'locationMessage': {
-        'name': "𝐌𝚵𝐍𝐔 Ꮻ𝐖𝐍𝚵𝐑 🔐",
+        'name': "🔐 MENU OWNER 888",
         'jpegThumbnail': await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
       }
     },
@@ -33,53 +33,65 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
   };
 
   let _0x2aa101 = 
-`╭─────────╮
-┃ 🔐 𝐌𝐄𝐍𝐔 𝐎𝐖𝐍𝐄𝐑 𝐃𝐈\n┃ 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃━━━━━━━━━━━━━━
-┃⮕ ${_0x3f73c1}𝐢𝐦𝐩𝐨𝐬𝐭𝐚𝐧𝐨𝐦𝐞
-┃⮕ ${_0x3f73c1}𝐫𝐞𝐬𝐞𝐭𝐭𝐚𝐧𝐨𝐦𝐞
-┃⮕ ${_0x3f73c1}𝐡𝐢𝐝𝐞𝐭𝐚𝐠𝐚𝐥𝐥
-┃⮕ ${_0x3f73c1}𝐚𝐝𝐝𝐨𝐰𝐧𝐞𝐫
-┃⮕ ${_0x3f73c1}𝐚𝐝𝐝𝐩𝐞𝐫𝐦𝐬
-┃⮕ ${_0x3f73c1}𝐝𝐢𝐬𝐚𝐛𝐥𝐞𝐩𝐥
-┃⮕ ${_0x3f73c1}𝐞en𝐚𝐛𝐥𝐞𝐩𝐥
-┃⮕ ${_0x3f73c1}𝐝e𝐥<b>𝐨</b>𝐰𝐧𝐞𝐫
-┃⮕ ${_0x3f73c1}𝐛𝐚𝐧𝐜𝐡𝐚𝐭
-┃⮕ ${_0x3f73c1}𝐛𝐚𝐧𝐮𝐬𝐞𝐫 (@)
-┃⮕ ${_0x3f73c1}𝐮𝐧𝐛𝐚𝐧𝐮𝐬𝐞𝐫 (@)
-┃⮕ ${_0x3f73c1}𝐮𝐧𝐛𝐥𝐨𝐜𝐤 (@)
-┃⮕ ${_0x3f73c1}𝐛𝐥𝐨𝐜𝐤 (@)
-┃⮕ ${_0x3f73c1}𝐛𝐚𝐧𝐥𝐢𝐬𝐭
-┃⮕ ${_0x3f73c1}𝐠𝐞𝐭𝐟𝐢𝐥𝐞
-┃⮕ ${_0x3f73c1}𝐬𝐚𝐯𝐞𝐩𝐥𝐮𝐠𝐢𝐧
-┃⮕ ${_0x3f73c1}𝐝𝐩 (𝐩𝐥𝐮𝐠𝐢𝐧)
-┃⮕ ${_0x3f73c1}𝐠𝐞𝐭𝐩𝐥𝐮𝐠𝐢𝐧
-┃⮕ ${_0x3f73c1}𝐞𝐝𝐢𝐭  𝐥𝐮𝐠𝐢𝐧
-┃⮕ ${_0x3f73c1}𝐨𝐮𝐭
-┃⮕ ${_0x3f73c1}𝐜𝐨𝐝𝐢𝐟𝐢𝐜𝐚
-┃⮕ ${_0x3f73c1}𝐝𝐢𝐨
-┃⮕ ${_0x3f73c1}𝐚𝐳𝐳𝐞𝐫𝐚(@)
-┃⮕ ${_0x3f73c1}𝐚𝐠𝐠𝐢𝐮𝐧𝐠𝐢 (𝐧𝐮𝐦𝐞𝐫𝐨 𝐝𝐢 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢)
-┃⮕ ${_0x3f73c1}𝐫𝐢𝐦𝐮𝐨𝐯𝐢 (𝐧𝐮𝐦𝐞𝐫𝐨 𝐝𝐢 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢)
-┃⮕ ${_0x3f73c1}𝐝𝐞𝐥𝐩𝐫𝐞𝐦
-┃⮕ ${_0x3f73c1}𝐝𝐢𝐚𝐠𝐧𝐨𝐬𝐢
-┃⮕ ${_0x3f73c1}𝐢𝐬𝐩𝐞𝐳𝐢𝐨𝐧𝐚 <𝐥𝐢𝐧𝐤 𝐠𝐫𝐮𝐩𝐩𝐨>
-┃⮕ ${_0x3f73c1}𝐬𝐞𝐭𝐩𝐩𝐛𝐨𝐭
-┃⮕ ${_0x3f73c1}𝐥𝐨𝐜𝐤
-┃⮕ ${_0x3f73c1}𝐣𝐨𝐢𝐧 (𝐥𝐢𝐧𝐤 𝐝𝐢 𝐮𝐧 𝐠𝐫𝐮𝐩𝐩𝐨)
-┃⮕ ${_0x3f73c1}𝐠𝐫𝐮𝐩𝐩𝐢
-┃⮕ ${_0x3f73c1}𝐥𝐢𝐬𝐭𝐩𝐥
-┃⮕ ${_0x3f73c1}𝐚𝐝𝐦𝐢𝐧𝐚𝐥𝐥 
-┃⮕ ${_0x3f73c1}𝐨𝐮𝐭𝐚𝐥𝐥
-┃⮕ ${_0x3f73c1}𝐥𝐢𝐬𝐭𝐚𝐦𝐮𝐭𝐢
-┃⮕ ${_0x3f73c1}𝐨𝐟𝐟𝐮𝐬𝐜𝐚
-┃⮕ ${_0x3f73c1}𝐩𝐫𝐞𝐟𝐢𝐬𝐬𝐨
-┃⮕ ${_0x3f73c1}𝐫𝐞𝐬𝐞𝐭𝐭𝐚𝐩𝐫𝐞𝐟𝐢𝐬𝐬𝐨
-┃⮕ ${_0x3f73c1}𝐬𝐢𝐬𝐭𝐞𝐦𝐚
-━━━━━━━━━━━━━━
-> 𝐩𝐞𝐫 𝐪𝐮𝐚𝐥𝐬𝐢𝐚𝐬𝐢 𝐩𝐫𝐨𝐛𝐥𝐞𝐦𝐚\n> 𝐮𝐬𝐚𝐫𝐞 𝐢𝐥 𝐭𝐚𝐬𝐭𝐨 ’’.𝐭𝐢𝐜𝐤𝐞𝐭’’\n> 𝐩𝐞𝐫 𝐬𝐞𝐠𝐧𝐚𝐥𝐚𝐫𝐥𝐨 𝐚𝐥𝐥𝐨 𝐬𝐭𝐚𝐟𝐟.
-╰─────────╯
-  `.trim();
+`╭━━━〔 🔐 *MENU OWNER* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Livello:* Sviluppatore / Creatore Core
+┃━━━━━━━━━━━━━━━━━━
+┃ ⚙️ *Gestione Bot & Credenziali:*
+┃  ⮕ ${_0x3f73c1}impostanome
+┃  ⮕ ${_0x3f73c1}resettanome
+┃  ⮕ ${_0x3f73c1}addowner
+┃  ⮕ ${_0x3f73c1}delowner
+┃  ⮕ ${_0x3f73c1}addperms
+┃  ⮕ ${_0x3f73c1}setppbot
+┃  ⮕ ${_0x3f73c1}prefisso
+┃  ⮕ ${_0x3f73c1}resettaprefisso
+┃ 
+┃ 🛡️ *Controllo Utenti & Chat:*
+┃  ⮕ ${_0x3f73c1}banchat
+┃  ⮕ ${_0x3f73c1}banuser (@)
+┃  ⮕ ${_0x3f73c1}unbanuser (@)
+┃  ⮕ ${_0x3f73c1}block (@)
+┃  ⮕ ${_0x3f73c1}unblock (@)
+┃  ⮕ ${_0x3f73c1}banlist
+┃  ⮕ ${_0x3f73c1}listamuti
+┃  ⮕ ${_0x3f73c1}delprem
+┃ 
+┃ 💻 *Gestione Sviluppo & Plugin:*
+┃  ⮕ ${_0x3f73c1}getfile
+┃  ⮕ ${_0x3f73c1}saveplugin
+┃  ⮕ ${_0x3f73c1}getplugin
+┃  ⮕ ${_0x3f73c1}editplugin
+┃  ⮕ ${_0x3f73c1}listpl
+┃  ⮕ ${_0x3f73c1}disablepl
+┃  ⮕ ${_0x3f73c1}enablepl
+┃  ⮕ ${_0x3f73c1}dp (plugin)
+┃  ⮕ ${_0x3f73c1}codifica
+┃  ⮕ ${_0x3f73c1}offusca
+┃ 
+┃ 🚪 *Controllo Gruppi & Spostamenti:*
+┃  ⮕ ${_0x3f73c1}hidetagall
+┃  ⮕ ${_0x3f73c1}ispeziona <link gruppo>
+┃  ⮕ ${_0x3f73c1}join (link gruppo)
+┃  ⮕ ${_0x3f73c1}gruppi
+┃  ⮕ ${_0x3f73c1}adminall
+┃  ⮕ ${_0x3f73c1}out
+┃  ⮕ ${_0x3f73c1}outall
+┃ 
+┃ 🔧 *Modifiche Database & Logica:*
+┃  ⮕ ${_0x3f73c1}azzera (@)
+┃  ⮕ ${_0x3f73c1}aggiungi (n° messaggi)
+┃  ⮕ ${_0x3f73c1}rimuovi (n° messaggi)
+┃  ⮕ ${_0x3f73c1}lock
+┃ 
+┃ 📊 *Diagnostica & Server:*
+┃  ⮕ ${_0x3f73c1}diagnosi
+┃  ⮕ ${_0x3f73c1}sistema
+┃  ⮕ ${_0x3f73c1}dio
+╰━━━━━━━━━━━━━━━━━━┈
+> ⚠️ In caso di bug o problemi tecnici, 
+> utilizza il comando *${_0x3f73c1}ticket* per 
+> segnalarlo subito allo staff.`.trim();
 
   _0x542b94.sendMessage(_0x512ed3.chat, { text: _0x2aa101 }, { quoted: _0x6bd16e });
 };
@@ -87,6 +99,6 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 handler.help = ["menu"];
 handler.tags = ["menu"];
 handler.command = /^(owner)$/i;
-handler.rowner = true
+handler.rowner = true;
 
 export default handler;

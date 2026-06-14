@@ -104,7 +104,7 @@ let handler = async (m, { conn, text, command, usedPrefix: prefix }) => {
     const buffer = canvas.toBuffer('image/png')
     
     let captionText = 
-`╭━━━〔 📡 *SCANZIONE LOG* 〕━━━┈
+`╭━━━〔 📡 *SCANSIONE LOG* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Livello:* Core Control System
 ┃━━━━━━━━━━━━━━━━━━

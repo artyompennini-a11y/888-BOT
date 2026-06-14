@@ -4,7 +4,7 @@ let handler = async (m, { conn }) => {
   await conn.sendMessage(m.chat, { text: message }, { quoted: m });
 };
 
-handler.help = ['punisher'];
+handler.help = ['xxxx'];
 handler.tags = ['giochi'];
 
 // Questa regex rileva "punisher" ovunque nel messaggio, ignorando maiuscole/minuscole

@@ -11,7 +11,7 @@ function truncate(text = '', max = 3500) {
   return str.length > max ? str.slice(0, max) + '\n...' : str
 }
 
-let handler = async (m, { conn, command }) => {
+let handler = async (m, { conn, command, usedPrefix: prefix }) => {
   try {
     console.log(`[update] Avvio processo di aggiornamento richiesto da: ${m.sender} tramite comando: ${command}`)
     await m.react('🔄')
@@ -61,21 +61,21 @@ let handler = async (m, { conn, command }) => {
 
         if (status.startsWith('R') && newPath) {
           const stats = statMap[newPath] || statMap[oldPath] || { plus: 0, minus: 0 }
-          return `\`🔁\` ${oldPath} \`→\` ${newPath} \`(+${stats.plus}/-${stats.minus})\``
+          return ` ⮕ 🔁 ${oldPath} → ${newPath} (+${stats.plus}/-${stats.minus})`
         }
 
         if (status === 'A') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return `\`🆕\` ${oldPath} \`(+${stats.plus}/-${stats.minus})\``
+          return ` ⮕ 🆕 ${oldPath} (+${stats.plus}/-${stats.minus})`
         }
 
         if (status === 'D') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return `\`🗑\` ${oldPath} \`(+${stats.plus}/-${stats.minus})\``
+          return ` ⮕ 🗑 ${oldPath} (+${stats.plus}/-${stats.minus})`
         }
 
         const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-        return `\`📄\` ${oldPath} \`(+${stats.plus}/-${stats.minus})\``
+        return ` ⮕ 📄 ${oldPath} (+${stats.plus}/-${stats.minus})`
       })
       .filter(Boolean)
 
@@ -85,15 +85,25 @@ let handler = async (m, { conn, command }) => {
 
     await sleep(1500)
 
-    let resultMsg = `\`── ✅ UPDATE COMPLETE ──\``
+    let filesContent = updatedFiles.length > 0 
+      ? updatedFiles.join('\n┃') 
+      : ' ⮕ Nessun file da aggiornare (Bot già aggiornato)'
 
-    if (updatedFiles.length > 0) {
-      resultMsg += `\n\n\`📦 File aggiornati:\` ${updatedFiles.length}\n\n${updatedFiles.join('\n')}`
-    } else {
-      resultMsg += `\n\n\`ℹ️ Nessun file da aggiornare\``
-    }
-
-    resultMsg += `\n\n\`[⚡] 888 SYSTEM\``
+    let resultMsg = 
+`╭━━━〔 🔄 *AGGIORNAMENTO* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Livello:* Privilegi Amministratore
+┃━━━━━━━━━━━━━━━━━━
+┃ ⚙️ *Stato del Sistema:*
+┃  ⮕ *Esito:* AGGIORNATO CON SUCCESSO ✅
+┃  ⮕ *File Rilevati:* ${updatedFiles.length}
+┃ 
+┃ 📦 *Dettagli Modifiche:*
+┃${filesContent}
+╰━━━━━━━━━━━━━━━━━━┈
+> ⚠️ In caso di bug o problemi tecnici, 
+> utilizza il comando *${prefix || '#'}ticket* per 
+> segnalarlo subito allo staff.`.trim()
 
     await conn.reply(m.chat, truncate(resultMsg), m)
     await m.react('✅')

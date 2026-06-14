@@ -2,7 +2,7 @@
 import fetch from 'node-fetch'
 import { createCanvas } from 'canvas'
 
-let handler = async (m, { conn, text, command }) => {
+let handler = async (m, { conn, text, command, usedPrefix: prefix }) => {
   try {
     console.log(`[checkban] Richiesta scansione da: ${m.sender} via ${command}`)
     
@@ -103,11 +103,19 @@ let handler = async (m, { conn, text, command }) => {
 
     const buffer = canvas.toBuffer('image/png')
     
-    let captionText = `\`── 🛰️ SCANZIONE LOG ──\`\n\n` +
-                      `\`[⚙️] Core:\` *888 NETWORK*\n` +
-                      `\`[👤] Target:\` @${cleanNumber}\n` +
-                      `\`[🛡️] Esito:\` ${isBanned ? '*BANNATO / LOCK*' : '*AUTORIZZATO / SAFE*'}\n\n` +
-                      `\`[⚡] 888 SYSTEM\``
+    let captionText = 
+`╭━━━〔 📡 *SCANZIONE LOG* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Livello:* Core Control System
+┃━━━━━━━━━━━━━━━━━━
+┃ ⚙️ *Dettagli Scansione:*
+┃  ⮕ *Core:* 888 NETWORK
+┃  ⮕ *Target:* @${cleanNumber}
+┃  ⮕ *Esito:* ${isBanned ? '*BANNATO / LOCK* 🔴' : '*AUTORIZZATO / SAFE* 🟢'}
+╰━━━━━━━━━━━━━━━━━━┈
+> ⚠️ In caso di bug o problemi tecnici, 
+> utilizza il comando *${prefix || '#'}ticket* per 
+> segnalarlo subito allo staff.`.trim()
 
     await conn.sendMessage(m.chat, { 
       image: buffer, 

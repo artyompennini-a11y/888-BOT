@@ -7,8 +7,8 @@ let handler = async (m, { conn }) => {
 handler.help = ['xxxx'];
 handler.tags = ['giochi'];
 
-// Questa regex rileva "punisher" ovunque nel messaggio, ignorando maiuscole/minuscole
-handler.customPrefix = /punisher/i; 
+// Questa regex rileva "xxxx" ovunque nel messaggio, ignorando maiuscole/minuscole
+handler.customPrefix = /xxxx/i; 
 handler.command = new RegExp; // Sovrascrive il comando standard per usare il prefisso personalizzato
 
 export default handler;

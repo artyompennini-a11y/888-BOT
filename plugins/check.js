@@ -1,93 +1,185 @@
-import 'os';
-import 'util';
-import 'human-readable';
-import '@realvare/baileys';
-import 'fs';
-import 'perf_hooks';
+// Plugin by Elixir, Punisher & 888 staff
+import { createCanvas, loadImage } from 'canvas';
 
-let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
-  if (!_0x512ed3.quoted) return _0x542b94.sendMessage(_0x512ed3.chat, { text: '`[!] ERRORE: Rispondi a un messaggio per analizzare l\'hardware sorgente.`' }, { quoted: _0x512ed3 });
+let handler = async (m, { conn, text }) => {
+  try {
+    console.log(`[check] Avvio scan per utente: ${m.sender}`)
 
-  const { welcome: _0x16d809, detect: _0x4c3a9f } = global.db.data.chats[_0x512ed3.chat];
-  let _0x5bfb0b = _0x512ed3.quoted ? _0x512ed3.quoted.sender : _0x512ed3.mentionedJid && _0x512ed3.mentionedJid[0] ? _0x512ed3.mentionedJid[0] : _0x512ed3.fromMe ? _0x542b94.user.jid : _0x512ed3.sender;
-  const _0x197a8a = (await _0x542b94.profilePictureUrl(_0x5bfb0b, "image").catch(_0x2cb040 => null)) || "./src/avatar_contact.png";
+    let who;
+    let targetMsg = m;
 
-  let _0x53e6f1;
-  if (_0x197a8a !== "./src/avatar_contact.png") {
-    _0x53e6f1 = await (await fetch(_0x197a8a)).buffer();
-  } else {
-    _0x53e6f1 = await (await fetch("https://qu.ax/DQsgr.png")).buffer();
-  }
-
-  let _0x6bd16e = {
-    'key': {
-      'participants': "0@s.whatsapp.net",
-      'fromMe': false,
-      'id': "Halo"
-    },
-    'message': {
-      'locationMessage': {
-        'name': "🎰 SCANNER 888",
-        'jpegThumbnail': await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
+    if (text) {
+      let cleanedText = text.replace(/[@\s+-]/g, '')
+      let number = cleanedText
+      if (!isNaN(number) && number.length >= 7 && number.length <= 15) {
+        who = number + '@s.whatsapp.net';
+        targetMsg = null;
+      } else if (m.mentionedJid && m.mentionedJid[0]) {
+        who = m.mentionedJid[0];
       }
-    },
-    'participant': "0@s.whatsapp.net"
-  };
-
-  const msgID = _0x512ed3.quoted.id || _0x512ed3.quoted.key?.id;
-  const tagUtente = _0x5bfb0b.split('@')[0];
-  let device = 'Sconosciuto 🕵️‍♂️';
-
-  if (!msgID) {
-    device = '⚠️ IMPOSSIBILE RILEVARE SORGENTE';
-  } else if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgID)) {
-    device = '🤖 BOT / EMULATORE';
-  } else if (msgID.startsWith('false_') || msgID.startsWith('true_')) {
-    device = '💻 WHATSAPP WEB (Standard)';
-  } else if (msgID.startsWith('3EB0')) {
-    if (/^[A-Z0-9]+$/.test(msgID)) {
-      device = '💻 WEB / BOT TERMINAL';
+    } else if (m.quoted) {
+      who = m.quoted.sender;
+      targetMsg = m.quoted;
     } else {
-      device = '🤖 ANDROID OS (Low Tier / Mod)';
+      who = m.sender;
     }
-  } else if (msgID.includes(':')) {
-    device = '🖥️ DESKTOP CLIENT (Multi-Device)';
-  } else if (/^[A-F0-9]{32}$/i.test(msgID)) {
-    device = '📱 ANDROID OS (Ufficiale)';
-  } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) {
-    device = '🍏 IOS KERNEL (iPhone)';
-  } else if (/^[A-Z0-9]{20,25}$/i.test(msgID)) {
-    device = '🍏 IOS KERNEL (iPhone - High Tier)';
-  } else {
-    device = 'Sconosciuto 🕵️‍♂️';
-    console.log(`[ANALISI] Nuovo ID rilevato e non indicizzato: ${msgID}`);
+
+    const tagUtente = who.replace(/@.+/, '');
+    const userName = await conn.getName(who) || tagUtente;
+
+    let device = 'Sconosciuto 🕵️‍♂️';
+    let msgID = 'N/D';
+    let msgType = 'N/D';
+    let msgLength = 0;
+    let formattedTime = 'N/D';
+
+    if (targetMsg) {
+      const rawMsg = targetMsg.vM || targetMsg;
+      msgID = targetMsg.id || rawMsg.key?.id || 'N/D';
+
+      if (msgID !== 'N/D') {
+        if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgID)) {
+          device = '🤖 BOT_EMULATOR';
+        } else if (msgID.startsWith('false_') || msgID.startsWith('true_')) {
+          device = '💻 WHATSAPP_WEB';
+        } else if (msgID.startsWith('3EB0') && msgID.length > 12) {
+          device = '💻 WEB/BOT_TERMINAL';
+        } else if (msgID.startsWith('3EB0')) {
+          device = '🤖 ANDROID_OS (Low Tier)';
+        } else if (msgID.includes(':')) {
+          device = '🖥️ DESKTOP_CLIENT';
+        } else if (/^[A-F0-9]{32}$/i.test(msgID)) {
+          device = '📱 ANDROID_OS';
+        } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgID)) {
+          device = '🍏 IOS_KERNEL (iPhone)';
+        } else if (/^[A-Z0-9]{20,25}$/i.test(msgID)) {
+          device = '🍏 IOS_KERNEL (iPhone - High Tier)';
+        }
+      }
+
+      msgType = 'Testo 📝';
+      if (rawMsg.imageMessage) msgType = 'Immagine 🖼️';
+      else if (rawMsg.videoMessage) msgType = 'Video 🎥';
+      else if (rawMsg.audioMessage) msgType = 'Audio/Nota Vocale 🎵';
+      else if (rawMsg.documentMessage) msgType = 'Documento/File 📄';
+      else if (rawMsg.stickerMessage) msgType = 'Sticker 🎨';
+      else if (rawMsg.contactMessage || rawMsg.contactsArrayMessage) msgType = 'Contatto VCard 📇';
+      else if (rawMsg.locationMessage) msgType = 'Posizione GPS 📍';
+      else if (rawMsg.pollCreationMessage || rawMsg.pollCreationMessageV2) msgType = 'Sondaggio 📊';
+      else if (rawMsg.reactionMessage) msgType = 'Reazione Emoji ❤️';
+
+      msgLength = targetMsg.text?.length || targetMsg.caption?.length || JSON.stringify(rawMsg).length || 0;
+
+      const timestamp = targetMsg.timestamp || rawMsg.messageTimestamp;
+      if (timestamp) {
+        const date = new Date(timestamp * 1000);
+        formattedTime = date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+    }
+
+    console.log(`[check] Target: ${who}, Device: ${device}, MsgType: ${msgType}`)
+
+    let loadingMsg = await conn.sendMessage(m.chat, { 
+      text: '⚡ `⚡ [𝟴𝟴𝟴 𝗕𝗢𝗧] Estrazione pacchetti dati e analisi hardware...` ⚡' 
+    }, { quoted: m });
+
+    let ppUrl;
+    try {
+      ppUrl = await conn.profilePictureUrl(who, 'image');
+    } catch {
+      ppUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png'; 
+    }
+
+    const canvas = createCanvas(950, 480);
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#0f111a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#00ffcc';
+    ctx.fillRect(0, 0, 15, canvas.height);
+    
+    let avatar;
+    try {
+      avatar = await loadImage(ppUrl);
+    } catch {
+      avatar = null;
+    }
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(160, 150, 80, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    if (avatar) {
+      ctx.drawImage(avatar, 80, 70, 160, 160);
+    } else {
+      ctx.fillStyle = '#3f475f';
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(160, 150, 82, 0, Math.PI * 2, true);
+    ctx.stroke();
+
+    ctx.textBaseline = 'top';
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 38px Arial, Verdana, Helvetica, sans-serif';
+    const displayName = userName.length > 22 ? userName.substring(0, 22) + '...' : userName;
+    ctx.fillText(displayName, 280, 65);
+
+    ctx.fillStyle = '#8f9cae';
+    ctx.font = '20px Arial, Verdana, Helvetica, sans-serif';
+    ctx.fillText(`JID: ${who}`, 280, 115);
+
+    ctx.fillStyle = '#3f475f';
+    ctx.fillRect(280, 155, 620, 1);
+
+    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 14px Arial, Verdana, Helvetica, sans-serif';
+    ctx.fillText('OS HARDWARE RILEVATO', 280, 175);
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 26px Arial, Verdana, Helvetica, sans-serif';
+    ctx.fillText(device, 280, 200);
+
+    ctx.fillStyle = '#3f475f';
+    ctx.fillRect(280, 250, 620, 1);
+
+    ctx.fillStyle = '#00ffcc';
+    ctx.font = 'bold 14px Arial, Verdana, Helvetica, sans-serif';
+    ctx.fillText('METADATI PACCHETTO DI RETE', 280, 270);
+
+    ctx.fillStyle = '#8f9cae';
+    ctx.font = '18px Arial, Verdana, Helvetica, sans-serif';
+    ctx.fillText(`ID Messaggio: ${msgID}`, 280, 295);
+    ctx.fillText(`Tipo Payload: ${msgType}`, 280, 325);
+    ctx.fillText(`Dimensione Buffer: ${msgLength} bytes`, 280, 355);
+    ctx.fillText(`Ora Esatta Ricezione: ${formattedTime}`, 280, 385);
+
+    const buffer = canvas.toBuffer();
+    
+    console.log(`[check] Report grafico generato per ${tagUtente}`)
+    await conn.sendMessage(m.chat, { 
+      image: buffer, 
+      caption: `\`[⚡] 𝟴𝟴𝟴 𝗕𝗢𝗧 SCANNER\`\n> Target tracciato con successo: @${tagUtente}`,
+      mentions: [who]
+    }, { quoted: loadingMsg });
+
+  } catch (error) {
+    console.error(`[check] Errore critico:`, error)
+    m.reply('`[!] Errore durante la generazione del report grafico esteso.`');
   }
-
-  let _0x2aa101 = 
-`╭━━━〔 🎰 *SCANNER DEVICE* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Categoria:* Utility & Controllo
-┃━━━━━━━━━━━━━━━━━━
-┃ 🔍 *Risultati Rilevamento:*
-┃  ⮕ *Target:* @${tagUtente}
-┃  ⮕ *Hardware:* \`${device}\`
-┃ 
-┃ ⚙️ *Stato Analisi:*
-┃  ⮕ Completato 100%
-┃  ⮕ Stringa ID: \`${msgID || 'N/D'}\`
-╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${_0x3f73c1}ticket* per 
-> segnalarlo subito allo staff.`.trim();
-
-  _0x542b94.sendMessage(_0x512ed3.chat, { text: _0x2aa101, mentions: [_0x5bfb0b] }, { quoted: _0x6bd16e });
 };
 
-handler.help = ['check', 'device', 'perquisizione'];  
-handler.tags = ['giochi'];  
-handler.command = /^(check|device|perquisizione|perqisizione)$/i; 
-handler.group = true;
-handler.admin = true;
-handler.botAdmin = false;
+handler.help = ['check <@tag/numero/reply>', 'device'];  
+handler.tags = ['owner'];  
+handler.command = /^(check|device)$/i; 
+handler.owner = true;
 
 export default handler;

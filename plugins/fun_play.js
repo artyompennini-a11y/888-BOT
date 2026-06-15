@@ -26,7 +26,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         return await conn.sendMessage(m.chat, {
             image: { url: vid.thumbnail },
             caption: infoMsg,
-            footer: '\n𝛥𝐗𝐈𝚶𝐍 𝚩𝚯𝐓',
+            footer: '\n𝟴𝟴𝟴 𝗕𝗢𝗧',
             buttons: [
                 { buttonId: `${usedPrefix}playaud ${url}`, buttonText: { displayText: '🎵 𝗔𝗨𝗗𝗜𝗢 (𝗠𝗣𝟯)' }, type: 1 },
                 { buttonId: `${usedPrefix}playvid ${url}`, buttonText: { displayText: '🎬 𝗩𝗜𝗗𝗘𝗢 (𝗠𝗣𝟰)' }, type: 1 }

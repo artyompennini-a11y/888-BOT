@@ -17,8 +17,8 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 ┃ ⚙️ *Azione:* Ban Permanente da WhatsApp (Simulato)
 ┃ 📝 *Motivo:* _${reason}_
 ┃━━━━━━━━━━━━━━━━━━
-┃ ⮕ _L'account dell'utente è stato rimosso_
-┃   _dalla matrice principale del gruppo._
+┃ ⮕ _L'account dell'utente è stato rimosso da WhatsApp_
+┃   
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⛔ Scherzo! L'utente non è stato bannato davvero.`.trim();
 
@@ -28,9 +28,9 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   }, { quoted: m });
 };
 
-handler.help = ['banzozzap', 'fintoban'];
+handler.help = ['fakeban', 'fintoban'];
 handler.tags = ['giochi'];
-handler.command = /^(banzozzap|fintoban|fban)$/i;
+handler.command = /^(fakeban|fintoban|fban)$/i;
 handler.group = true;
 handler.admin = true; 
 

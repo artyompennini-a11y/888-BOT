@@ -165,9 +165,23 @@ let handler = async (m, { conn, text }) => {
     const buffer = canvas.toBuffer();
     
     console.log(`[check] Report grafico generato per ${tagUtente}`)
+
+    let reportDidascalia = `╭━━━〔 🎰 *SCANNER DEVICE* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Categoria:* Utility & Controllo
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔍 *Risultati Rilevamento:*
+┃ ⮕ *Target:* @${tagUtente}
+┃ ⮕ *Hardware:* \`${device}\`
+┃ 
+┃ ⚙️ *Stato Analisi:*
+┃ ⮕ Completato 100%
+┃ ⮕ Stringa ID: \`${msgID || 'N/D'}\`
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
+
     await conn.sendMessage(m.chat, { 
       image: buffer, 
-      caption: `\`[⚡] 𝟴𝟴𝟴 𝗕𝗢𝗧 SCANNER\`\n> Target tracciato con successo: @${tagUtente}`,
+      caption: reportDidascalia,
       mentions: [who]
     }, { quoted: loadingMsg });
 

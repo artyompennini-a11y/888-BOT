@@ -1,48 +1,94 @@
 let handler = async (m, { conn }) => {
+    let staff = `*⋆｡˚✦『 𝐒𝐓𝐀𝐅𝐅 𝟴𝟴𝟴 𝗕𝗢𝗧 』✦˚｡⋆*
 
-  const text = `╭━━━〔 👑 *INFO STAFF* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Stato:* Staff Ufficiale
-┃━━━━━━━━━━━━━━━━━━
-┃ 👑 *OWNER:*
-┃  • _The Punisher:_ wa.me/393206032199
-┃ 
-┃ 🔱 *CO-OWNER:*
-┃  • _Elixir:_ wa.me/393784409415
-┃━━━━━━━━━━━━━━━━━━
-┃ 🌐 *LINK INSTAGRAM:*
-┃  • _The Punisher:_ instagram.com/arty.340
-┃  • _Elixir:_ instagram.com/eli.xir_ggt.me/ElixirKG
-┃ 
-┃ 📲 *CONTATTI TELEGRAM:*
-┃  • _The Punisher:_ @punishth
-┃  • _Elixir:_ @ElixirKG
-╰━━━━━━━━━━━━━━━━━━┈`.trim()
+*╭───────────────╮*
+*│ 🤖 𝐁𝐨𝐭:* ${global.nomebot}
+*│ 🆚 𝐕𝐞𝐫𝐬𝐢𝐨𝐧𝐞:* ${global.versione}
+*╰───────────────╯*
 
-  const mentions = [
-    '393206032199@s.whatsapp.net',
-    '393784409415@s.whatsapp.net'
-  ]
+*╭─── 👑 𝐂𝐑𝐄𝐀𝐓𝐎𝐑𝐄 ───╮*
+*│ ✦ 𝐍𝐨𝐦𝐞:* The punisher
+*│ ✦ 𝐑𝐮𝐨𝐥𝐨:* Owner / Developer
+*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @79524931364
+*│ ✦ 𝐈𝐆:* instagram.com/arty.340
+*│ ✦ 𝐓𝐆:* @punishth
+*╰────────────────────╯*
 
-  await conn.sendMessage(m.chat, {
-    text,
-    mentions,
-    contextInfo: {
-      externalAdReply: {
-        title: 'STAFF 𝟴𝟴𝟴 𝗕𝗢𝗧',
-        body: 'Entra nel canale ufficiale di 𝟴𝟴𝟴 𝗕𝗢𝗧!',
-        sourceUrl: 'https://whatsapp.com/channel/0029Vb7NyC67tkj0robcbw24',
-        mediaType: 1,
-        renderLargerThumbnail: true
-      }
-    }
-  }, { quoted: m })
+*╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*
+*│ ✦ Elixir*
+*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner
+*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639752917233     
+*│   ├ 𝐈𝐆:* instagram.com/eli.xir_gg 
+*│   └ 𝐓𝐆:* @ElixirKG
+*╰────────────────────╯*
 
-  m.react('👑')
+*╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*
+*│ ✦ Ghost*
+*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Manager
+*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @212785655331
+*╰────────────────────╯*
+
+*╭─── 📌 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋𝐈 ───╮*
+*│ ✦ 𝐂𝐚𝐧𝐚𝐥𝐞:* whatsapp.com/channel/0029Vb7NyC67tkj0robcbw24
+*╰────────────────────╯*
+
+> *𝟴𝟴𝟴 𝗕𝗢𝗧*`
+
+    await conn.reply(
+        m.chat,
+        staff.trim(),
+        m,
+        {
+            contextInfo: {
+                mentionedJid: [
+                    '79524931364@s.whatsapp.net',
+                    '639752917233@s.whatsapp.net',  
+                    '212785655331@s.whatsapp.net'
+                ]
+            }
+        }
+    )
+
+    await conn.sendMessage(
+        m.chat,
+        {
+            contacts: {
+                contacts: [
+                    {
+                        vcard: `BEGIN:VCARD 
+VERSION:3.0
+FN:The punisher
+ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Owner / Dev
+TEL;type=CELL;type=VOICE;waid=79524931364:+79524931364
+END:VCARD`
+                    },
+                    {
+                        vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:Elixir
+ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner
+TEL;type=CELL;type=VOICE;waid=639752917233:+639752917233
+END:VCARD`
+                    },
+                    {
+                        vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:Ghost
+ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Manager
+TEL;type=CELL;type=VOICE;waid=212785655331:+212785655331
+END:VCARD`
+                    }
+                ]
+            }
+        },
+        { quoted: m }
+    )
+
+    m.react('👑')
 }
 
 handler.help = ['staff']
-handler.tags = ['admin']
+handler.tags = ['main']
 handler.command = ['staff']
 
 export default handler

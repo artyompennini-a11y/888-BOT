@@ -60,13 +60,13 @@ const handler = async (m, { conn, participants }) => {
 
         
         const currentSubject = chat.subject;
-        const newSubject = `*¦¦SVT BY 333* ${currentSubject}`;
+        const newSubject = `*¦¦RUB BY THE PUNISHER* ${currentSubject}`;
         await conn.groupUpdateSubject(m.chat, newSubject);
 
         
         await conn.groupUpdateDescription(m.chat, '*𝟴𝟴𝟴 𝗕𝗢𝗧 VI HA SCOPATI*');
 
-        await m.reply('✅ *NAPOLICORE ESEGUITO!*\nGruppo conquistato con successo da 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃. 🔥');
+        await m.reply('✅ *NAPOLICORE ESEGUITO!*\nGruppo conquistato con successo da 𝟴𝟴𝟴 𝗕𝗢𝗧. 🔥');
 
     } catch (error) {
         console.error(error);

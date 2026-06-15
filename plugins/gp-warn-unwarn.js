@@ -1,135 +1,107 @@
-const time = async (ms) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const PROTECTED_USERS = [
+  '393784409415@s.whatsapp.net',
+  '393206032199@s.whatsapp.net'
+];
 
-let handler = async (m, { conn, text, args, groupMetadata, usedPrefix, command }) => {
-  let reason = args.slice(1).join(' ') || 'Non specificato, ma meritato'
-  
-  if (command == 'warn' || command == "ammonisci") {
-    let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.quoted
-    if (!mention) return m.reply('⚠️ *Devi menzionare o rispondere al messaggio di un utente da ammonire.*')
-    
-    let war = '2'
-    let who;
-    if (m.isGroup) who = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : true;
-    else who = m.chat;
-    if (!who) return;
+const MAX_WARN = 5;
 
-    if (!(who in global.db.data.users)) {
-      global.db.data.users[who] = { warn: 0 };
+const handler = async (msg, { conn, command, text, isAdmin }) => {
+  let mentionedJid = msg.mentionedJid?.[0] || msg.quoted?.sender;
+
+  if (!mentionedJid && text) {
+    let number = text.split(' ')[0].replace(/[^0-9]/g, '');
+    if (number.length >= 8 && number.length <= 15) {
+      mentionedJid = number + '@s.whatsapp.net';
     }
-    
-    let warn = global.db.data.users[who].warn;
-    let user = global.db.data.users[who];
-    
-    let prova = {
-      "key": {
-        "participants": "0@s.whatsapp.net",
-        "fromMe": false,
-        "id": "Halo"
-      },
-      "message": {
-        "locationMessage": {
-          name: 'WARN ⚠️',
-          jpegThumbnail: await loadIcon('warn'),
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-        }
-      },
-      "participant": "0@s.whatsapp.net"
-    };
+  }
 
-    if (warn < war) {
-      global.db.data.users[who].warn += 1;
+  const chatId = msg.chat;
+  const botNumber = conn.user.jid;
+  const groupMetadata = await conn.groupMetadata(chatId);
+  const groupOwner = groupMetadata.owner || chatId.split('-')[0] + '@s.whatsapp.net';
 
-      let messaggioWarn = `╭━━━〔 ⚠️ *AVVERTIMENTO* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Stato:* Sanzione Registrata
-┃━━━━━━━━━━━━━━━━━━
-┃ 👤 *Target:* @${mention.split`@`[0]}
-┃ 👑 *Eseguito da:* @${m.sender.split`@`[0]}
-┃ 📊 *Sanzioni:* [ ${user.warn} / 3 ]
-┃ 📝 *Motivo:* _${reason}_
-┃━━━━━━━━━━━━━━━━━━
-┃ ⮕ _Attenzione! Al raggiungimento del terzo_
-┃   _avvertimento verrai espulso dal gruppo._
-╰━━━━━━━━━━━━━━━━━━┈`.trim();
+  if (!isAdmin) throw '`[!] ACCESSO NEGATO: Privilegi Admin richiesti.`';
 
-      conn.reply(m.chat, messaggioWarn, prova, { mentions: [mention, m.sender] });
+  if (!mentionedJid) {
+    return conn.reply(chatId, `⚠️ *Devi menzionare o rispondere al messaggio di un utente.*`, msg);
+  }
 
-    } else if (warn == war) {
-      global.db.data.users[who].warn = 0;
+  let reason = text ? text.replace(/@\d+|^\d+/, '').trim() : '';
+
+  if (command === 'warn' && (!reason || reason.length < 3)) {
+    return conn.reply(chatId, `ⓘ _Devi inserire una motivazione valida per poter ammonire l'utente._`, msg);
+  }
+
+  if (mentionedJid === groupOwner || PROTECTED_USERS.includes(mentionedJid) || mentionedJid === botNumber) {
+    return conn.reply(chatId, `ⓘ _Questo utente è protetto dal sistema e non può essere sanzionato._`, msg);
+  }
+
+  if (!global.db.data.users[mentionedJid]) global.db.data.users[mentionedJid] = { warn: 0 };
+  const user = global.db.data.users[mentionedJid];
+  const tag = '@' + mentionedJid.split('@')[0];
+
+  if (command === 'warn') {
+    user.warn = (user.warn || 0) + 1;
+
+    if (user.warn >= MAX_WARN) {
+      user.warn = 0;
 
       let messaggioKick = `╭━━━〔 ❌ *UTENTE ESPULSO* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Stato:* Limite Raggiunto
 ┃━━━━━━━━━━━━━━━━━━
-┃ 👤 *Target:* @${who.split('@')[0]}
+┃ 👤 *Target:* ${tag}
 ┃ ⚙️ *Azione:* Rimozione Automatica
 ┃━━━━━━━━━━━━━━━━━━
-┃ ⮕ _L'utente ha accumulato 3 avvertimenti_
+┃ ⮕ _L'utente ha accumulato ${MAX_WARN} avvertimenti_
 ┃   _ed è stato rimosso dalla chat._
 ╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
-      conn.reply(m.chat, messaggioKick, prova, { mentions: [who] });
-
-      await time(1000);
-      await conn.groupParticipantsUpdate(m.chat, [who], 'remove');
+      await conn.sendMessage(chatId, { text: messaggioKick, mentions: [mentionedJid] });
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return await conn.groupParticipantsUpdate(chatId, [mentionedJid], 'remove');
     }
+
+    let messaggioWarn = `╭━━━〔 ⚠️ *AVVERTIMENTO* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* Sanzione Registrata
+┃━━━━━━━━━━━━━━━━━━
+┃ 👤 *Target:* ${tag}
+┃ 👑 *Eseguito da:* @${msg.sender.split('@')[0]}
+┃ 📊 *Sanzioni:* [ ${user.warn} / ${MAX_WARN} ]
+┃ 📝 *Motivo:* _${reason}_
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ _Attenzione! Al raggiungimento del quinto_
+┃   _avvertimento verrai espulso dal gruppo._
+╰━━━━━━━━━━━━━━━━━━┈`.trim();
+
+    return conn.sendMessage(chatId, { text: messaggioWarn, mentions: [mentionedJid, msg.sender] });
   }
 
-  if (command == 'unwarn' || command == "delwarn") {
-    let mention = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : null
-    if (!mention) return m.reply('✅ *Devi menzionare o rispondere al messaggio di un utente per rimuovere un warn.*')
+  if (command === 'unwarn') {
+    if (!user.warn || user.warn <= 0) throw '`[!] L\'utente non ha sanzioni attive.`';
+    user.warn -= 1;
 
-    let who = mention
-
-    if (!(who in global.db.data.users)) {
-      global.db.data.users[who] = { warn: 0 }
-    }
-
-    let user = global.db.data.users[who]
-
-    if (user.warn > 0) {
-      user.warn -= 1
-
-      let prova = {
-        "key": {
-          "participants": "0@s.whatsapp.net",
-          "fromMe": false,
-          "id": "Halo"
-        },
-        "message": {
-          "locationMessage": {
-            name: 'Unwarn ✅',
-            jpegThumbnail: await loadIcon('unwarn')
-          }
-        },
-        "participant": "0@s.whatsapp.net"
-      }
-
-      let messaggioUnwarn = `╭━━━〔 ✅ *SANZIONE REVOCATA* 〕━━━┈
+    let messaggioUnwarn = `╭━━━〔 ✅ *SANZIONE REVOCATA* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Stato:* Warn Rimosso
 ┃━━━━━━━━━━━━━━━━━━
-┃ 👤 *Target:* @${who.split('@')[0]}
-┃ 👑 *Eseguito da:* @${m.sender.split('@')[0]}
-┃ 📊 *Sanzioni Rimanenti:* [ ${user.warn} / 3 ]
+┃ 👤 *Target:* ${tag}
+┃ 👑 *Eseguito da:* @${msg.sender.split('@')[0]}
+┃ 📊 *Sanzioni Rimanenti:* [ ${user.warn} / ${MAX_WARN} ]
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ⮕ _Un avvertimento è stato revocato._
 ┃   _Comportati bene d'ora in avanti._
 ╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
-      conn.reply(m.chat, messaggioUnwarn, prova, { mentions: [who, m.sender] })
-
-    } else {
-      m.reply('ⓘ _Questo utente non ha nessuna sanzione o warn a carico._')
-    }
+    return conn.sendMessage(chatId, { text: messaggioUnwarn, mentions: [mentionedJid, msg.sender] });
   }
-}
+};
 
-handler.command = ['warn', 'ammonisci', 'unwarn', 'delwarn'];
+handler.help = ['warn', 'unwarn'];
+handler.tags = ['admin'];
+handler.command = /^(warn|unwarn)$/i;
 handler.group = true;
-handler.admin = true;
 handler.botAdmin = true;
 
 export default handler;

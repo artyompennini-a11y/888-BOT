@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  if (!text) return m.reply(`⚡ *𝛥𝐗𝐈𝚶𝐍 𝚩𝚯𝐓*\n\n💡 _Scrivi:_ ${usedPrefix + command} nome canzone`);
+  if (!text) return m.reply(`⚡ *𝟴𝟴𝟴 𝗕𝗢𝗧*\n\n💡 _Scrivi:_ ${usedPrefix + command} nome canzone`);
 
   try {
     const search = await yts(text);
@@ -17,7 +17,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     // Struttura originale dei pulsanti mantenuta intatta
     if (command === 'play') {
         let infoMsg = `┏━━━━━━━━━━━━━━━━━━━┓\n` +
-                      `   🎧  *𝙋𝙡𝙖𝙮 𝛥𝐗𝐈𝚶𝐍 𝚩𝚯𝐓* 🎧\n` +
+                      `   🎧  *𝙋𝙡𝙖𝙮 𝟴𝟴𝟴 𝗕𝗢𝗧* 🎧\n` +
                       `┗━━━━━━━━━━━━━━━━━━━┛\n\n` +
                       `◈ 📌 *𝗧𝗶𝘁𝗼𝗹𝗼:* ${vid.title}\n` +
                       `◈ ⏱️ *𝗗𝘂𝗿𝗮𝘁𝗮:* ${vid.timestamp}\n\n` +
@@ -83,7 +83,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, {
             video: fs.readFileSync(outputPath),
             mimetype: 'video/mp4',
-            caption: `✅ *𝐒𝐜𝐚𝐫𝐢𝐜𝐚𝐭𝐨 𝐝𝐚 𝛥𝐗𝐈𝚶𝐍 𝚩𝚯𝐓*`
+            caption: `✅ *𝐒𝐜𝐚𝐫𝐢𝐜𝐚𝐭𝐨 𝐝𝐚 𝟴𝟴𝟴 𝗕𝗢𝗧*`
         }, { quoted: m });
     }
 

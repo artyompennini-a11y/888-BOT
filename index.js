@@ -18,18 +18,18 @@ const checkAndInstallModules = () => {
   if (!existsSync(nodeModulesPath)) {
     console.clear();
     console.log('\n\n');
-    console.log('\x1b[35m' + '═'.repeat(70) + '\x1b[0m');
+    console.log('\x1b[34m' + '═'.repeat(70) + '\x1b[0m');
     console.log('\x1b[37m\n    Bro e senza moduli come avvi il bot? \x1b[0m');
-    console.log('\x1b[90m    Menomale che ci sono io! 😎\x1b[0m\n');
-    console.log('\x1b[35m' + '═'.repeat(70) + '\x1b[0m');
-    console.log('\n\x1b[35m⚡ Installazione moduli in corso...\x1b[0m\n');
+    console.log('\x1b[32m    Menomale che ci sono io! 😎\x1b[0m\n');
+    console.log('\x1b[34m' + '═'.repeat(70) + '\x1b[0m');
+    console.log('\n\x1b[32m⚡ Installazione moduli in corso...\x1b[0m\n');
     
     try {
       execSync('npm install', { stdio: 'inherit' });
-      console.log('\n\x1b[35m✓ Moduli installati con successo!\x1b[0m');
-      console.log('\x1b[90m🚀 Avvio del bot...\x1b[0m\n');
+      console.log('\n\x1b[32m✓ Moduli installati con successo!\x1b[0m');
+      console.log('\x1b[34m🚀 Avvio del bot...\x1b[0m\n');
     } catch (error) {
-      console.error('\n\x1b[90m✖ Errore durante l\'installazione dei moduli\x1b[0m');
+      console.error('\n\x1b[34m✖ Errore durante l\'installazione dei moduli\x1b[0m');
       process.exit(1);
     }
   }
@@ -61,7 +61,7 @@ const typeWriterBig = async (text, delay = 100) => {
     cfonts.say(current, {
       font: 'block',
       align: 'center',
-      gradient: ['white', 'magenta'],
+      gradient: ['white', 'blue'],
       transitionGradient: true,
     });
     await sleep(delay);
@@ -75,12 +75,12 @@ const loading = async (text, duration = 1000) => {
   
   return new Promise(resolve => {
     const interval = setInterval(() => {
-      process.stdout.write(`\r\x1b[35m${frames[i]} \x1b[37m${text}\x1b[0m`);
+      process.stdout.write(`\r\x1b[34m${frames[i]} \x1b[37m${text}\x1b[0m`);
       i = (i + 1) % frames.length;
       
       if (Date.now() - startTime >= duration) {
         clearInterval(interval);
-        process.stdout.write(`\r\x1b[35m✓ \x1b[37m${text}\x1b[0m\n`);
+        process.stdout.write(`\r\x1b[32m✓ \x1b[37m${text}\x1b[0m\n`);
         resolve();
       }
     }, 60);
@@ -97,14 +97,14 @@ const progressBar = async (label, duration = 1200) => {
     const empty = barLength - filled;
     const bar = '█'.repeat(filled) + '░'.repeat(empty);
     const percent = Math.floor((i / steps) * 100);
-    process.stdout.write(`\r\x1b[37m${label} \x1b[35m[${bar}] \x1b[37m${percent}%\x1b[0m`);
+    process.stdout.write(`\r\x1b[37m${label} \x1b[34m[${bar}] \x1b[32m${percent}%\x1b[0m`);
     await sleep(stepDuration);
   }
   console.log();
 };
 
 const pulse = async (text, times = 3) => {
-  const colors = ['\x1b[37m', '\x1b[35m', '\x1b[90m', '\x1b[35m'];
+  const colors = ['\x1b[37m', '\x1b[34m', '\x1b[32m', '\x1b[34m'];
   for (let i = 0; i < times; i++) {
     for (let color of colors) {
       process.stdout.write(`\r${color}${text}\x1b[0m`);
@@ -133,13 +133,13 @@ async function epicStartup() {
   await sleep(400);
   
   console.log('\n');
-  await typeWriter('                    Ultimo Aggiornamento: 21/05/2026', 40, '\x1b[90m');
+  await typeWriter('                    Ultimo Aggiornamento: 21/05/2026', 40, '\x1b[34m');
   
   console.log('\n');
-  await typeWriter('                  Edit by Elixir, Punisher & 888 Staff', 35, '\x1b[37m');
+  await typeWriter('                  Edit by Elixir, Punisher & 888 Staff', 35, '\x1b[32m');
   
   console.log('\n\n');
-  console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');
+  console.log('\x1b[34m' + '━'.repeat(70) + '\x1b[0m');
   console.log('\n');
   
   await progressBar('Caricamento sistema', 1100);
@@ -150,14 +150,14 @@ async function epicStartup() {
   await progressBar('Finalizzazione', 900);
   
   console.log('\n');
-  console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');
+  console.log('\x1b[34m' + '━'.repeat(70) + '\x1b[0m');
   console.log('\n');
   
   await sleep(200);
   await pulse('                    #888NEVERDIES', 4);
   
   console.log('\n');
-  console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');
+  console.log('\x1b[34m' + '━'.repeat(70) + '\x1b[0m');
   console.log('\n\n');
 }
 
@@ -171,9 +171,9 @@ async function start(file) {
 
   const args = [join(__dirname, file), ...process.argv.slice(2)];
 
-  console.log('\x1b[35m✓ \x1b[37mSistema pronto\x1b[0m');
-  console.log('\x1b[35m✓ \x1b[37mBot online\x1b[0m');
-  console.log('\x1b[35m✓ \x1b[37mTutti i sistemi operativi\x1b[0m\n');
+  console.log('\x1b[32m✓ \x1b[37mSistema pronto\x1b[0m');
+  console.log('\x1b[32m✓ \x1b[37mBot online\x1b[0m');
+  console.log('\x1b[32m✓ \x1b[37mTutti i sistemi operativi\x1b[0m\n');
 
   setupMaster({
     exec: args[0],
@@ -183,10 +183,10 @@ async function start(file) {
   let processInstance = fork();
 
   processInstance.on('message', (data) => {
-    console.log('\x1b[35m[→]\x1b[0m', data);
+    console.log('\x1b[34m[→]\x1b[0m', data);
     switch (data) {
       case 'reset':
-        console.log('\x1b[35m\n⟳ Riavvio in corso...\x1b[0m\n');
+        console.log('\x1b[34m\n⟳ Riavvio in corso...\x1b[0m\n');
         processInstance.kill();
         isRunning = false;
         start(file);
@@ -199,12 +199,12 @@ async function start(file) {
 
   processInstance.on('exit', (_, code) => {
     isRunning = false;
-    console.error('\n\x1b[90m✖ Errore processo [' + code + ']\x1b[0m\n');
+    console.error('\n\x1b[34m✖ Errore processo [' + code + ']\x1b[0m\n');
 
     if (code !== 0) {
       watchFile(args[0], () => {
         unwatchFile(args[0]);
-        console.log('\x1b[35m↻ Recupero automatico...\x1b[0m\n');
+        console.log('\x1b[32m↻ Recupero automatico...\x1b[0m\n');
         start(file);
       });
     }

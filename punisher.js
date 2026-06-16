@@ -388,7 +388,6 @@ ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━�
 ${chalk.bgBlue.white('┃     888 BOT 2026      ┃')}
 ${chalk.bgBlue.white('┃          V10          ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
-`;
 ${chalk.yellow('Seleziona come collegarti:')}
 
 ${chalk.green('[1] 📲 QR CODE')}
@@ -559,8 +558,8 @@ async function connectionUpdate(update) {
 
    if (qr && pairingMode === 'qr' && !global.qrGenerated) {
     console.log(chalk.bold.hex('#8b5cf6')(`
-          𝟴𝟴𝟴 𝗕𝗢𝗧                 
-        CONNESSIONE QR           
+           𝟴𝟴𝟴 𝗕𝗢𝗧                  
+        CONNESSIONE QR            
 
 📲 Scansiona il QR qui sotto
 ⏳ Valido per ~45 secondi

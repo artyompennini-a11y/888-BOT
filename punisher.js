@@ -385,10 +385,10 @@ let opzione;
 if (!pairingMode && !hasExistingSession) {
   const menu = `
 ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
-${chalk.bgBlue.white('┃     𝟴𝟴𝟴 𝗕𝗢𝗧 2026     ┃')}
-${chalk.bgBlue.white('┃         V10           ┃')}
+${chalk.bgBlue.white('┃     888 BOT 2026      ┃')}
+${chalk.bgBlue.white('┃          V10          ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
-
+`;
 ${chalk.yellow('Seleziona come collegarti:')}
 
 ${chalk.green('[1] 📲 QR CODE')}

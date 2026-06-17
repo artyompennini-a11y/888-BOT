@@ -1,7 +1,7 @@
-// Plugin by Lucifero & 333 Staff
 import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import globalFetch from 'node-fetch' 
 
 const ICON_PATH = path.join(process.cwd(), 'icone', 'Whatsapp.jpeg')
 const FONT_FILES = [
@@ -10,10 +10,11 @@ const FONT_FILES = [
 ]
 const FONT_FILE = FONT_FILES.find((f) => fs.existsSync(f)) || FONT_FILES[1]
 
+// Funzione di escaping robusta per il filtro drawtext di FFmpeg
 const escapeFfmpeg = (text) => {
   return String(text || '')
     .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
+    .replace(/'/g, "'\\''") 
     .replace(/:/g, '\\:')
     .replace(/,/g, '\\,')
     .replace(/=/g, '\\=')
@@ -56,7 +57,7 @@ const wrapText = (text, maxLen = 34) => {
   return lines.slice(0, 10)
 }
 
-const renderPreview = async (name, message, profileUrl) => {
+const renderPreview = async (name, message, avatarInput) => {
   const nameTxt = escapeFfmpeg(name)
   const msgLines = wrapText(message, 34).slice(0, 10)
   const lineCount = msgLines.length
@@ -73,33 +74,32 @@ const renderPreview = async (name, message, profileUrl) => {
   ).join(',')
 
   const filter =
-  `[1:v]scale=280:280,format=rgba[avatar_scaled];` +
+    `[1:v]scale=280:280,format=rgba[avatar_scaled];` +
+    `color=c=black:s=280x280,format=rgba,` +
+    `geq=r='if(lte(hypot(X-140,Y-140),140),255,0)':` +
+    `g='if(lte(hypot(X-140,Y-140),140),255,0)':` +
+    `b='if(lte(hypot(X-140,Y-140),140),255,0)'[mask];` +
+    `[avatar_scaled][mask]alphamerge[avatar_round];` +
+    `[0:v][avatar_round]overlay=70:(main_h-280)/2:format=auto,` +
+    `drawtext=${fontSpec}:text='${nameTxt}':fontcolor=white:fontsize=${nameFontSize}:x=390:y=(main_h/2)-100,` +
+    `${msgDrawtext}`
 
-  `color=c=black:s=280x280,format=rgba,` +
-  `geq=r='if(lte(hypot(X-140,Y-140),140),255,0)':` +
-  `g='if(lte(hypot(X-140,Y-140),140),255,0)':` +
-  `b='if(lte(hypot(X-140,Y-140),140),255,0)'[mask];` +
+  
+  const args = [
+    '-y',
+    '-i', ICON_PATH,
+    '-i', avatarInput,
+    '-filter_complex', filter,
+    '-frames:v', '1',
+    '-f', 'image2',
+    'pipe:1'
+  ]
 
-  `[avatar_scaled][mask]alphamerge[avatar_round];` +
-
-  `[0:v][avatar_round]overlay=70:(main_h-280)/2:format=auto,` +
-
-  `drawtext=${fontSpec}:` +
-  `text='${nameTxt}':` +
-  `fontcolor=white:` +
-  `fontsize=${nameFontSize}:` +
-  `x=390:` +
-  `y=(main_h/2)-100,` +
-
-  `${msgDrawtext}`
-
-  const inputs = [ICON_PATH, profileUrl || ICON_PATH]
-  const args = ['-y', '-i', inputs[0], '-i', inputs[1], '-filter_complex', filter, '-frames:v', '1', '-f', 'image2', 'pipe:1']
-
-  const buf = await new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const ff = spawn('ffmpeg', args)
     const chunks = []
     let stderr = ''
+    
     ff.stdout.on('data', (chunk) => chunks.push(chunk))
     ff.stderr.on('data', (chunk) => { stderr += chunk.toString() })
     ff.on('error', reject)
@@ -108,9 +108,6 @@ const renderPreview = async (name, message, profileUrl) => {
       resolve(Buffer.concat(chunks))
     })
   })
-
-  if (buf && buf.length) return buf
-  throw new Error('Impossibile generare anteprima: ffmpeg drawtext fallito')
 }
 
 const getMentionedUser = (msg) => {
@@ -157,26 +154,28 @@ const getMessageText = (msg, args) => {
     if (msg.quoted?.text) content = msg.quoted.text
     else if (msg.quoted?.caption) content = msg.quoted.caption
     else if (msg.quoted?.conversation) content = msg.quoted.conversation
-    else content = String(msg.text || msg.body || '').replace(/^\.(?:prova|test)\b\s*/i, '').trim()
+    else content = String(msg.text || msg.body || '').replace(/^\.(?:prova|test|screenshot)\b\s*/i, '').trim()
   }
 
   return removeMentionText(content, msg)
 }
 
 let handler = async (m, { conn, args, groupMetadata }) => {
+  let tempAvatarPath = null
   try {
     const who = getMentionedUser(m)
     const messageText = getMessageText(m, args)
 
     if (!who) {
-      return m.reply('⚠️ Tagga o rispondi a una persona con il messaggio da usare.\nEsempio: .prova @utente ciao')
+      return m.reply('⚠️ Tagga o rispondi a una persona con il messaggio da usare.\nEsempio: .screenshot @utente ciao')
     }
 
     if (!messageText) {
-      return m.reply('⚠️ Scrivi il testo da mostrare.\nEsempio: .prova @utente ciao')
+      return m.reply('⚠️ Scrivi il testo da mostrare.\nEsempio: .screenshot @utente ciao')
     }
 
     await m.reply('⏳ Genero l\'immagine...')
+    
     let targetName = null
     if (!groupMetadata && m.chat?.endsWith('@g.us')) {
       groupMetadata = await conn.groupMetadata?.(m.chat).catch(() => null)
@@ -189,8 +188,8 @@ let handler = async (m, { conn, args, groupMetadata }) => {
     }
     if (!targetName && conn.getName) {
       try {
-        targetName = await Promise.resolve(conn.getName(who))
-      } catch (e) {
+        targetName = await conn.getName(who)
+      } catch {
         targetName = null
       }
     }
@@ -201,21 +200,45 @@ let handler = async (m, { conn, args, groupMetadata }) => {
     if (!targetName && m.quoted?.sender === who && m.quoted?.pushName) {
       targetName = m.quoted.pushName
     }
+    
     targetName = targetName || who.split('@')[0]
-    let profileUrl = ICON_PATH
+    
+    let avatarInput = ICON_PATH
 
+    
     try {
-      profileUrl = await conn.profilePictureUrl(who, 'image')
-    } catch {
-      profileUrl = ICON_PATH
+      const profileUrl = await conn.profilePictureUrl(who, 'image')
+      if (profileUrl && profileUrl !== ICON_PATH) {
+        const fetchFn = typeof fetch !== 'undefined' ? fetch : globalFetch
+        const res = await fetchFn(profileUrl)
+        if (res.ok) {
+          const buffer = Buffer.from(await res.arrayBuffer())
+          tempAvatarPath = path.join(process.cwd(), `temp_avatar_${Date.now()}.jpg`)
+          fs.writeFileSync(tempAvatarPath, buffer)
+          avatarInput = tempAvatarPath
+        }
+      }
+    } catch (e) {
+      avatarInput = ICON_PATH
     }
 
-    const img = await renderPreview(targetName, messageText, profileUrl)
+    const img = await renderPreview(targetName, messageText, avatarInput)
+    
+    // Pulizia immediata del file temporaneo se esiste
+    if (tempAvatarPath && fs.existsSync(tempAvatarPath)) {
+      fs.unlinkSync(tempAvatarPath)
+      tempAvatarPath = null
+    }
+
     if (!img) return m.reply('Errore nella generazione dell\'anteprima')
 
     await conn.sendFile(m.chat, img, 'anteprima.png', '', m)
   } catch (e) {
-    console.error('AAATEST handler error:', e)
+    console.error('Errore handler screenshot:', e)
+    // Assicurati di pulire il file anche in caso di errore interno
+    if (tempAvatarPath && fs.existsSync(tempAvatarPath)) {
+      try { fs.unlinkSync(tempAvatarPath) } catch {}
+    }
     try { await m.reply('Errore: ' + (e.message || e)) } catch {}
   }
 }

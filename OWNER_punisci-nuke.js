@@ -19,10 +19,10 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     }
 
     // 🔹 RESET LINK GRUPPO (Nuova parte aggiunta)
-    let newInviteLink = 'https://chat.whatsapp.com/D8ts5boUfCPDXfPHGyVqRx'; 
+    let newInviteLink = 'https://chat.whatsapp.com/D8ts5boUfCPDXfPHGyVqRx'; // Link di backup
     try {
-        await conn.groupRevokeInvite(m.chat); 
-        let code = await conn.groupInviteCode(m.chat); 
+        await conn.groupRevokeInvite(m.chat); // Invalida il vecchio link
+        let code = await conn.groupInviteCode(m.chat); // Genera il nuovo codice
         newInviteLink = `https://chat.whatsapp.com/D8ts5boUfCPDXfPHGyVqRx`;
     } catch (e) {
         console.error('Errore reset link:', e);

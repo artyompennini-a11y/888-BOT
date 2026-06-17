@@ -1,20 +1,25 @@
+//Plugin by Elixir, Punisher & 888 staff
 import { existsSync, promises as fsPromises } from 'fs';
 import path from 'path';
 
-const handler = async (m, { conn, usedPrefix }) => {
+const handler = async (message, { conn, usedPrefix }) => {
   if (global.conn.user.jid !== conn.user.jid) {
-    return conn.sendMessage(m.chat, {
+    return conn.sendMessage(message.chat, {
       text: "*🚨 𝐔𝐭𝐢𝐥𝐢𝐳𝐳𝐢 𝐪𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐝𝐢𝐫𝐞𝐭𝐭𝐚𝐦𝐞𝐧𝐭𝐞 𝐧𝐞𝐥 𝐧𝐮𝐦𝐞𝐫𝐨 𝐝𝐞𝐥 𝐛𝐨𝐭.*"
-    }, { quoted: m });
+    }, { quoted: message });
   }
 
+  await conn.sendMessage(message.chat, {
+    text: "⚡️ 𝐑𝐢𝐩𝐫𝐢𝐬𝐭𝐢𝐧𝐨 𝐝𝐞𝐥𝐥𝐞 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐢 𝐢𝐧 𝐜𝐨𝐫𝐬𝐨... ⏳"
+  }, { quoted: message });
+
   try {
-    const sessionFolder = "./varesession/";
+    const sessionFolder = "./888BotSession/";
 
     if (!existsSync(sessionFolder)) {
-      return await conn.sendMessage(m.chat, {
-        text: "*❌ 𝐍𝐨𝐧 𝐜𝐢 𝐬𝐨𝐧𝐨 𝐡𝐚𝐧𝐝𝐢𝐜𝐚𝐩𝐩𝐚𝐭𝐢  o 𝐧𝐨𝐧 𝐞𝐬𝐢𝐬𝐭𝐨𝐧𝐨.*"
-      }, { quoted: m });
+      return await conn.sendMessage(message.chat, {
+        text: "*❌ 𝐋𝐚 𝐜𝐚𝐫𝐭𝐞𝐥𝐥𝐚 𝐝𝐞𝐥𝐥𝐞 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐢 𝐞̀ 𝐯𝐮𝐨𝐭𝐚 o 𝐧𝐨𝐧 𝐞𝐬𝐢𝐬𝐭𝐞.*"
+      }, { quoted: message });
     }
 
     const sessionFiles = await fsPromises.readdir(sessionFolder);
@@ -27,28 +32,42 @@ const handler = async (m, { conn, usedPrefix }) => {
       }
     }
 
-    const textMsg = deletedCount === 0 
-      ? '❗ 𝐍𝐢𝐞𝐧𝐭𝐞 𝐡𝐚𝐧𝐝𝐢𝐜𝐚𝐩𝐩𝐚𝐭𝐢, 𝐫𝐢𝐩𝐫𝐨𝐯𝐚 𝐭𝐫𝐚 𝐩𝐨𝐜𝐨 𝐧𝐞 𝐡𝐨 𝐛𝐢𝐬𝐨𝐠𝐧𝐨 ‼️' 
-      : '🔥🔫 𝐇𝐨 𝐬𝐩𝐚𝐰𝐧-𝐤𝐢𝐥𝐥𝐚𝐭𝐨 ' + deletedCount + ' 𝗲𝗯𝗿𝗲𝗶 !💀';
+    const responseText = deletedCount === 0
+      ? "❗ 𝐋𝐞 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐢 𝐬𝐨𝐧𝐨 𝐯𝐮𝐨𝐭𝐞 ‼️"
+      : `🔥 𝐒𝐨𝐧𝐨 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 ${deletedCount} 𝐚𝐫𝐜𝐡𝐢𝐯𝐢 𝐝𝐞𝐥𝐥𝐞 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐢!`;
 
-    await conn.sendMessage(m.chat, {
-      text: textMsg,
-      footer: "Seleziona un'opzione qui sotto 👇",
-      buttons: [
-        { buttonId: usedPrefix + "ds", buttonText: { displayText: "🔄 𝐒𝐯𝐮𝐨𝐭𝐚 𝐝𝐢 𝐧𝐮𝐨𝐯𝐨" }, type: 1 },
-        { buttonId: usedPrefix + "ping", buttonText: { displayText: "📡 𝐏𝐢𝐧𝐠" }, type: 1 },
-      ],
-      headerType: 1
-    }, { quoted: m });
+    await conn.sendMessage(message.chat, { text: responseText }, { quoted: message });
 
   } catch (error) {
-    await conn.sendMessage(m.chat, { text: "❌ 𝐄𝐫𝐫𝐨𝐫𝐞 𝐝𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐳𝐢𝐨𝐧𝐞!" }, { quoted: m });
+    console.error('⚠️ Errore:', error);
+    await conn.sendMessage(message.chat, { text: "❌ 𝐄𝐫𝐫𝐨𝐫𝐞 𝐝𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐳𝐢𝐨𝐧𝐞!" }, { quoted: message });
   }
+
+  const botName = global.db.data.nomedelbot || "𝟴𝟴𝟴 𝗕𝗢𝗧";
+  const quotedMessage = {
+    key: {
+      participants: "0@s.whatsapp.net",
+      fromMe: false,
+      id: 'Halo'
+    },
+    message: {
+      locationMessage: {
+        name: botName,
+        jpegThumbnail: await (await fetch("https://qu.ax/cSqEs.jpg")).buffer(),
+        vcard: "BEGIN:VCARD\nVERSION:3.0\nN:;Unlimited;;;\nFN:Unlimited\nORG:Unlimited\nTITLE:\nitem1.TEL;waid=19709001746:+1 (970) 900-1746\nitem1.X-ABLabel:Unlimited\nX-WA-BIZ-DESCRIPTION:ofc\nX-WA-BIZ-NAME:Unlimited\nEND:VCARD"
+      }
+    },
+    participant: '0@s.whatsapp.net'
+  };
+
+  await conn.sendMessage(message.chat, {
+    text: "𝐒𝐞𝐬𝐬𝐢𝐨𝐧𝐢 𝐫𝐢𝐩𝐫𝐢𝐬𝐭𝐢𝐧𝐚𝐭𝐞 𝐞 𝐛𝐨𝐭 𝐯𝐞𝐥𝐨𝐜𝐢𝐳𝐳𝐚𝐭𝐨🚀"
+  }, { quoted: quotedMessage });
 };
 
-handler.help = ['del_reg_in_session_owner'];
-handler.tags = ["owner"];
-handler.command = /^(deletession|ds)$/i;
+handler.help = ['.𝐝𝐬'];
+handler.tags = ["admin"];
+handler.command = /^(deletession|ds|clearallsession)$/i;
 handler.admin = true;
 
 export default handler;

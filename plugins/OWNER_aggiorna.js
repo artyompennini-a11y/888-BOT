@@ -61,21 +61,21 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
 
         if (status.startsWith('R') && newPath) {
           const stats = statMap[newPath] || statMap[oldPath] || { plus: 0, minus: 0 }
-          return ` ⮕ 🔁 ${oldPath} → ${newPath} (+${stats.plus}/-${stats.minus})`
+          return `• 🔁 ${oldPath} → ${newPath} (+${stats.plus}/-${stats.minus})`
         }
 
         if (status === 'A') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return ` ⮕ 🆕 ${oldPath} (+${stats.plus}/-${stats.minus})`
+          return `• 🆕 ${oldPath} (+${stats.plus}/-${stats.minus})`
         }
 
         if (status === 'D') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return ` ⮕ 🗑 ${oldPath} (+${stats.plus}/-${stats.minus})`
+          return `• 🗑 ${oldPath} (+${stats.plus}/-${stats.minus})`
         }
 
         const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-        return ` ⮕ 📄 ${oldPath} (+${stats.plus}/-${stats.minus})`
+        return `• 📄 ${oldPath} (+${stats.plus}/-${stats.minus})`
       })
       .filter(Boolean)
 
@@ -86,24 +86,16 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
     await sleep(1500)
 
     let filesContent = updatedFiles.length > 0 
-      ? updatedFiles.join('\n┃') 
-      : ' ⮕ Nessun file da aggiornare (Bot già aggiornato)'
+      ? updatedFiles.join('\n') 
+      : '_Nessuna modifica rilevata (sistema già aggiornato)._'
 
     let resultMsg = 
-`╭━━━〔 🔄 *AGGIORNAMENTO* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Livello:* Privilegi Amministratore
-┃━━━━━━━━━━━━━━━━━━
-┃ ⚙️ *Stato del Sistema:*
-┃  ⮕ *Esito:* AGGIORNATO CON SUCCESSO ✅
-┃  ⮕ *File Rilevati:* ${updatedFiles.length}
-┃ 
-┃ 📦 *Dettagli Modifiche:*
-┃${filesContent}
-╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${prefix || '#'}ticket* per 
-> segnalarlo subito allo staff.`.trim()
+`*Aggiornamento completato con successo* 🔄
+
+_Modifiche applicate:_
+${filesContent}
+
+Se riscontri problemi o bug dopo il riavvio, segnalali subito tramite il comando *${prefix || '#'}ticket*.`.trim()
 
     await conn.reply(m.chat, truncate(resultMsg), m)
     await m.react('✅')
@@ -113,7 +105,7 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
     console.error('[update] Errore critico durante l\'aggiornamento:', err)
     await conn.reply(
       m.chat,
-      `\`── ❌ UPDATE ERROR ──\`\n\n\`💥\` ${err.message}\n\n\`[⚡] 888 SYSTEM\``,
+      `*Errore durante l'aggiornamento*\n\n_Dettaglio interno:_\n\`\`\`${err.message}\`\`\``,
       m
     )
     await m.react('❌')
@@ -126,3 +118,4 @@ handler.command = /^(aggiorna|update|aggiornabot)$/i
 handler.owner = true
 
 export default handler
+

@@ -61,21 +61,21 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
 
         if (status.startsWith('R') && newPath) {
           const stats = statMap[newPath] || statMap[oldPath] || { plus: 0, minus: 0 }
-          return `• 🔁 ${oldPath} → ${newPath} (+${stats.plus}/-${stats.minus})`
+          return `  🔁 ${oldPath} → ${newPath} _(+${stats.plus}/-${stats.minus})_`
         }
 
         if (status === 'A') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return `• 🆕 ${oldPath} (+${stats.plus}/-${stats.minus})`
+          return `  🆕 ${oldPath} _(+${stats.plus}/-${stats.minus})_`
         }
 
         if (status === 'D') {
           const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-          return `• 🗑 ${oldPath} (+${stats.plus}/-${stats.minus})`
+          return `  🗑 ${oldPath} _(+${stats.plus}/-${stats.minus})_`
         }
 
         const stats = statMap[oldPath] || { plus: 0, minus: 0 }
-        return `• 📄 ${oldPath} (+${stats.plus}/-${stats.minus})`
+        return `  📄 ${oldPath} _(+${stats.plus}/-${stats.minus})_`
       })
       .filter(Boolean)
 
@@ -87,15 +87,20 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
 
     let filesContent = updatedFiles.length > 0 
       ? updatedFiles.join('\n') 
-      : '_Nessuna modifica rilevata (sistema già aggiornato)._'
+      : '  _Nessun file modificato (sistema già aggiornato)_'
 
     let resultMsg = 
-`*Aggiornamento completato con successo* 🔄
+`✨ *Aggiornamento Sistema*
+───
 
-_Modifiche applicate:_
+🔄 *Stato:* Completato con successo
+📦 *File modificati:* ${updatedFiles.length}
+
+*Dettaglio modifiche:*
 ${filesContent}
 
-Se riscontri problemi o bug dopo il riavvio, segnalali subito tramite il comando *${prefix || '#'}ticket*.`.trim()
+───
+_💡 In caso di bug o anomalie, usa il comando *${prefix || '#'}ticket*._`.trim()
 
     await conn.reply(m.chat, truncate(resultMsg), m)
     await m.react('✅')
@@ -105,7 +110,7 @@ Se riscontri problemi o bug dopo il riavvio, segnalali subito tramite il comando
     console.error('[update] Errore critico durante l\'aggiornamento:', err)
     await conn.reply(
       m.chat,
-      `*Errore durante l'aggiornamento*\n\n_Dettaglio interno:_\n\`\`\`${err.message}\`\`\``,
+      `⚠️ *Errore di Aggiornamento*\n───\n\nNon è stato possibile completare il processo:\n\`\`\`${err.message}\`\`\``,
       m
     )
     await m.react('❌')

@@ -29,7 +29,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   const speed = (performance.now() - handlerStart).toFixed(2)
   const speedWithFont = toMathematicalAlphanumericSymbols(speed)
 
-  const info = `╭━━━〔 🏓 *PING & DIAGNOSTICA* 〕━━━┈
+  const info = `╭━━━〔 🏓 *PING* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Stato:* Online / Attivo
 ┃━━━━━━━━━━━━━━━━━━

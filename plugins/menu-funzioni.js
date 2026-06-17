@@ -97,11 +97,11 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 ┃  [${s(antilinktg)}] ⮕ ${p}antilinktg
 ${catalogs}${ownerSection}
 ┃━━━━━━━━━━━━━━━━━━
-┃ 🟩 = Attivo  |  🟥 = Disattivo
+┃ 🟩 = Attivato  |  🟥 = Disattivato
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ℹ️ *GUIDA RAPIDA USO:*
 ┃  • _Per attivare:_ ${p}attiva [modulo]
-┃  • _Per disattivare:_ ${p}disabilita [modulo]
+┃  • _Per disattivare:_ ${p}disattiva [modulo]
 ╰━━━━━━━━━━━━━━━━━━┈`.trim()
 
   await conn.sendMessage(m.chat, {

@@ -1,8 +1,6 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import { generateWAMessageFromContent, proto } from '@realvare/baileys'
 
-const SUPPORT_GROUP = '120363405035221899@g.us' // Mettete l'id del vostro gruppo privato (non è ChatGPT coglioni, l'ho scritto io Lucifero in persona)
+const SUPPORT_GROUP = '120363405035221899@g.us'
 const pendingFirma = {}
 
 const getGroupJid = async (conn) => {
@@ -21,7 +19,7 @@ let handler = async (m, { conn, text, command }) => {
 
   if (cmd === 'ticket') {
     if (!text || text.trim().length < 10)
-      return m.reply('❌ Scrivi un motivo di almeno *10 caratteri*.\nEsempio: .ticket non riesco ad accedere al gruppo')
+      return m.reply('⚠️ Il motivo deve contenere almeno 10 caratteri.\nEsempio: .ticket non riesco ad accedere al gruppo')
 
     const groupJid = await getGroupJid(conn)
     if (!groupJid) return m.reply('❌ Errore nel trovare il gruppo di supporto.')
@@ -38,33 +36,31 @@ let handler = async (m, { conn, text, command }) => {
       timestamp: Date.now()
     }
 
-    const interactiveButtons = [
-      {
-        name: 'cta_copy',
-        buttonParamsJson: JSON.stringify({
-          display_text: '📋 COPIA TICKET',
-          id: ticketId,
-          copy_code: ticketId
-        })
-      }
-    ]
-
     const staffMessage = {
       viewOnceMessage: {
         message: {
           interactiveMessage: {
             header: {
-              title: '🎫 NUOVO TICKET',
+              title: '🎫 Nuovo Ticket',
               hasMediaAttachment: false
             },
             body: {
-              text: `🎫 *NUOVO TICKET* — ${ticketId}\n\n👤 Utente: *+${numero}*\n💬 Motivo:\n${text.trim()}\n\n📝 Rispondi con *.risposta ${ticketId} [testo]*`
+              text: `• *ID:* ${ticketId}\n• *Utente:* +${numero}\n• *Motivo:* ${text.trim()}\n\n_Rispondi con:_ .risposta ${ticketId} [testo]`
             },
             footer: {
-              text: '📋 Premi il pulsante per copiare il numero del ticket'
+              text: 'Usa il pulsante per copiare il codice del ticket'
             },
             nativeFlowMessage: {
-              buttons: interactiveButtons
+              buttons: [
+                {
+                  name: 'cta_copy',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '📋 Copia ID',
+                    id: ticketId,
+                    copy_code: ticketId
+                  })
+                }
+              ]
             }
           }
         }
@@ -73,43 +69,57 @@ let handler = async (m, { conn, text, command }) => {
 
     await conn.relayMessage(groupJid, staffMessage, {})
 
-    await m.reply(
-`✅ *Ticket aperto con successo!*
-
-🎫 ID: *${ticketId}*
-📨 Il nostro staff ti risponderà il prima possibile.`)
+    await m.reply(`✅ *Ticket aperto con successo!*\n\n• *ID:* ${ticketId}\n_Il nostro staff ti risponderà il prima possibile._`)
     return
   }
 
   if (cmd === 'risposta') {
     const parts = text?.trim().split(' ')
     if (!parts || parts.length < 2)
-      return m.reply('❌ Uso: *.risposta TKT-123456 testo della risposta*')
+      return m.reply('⚠️ Uso corretto: .risposta TKT-123456 testo della risposta')
 
     const ticketId = parts[0].toUpperCase()
     const testo = parts.slice(1).join(' ')
 
     const ticket = global.db.data.tickets[ticketId]
-    if (!ticket) return m.reply(`❌ Ticket *${ticketId}* non trovato.`)
-    if (ticket.status === 'closed') return m.reply(`⚠️ Ticket *${ticketId}* già chiuso.`)
+    if (!ticket) return m.reply(`❌ Ticket ${ticketId} non trovato.`)
+    if (ticket.status === 'closed') return m.reply(`⚠️ Il ticket ${ticketId} è già stato chiuso.`)
 
     pendingFirma[m.sender] = { ticketId, testo }
 
-    return await conn.sendMessage(m.chat, {
-      text:
-`✏️ *Firma il messaggio*
+    const signPrompt = {
+      viewOnceMessage: {
+        message: {
+          interactiveMessage: {
+            header: {
+              title: '✏️ Firma della risposta',
+              hasMediaAttachment: false
+            },
+            body: {
+              text: `Invia il tuo *nome* in chat per firmare la risposta al ticket *${ticketId}*.\n\n_Oppure usa il pulsante per annullare._`
+            },
+            nativeFlowMessage: {
+              buttons: [
+                {
+                  name: 'quick_reply',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '❌ Annulla',
+                    id: '.annullafirma'
+                  })
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
 
-Scrivi il tuo *nome* per firmare la risposta al ticket *${ticketId}*:`,
-      buttons: [
-        { buttonId: `.annullafirma`, buttonText: { displayText: '❌ Annulla' }, type: 1 }
-      ],
-      headerType: 1
-    }, { quoted: m })
+    return await conn.relayMessage(m.chat, signPrompt, { quoted: m })
   }
 
   if (cmd === 'annullafirma') {
     delete pendingFirma[m.sender]
-    return m.reply('🗑️ Risposta annullata.')
+    return m.reply('🗑️ Invio della risposta annullato.')
   }
 }
 
@@ -129,26 +139,15 @@ handler.all = async function (m) {
 
   try {
     await this.sendMessage(ticket.sender, {
-      text:
-`📩 *Risposta al tuo ticket* — ${ticketId}
-
-${testo}
-
-━━━━━━━━━━━━
-✍️ Firmato: *${firma}*
-🏷️ 888 Staff`
+      text: `📩 *Risposta al tuo ticket* (${ticketId})\n\n${testo}\n\n• *Firmato:* ${firma}\n• _888 Staff_`
     })
 
     await this.sendMessage(m.chat, {
-      text:
-`✅ Risposta inviata a *+${ticket.numero}*
-
-🎫 Ticket *${ticketId}* chiuso.
-✍️ Firmato da: *${firma}*`
+      text: `✅ Risposta inviata a *+${ticket.numero}*\n\n• *Ticket:* ${ticketId} (Chiuso)\n• *Firma:* ${firma}`
     })
   } catch (e) {
     await this.sendMessage(m.chat, {
-      text: `❌ Errore nell'invio: ${e.message}`
+      text: `❌ Errore durante l'invio: ${e.message}`
     })
   }
 }

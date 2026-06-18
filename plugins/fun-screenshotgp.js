@@ -1,4 +1,4 @@
-// Plugin by Lucifero & 333 Staff
+// Plugin by Elixir, Punisher & 888 Staff
 import { spawn } from 'child_process'
 import fs from 'fs'
 import path from 'path'
@@ -9,6 +9,16 @@ const FONT_FILES = [
   '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 ]
 const FONT_FILE = FONT_FILES.find((f) => fs.existsSync(f)) || FONT_FILES[1]
+
+const normalizeText = (text) => {
+  if (!text) return ''
+  return String(text)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
 
 const escapeFfmpeg = (text) => {
   return String(text || '')
@@ -57,7 +67,9 @@ const wrapText = (text, maxLen = 34) => {
 }
 
 const renderPreview = async (name, message, profileUrl) => {
-  const nameTxt = escapeFfmpeg(name)
+  const cleanName = normalizeText(name) || "Gruppo WhatsApp"
+  const nameTxt = escapeFfmpeg(cleanName)
+  
   const msgLines = wrapText(message, 34).slice(0, 10)
   const lineCount = msgLines.length
   const fontSpec = `fontfile='${FONT_FILE}'`
@@ -74,23 +86,18 @@ const renderPreview = async (name, message, profileUrl) => {
 
   const filter =
   `[1:v]scale=280:280,format=rgba[avatar_scaled];` +
-
   `color=c=black:s=280x280,format=rgba,` +
   `geq=r='if(lte(hypot(X-140,Y-140),140),255,0)':` +
   `g='if(lte(hypot(X-140,Y-140),140),255,0)':` +
   `b='if(lte(hypot(X-140,Y-140),140),255,0)'[mask];` +
-
   `[avatar_scaled][mask]alphamerge[avatar_round];` +
-
   `[0:v][avatar_round]overlay=70:(main_h-280)/2:format=auto,` +
-
   `drawtext=${fontSpec}:` +
   `text='${nameTxt}':` +
   `fontcolor=white:` +
   `fontsize=${nameFontSize}:` +
   `x=390:` +
   `y=(main_h/2)-100,` +
-
   `${msgDrawtext}`
 
   const inputs = [ICON_PATH, profileUrl || ICON_PATH]
@@ -180,14 +187,40 @@ let handler = async (m, { conn, args, groupMetadata }) => {
     await m.reply('⏳ Genero l\'immagine...')
 
     let authorName = null
-    if (conn.getName) {
+
+    if (m.quoted?.sender === who && m.quoted?.pushName) {
+      authorName = m.quoted.pushName
+    }
+
+    if (!authorName && groupMetadata?.participants) {
+      const participant = groupMetadata.participants.find((p) => p.id === who)
+      if (participant) {
+        authorName = participant.notify || participant.name || participant.vname || null
+      }
+    }
+
+    if (!authorName && conn.getName) {
       try {
-        authorName = await Promise.resolve(conn.getName(who))
+        let fetchedName = await Promise.resolve(conn.getName(who))
+        if (fetchedName && !fetchedName.includes('@') && !/^\d+$/.test(fetchedName.replace(/[\s+]/g, ''))) {
+          authorName = fetchedName
+        }
       } catch (e) {
         authorName = null
       }
     }
-    authorName = authorName || who.split('@')[0]
+
+    if (!authorName && conn.contacts && conn.contacts[who]) {
+      const contact = conn.contacts[who]
+      authorName = contact.name || contact.notify || contact.vname || null
+    }
+
+    if (!authorName || /^\d+$/.test(authorName.replace(/[\s+]/g, ''))) {
+      authorName = "Utente WhatsApp"
+    }
+
+    const cleanedAuthor = normalizeText(authorName)
+    authorName = cleanedAuthor.length > 0 ? cleanedAuthor : "Utente WhatsApp"
 
     const groupName = groupMetadata?.subject || (m.chat || '').split('@')[0] || 'Gruppo'
     const messageText = `${authorName}: ${messageRaw}`

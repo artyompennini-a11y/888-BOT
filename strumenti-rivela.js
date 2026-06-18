@@ -1,5 +1,3 @@
-// Plugin by Elixir, Punisher & 888 staff
-
 let handler = async (m, { conn }) => {
     try {
         if (!m.quoted) {
@@ -50,9 +48,10 @@ let handler = async (m, { conn }) => {
     }
 }
 
+// Cambiato da Regex ad Array di stringhe per massima compatibilità
+handler.command = ['readviewonce', 'rivela', 'viewonce']
 handler.help = ['rivela']
 handler.tags = ['strumenti']
-handler.command = /^(readviewonce|rivela|viewonce)$/i
 handler.group = true
 handler.admin = true
 

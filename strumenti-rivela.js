@@ -1,5 +1,4 @@
 // Plugin by Elixir, Punisher & 888 staff
-import { downloadContentFromMessage } from '@realvare/baileys'
 
 let handler = async (m, { conn }) => {
     try {
@@ -20,45 +19,14 @@ let handler = async (m, { conn }) => {
             throw '『 ⚠️ 』- `Questo non è un contenuto visualizzabile una volta`'
         }
 
-        let buffer
-        const downloadFromStream = async (stream) => {
-            let buf = Buffer.from([])
-            for await (const chunk of stream) {
-                buf = Buffer.concat([buf, chunk])
-            }
-            return buf
-        }
-
-        if (/videoMessage/.test(type)) {
-            try {
-                const stream = await downloadContentFromMessage(msg.videoMessage || msg, 'video')
-                buffer = await downloadFromStream(stream)
-            } catch (err) {
-                console.warn('Fallback al metodo download() per video:', err.message)
-                buffer = await m.quoted.download().catch(() => null)
-            }
-        } else if (/imageMessage/.test(type)) {
-            try {
-                const stream = await downloadContentFromMessage(msg.imageMessage || msg, 'image')
-                buffer = await downloadFromStream(stream)
-            } catch (err) {
-                console.warn('Fallback al metodo download() per immagine:', err.message)
-                buffer = await m.quoted.download().catch(() => null)
-            }
-        } else if (/audioMessage/.test(type)) {
-            try {
-                const stream = await downloadContentFromMessage(msg.audioMessage || msg, 'audio')
-                buffer = await downloadFromStream(stream)
-            } catch (err) {
-                console.warn('Fallback al metodo download() per audio:', err.message)
-                buffer = await m.quoted.download().catch(() => null)
-            }
-        } else {
+        if (!/videoMessage|imageMessage|audioMessage/.test(type)) {
             throw '❌ Formato non supportato o non è un View Once valido'
         }
 
+        const buffer = await m.quoted.download().catch(() => null)
+
         if (!buffer || buffer.length === 0) {
-            throw '❌ Impossibile scaricare il contenuto'
+            throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
         }
 
         const caption = msg?.[type]?.caption || m.quoted?.caption || ''

@@ -31,7 +31,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   const commandList = `
-╭━━━〔 ⚡️ *MENU PRINCIPALE* 〕━━━┈
+╭━━━〔 ⚡️ *MENU* 〕━━━┈
 ┃ *Bot:* ${botName}
 ┃ *Versione:* ${botVersion}
 ┃━━━━━━━━━━━━━━━━━━

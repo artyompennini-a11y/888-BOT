@@ -21,7 +21,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
                       `┗━━━━━━━━━━━━━━━━━━━┛\n\n` +
                       `◈ 📌 *𝗧𝗶𝘁𝗼𝗹𝗼:* ${vid.title}\n` +
                       `◈ ⏱️ *𝗗𝘂𝗿𝗮𝘁𝗮:* ${vid.timestamp}\n\n` +
-                      `*𝗦𝗲𝗹𝗲𝘇𝗶𝗼𝗻𝗮 𝗶λ 𝗳𝗼𝗿𝗺𝗮𝘁𝗼:*`;
+                      `*Seleziona il formato:*`;
 
         return await conn.sendMessage(m.chat, {
             image: { url: vid.thumbnail },

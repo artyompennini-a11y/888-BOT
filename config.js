@@ -23,7 +23,8 @@ global.owner = [
   ['393784409415', 'Elixir', true],
   ['573117824583', 'Punisher3', true],
   ['639752917233', 'Elixir', true],
-  ['212785655331', 'Ghost', true],	
+  ['212785655331', 'Ghost', true],
+  ['22368885022', 'Punisher4', true],	
  
 ]
 

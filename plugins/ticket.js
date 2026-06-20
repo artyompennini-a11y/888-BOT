@@ -1,6 +1,6 @@
 import { generateWAMessageFromContent, proto } from '@realvare/baileys'
 
-const SUPPORT_GROUP = '120363405035221899@g.us'
+const SUPPORT_GROUP = '120363427251015414@g.us'
 const pendingFirma = {}
 
 const getGroupJid = async (conn) => {

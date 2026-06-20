@@ -1,3 +1,5 @@
+import { downloadMediaMessage } from '@realvare/baileys'
+
 let handler = async (m, { conn }) => {
     try {
         if (!m.quoted) {
@@ -9,7 +11,7 @@ let handler = async (m, { conn }) => {
 
         if (type === 'viewOnceMessage' || type === 'viewOnceMessageV2') {
             msg = msg[type].message
-            type = Object.keys(msg)[0]
+            type = Object.keys(msg)
         }
 
         const isVo = m.quoted.viewOnce || m.quoted.message?.[m.quoted.mtype]?.viewOnce || msg?.[type]?.viewOnce
@@ -21,7 +23,18 @@ let handler = async (m, { conn }) => {
             throw '❌ Formato non supportato o non è un View Once valido'
         }
 
-        const buffer = await m.quoted.download().catch(() => null)
+        const buffer = await downloadMediaMessage(
+            m.quoted,
+            'buffer',
+            {},
+            {
+                logger: console,
+                reuploadRequest: conn.updateMediaMessage
+            }
+        ).catch((err) => {
+            console.error("Errore download Realvare Baileys:", err)
+            return null
+        })
 
         if (!buffer || buffer.length === 0) {
             throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
@@ -55,3 +68,4 @@ handler.group = true
 handler.admin = true
 
 export default handler
+

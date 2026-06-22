@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { performance } from 'perf_hooks';
 
-const BASE_PATH = path.join(process.cwd(), 'media', 'giftrasformazioni');
+const BASE_PATH = path.join(process.cwd(), "media", "giftrasformazioni");
 
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -19,45 +19,46 @@ let handler = async (m, { conn, text }) => {
 
     const start = performance.now();
 
-    // Invia il messaggio iniziale e cattura la chiave
-    let loading = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
+    // Invia il messaggio iniziale
+    let loading = await conn.sendMessage(m.chat, { text: "⏳ *Inizio processo di TRASFORMAZIONE...*", mentions: [who] }, { quoted: m });
 
-    // Ciclo di progresso reale che modifica lo stesso messaggio
-    const progresses = ['30%', '50%', '70%', '100%'];
+    // Ciclo di progresso
+    const progresses = ["30%", "50%", "70%", "100%"];
     for (const p of progresses) {
       await wait(500);
       await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: loading.key, mentions: [who] });
     }
 
+    // Utilizzate virgolette doppie per evitare conflitti con gli apostrofi e la parola "di"
     const localVideos = {
-      'Beast Form': 'beast_form.mp4',
-      'Fake Super Saiyan': 'fake_super_saiyan.mp4',
-      'Kaioken': 'kaioken.mp4',
-      'Orange Piccolo': 'orange_piccolo.mp4',
-      'Oozaru': 'ozaru.mp4',
-      'Oozaru Argento': 'ozaru_argento.mp4',
-      'Oozaru Controllato': 'ozaru_controllato.mp4',
-      'Oozaru d\'Oro': 'ozaru_oro.mp4',
-      'Super Saiyan 5 (AF)': 'ssj5_af.mp4',
-      'Super Saiyan Full Power': 'ssj_full_power.mp4',
-      'Super Saiyan di 2° Grado': 'ssj_grado_2.mp4',
-      'Super Saiyan di 3° Grado': 'ssj_grado_3.mp4',
-      'Super Saiyan Ikari': 'ssj_ikari.mp4',
-      'Super Saiyan Leggendario': 'ssj_leggendario.mp4',
-      'Super Saiyan Rose': 'ssj_rose.mp4',
-      'Super Saiyan': 'super_saiyan.mp4',
-      'Super Saiyan 2': 'super_saiyan_2.mp4',
-      'Super Saiyan 3': 'super_saiyan_3.mp4',
-      'Super Saiyan 4 (GT)': 'super_saiyan_4_gt.mp4',
-      'Super Saiyan Blue Evolution': 'super_saiyan_blue_evolution.mp4',
-      'Super Saiyan Blue Kaioken': 'super_saiyan_blue_kaioken.mp4',
-      'Super Saiyan God': 'super_saiyan_god.mp4',
-      'Super Saiyan God SSJ': 'super_saiyan_god_ssj.mp4',
-      'Super Saiyan Kaioken': 'super_saiyan_kaioken.mp4',
-      'Ultimate Form': 'ultimate_form.mp4',
-      'Ultra Ego': 'ultra_ego.mp4',
-      'Ultra Istinto Mastered': 'ultra_istinto_mastered.mp4',
-      'Ultra Istinto Omen': 'ultra_istinto_omen.mp4'
+      "Beast Form": "beast_form.mp4",
+      "Fake Super Saiyan": "fake_super_saiyan.mp4",
+      "Kaioken": "kaioken.mp4",
+      "Orange Piccolo": "orange_piccolo.mp4",
+      "Oozaru": "ozaru.mp4",
+      "Oozaru Argento": "ozaru_argento.mp4",
+      "Oozaru Controllato": "ozaru_controllato.mp4",
+      "Oozaru d'Oro": "ozaru_oro.mp4",
+      "Super Saiyan 5 (AF)": "ssj5_af.mp4",
+      "Super Saiyan Full Power": "ssj_full_power.mp4",
+      "Super Saiyan di 2° Grado": "ssj_grado_2.mp4",
+      "Super Saiyan di 3° Grado": "ssj_grado_3.mp4",
+      "Super Saiyan Ikari": "ssj_ikari.mp4",
+      "Super Saiyan Leggendario": "ssj_leggendario.mp4",
+      "Super Saiyan Rose": "ssj_rose.mp4",
+      "Super Saiyan": "super_saiyan.mp4",
+      "Super Saiyan 2": "super_saiyan_2.mp4",
+      "Super Saiyan 3": "super_saiyan_3.mp4",
+      "Super Saiyan 4 (GT)": "super_saiyan_4_gt.mp4",
+      "Super Saiyan Blue Evolution": "super_saiyan_blue_evolution.mp4",
+      "Super Saiyan Blue Kaioken": "super_saiyan_blue_kaioken.mp4",
+      "Super Saiyan God": "super_saiyan_god.mp4",
+      "Super Saiyan God SSJ": "super_saiyan_god_ssj.mp4",
+      "Super Saiyan Kaioken": "super_saiyan_kaioken.mp4",
+      "Ultimate Form": "ultimate_form.mp4",
+      "Ultra Ego": "ultra_ego.mp4",
+      "Ultra Istinto Mastered": "ultra_istinto_mastered.mp4",
+      "Ultra Istinto Omen": "ultra_istinto_omen.mp4"
     };
 
     const keys = Object.keys(localVideos);
@@ -83,7 +84,7 @@ let handler = async (m, { conn, text }) => {
 ║   888-BOT  ║  
 ╚════════════╝`;
 
-    // CORREZIONE 1: Sintassi corretta per eliminare il messaggio di caricamento
+    // Eliminazione del messaggio di caricamento
     await conn.sendMessage(m.chat, { 
       delete: { 
         remoteJid: m.chat, 
@@ -93,7 +94,7 @@ let handler = async (m, { conn, text }) => {
       } 
     });
 
-    // CORREZIONE 2: Invio del video tramite percorso (molto più leggero e sicuro di readFileSync)
+    // Invio video
     await conn.sendMessage(m.chat, {
         video: { url: videoPath },
         caption: finalMsg,
@@ -108,6 +109,6 @@ let handler = async (m, { conn, text }) => {
 
 handler.help = ['saiyan'];
 handler.tags = ['fun'];
-handler.command = /^(saiyan)$/i;
+handler.command = ['saiyan']; // Cambiato in array per massima compatibilità di rilevamento
 
 export default handler;

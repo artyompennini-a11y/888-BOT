@@ -78,7 +78,7 @@ let handler = async (m, { conn, text }) => {
 🕒 *Tempo:* ${timeTaken}s  
 ━━━━━━━━━━━━━━━━━━━━━  
 ╔════════════╗  
-║   888-BOT               ║  
+║   888-BOT              ║  
 ╚════════════╝`;
 
     try {

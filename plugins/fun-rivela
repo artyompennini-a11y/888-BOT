@@ -1,11 +1,5 @@
 import { downloadContentFromMessage } from '@realvare/baileys'
 
-const MESSAGES_CONFIG = {
-  videoMessage: { type: 'video', ext: 'video.mp4', isAudio: false },
-  imageMessage: { type: 'image', ext: 'image.jpg', isAudio: false },
-  audioMessage: { type: 'audio', ext: 'audio.mp3', isAudio: true }
-}
-
 let handler = async (m, { conn }) => {
   try {
     if (!m.quoted) {
@@ -17,22 +11,39 @@ let handler = async (m, { conn }) => {
     }
 
     const mtype = m.quoted.mtype
-    const config = MESSAGES_CONFIG[mtype]
+    let buffer
 
-    if (!config) {
-      return m.reply('*❌ 𝐅𝐨𝐫𝐦𝐚𝐭𝐨 𝐧𝐨𝐧 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐚𝐭𝐨.*')
+    const downloadFromStream = async stream => {
+      let buffer = Buffer.from([])
+      for await (const chunk of stream) {
+        buffer = Buffer.concat([buffer, chunk])
+      }
+      return buffer
     }
 
-    let buffer
-    try {
-      const stream = await downloadContentFromMessage(m.quoted[mtype], config.type)
-      const chunks = []
-      for await (const chunk of stream) {
-        chunks.push(chunk)
+    if (/videoMessage/.test(mtype)) {
+      try {
+        const stream = await downloadContentFromMessage(m.quoted.videoMessage, 'video')
+        buffer = await downloadFromStream(stream)
+      } catch (e) {
+        buffer = await m.quoted.download()
       }
-      buffer = Buffer.concat(chunks)
-    } catch {
-      buffer = await m.quoted.download?.()
+    } else if (/imageMessage/.test(mtype)) {
+      try {
+        const stream = await downloadContentFromMessage(m.quoted.imageMessage, 'image')
+        buffer = await downloadFromStream(stream)
+      } catch (e) {
+        buffer = await m.quoted.download()
+      }
+    } else if (/audioMessage/.test(mtype)) {
+      try {
+        const stream = await downloadContentFromMessage(m.quoted.audioMessage, 'audio')
+        buffer = await downloadFromStream(stream)
+      } catch (e) {
+        buffer = await m.quoted.download()
+      }
+    } else {
+      return m.reply('*❌ 𝐅𝐨𝐫𝐦𝐚𝐭𝐨 𝐧𝐨𝐧 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐚𝐭𝐨.*')
     }
 
     if (!buffer || !buffer.length) {
@@ -41,13 +52,15 @@ let handler = async (m, { conn }) => {
 
     const caption = m.quoted?.caption || ''
 
-    if (config.isAudio) {
-      await conn.sendFile(m.chat, buffer, config.ext, '', m, false, {
+    if (/videoMessage/.test(mtype)) {
+      await conn.sendFile(m.chat, buffer, 'video.mp4', caption, m)
+    } else if (/imageMessage/.test(mtype)) {
+      await conn.sendFile(m.chat, buffer, 'image.jpg', caption, m)
+    } else if (/audioMessage/.test(mtype)) {
+      await conn.sendFile(m.chat, buffer, 'audio.mp3', '', m, false, {
         mimetype: 'audio/mp4',
         ptt: m.quoted.ptt || false
       })
-    } else {
-      await conn.sendFile(m.chat, buffer, config.ext, caption, m)
     }
 
   } catch (e) {

@@ -4,11 +4,19 @@ import fs from 'fs'
 import path from 'path'
 
 const ICON_PATH = path.join(process.cwd(), 'icone', 'Whatsapp.jpeg')
-const FONT_FILES = [
-  '/usr/share/fonts/truetype/ancient-scripts/Symbola_hint.ttf',
-  '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-]
-const FONT_FILE = FONT_FILES.find((f) => fs.existsSync(f)) || FONT_FILES[1]
+
+const isWin = process.platform === 'win32'
+const FONT_FILES = isWin 
+  ? [
+      'C:\\Windows\\Fonts\\arial.ttf',
+      'C:\\Windows\\Fonts\\segoeui.ttf'
+    ]
+  : [
+      '/usr/share/fonts/truetype/ancient-scripts/Symbola_hint.ttf',
+      '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
+    ]
+
+const FONT_FILE = FONT_FILES.find((f) => fs.existsSync(f)) || (isWin ? 'Arial' : 'sans-serif')
 
 const normalizeText = (text) => {
   if (!text) return ''
@@ -72,7 +80,9 @@ const renderPreview = async (name, message, profileUrl) => {
   
   const msgLines = wrapText(message, 34).slice(0, 10)
   const lineCount = msgLines.length
-  const fontSpec = `fontfile='${FONT_FILE}'`
+
+  const sanitizedFontPath = FONT_FILE.replace(/\\/g, '/').replace(/:/g, '\\:')
+  const fontSpec = `fontfile='${sanitizedFontPath}'`
 
   const nameFontSize = nameTxt.length > 22 ? 64 : nameTxt.length > 16 ? 72 : 80
   let msgFontSize = 74

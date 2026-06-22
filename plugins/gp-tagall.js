@@ -1,10 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
-
-
-
 let handler = async (m, { isOwner, isAdmin, conn, text, participants, args, usedPrefix, command, groupMetadata }) => {
     if (command === 'tagall' || command === 'marcar') {
         if (!(isAdmin || isOwner)) {
@@ -12,8 +5,8 @@ let handler = async (m, { isOwner, isAdmin, conn, text, participants, args, used
             throw false;
         }
 
-        let pesan = args.join` ` || ' 🚨 *𝐀𝐋𝐋𝐄𝐑𝐓𝐀!*';
-        let oi = `📢  ${pesan}`;
+        let pesan = args.join` ` || '🚨 *SVEGLIA!!!*';
+        let oi = `${pesan}`;
 
         let prova = {
             key: {
@@ -31,15 +24,16 @@ let handler = async (m, { isOwner, isAdmin, conn, text, participants, args, used
             participant: "0@s.whatsapp.net"
         };
 
-        let teks = `
-╭─────────╮\n║ *𝐓𝐀𝐆𝐀𝐋𝐋:* 
-║ 🏠 *𝐆𝐫𝐮𝐩𝐩𝐨:*  ${groupMetadata.subject || 'Non sei in un gruppo'}
-║ 👥 *𝐌𝐞𝐦𝐛𝐫𝐢:*  ${participants.length}
-║ 💬 *𝐌𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨:*  ${oi}
-━━━━━━━━━━━━━━
-
- *𝐌𝐄𝐍𝐙𝐈𝐎𝐍𝐈:* \n
-`.trim(); 
+        // Nuova impostazione grafica allineata allo stile del bot
+        let teks = `╭━━━〔 📢 *RICHIAMO GENERALE* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* Tag All Active
+┃━━━━━━━━━━━━━━━━━━
+┃ 🏠 *Gruppo:* ${groupMetadata.subject || 'Non sei in un gruppo'}
+┃ 👥 *Membri:* ${participants.length}
+┃ 💬 *Messaggio:* _${oi}_
+┃━━━━━━━━━━━━━━━━━━
+┃ ⮕ *MENZIONI:*`.trim(); 
 
         const validParticipants = participants.filter(mem => mem && typeof mem.id === 'string' && mem.id.includes('@'))
         const mentionList = validParticipants.map(mem => mem.id)
@@ -57,10 +51,10 @@ let handler = async (m, { isOwner, isAdmin, conn, text, participants, args, used
 
         for (let mem of validParticipants) {
             const name = await getSafeName(mem.id)
-            teks += `\n➤ @${name}`
+            teks += `\n┃ ➤ @${name}`
         }
 
-        teks += `\n𝐁𝐘 𝟴𝟴𝟴 𝗕𝗢𝗧`;
+        teks += `\n╰━━━━━━━━━━━━━━━━━━┈`;
 
         await conn.sendMessage(m.chat, {
             text: teks,

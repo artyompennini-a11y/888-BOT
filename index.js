@@ -128,7 +128,7 @@ async function epicStartup() {
   
   await sleep(300);
   
-  await typeWriterBig('888\nBOT V10\n2026', 120);
+  await typeWriterBig('888\nBOT V 1.0\n2026', 120);
   
   await sleep(400);
   

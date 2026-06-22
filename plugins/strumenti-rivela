@@ -61,7 +61,5 @@ let handler = async (m, { conn }) => {
 handler.help = ['rivela']
 handler.tags = ['strumenti']
 handler.command = /^(readviewonce|rivela|viewonce)$/i
-handler.group = true
-handler.admin = true
 
 export default handler

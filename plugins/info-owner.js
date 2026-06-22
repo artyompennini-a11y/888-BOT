@@ -23,7 +23,7 @@ let handler = async (m) => {
 
 }
 
-handler.help = ['owner']
+handler.help = ['padroni']
 handler.tags = ['main']
 handler.command = ['padroni','proprietario'] 
 export default handler

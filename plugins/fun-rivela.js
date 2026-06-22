@@ -1,5 +1,3 @@
-import { downloadContentFromMessage } from '@realvare/baileys'
-
 let handler = async (m, { conn }) => {
     try {
         if (!m.quoted) {
@@ -11,7 +9,7 @@ let handler = async (m, { conn }) => {
 
         if (type === 'viewOnceMessage' || type === 'viewOnceMessageV2') {
             msg = msg[type].message
-            type = Object.keys(msg)
+            type = Object.keys(msg)[0]
         }
 
         const isVo = m.quoted.viewOnce || m.quoted.message?.[m.quoted.mtype]?.viewOnce || msg?.[type]?.viewOnce
@@ -23,29 +21,23 @@ let handler = async (m, { conn }) => {
             throw '❌ Formato non supportato o non è un View Once valido'
         }
 
-        const mediaData = msg[type]
-        const stream = await downloadContentFromMessage(mediaData, type.replace('Message', ''))
-        let buffer = Buffer.from([])
-        
-        for await (const chunk of stream) {
-            buffer = Buffer.concat([buffer, chunk])
-        }
+        const buffer = await m.quoted.download().catch(() => null)
 
         if (!buffer || buffer.length === 0) {
             throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
         }
 
-        const caption = mediaData?.caption || m.quoted?.caption || ''
-
-        if (type === 'imageMessage') {
+        const caption = msg?.[type]?.caption || m.quoted?.caption || ''
+        
+        if (/imageMessage/.test(type)) {
             await conn.sendMessage(m.chat, { image: buffer, caption: caption }, { quoted: m })
-        } else if (type === 'videoMessage') {
+        } else if (/videoMessage/.test(type)) {
             await conn.sendMessage(m.chat, { video: buffer, caption: caption }, { quoted: m })
-        } else if (type === 'audioMessage') {
+        } else if (/audioMessage/.test(type)) {
             await conn.sendMessage(m.chat, {
                 audio: buffer,
                 mimetype: 'audio/mp4',
-                ptt: mediaData?.ptt || m.quoted?.ptt || false
+                ptt: msg?.[type]?.ptt || m.quoted?.ptt || false
             }, { quoted: m })
         }
 
@@ -59,7 +51,7 @@ let handler = async (m, { conn }) => {
 handler.help = ['rivela']
 handler.tags = ['strumenti']
 handler.command = /^(readviewonce|rivela|viewonce)$/i
-handler.group = true
-handler.admin = true
+handler.group = false
+handler.admin = false
 
 export default handler

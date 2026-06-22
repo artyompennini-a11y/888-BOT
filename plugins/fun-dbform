@@ -19,7 +19,7 @@ let handler = async (m, { conn, text }) => {
 
     const start = performance.now();
 
-    // Invia il messaggio iniziale e cattura la chiave per poterlo modificare
+    // Invia il messaggio iniziale e cattura la chiave
     let loading = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
 
     // Ciclo di progresso reale che modifica lo stesso messaggio
@@ -80,14 +80,22 @@ let handler = async (m, { conn, text }) => {
 🕒 *Tempo:* ${timeTaken}s  
 ━━━━━━━━━━━━━━━━━━━━━  
 ╔════════════╗  
-║   888-BOT     ║  
+║   888-BOT  ║  
 ╚════════════╝`;
 
-    // Cancella il messaggio di caricamento per non intasare la chat
-    await conn.sendMessage(m.chat, { delete: loading.key });
+    // CORREZIONE 1: Sintassi corretta per eliminare il messaggio di caricamento
+    await conn.sendMessage(m.chat, { 
+      delete: { 
+        remoteJid: m.chat, 
+        fromMe: loading.key.fromMe, 
+        id: loading.key.id, 
+        participant: loading.key.participant 
+      } 
+    });
 
+    // CORREZIONE 2: Invio del video tramite percorso (molto più leggero e sicuro di readFileSync)
     await conn.sendMessage(m.chat, {
-        video: fs.readFileSync(videoPath),
+        video: { url: videoPath },
         caption: finalMsg,
         mentions: [who]
     }, { quoted: m });
@@ -100,4 +108,6 @@ let handler = async (m, { conn, text }) => {
 
 handler.help = ['saiyan'];
 handler.tags = ['fun'];
-handler.command = /^saiyan$/i;
+handler.command = /^(saiyan)$/i;
+
+export default handler;

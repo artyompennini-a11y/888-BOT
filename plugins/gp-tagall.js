@@ -60,7 +60,7 @@ let handler = async (m, { isOwner, isAdmin, conn, text, participants, args, used
             teks += `\n➤ @${name}`
         }
 
-        teks += `\n𝐁𝐘  ꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰`;
+        teks += `\n𝐁𝐘 𝟴𝟴𝟴 𝗕𝗢𝗧`;
 
         await conn.sendMessage(m.chat, {
             text: teks,

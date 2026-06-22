@@ -4,40 +4,6 @@ import { performance } from 'perf_hooks';
 
 const BASE_PATH = path.join(process.cwd(), 'media');
 
-const localVideos = {
-  'Beast Form': 'beast_form.mp4',
-  'Fake Super Saiyan': 'fake_super_saiyan.mp4',
-  'Kaioken': 'kaioken.mp4',
-  'Orange Piccolo': 'orange_piccolo.mp4',
-  'Oozaru': 'ozaru.mp4',
-  'Oozaru Argento': 'ozaru_argento.mp4',
-  'Oozaru Controllato': 'ozaru_controllato.mp4',
-  'Oozaru d Oro': 'ozaru_oro.mp4',
-  'Super Saiyan 5 (AF)': 'ssj5_af.mp4',
-  'Super Saiyan Full Power': 'ssj_full_power.mp4',
-  'Super Saiyan di 2 Grado': 'ssj_grado_2.mp4',
-  'Super Saiyan di 3 Grado': 'ssj_grado_3.mp4',
-  'Super Saiyan Ikari': 'ssj_ikari.mp4',
-  'Super Saiyan Leggendario': 'ssj_leggendario.mp4',
-  'Super Saiyan Rose': 'ssj_rose.mp4',
-  'Super Saiyan': 'super_saiyan.mp4',
-  'Super Saiyan 2': 'super_saiyan_2.mp4',
-  'Super Saiyan 3': 'super_saiyan_3.mp4',
-  'Super Saiyan 4 (GT)': 'super_saiyan_4_gt.mp4',
-  'Super Saiyan Blue Evolution': 'super_saiyan_blue_evolution.mp4',
-  'Super Saiyan Blue Kaioken': 'super_saiyan_blue_kaioken.mp4',
-  'Super Saiyan God': 'super_saiyan_god.mp4',
-  'Super Saiyan God SSJ': 'super_saiyan_god_ssj.mp4',
-  'Super Saiyan Kaioken': 'super_saiyan_kaioken.mp4',
-  'Ultimate Form': 'ultimate_form.mp4',
-  'Ultra Ego': 'ultra_ego.mp4',
-  'Ultra Istinto Mastered': 'ultra_istinto_mastered.mp4',
-  'Ultra Istinto Omen': 'ultra_istinto_omen.mp4'
-};
-
-const keys = Object.keys(localVideos);
-const progresses = ['30%', '50%', '70%', '100%'];
-
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
 }
@@ -55,13 +21,47 @@ let handler = async (m, { conn, text }) => {
 
     let loading = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
 
+    const progresses = ['30%', '50%', '70%', '100%'];
     for (const p of progresses) {
       await wait(500);
       await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: loading.key, mentions: [who] });
     }
 
+    const localVideos = {
+      'Beast Form': 'beast_form.mp4',
+      'Fake Super Saiyan': 'fake_super_saiyan.mp4',
+      'Kaioken': 'kaioken.mp4',
+      'Orange Piccolo': 'orange_piccolo.mp4',
+      'Oozaru': 'ozaru.mp4',
+      'Oozaru Argento': 'ozaru_argento.mp4',
+      'Oozaru Controllato': 'ozaru_controllato.mp4',
+      'Oozaru d Oro': 'ozaru_oro.mp4',
+      'Super Saiyan 5 (AF)': 'ssj5_af.mp4',
+      'Super Saiyan Full Power': 'ssj_full_power.mp4',
+      'Super Saiyan di 2 Grado': 'ssj_grado_2.mp4',
+      'Super Saiyan di 3 Grado': 'ssj_grado_3.mp4',
+      'Super Saiyan Ikari': 'ssj_ikari.mp4',
+      'Super Saiyan Leggendario': 'ssj_leggendario.mp4',
+      'Super Saiyan Rose': 'ssj_rose.mp4',
+      'Super Saiyan': 'super_saiyan.mp4',
+      'Super Saiyan 2': 'super_saiyan_2.mp4',
+      'Super Saiyan 3': 'super_saiyan_3.mp4',
+      'Super Saiyan 4 (GT)': 'super_saiyan_4_gt.mp4',
+      'Super Saiyan Blue Evolution': 'super_saiyan_blue_evolution.mp4',
+      'Super Saiyan Blue Kaioken': 'super_saiyan_blue_kaioken.mp4',
+      'Super Saiyan God': 'super_saiyan_god.mp4',
+      'Super Saiyan God SSJ': 'super_saiyan_god_ssj.mp4',
+      'Super Saiyan Kaioken': 'super_saiyan_kaioken.mp4',
+      'Ultimate Form': 'ultimate_form.mp4',
+      'Ultra Ego': 'ultra_ego.mp4',
+      'Ultra Istinto Mastered': 'ultra_istinto_mastered.mp4',
+      'Ultra Istinto Omen': 'ultra_istinto_omen.mp4'
+    };
+
+    const keys = Object.keys(localVideos);
     const chosen = pickRandom(keys);
     const videoFile = localVideos[chosen];
+   
     const videoPath = path.join(BASE_PATH, videoFile);
 
     if (!fs.existsSync(videoPath)) {
@@ -82,7 +82,14 @@ let handler = async (m, { conn, text }) => {
 ╚════════════╝`;
 
     try {
-      await conn.sendMessage(m.chat, { delete: loading.key });
+      await conn.sendMessage(m.chat, { 
+        delete: { 
+          remoteJid: m.chat, 
+          fromMe: loading.key.fromMe, 
+          id: loading.key.id, 
+          participant: loading.key.participant 
+        } 
+      });
     } catch (e) {}
 
     await conn.sendMessage(m.chat, {

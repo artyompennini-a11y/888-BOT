@@ -18,16 +18,16 @@ const checkAndInstallModules = () => {
   if (!existsSync(nodeModulesPath)) {
     console.clear();
     console.log('\n\n');
-    console.log('\x1b[95m' + '═'.repeat(70) + '\x1b[0m'); // Magenta Chiaro
-    console.log('\x1b[96m\n    Bro e senza moduli come avvi il bot? \x1b[0m'); // Ciano Chiaro
-    console.log('\x1b[95m    Menomale che ci sono io! 😎\x1b[0m\n'); // Magenta Chiaro
-    console.log('\x1b[95m' + '═'.repeat(70) + '\x1b[0m');
-    console.log('\n\x1b[95m⚡ Installazione moduli in corso...\x1b[0m\n');
+    console.log('\x1b[90m' + '═'.repeat(70) + '\x1b[0m'); // Grigio Scuro
+    console.log('\x1b[92m\n    Bro e senza moduli come avvi il bot? \x1b[0m'); // Verde Chiaro
+    console.log('\x1b[90m    Menomale che ci sono io! 😎\x1b[0m\n');
+    console.log('\x1b[90m' + '═'.repeat(70) + '\x1b[0m');
+    console.log('\n\x1b[92m⚡ Installazione moduli in corso...\x1b[0m\n');
     
     try {
       execSync('npm install', { stdio: 'inherit' });
       console.log('\n\x1b[32m✓ Moduli installati con successo!\x1b[0m');
-      console.log('\x1b[96m🚀 Avvio del bot...\x1b[0m\n');
+      console.log('\x1b[92m🚀 Avvio del bot...\x1b[0m\n');
     } catch (error) {
       console.error('\n\x1b[31m✖ Errore durante l\'installazione dei moduli\x1b[0m');
       process.exit(1);
@@ -61,7 +61,7 @@ const typeWriterBig = async (text, delay = 100) => {
     cfonts.say(current, {
       font: 'block',
       align: 'center',
-      gradient: ['magenta', 'cyan'], // Sfumatura a tema Synthwave
+      gradient: ['green', 'yellow'], // Sfumatura a tema Hacker
       transitionGradient: true,
     });
     await sleep(delay);
@@ -75,12 +75,12 @@ const loading = async (text, duration = 1000) => {
   
   return new Promise(resolve => {
     const interval = setInterval(() => {
-      process.stdout.write(`\r\x1b[95m${frames[i]} \x1b[96m${text}\x1b[0m`); // Magenta e Ciano Chiaro
+      process.stdout.write(`\r\x1b[92m${frames[i]} \x1b[90m${text}\x1b[0m`); // Verde Chiaro e Grigio
       i = (i + 1) % frames.length;
       
       if (Date.now() - startTime >= duration) {
         clearInterval(interval);
-        process.stdout.write(`\r\x1b[32m✓ \x1b[96m${text}\x1b[0m\n`);
+        process.stdout.write(`\r\x1b[32m✓ \x1b[92m${text}\x1b[0m\n`);
         resolve();
       }
     }, 60);
@@ -97,14 +97,14 @@ const progressBar = async (label, duration = 1200) => {
     const empty = barLength - filled;
     const bar = '█'.repeat(filled) + '░'.repeat(empty);
     const percent = Math.floor((i / steps) * 100);
-    process.stdout.write(`\r\x1b[96m${label} \x1b[95m[${bar}] \x1b[96m${percent}%\x1b[0m`); // Mix Neon
+    process.stdout.write(`\r\x1b[92m${label} \x1b[90m[${bar}] \x1b[92m${percent}%\x1b[0m`); // Stile Terminale
     await sleep(stepDuration);
   }
   console.log();
 };
 
 const pulse = async (text, times = 3) => {
-  const colors = ['\x1b[95m', '\x1b[96m', '\x1b[35m', '\x1b[36m']; // Alternanza tra magenta/ciano chiari e scuri
+  const colors = ['\x1b[32m', '\x1b[92m', '\x1b[32m', '\x1b[90m']; // Pulsazione sfumata verde/grigia
   for (let i = 0; i < times; i++) {
     for (let color of colors) {
       process.stdout.write(`\r${color}${text}\x1b[0m`);
@@ -114,7 +114,7 @@ const pulse = async (text, times = 3) => {
   console.log();
 };
 
-const typeWriter = async (text, delay = 25, color = '\x1b[96m') => {
+const typeWriter = async (text, delay = 25, color = '\x1b[92m') => {
   const reset = '\x1b[0m';
   for (let char of text) {
     process.stdout.write(color + char + reset);
@@ -133,10 +133,10 @@ async function epicStartup() {
   await sleep(400);
   
   console.log('\n');
-  await typeWriter('                 Ultimo Aggiornamento: 21/05/2026', 40, '\x1b[95m');
+  await typeWriter('                 Ultimo Aggiornamento: 21/05/2026', 40, '\x1b[90m');
   
   console.log('\n');
-  await typeWriter('              Edit by Elixir, Punisher & 888 Staff', 35, '\x1b[96m');
+  await typeWriter('              Edit by Elixir, Punisher & 888 Staff', 35, '\x1b[92m');
   
   console.log('\n\n');
   console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');
@@ -183,10 +183,10 @@ async function start(file) {
   let processInstance = fork();
 
   processInstance.on('message', (data) => {
-    console.log('\x1b[96m[→]\x1b[0m', data);
+    console.log('\x1b[92m[→]\x1b[0m', data);
     switch (data) {
       case 'reset':
-        console.log('\x1b[95m\n⟳ Riavvio in corso...\x1b[0m\n');
+        console.log('\x1b[90m\n⟳ Riavvio in corso...\x1b[0m\n');
         processInstance.kill();
         isRunning = false;
         start(file);
@@ -223,4 +223,4 @@ async function start(file) {
   }
 }
 
-start('punisher.js');            
+start('punisher.js');           

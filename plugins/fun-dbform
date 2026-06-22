@@ -19,14 +19,14 @@ let handler = async (m, { conn, text }) => {
 
     const start = performance.now();
 
-    // Invia il messaggio iniziale e salva la chiave per modificarlo successivamente
-    let { key } = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
+    // Invia il messaggio iniziale e cattura la chiave per poterlo modificare
+    let loading = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
 
-    // Ciclo di progresso che modifica effettivamente il messaggio inviato
+    // Ciclo di progresso reale che modifica lo stesso messaggio
     const progresses = ['30%', '50%', '70%', '100%'];
     for (const p of progresses) {
       await wait(500);
-      await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: key, mentions: [who] });
+      await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: loading.key, mentions: [who] });
     }
 
     const localVideos = {
@@ -63,10 +63,11 @@ let handler = async (m, { conn, text }) => {
     const keys = Object.keys(localVideos);
     const chosen = pickRandom(keys);
     const videoFile = localVideos[chosen];
+    
     const videoPath = path.join(BASE_PATH, videoFile);
 
     if (!fs.existsSync(videoPath)) {
-      await conn.sendMessage(m.chat, { text: `⚠️ Errore: Il file *${videoFile}* non esiste.` }, { quoted: m });
+      await conn.sendMessage(m.chat, { text: `⚠️ Errore: Il file *${videoFile}* non esiste nella cartella.` }, { quoted: m });
       return;
     }
 
@@ -82,8 +83,8 @@ let handler = async (m, { conn, text }) => {
 ║   888-BOT  ║  
 ╚════════════╝`;
 
-    // Elimina il messaggio di caricamento prima di mandare il video finale (opzionale, ma pulisce la chat)
-    await conn.sendMessage(m.chat, { delete: key });
+    // Cancella il messaggio di caricamento per non intasare la chat
+    await conn.sendMessage(m.chat, { delete: loading.key });
 
     await conn.sendMessage(m.chat, {
         video: fs.readFileSync(videoPath),

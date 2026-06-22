@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { performance } from 'perf_hooks';
 
-const BASE_PATH = path.join(process.cwd(), 'media', 'giftrasformazioni'); 
+const BASE_PATH = path.join(process.cwd(), 'media', 'giftrasformazioni');
 
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -63,7 +63,7 @@ let handler = async (m, { conn, text }) => {
     const keys = Object.keys(localVideos);
     const chosen = pickRandom(keys);
     const videoFile = localVideos[chosen];
-    
+   
     const videoPath = path.join(BASE_PATH, videoFile);
 
     if (!fs.existsSync(videoPath)) {
@@ -80,7 +80,7 @@ let handler = async (m, { conn, text }) => {
 🕒 *Tempo:* ${timeTaken}s  
 ━━━━━━━━━━━━━━━━━━━━━  
 ╔════════════╗  
-║   888-BOT  ║  
+║   888-BOT     ║  
 ╚════════════╝`;
 
     // Cancella il messaggio di caricamento per non intasare la chat
@@ -89,7 +89,7 @@ let handler = async (m, { conn, text }) => {
     await conn.sendMessage(m.chat, {
         video: fs.readFileSync(videoPath),
         caption: finalMsg,
-        mentions: [who] 
+        mentions: [who]
     }, { quoted: m });
 
   } catch (err) {
@@ -100,6 +100,4 @@ let handler = async (m, { conn, text }) => {
 
 handler.help = ['saiyan'];
 handler.tags = ['fun'];
-handler.command = /^(saiyan)$/i;
-
-export default handler;
+handler.command = /^saiyan$/i;

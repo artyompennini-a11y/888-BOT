@@ -1,76 +1,64 @@
 import { downloadContentFromMessage } from '@realvare/baileys'
 
 let handler = async (m, { conn }) => {
-  try {
-    if (!m.quoted) {
-      return m.reply('*⚠️ 𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚 𝐮𝐧 𝐜𝐨𝐧𝐭𝐞𝐧𝐮𝐭𝐨 𝐯𝐢𝐬𝐮𝐚𝐥𝐢𝐳𝐳𝐚𝐛𝐢𝐥𝐞 𝐮𝐧𝐚 𝐬𝐨𝐥𝐚 𝐯𝐨𝐥𝐭𝐚.*')
+    try {
+        if (!m.quoted) {
+            throw '『 ⚠️ 』- `Rispondi a un contenuto visualizzabile una volta`'
+        }
+
+        let type = m.quoted.mtype
+        let msg = m.quoted.message
+
+        if (type === 'viewOnceMessage' || type === 'viewOnceMessageV2') {
+            msg = msg[type].message
+            type = Object.keys(msg)
+        }
+
+        const isVo = m.quoted.viewOnce || m.quoted.message?.[m.quoted.mtype]?.viewOnce || msg?.[type]?.viewOnce
+        if (!isVo) {
+            throw '『 ⚠️ 』- `Questo non è un contenuto visualizzabile una volta`'
+        }
+
+        if (!/videoMessage|imageMessage|audioMessage/.test(type)) {
+            throw '❌ Formato non supportato o non è un View Once valido'
+        }
+
+        const mediaData = msg[type]
+        const stream = await downloadContentFromMessage(mediaData, type.replace('Message', ''))
+        let buffer = Buffer.from([])
+        
+        for await (const chunk of stream) {
+            buffer = Buffer.concat([buffer, chunk])
+        }
+
+        if (!buffer || buffer.length === 0) {
+            throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
+        }
+
+        const caption = mediaData?.caption || m.quoted?.caption || ''
+
+        if (type === 'imageMessage') {
+            await conn.sendMessage(m.chat, { image: buffer, caption: caption }, { quoted: m })
+        } else if (type === 'videoMessage') {
+            await conn.sendMessage(m.chat, { video: buffer, caption: caption }, { quoted: m })
+        } else if (type === 'audioMessage') {
+            await conn.sendMessage(m.chat, {
+                audio: buffer,
+                mimetype: 'audio/mp4',
+                ptt: mediaData?.ptt || m.quoted?.ptt || false
+            }, { quoted: m })
+        }
+
+    } catch (e) {
+        console.error(e)
+        const errorMessage = typeof e === 'string' ? e : '❌ Si è verificato un errore nel download del View Once.'
+        await conn.sendMessage(m.chat, { text: errorMessage }, { quoted: m })
     }
-
-    if (!m.quoted?.viewOnce) {
-      return m.reply('*⚠️ 𝐐𝐮𝐞𝐬𝐭𝐨 𝐧𝐨𝐧 𝐞̀ 𝐮𝐧 𝐜𝐨𝐧𝐭𝐞𝐧𝐮𝐭𝐨 𝐯𝐢𝐬𝐮𝐚𝐥𝐢𝐳𝐳𝐚𝐛𝐢𝐥𝐞 𝐮𝐧𝐚 𝐬𝐨𝐥𝐚 𝐯𝐨𝐥𝐭𝐚.*')
-    }
-
-    const mtype = m.quoted.mtype
-    let buffer
-
-    const downloadFromStream = async stream => {
-      let buffer = Buffer.from([])
-      for await (const chunk of stream) {
-        buffer = Buffer.concat([buffer, chunk])
-      }
-      return buffer
-    }
-
-    if (/videoMessage/.test(mtype)) {
-      try {
-        const stream = await downloadContentFromMessage(m.quoted.videoMessage, 'video')
-        buffer = await downloadFromStream(stream)
-      } catch (e) {
-        buffer = await m.quoted.download()
-      }
-    } else if (/imageMessage/.test(mtype)) {
-      try {
-        const stream = await downloadContentFromMessage(m.quoted.imageMessage, 'image')
-        buffer = await downloadFromStream(stream)
-      } catch (e) {
-        buffer = await m.quoted.download()
-      }
-    } else if (/audioMessage/.test(mtype)) {
-      try {
-        const stream = await downloadContentFromMessage(m.quoted.audioMessage, 'audio')
-        buffer = await downloadFromStream(stream)
-      } catch (e) {
-        buffer = await m.quoted.download()
-      }
-    } else {
-      return m.reply('*❌ 𝐅𝐨𝐫𝐦𝐚𝐭𝐨 𝐧𝐨𝐧 𝐬𝐮𝐩𝐩𝐨𝐫𝐭𝐚𝐭𝐨.*')
-    }
-
-    if (!buffer || !buffer.length) {
-      return m.reply('*❌ 𝐈𝐦𝐩𝐨𝐬𝐬𝐢𝐛𝐢𝐥𝐞 𝐬𝐜𝐚𝐫𝐢𝐜𝐚𝐫𝐞 𝐢𝐥 𝐜𝐨𝐧𝐭𝐞𝐧𝐮𝐭𝐨.*')
-    }
-
-    const caption = m.quoted?.caption || ''
-
-    if (/videoMessage/.test(mtype)) {
-      await conn.sendFile(m.chat, buffer, 'video.mp4', caption, m)
-    } else if (/imageMessage/.test(mtype)) {
-      await conn.sendFile(m.chat, buffer, 'image.jpg', caption, m)
-    } else if (/audioMessage/.test(mtype)) {
-      await conn.sendFile(m.chat, buffer, 'audio.mp3', '', m, false, {
-        mimetype: 'audio/mp4',
-        ptt: m.quoted.ptt || false
-      })
-    }
-
-  } catch (e) {
-    throw new Error(`*❌ 𝐄𝐫𝐫𝐨𝐫𝐞*\n\n${e.message || e}`)
-  }
 }
 
 handler.help = ['rivela']
-handler.tags = ['gruppo']
-handler.command = ['readviewonce', 'rivela', 'viewonce']
+handler.tags = ['strumenti']
+handler.command = /^(readviewonce|rivela|viewonce)$/i
 handler.group = true
 handler.admin = true
 

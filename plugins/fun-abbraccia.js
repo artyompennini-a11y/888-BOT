@@ -1,56 +1,45 @@
-//Plugin by Gab, Lucifero & 333 staff
+globalThis.abbracciRank = globalThis.abbracciRank || {};
 
-let handler = async (m, { conn, usedPrefix, command, text }) => {
-    let who;
+let handler = async (m, { conn }) => {
+  let sender = m.sender;
+  let target = null;
 
+  if (m.mentionedJid && m.mentionedJid[0]) {
+    target = m.mentionedJid[0];
+  } else if (m.quoted && m.quoted.sender) {
+    target = m.quoted.sender;
+  } else {
+    return m.reply("Devi menzionare qualcuno a cui vuoi dare un abbraccio! 🤗🫂");
+  }
 
-    if (m.isGroup) {
-        who = m.mentionedJid[0] 
-            ? m.mentionedJid[0] 
-            : m.quoted ? m.quoted.sender 
-            : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' 
-            : false;
-    } else {
-        who = text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : m.chat;
-    }
+  
 
+  
+  const frasi = [
+    `@${sender.split("@")[0]} stringe forte @${target.split("@")[0]}! 🤗💞`,
+    `Un abbraccio scalda-cuore da @${sender.split("@")[0]} per @${target.split("@")[0]}! ✨💖`,
+    `@${sender.split("@")[0]} corre ad abbracciare @${target.split("@")[0]}! 🫂❤️`,
+    `Niente è meglio di un abbraccio tra @${sender.split("@")[0]} e @${target.split("@")[0]}! 🥰❣`
+  ];
 
-    if (!who) return m.reply(`𝐦𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐥𝐚 𝐩𝐞𝐫𝐬𝐨𝐧𝐚 𝐝𝐚 𝐚𝐛𝐛𝐫𝐚𝐜𝐜𝐢𝐚𝐫𝐞 🫂`);
+  const fraseRandom = frasi[Math.floor(Math.random() * frasi.length)];
+  
+  
+  if (!globalThis.abbracciRank[target]) globalThis.abbracciRank[target] = 0;
+  globalThis.abbracciRank[target] += 1;
 
+  const testoFinale = `✨ *HUG!* ✨\n\n${fraseRandom}\n\n🏆 Abbracci ricevuti da @${target.split("@")[0]}: *${globalThis.abbracciRank[target]}* 🫂`;
 
-    const thumbnailUrl = "https://files.catbox.moe/gg4nzm.png"; // URL dell'immagine in miniatura
-    const thumbnailBuffer = await (await fetch(thumbnailUrl)).buffer();
-    const thumbnailText = "𝐀𝐁𝐁𝐑𝐀𝐂𝐂𝐈𝐎"; // Testo miniatura compatibile
-
-
-    let abrazo = await conn.sendMessage(m.chat, {
-        text: `══════•⊰✰⊱•══════
-@${who.split('@')[0]} 𝐬𝐞𝐢 𝐬𝐭𝐚𝐭𝐨/𝐚 𝐚𝐛𝐛𝐫𝐚𝐜𝐜𝐢𝐚𝐭𝐨/𝐚 𝐝𝐚 @${m.sender.split('@')[0]}
-══════•⊰✰⊱•══════`,
-        mentions: [who, m.sender],
-    }, {
-        quoted: {
-            key: {
-                participants: "0@s.whatsapp.net",
-                fromMe: false,
-                id: "Halo",
-            },
-            message: {
-                locationMessage: {
-                    name: thumbnailText, // Scritta in miniatura compatibile
-                    jpegThumbnail: thumbnailBuffer, // Immagine in miniatura
-                },
-            },
-            participant: "0@s.whatsapp.net",
-        },
-    });
-
-
-    conn.sendMessage(m.chat, { react: { text: '', key: abrazo.key } });
+  
+  await conn.sendMessage(m.chat, {
+    text: testoFinale,
+    mentions: [sender, target]
+  }, { quoted: m });
 };
 
-handler.command = ['abbraccia'];
-handler.help = ['𝐚𝐛𝐛𝐫𝐚𝐜𝐜𝐢𝐚 @𝐭𝐚𝐠'];
-handler.tags = ['fun'];
+handler.help = ['abbraccia'];
+handler.tags = ['giochi'];
+handler.command = /^(abbraccia|hug)$/i;
+handler.group = true;
 
 export default handler;

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { performance } from 'perf_hooks';
 
-const BASE_PATH = './media/giftrasformazioni'; 
+const BASE_PATH = path.join(process.cwd(), 'media', 'giftrasformazioni'); 
 
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -14,22 +14,20 @@ function wait(ms) {
 
 let handler = async (m, { conn, text }) => {
   try {
-  
     let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
     let userId = who.split('@')[0];
 
-    await m.reply('⏳ *Inizio processo di TRASFORMAZIONE...*', null, { mentions: [who] });
+    const start = performance.now();
 
+    // Invia il messaggio iniziale e salva la chiave per modificarlo successivamente
+    let { key } = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
+
+    // Ciclo di progresso che modifica effettivamente il messaggio inviato
     const progresses = ['30%', '50%', '70%', '100%'];
     for (const p of progresses) {
       await wait(500);
-     
+      await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: key, mentions: [who] });
     }
-
-    const start = performance.now();
-    await wait(1000); 
-    const end = performance.now();
-    const timeTaken = ((end - start) / 1000).toFixed(2);
 
     const localVideos = {
       'Beast Form': 'beast_form.mp4',
@@ -65,17 +63,17 @@ let handler = async (m, { conn, text }) => {
     const keys = Object.keys(localVideos);
     const chosen = pickRandom(keys);
     const videoFile = localVideos[chosen];
-    
-    const videoPath = path.join(process.cwd(), 'media', 'giftrasformazioni', videoFile);
+    const videoPath = path.join(BASE_PATH, videoFile);
 
     if (!fs.existsSync(videoPath)) {
-      await m.reply(`⚠️ Errore: Il file *${videoFile}* non esiste.`);
+      await conn.sendMessage(m.chat, { text: `⚠️ Errore: Il file *${videoFile}* non esiste.` }, { quoted: m });
       return;
     }
 
-    
-    const finalMsg = `*✔️ TRASFORMAZIONE COMPLETATA*  
-━━━━━━━━━━━━━━━━━━━━━  
+    const end = performance.now();
+    const timeTaken = ((end - start) / 1000).toFixed(2);
+
+    const finalMsg = `*✔️ TRASFORMAZIONE COMPLETATA* ━━━━━━━━━━━━━━━━━━━━━  
 👤 *Guerriero:* @${userId}  
 🪐 *Forma:* ${chosen}  
 🕒 *Tempo:* ${timeTaken}s  
@@ -83,6 +81,9 @@ let handler = async (m, { conn, text }) => {
 ╔════════════╗  
 ║   888-BOT  ║  
 ╚════════════╝`;
+
+    // Elimina il messaggio di caricamento prima di mandare il video finale (opzionale, ma pulisce la chat)
+    await conn.sendMessage(m.chat, { delete: key });
 
     await conn.sendMessage(m.chat, {
         video: fs.readFileSync(videoPath),
@@ -96,8 +97,8 @@ let handler = async (m, { conn, text }) => {
   }
 };
 
-handler.help = ['saiyan']
-handler.tags = ['fun']
-handler.command = /^(saiyan)$/i // Accetta solo .saiyan
+handler.help = ['saiyan'];
+handler.tags = ['fun'];
+handler.command = /^(saiyan)$/i;
 
 export default handler;

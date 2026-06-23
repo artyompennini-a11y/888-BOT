@@ -1,15 +1,12 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, participants }) => {
     const chat = global.db.data.chats[m.chat];
     if (!chat?.topUsers || Object.keys(chat.topUsers).length === 0) {
         return await conn.sendMessage(m.chat, { text: 'Nessun messaggio registrato in questo gruppo.' });
     }
 
+    const groupMembers = new Set(participants?.map(p => p.id) || [])
     const users = Object.entries(chat.topUsers)
-        .filter(([jid]) => !jid.endsWith('@g.us') && jid !== conn.user.jid);
+        .filter(([jid]) => groupMembers.has(jid) && jid !== conn.user.jid);
 
     if (users.length === 0) {
         return await conn.sendMessage(m.chat, { text: 'Nessun messaggio registrato in questo gruppo.' });

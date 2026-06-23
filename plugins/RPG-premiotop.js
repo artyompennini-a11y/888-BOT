@@ -1,14 +1,14 @@
-//Plugin by Gab, Lucifero & 333 staff
-
+//Plugin by Elixir, Punisher & 888 staff
 import fetch from 'node-fetch';
 
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, participants }) => {
     let chat = global.db.data.chats[m.chat] || {};
     chat.topUsers = chat.topUsers || {};
 
+    const groupMembers = new Set(participants?.map(p => p.id) || [])
 
     let topUsers = Object.entries(chat.topUsers)
-        .filter(([jid]) => jid !== m.chat && global.db.data.users[jid])
+        .filter(([jid]) => groupMembers.has(jid) && global.db.data.users[jid])
         .sort((a, b) => b[1] - a[1]);
 
     if (topUsers.length === 0) {

@@ -13,7 +13,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   const botName = global.db.data.nomedelbot || "𝟴𝟴𝟴 𝗕𝗢𝗧";
-  const botVersion = global.db.data.version || "10.0.0";
+  const botVersion = global.db.data.version || "1.0";
 
   const fake = {
     key: {

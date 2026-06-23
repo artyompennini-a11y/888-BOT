@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Elixir, Punisher & 888 staff
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const STATS_KEY = 'statsgiornaliere'
@@ -112,7 +112,9 @@ let handler = async (m, { conn, participants, groupMetadata, isAdmin }) => {
     const total = gstats.total || 0
     const usersObj = gstats.users || {}
 
+    const groupMembers = new Set(participants?.map(p => p.id) || [])
     const entries = Object.entries(usersObj)
+      .filter(([jid]) => groupMembers.has(jid))
     entries.sort((a,b) => b[1] - a[1])
 
     const top3 = entries.slice(0,3)
@@ -158,8 +160,13 @@ let handler = async (m, { conn, participants, groupMetadata, isAdmin }) => {
       prizesText = '\nImpossibile assegnare premi (errore interno)'
     }
 
+    let botGroups = {}
+    try { botGroups = await conn.groupFetchAllParticipating().catch(() => ({})) } catch(e) {}
+    const activeGroups = new Set(Object.keys(botGroups))
+
     const groups = []
     for (const [chatId, data] of Object.entries(global.dailyStats.chats || {})) {
+      if (!activeGroups.has(chatId)) continue
       groups.push({ chatId, total: data.total || 0 })
     }
     groups.sort((a,b)=> b.total - a.total)

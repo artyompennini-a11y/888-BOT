@@ -23,11 +23,12 @@ const normalizeText = (text) => {
 const escapeFfmpeg = (text) => {
   return String(text || '')
     .replace(/\\/g, '\\\\')
-    .replace(/'/g, "'\\''")
+    .replace(/'/g, "\\'")
     .replace(/:/g, '\\:')
     .replace(/,/g, '\\,')
     .replace(/=/g, '\\=')
     .replace(/%/g, '\\%')
+    .replace(/\n/g, '\\n')
 }
 
 const wrapText = (text, maxLen = 34) => {
@@ -83,19 +84,21 @@ const renderPreview = async (name, message, profileUrl) => {
     `drawtext=${fontSpec}:text='${escapeFfmpeg(line)}':fontcolor=white:fontsize=${msgFontSize}:x=390:y=(main_h/2)+20+${idx * (msgFontSize + 10)}:box=1:boxcolor=black@0.4:boxborderw=6`
   ).join(',')
 
-  let filter = `[0:v]scale=1280:720,format=rgba[bg];` +
+  const filter =
   `[1:v]scale=280:280,format=rgba[avatar_scaled];` +
   `color=c=black:s=280x280,format=rgba,` +
   `geq=r='if(lte(hypot(X-140,Y-140),140),255,0)':` +
   `g='if(lte(hypot(X-140,Y-140),140),255,0)':` +
   `b='if(lte(hypot(X-140,Y-140),140),255,0)'[mask];` +
   `[avatar_scaled][mask]alphamerge[avatar_round];` +
-  `[bg][avatar_round]overlay=70:(main_h-280)/2:format=auto,` +
-  `drawtext=${fontSpec}:text='${nameTxt}':fontcolor=white:fontsize=${nameFontSize}:x=390:y=(main_h/2)-100`
-
-  if (msgDrawtext) {
-    filter += `,${msgDrawtext}`
-  }
+  `[0:v][avatar_round]overlay=70:(main_h-280)/2:format=auto,` +
+  `drawtext=${fontSpec}:` +
+  `text='${nameTxt}':` +
+  `fontcolor=white:` +
+  `fontsize=${nameFontSize}:` +
+  `x=390:` +
+  `y=(main_h/2)-100,` +
+  `${msgDrawtext}`
 
   const inputs = [ICON_PATH, profileUrl || ICON_PATH]
   const args = ['-y', '-i', inputs[0], '-i', inputs[1], '-filter_complex', filter, '-frames:v', '1', '-f', 'image2', 'pipe:1']

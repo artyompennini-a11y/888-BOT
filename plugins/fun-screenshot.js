@@ -130,122 +130,75 @@ const renderPreview = async (name, message, profileUrl) => {
   throw new Error('Impossibile generare anteprima: ffmpeg drawtext fallito')
 }
 
-const getMentionedUser = (msg) => {
-  if (!msg) return null
-  if (msg.quoted?.sender) return msg.quoted.sender
-  if (Array.isArray(msg.mentionedJid) && msg.mentionedJid.length) return msg.mentionedJid[0]
-  if (msg.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length) return msg.message.extendedTextMessage.contextInfo.mentionedJid[0]
-  if (Array.isArray(msg.mentioned) && msg.mentioned.length) return msg.mentioned[0]
-  return null
-}
-
-const removeMentionText = (text, msg) => {
-  if (!text) return ''
-  let cleaned = String(text)
-  const mentions = new Set()
-
-  if (Array.isArray(msg.mentionedJid)) {
-    msg.mentionedJid.forEach((jid) => mentions.add(`@${jid.split('@')[0]}`))
-  }
-  const extendedMentions = msg.message?.extendedTextMessage?.contextInfo?.mentionedJid
-  if (Array.isArray(extendedMentions)) {
-    extendedMentions.forEach((jid) => mentions.add(`@${jid.split('@')[0]}`))
-  }
-  if (Array.isArray(msg.mentioned)) {
-    msg.mentioned.forEach((mention) => mentions.add(mention))
-  }
-
-  mentions.forEach((mention) => {
-    const escaped = mention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    cleaned = cleaned.replace(new RegExp(escaped, 'g'), '')
-  })
-
-  cleaned = cleaned.replace(/^\s*@\+?[0-9]{4,}\s*/, '')
-  cleaned = cleaned.replace(/^\s*@[^\s]+\s*/, '')
-
-  return cleaned.replace(/\s{2,}/g, ' ').trim()
-}
-
-const getMessageText = (msg, args) => {
-  const raw = Array.isArray(args) && args.length > 0 ? args.join(' ').trim() : ''
-  let content = raw
-
-  if (!content) {
-    if (msg.quoted?.text) content = msg.quoted.text
-    else if (msg.quoted?.caption) content = msg.quoted.caption
-    else if (msg.quoted?.conversation) content = msg.quoted.conversation
-    else content = String(msg.text || msg.body || '').replace(/^\.(?:prova|test)\b\s*/i, '').trim()
-  }
-
-  return removeMentionText(content, msg)
-}
-
-let handler = async (m, { conn, args, groupMetadata }) => {
+let handler = async (m, { conn, args, usedPrefix, command }) => {
   try {
-    const who = getMentionedUser(m)
-    const messageText = getMessageText(m, args)
-
-    if (!who) {
-      return m.reply('⚠️ Tagga o rispondi a una persona con il messaggio da usare.\nEsempio: .screenshot @utente ciao')
+    let who = null
+    if (m.quoted?.sender) {
+      who = m.quoted.sender
+    } else if (Array.isArray(m.mentionedJid) && m.mentionedJid.length > 0) {
+      who = m.mentionedJid[0]
+    } else if (m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.length > 0) {
+      who = m.message.extendedTextMessage.contextInfo.mentionedJid[0]
     }
+
+    if (!who) who = m.sender
+
+    let messageText = args.join(' ').trim()
+
+    if (!messageText && m.quoted) {
+      messageText = m.quoted.text || m.quoted.caption || m.quoted.conversation || ''
+    }
+
+    messageText = messageText.replace(/^\s*@\+?[0-9]{4,}\s*/, '').replace(/^\s*@[^\s]+\s*/, '').trim()
 
     if (!messageText) {
-      return m.reply('⚠️ Scrivi il testo da mostrare.\nEsempio: .screenshot @utente ciao')
+      return conn.sendMessage(m.chat, {
+        text: `⚠️ *Specifica il testo o tagga qualcuno!*\nUso: *${usedPrefix}${command}* @utente <testo>`,
+      }, { quoted: m })
     }
 
-    await m.reply('⏳ Genero l\'immagine...')
+    await conn.sendMessage(m.chat, { text: '⏳ Genero l\'anteprima...' }, { quoted: m })
+
     let targetName = null
 
-    // 1. Tenta dal pushName del messaggio citato (se presente ed è l'utente target)
-    if (m.quoted?.sender === who && m.quoted?.pushName) {
+    if (m.quoted && m.quoted.sender === who && m.quoted.pushName) {
       targetName = m.quoted.pushName
     }
 
-    // 2. Se l'utente target sei tu stesso, usa direttamente il tuo pushName del messaggio
     if (!targetName && who === m.sender && m.pushName) {
       targetName = m.pushName
     }
 
-    // 3. Tenta dai partecipanti del gruppo
-    if (!targetName && !groupMetadata && m.chat?.endsWith('@g.us')) {
-      groupMetadata = await conn.groupMetadata?.(m.chat).catch(() => null)
-    }
-    if (!targetName && groupMetadata?.participants) {
-      const participant = groupMetadata.participants.find((p) => p.id === who)
-      if (participant) {
-        targetName = participant.notify || participant.name || participant.vname || null
-      }
+    if (!targetName && m.chat.endsWith('@g.us')) {
+      try {
+        const groupMetadata = await conn.groupMetadata(m.chat).catch(() => null)
+        if (groupMetadata?.participants) {
+          const participant = groupMetadata.participants.find((p) => p.id === who)
+          if (participant) {
+            targetName = participant.notify || participant.name || participant.vname || null
+          }
+        }
+      } catch {}
     }
 
-    // 4. Tenta con conn.getName senza filtri numerici distruttivi
     if (!targetName && conn.getName) {
       try {
         let fetchedName = await conn.getName(who)
-        if (fetchedName && !fetchedName.includes('@')) {
+        if (fetchedName && !fetchedName.includes('@') && !/^\d+$/.test(fetchedName.replace(/[\s+]/g, ''))) {
           targetName = fetchedName
         }
-      } catch (e) {
-        targetName = null
-      }
+      } catch {}
     }
 
-    // 5. Tenta dalla lista contatti interna
-    if (!targetName && conn.contacts && conn.contacts[who]) {
-      const contact = conn.contacts[who]
-      targetName = contact.name || contact.notify || contact.vname || null
-    }
-
-    // Fallback finale: se non trova nulla o è solo un numero pulito, usa il numero formattato invece del testo fisso
     if (!targetName || /^\d+$/.test(targetName.replace(/[\s+]/g, ''))) {
-      if (who) {
+      if (who && who.includes('@')) {
         targetName = who.split('@')[0]
       } else {
         targetName = "Utente WhatsApp"
       }
     }
-    
-    let profileUrl = ICON_PATH
 
+    let profileUrl = ICON_PATH
     try {
       profileUrl = await conn.profilePictureUrl(who, 'image')
     } catch {
@@ -253,15 +206,25 @@ let handler = async (m, { conn, args, groupMetadata }) => {
     }
 
     const img = await renderPreview(targetName, messageText, profileUrl)
-    if (!img) return m.reply('Errore nella generazione dell\'anteprima')
+    if (!img) throw new Error('Buffer immagine vuoto')
 
-    await conn.sendFile(m.chat, img, 'anteprima.png', '', m)
+    await conn.sendMessage(m.chat, {
+      image: img,
+      caption: '',
+      mimetype: 'image/png',
+    }, { quoted: m })
+
   } catch (e) {
-    console.error('AAATEST handler error:', e)
-    try { await m.reply('Errore: ' + (e.message || e)) } catch {}
+    console.error('[screenshot] Errore critico:', e)
+    try {
+      await conn.sendMessage(m.chat, { text: `❌ Errore: ${e.message || e}` }, { quoted: m })
+    } catch {}
   }
 }
 
 handler.tags = ['fun']
 handler.command = ['screenshot']
+handler.group = false
+handler.register = false
+
 export default handler

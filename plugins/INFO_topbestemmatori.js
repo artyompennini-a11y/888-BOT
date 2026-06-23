@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Elixir, Punisher & 888 staff
 
 const handler = async (m, { conn, groupMetadata }) => {
   if (!m.isGroup) return await conn.sendMessage(m.chat, { text: 'Questo comando funziona solo nei gruppi.' })
@@ -10,15 +10,19 @@ const handler = async (m, { conn, groupMetadata }) => {
     return await conn.sendMessage(m.chat, { text: 'Impossibile recuperare i membri del gruppo.' })
   }
 
+  const usersDb = global.db.data.users || {}
+
+  const groupMemberJids = new Set(participants.map(p => p.id))
   const chat = global.db.data.chats[m.chat] || {}
   const topBlasphemy = chat.topBlasphemy || {}
 
-  const values = Object.entries(topBlasphemy)
-    .map(([jid, total]) => ({
+  const values = Array.from(groupMemberJids)
+    .filter(jid => jid && !jid.endsWith('@g.us'))
+    .map(jid => ({
       jid,
-      total: Number(total) || 0
+      total: Number(topBlasphemy[jid]) || 0
     }))
-    .filter(user => user.jid && user.total > 0)
+    .filter(user => user.total > 0)
 
   if (!values.length) {
     return await conn.sendMessage(m.chat, { text: 'Nessun dato di bestemmie disponibile per questo gruppo.' })

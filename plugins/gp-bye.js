@@ -1,17 +1,31 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fetch from 'node-fetch';
 
 export async function before(m, { conn, participants }) {
   if (!m.isGroup) return;
 
   let chat = global.db.data.chats[m.chat];
-  if (!chat.goodbye) return;
+  if (!chat) return;
 
   let groupMetadata = await conn.groupMetadata(m.chat) || (conn.chats[m.chat] || {}).metadata;
-  let participants_new = m.messageStubParameters;
+  let participants_new = m.messageStubParameters || [];
 
   for (let user of participants_new) {
+    // Cleanup: remove user's data from chat-specific tracking when they leave
+    if (m.messageStubType === 28) {
+      // Remove from topBlasphemy
+      if (chat.topBlasphemy && chat.topBlasphemy[user]) {
+        delete chat.topBlasphemy[user]
+      }
+      // Remove from topUsers (messaggi)
+      if (chat.topUsers && chat.topUsers[user]) {
+        delete chat.topUsers[user]
+      }
+      // Remove from any other per-chat user tracking
+      if (chat.whitelist && chat.whitelist.includes(user)) {
+        chat.whitelist = chat.whitelist.filter(u => u !== user)
+      }
+    }
+
     let profilePic;
     try {
       profilePic = await conn.profilePictureUrl(user, 'image');

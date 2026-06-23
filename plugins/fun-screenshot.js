@@ -196,10 +196,17 @@ let handler = async (m, { conn, args, groupMetadata }) => {
     await m.reply('⏳ Genero l\'immagine...')
     let targetName = null
 
+    // 1. Tenta dal pushName del messaggio citato (se presente ed è l'utente target)
     if (m.quoted?.sender === who && m.quoted?.pushName) {
       targetName = m.quoted.pushName
     }
 
+    // 2. Se l'utente target sei tu stesso, usa direttamente il tuo pushName del messaggio
+    if (!targetName && who === m.sender && m.pushName) {
+      targetName = m.pushName
+    }
+
+    // 3. Tenta dai partecipanti del gruppo
     if (!targetName && !groupMetadata && m.chat?.endsWith('@g.us')) {
       groupMetadata = await conn.groupMetadata?.(m.chat).catch(() => null)
     }
@@ -209,23 +216,32 @@ let handler = async (m, { conn, args, groupMetadata }) => {
         targetName = participant.notify || participant.name || participant.vname || null
       }
     }
+
+    // 4. Tenta con conn.getName senza filtri numerici distruttivi
     if (!targetName && conn.getName) {
       try {
-        let fetchedName = await Promise.resolve(conn.getName(who))
-        if (fetchedName && !fetchedName.includes('@') && !/^\d+$/.test(fetchedName.replace(/[\s+]/g, ''))) {
+        let fetchedName = await conn.getName(who)
+        if (fetchedName && !fetchedName.includes('@')) {
           targetName = fetchedName
         }
       } catch (e) {
         targetName = null
       }
     }
+
+    // 5. Tenta dalla lista contatti interna
     if (!targetName && conn.contacts && conn.contacts[who]) {
       const contact = conn.contacts[who]
       targetName = contact.name || contact.notify || contact.vname || null
     }
 
+    // Fallback finale: se non trova nulla o è solo un numero pulito, usa il numero formattato invece del testo fisso
     if (!targetName || /^\d+$/.test(targetName.replace(/[\s+]/g, ''))) {
-      targetName = "Utente WhatsApp"
+      if (who) {
+        targetName = who.split('@')[0]
+      } else {
+        targetName = "Utente WhatsApp"
+      }
     }
     
     let profileUrl = ICON_PATH

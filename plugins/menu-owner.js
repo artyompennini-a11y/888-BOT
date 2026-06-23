@@ -82,6 +82,8 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃  ⮕ ${_0x3f73c1}azzera (@)
 ┃  ⮕ ${_0x3f73c1}aggiungi (n° messaggi)
 ┃  ⮕ ${_0x3f73c1}rimuovi (n° messaggi)
+┃  ⮕ ${_0x3f73c1}addrank (n° livelli) (@user)
+┃  ⮕ ${_0x3f73c1}delrank (n° livelli) (@user)
 ┃  ⮕ ${_0x3f73c1}lock
 ┃ 
 ┃ 📊 *Diagnostica & Server:*

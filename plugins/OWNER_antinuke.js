@@ -1,6 +1,6 @@
 const handler = m => m;
 
-handler.before = async function (m, { conn, participants, isBotAdmin, usedPrefix: prefix }) {
+handler.before = async function (m, { conn, participants, isBotAdmin }) {
   if (!m.isGroup) return;
   if (!isBotAdmin) return;
 
@@ -70,24 +70,17 @@ handler.before = async function (m, { conn, participants, isBotAdmin, usedPrefix
     m.messageStubType === 29 ? 'PROMOZIONE ADMIN' :
     'RETROCESSIONE ADMIN';
 
-  const text = 
-`╭━━━〔 🛡️ *ANTINUKE ACTIVE* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Livello:* Sicurezza Centralizzata
-┃━━━━━━━━━━━━━━━━━━
-┃ ⚠️ *Attività Sospetta Rilevata:*
-┃  ⮕ *Autore:* @${sender.split('@')[0]}
-┃  ⮕ *Azione:* ${action}
-┃  ⮕ *Stato:* INTERVENTO IMMEDIATO 🚨
-┃ 
-┃ 🔒 *Misure di Sicurezza Applicate:*
-┃  ⮕ Admin non autorizzati degradati
-┃  ⮕ Gruppo impostato in sola lettura
-┃  ⮕ Utenti in whitelist preservati
-╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${prefix || '#'}ticket* per 
-> segnalarlo subito allo staff.`.trim();
+  const text = `⚠️ *ATTIVITÀ SOSPETTA RILEVATA*
+━━━━━━━━━━━━━━━━━━━━
+👤 *Autore:* @${sender.split('@')[0]}
+🚫 *Azione:* ${action}
+⚡ *Stato:* INTERVENTO IMMEDIATO
+━━━━━━━━━━━━━━━━━━━━
+📉 Admin non autorizzati degradati
+🔒 Gruppo impostato in sola lettura
+✅ Utenti in whitelist preservati
+━━━━━━━━━━━━━━━━━━━━
+🔐 *888 SECURITY SYSTEM*`;
 
   try {
     await conn.sendMessage(m.chat, {
@@ -95,10 +88,10 @@ handler.before = async function (m, { conn, participants, isBotAdmin, usedPrefix
       contextInfo: {
         mentionedJid: [sender, ...usersToDemote, ...BOT_OWNERS].filter(Boolean),
         externalAdReply: {
-          title: '🛡️ 𝟴𝟴𝟴 𝗕𝗢𝗧 ANTINUKE SYSTEM',
+          title: '🛡️ 888 ANTINUKE',
           body: 'Protocollo di Emergenza Attivo',
           thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png',
-          sourceUrl: '𝟴𝟴𝟴 𝗕𝗢𝗧_ANTINUKE',
+          sourceUrl: 'ELIXIR_ANTINUKE',
           mediaType: 1,
           renderLargerThumbnail: true
         }

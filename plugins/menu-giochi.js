@@ -37,6 +37,10 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Intrattenimento e Funzioni Community*
 ┃━━━━━━━━━━━━━━━━━━
+┃ ♟️ *GIOCHI DA TAVOLO:*
+┃  ⮕ ${_0x3f73c1}scacchi
+┃  ⮕ ${_0x3f73c1}startblast
+┃g
 ┃ 🧩 *FUNNY:*
 ┃  ⮕ ${_0x3f73c1}impiccato
 ┃  ⮕ ${_0x3f73c1}tris
@@ -88,6 +92,7 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃  ⮕ ${_0x3f73c1}clan
 ┃ 
 ┃ 🔧 *STRUMENTI & UTILITY:*
+┃  ⮕ ${_0x3f73c1}removebg
 ┃  ⮕ ${_0x3f73c1}calendario
 ┃  ⮕ ${_0x3f73c1}screen
 ┃  ⮕ ${_0x3f73c1}emojimix

@@ -190,11 +190,12 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
       } catch {}
     }
 
+    // MODIFICA: Se non trova il nome o è solo un numero, mette la chiocciola seguita dal numero o dall'ID
     if (!targetName || /^\d+$/.test(targetName.replace(/[\s+]/g, ''))) {
       if (who && who.includes('@')) {
-        targetName = who.split('@')[0]
+        targetName = '@' + who.split('@')[0]
       } else {
-        targetName = "Utente WhatsApp"
+        targetName = "@utente"
       }
     }
 
@@ -217,7 +218,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
   } catch (e) {
     console.error('[screenshot] Errore critico:', e)
     try {
-      await conn.sendMessage(m.chat, { text: `❌ Errore: ${e.message || e}` }, { quoted: m })
+      await conn.sendMessage(m.chat, { text: `❌ Errore: ${e.message || e}` }, { pointer: m })
     } catch {}
   }
 }

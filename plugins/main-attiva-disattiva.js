@@ -260,8 +260,8 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   await conn.sendMessage(m.chat, { text: summaryMessage }, { quoted: fake });
 };
 
-handler.help = ['attiva', 'disabilita'];
+handler.help = ['attiva', 'disattiva'];
 handler.tags = ['main'];
-handler.command = ['enable', 'disable', 'attiva', 'disabilita', 'on', 'off'];
+handler.command = ['enable', 'disable', 'attiva', 'disattiva', 'on', 'off'];
 
 export default handler;

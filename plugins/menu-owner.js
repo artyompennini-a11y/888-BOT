@@ -47,7 +47,8 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃  ⮕ ${_0x3f73c1}prefisso
 ┃  ⮕ ${_0x3f73c1}resettaprefisso
 ┃ 
-┃ 🛡️ *Controllo Utenti & Chat:*
+┃ 🛡️ *Sicurezza & Protezione:*
+┃  ⮕ ${_0x3f73c1}antinuke
 ┃  ⮕ ${_0x3f73c1}banchat
 ┃  ⮕ ${_0x3f73c1}banuser (@)
 ┃  ⮕ ${_0x3f73c1}unbanuser (@)

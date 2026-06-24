@@ -252,7 +252,7 @@ if (global.conn && global.conn.ws) {
                     let settings = global.db.data?.settings?.[global.conn.user.jid]
                     if (!settings) {
                         settings = global.db.data.settings[global.conn.user.jid] = {
-                            jadibotmd: false, antiPrivate: true,
+                            jadibotmd: false,
                             soloCreatore: false, anticall: true, status: 0
                         }
                     }
@@ -493,10 +493,10 @@ if (user.banned) {
 
         let chat = global.db.data.chats[m.chat] || (global.db.data.chats[m.chat] = {
             isBanned: false, welcome: false, goodbye: false, ai: false,
-            vocali: false, antiporno: false, antioneview: false,
+            vocali: false, antiporno: true, antioneview: false,
             autolevelup: false, antivoip: false, rileva: false,
-            modoadmin: false, antiLink: false, antiLink2: false,
-            slowmode: false, reaction: false, antispam: false, expired: 0, users: {}, topUsers: {}, topRich: {}, topBlasphemy: {}
+            modoadmin: true, antiLink: true, antiLink2: false,
+            slowmode: false, reaction: false, antispam: true, expired: 0, users: {}, topUsers: {}, topRich: {}, topBlasphemy: {}
         })
         if (!chat.topUsers) chat.topUsers = {}
         if (!chat.topRich) chat.topRich = {}
@@ -857,8 +857,6 @@ if (user.banned) {
             if (user) {
                 user.exp += m.exp || 0
                 user.euro -= m.euro * 1 || 0
-                user.messaggi = (user.messaggi || 0) + 1
-                user.messages = (user.messages || 0) + 1
                 if (m.isCommand) {
                     user.comandiEseguiti = (user.comandiEseguiti || 0) + 1
                     if (isAdmin) {
@@ -875,9 +873,6 @@ if (user.banned) {
                     if (!chat.users) chat.users = {}
                     if (!chat.users[normalizedSender]) chat.users[normalizedSender] = { messages: 0 }
                     chat.users[normalizedSender].messages++
-
-                    if (!chat.topUsers) chat.topUsers = {}
-                    chat.topUsers[normalizedSender] = (chat.topUsers[normalizedSender] || 0) + 1
 
                     if (!chat.topRich) chat.topRich = {}
                     const wallet = Number(user.money) || 0

@@ -37,11 +37,12 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     security: ['antilink', 'antiporno', 'modoadmin','antispam','antimedia','antitoxic','antiBot','antivoip','antioneview','antitrava','antibusiness','slowmode','antinuke'],
     protezione: ['antispam', 'antitoxic', 'antiBot', 'antivoip', 'antioneview', 'antitrava', 'antibusiness'],
     media: ['antimedia', 'antiporno', 'antigore'],
-    full: ['antilink', 'antiporno', 'antigore', 'antispam', 'antitoxic', 'antiBot', 'antivoip', 'antioneview', 'antimedia', 'antilinktg', 'antilinkig', 'antilinktiktok', 'modoadmin', 'antitrava', 'antibusiness', 'slowmode']
+    full: ['antilink', 'antiporno', 'antigore', 'antispam', 'antitoxic', 'antiBot', 'antivoip', 'antioneview', 'antimedia', 'antilinktg', 'antilinkig', 'antilinktiktok', 'modoadmin', 'antitrava', 'antibusiness', 'slowmode', 'antinuke']
   };
 
   const adminFeatures = [
     { key: 'welcome', name: 'Welcome', desc: 'Messaggio di benvenuto' },
+    { key: 'antinuke', name: 'AntiNuke', desc: 'Protezione totale del gruppo (Anti-Nuke)' },
     { key: 'antimedia', name: 'AntiMedia', desc: 'Blocca foto e video a più visual' },
     { key: 'goodbye', name: 'Addio', desc: 'Messaggio di addio' },
     { key: 'antispam', name: 'Antispam', desc: 'Antispam' },
@@ -106,6 +107,10 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
         if (!m.isGroup && !isOwner) { groupGuard(); break; }
         if (m.isGroup && !isAdmin && !isOwner && !isROwner) { adminGuard(); break; }
         setChat('goodbye'); break;
+      case 'antinuke':
+        if (!m.isGroup && !isOwner) { groupGuard(); break; }
+        if (adminCheck) { adminGuard(); break; }
+        setChat('antinuke'); break;
       case 'antiprivato': case 'antipriv':
         if (ownerOnly) { ownerGuard(); break; }
         setBot('antiprivato'); break;

@@ -1,3 +1,6 @@
+//Plugin by Elixir & 888 staff
+import fs from 'fs'
+
 function normalizeJid(jid = '') {
   if (!jid) return null
   if (jid.includes('@s.whatsapp.net')) return jid
@@ -55,9 +58,9 @@ function resolveAction(m, command = '') {
 }
 
 function ensureChatMuteStore(chat) {
-  global.db.data.chats ||= {}
-  global.db.data.chats[chat] ||= {}
-  global.db.data.chats[chat].mutedUsers ||= {}
+  if (!global.db.data.chats) global.db.data.chats = {}
+  if (!global.db.data.chats[chat]) global.db.data.chats[chat] = {}
+  if (!global.db.data.chats[chat].mutedUsers) global.db.data.chats[chat].mutedUsers = {}
   return global.db.data.chats[chat].mutedUsers
 }
 
@@ -114,7 +117,7 @@ let handler = async (m, { conn, text, command, isOwner, isROwner }) => {
     if (isMute && targetIsOwner) {
       return conn.reply(
         m.chat,
-        '⛔ *Non è possibile applicare restrizioni o mutare i creatori/owner.*',
+        '⛔ *Non è possibile mutare i creatori/owner.*',
         m
       )
     }
@@ -125,7 +128,7 @@ let handler = async (m, { conn, text, command, isOwner, isROwner }) => {
     if (!isMute && oldMuteData?.mutedByOwner && !executorIsOwner) {
       return conn.reply(
         m.chat,
-        '⛔ *Questo utente è stato mutato direttamente da un Owner. Solo un Owner può revocare la sanzione.*',
+        '⛔ *Solo un Owner può revocare il mute di un utente mutato da un Owner.*',
         m
       )
     }
@@ -147,42 +150,37 @@ let handler = async (m, { conn, text, command, isOwner, isROwner }) => {
     const targetTag = `@${target.split('@')[0]}`
     const executorTag = `@${m.sender.split('@')[0]}`
 
-    let messaggio = ''
-    if (isMute) {
-      messaggio = `╭━━━〔 🔇 *UTENTE MUTATO* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Stato:* Sanzione Applicata
-┃━━━━━━━━━━━━━━━━━━
-┃ 👤 *Target:* ${targetTag}
-┃ 👑 *Eseguito da:* ${executorTag}
-┃ ⏳ *Durata:* _${duration?.label || 'Permanente'}_
-┃━━━━━━━━━━━━━━━━━━
-┃ ⮕ _I messaggi inviati dall'utente verranno_
-┃   _intercettati ed eliminati automaticamente._
-╰━━━━━━━━━━━━━━━━━━┈`.trim()
-    } else {
-      messaggio = `╭━━━〔 🔊 *MUTING REVOCATO* 〕━━━┈
-┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ *Stato:* Sanzione Revocata
-┃━━━━━━━━━━━━━━━━━━
-┃ 👤 *Target:* ${targetTag}
-┃ 👑 *Sbloccato da:* ${executorTag}
-┃━━━━━━━━━━━━━━━━━━
-┃ ⮕ _L'utente può riprendere regolarmente_
-┃   _l'attività all'interno della chat._
-╰━━━━━━━━━━━━━━━━━━┈`.trim()
+    const label = isMute ? '🔇 MUTE APPLICATO' : '🔊 MUTE RIMOSSO'
+    const status = isMute ? 'Attivo' : 'Revocato'
+    const durationLabel = duration?.label || 'Permanente'
+
+    const body = [
+      `╭━━━〔 ${label} 〕━━━┈`,
+      `┃ 🔒 *Stato:* ${status}`,
+      `┃ 👤 *Target:* ${targetTag}`,
+      `┃ 👑 *Da:* ${executorTag}`,
+      `┃ ⏳ *Durata:* ${durationLabel}`,
+      `╰━━━━━━━━━━━━━━━━━━┈`
+    ].join('\n')
+
+    let imgBuffer
+    try {
+      imgBuffer = fs.readFileSync('icone/warn.png')
+    } catch {
+      imgBuffer = Buffer.alloc(0)
     }
 
     await conn.sendMessage(m.chat, {
-      text: messaggio,
-      mentions: [target, m.sender]
+      text: body,
+      mentions: [target, m.sender],
+      jpegThumbnail: imgBuffer
     }, { quoted: m })
 
   } catch (e) {
     console.error('[MUTA ERROR]', e)
     conn.reply(
       m.chat,
-      '❌ *Errore critico durante l\'elaborazione del comando Mute.*',
+      '❌ *Errore durante l\'elaborazione del comando.*',
       m
     )
   }
@@ -204,9 +202,7 @@ handler.before = async function (m, { conn }) {
     return
   }
 
-  const isMuted = muteData.active === true
-
-  if (!isMuted) return
+  if (muteData.active !== true) return
 
   try {
     await conn.sendMessage(m.chat, { delete: m.key })
@@ -219,5 +215,6 @@ handler.command = ['muta', 'smuta']
 handler.group = true
 handler.admin = true
 handler.botAdmin = true
+handler.tags = ['admin']
 
-export default handler                                
+export default handler                            

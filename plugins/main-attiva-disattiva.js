@@ -1,3 +1,5 @@
+//Plugin by Elixir & 888 staff
+
 import fetch from 'node-fetch';
 import fs from 'fs';
 
@@ -51,7 +53,6 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     { key: 'rileva', name: 'Rileva', desc: 'Rileva events gruppo' },
     { key: 'antiporn', name: 'Antiporno', desc: 'Antiporno' },
     { key: 'antigore', name: 'Antigore', desc: 'Antigore' },
-    { key: 'antinuke', name: 'AntiNuke', desc: 'Blocca cambi di admin non autorizzati' },
     { key: 'logrichieste', name: 'LogRichieste', desc: 'Messaggi di join request anti-spam' },
     { key: 'modoadmin', name: 'Soloadmin', desc: 'Solo gli admin possono usare i comandi' },
     { key: 'slowmode', name: 'Slowmode', desc: 'Limita i messaggi troppo ravvicinati' },
@@ -168,9 +169,6 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
       case 'antigore':
         if (adminCheck) { adminGuard(); break; }
         setChat('antigore'); break;
-      case 'antinuke': case 'anti-nuke':
-        if (adminCheck) { adminGuard(); break; }
-        setChat('antinuke'); break;
       case 'slowmode':
         if (adminCheck) { adminGuard(); break; }
         setChat('slowmode'); break;
@@ -257,8 +255,8 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   await conn.sendMessage(m.chat, { text: summaryMessage }, { quoted: fake });
 };
 
-handler.help = ['attiva', 'disattiva'];
+handler.help = ['attiva', 'disabilita'];
 handler.tags = ['main'];
-handler.command = ['enable', 'disable', 'attiva', 'disattiva', 'on', 'off'];
+handler.command = ['enable', 'disable', 'attiva', 'disabilita', 'on', 'off'];
 
 export default handler;

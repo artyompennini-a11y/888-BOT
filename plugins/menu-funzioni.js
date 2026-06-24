@@ -12,7 +12,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktiktok,
     antilinktg, antimedia, antispam, antitoxic, antiBot, antioneview,
     antigore, antibusiness, reaction, bestemmiometro, ai, vocali, logrichieste,
-    slowmode
+    slowmode, antinuke
   } = chat
 
   const { antiprivato, soloCreatore, read, anticall } = bot
@@ -83,6 +83,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 ┃  [${s(logrichieste)}] ⮕ ${p}logrichieste
 ┃ 
 ┃ 🚫 *MODULI DI PROTEZIONE (ANTI):*
+┃  [${s(antinuke)}] ⮕ ${p}antinuke
 ┃  [${s(antiporno)}] ⮕ ${p}antiporno
 ┃  [${s(antigore)}] ⮕ ${p}antigore
 ┃  [${s(antispam)}] ⮕ ${p}antispam

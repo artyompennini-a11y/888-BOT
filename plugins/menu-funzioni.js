@@ -17,12 +17,12 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   const { antiprivato, soloCreatore, read, anticall } = bot
 
-  // Gestione sicura del file immagine per evitare crash se non esiste
+  
   let imgBuffer
   try {
     imgBuffer = fs.readFileSync('icone/888.jpg')
   } catch (e) {
-    // Buffer vuoto di fallback se l'immagine non viene trovata
+    
     imgBuffer = Buffer.alloc(0)
   }
 
@@ -30,12 +30,12 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     key: {
       participants: '0@s.whatsapp.net',
       fromMe: false,
-      id: '333Funzioni'
+      id: '888Funzioni'
     },
     message: {
       locationMessage: {
         name: '⚙️ MENU FUNZIONI 888',
-        jpegThumbnail: imgBuffer, // Baileys vuole il Buffer diretto, non toString('base64')
+        jpegThumbnail: imgBuffer, 
         vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;333;;;\nFN:333\nEND:VCARD'
       }
     },

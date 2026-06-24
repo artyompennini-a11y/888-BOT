@@ -91,7 +91,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
           title: '🛡️ 888 ANTINUKE',
           body: 'Protocollo di Emergenza Attivo',
           thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png',
-          sourceUrl: 'ELIXIR_ANTINUKE',
+          sourceUrl: '888_ANTINUKE',
           mediaType: 1,
           renderLargerThumbnail: true
         }

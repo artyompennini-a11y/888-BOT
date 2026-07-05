@@ -16,10 +16,10 @@ const pkg = JSON.parse(await fs.promises.readFile(new URL('./package.json', impo
 const moduleCache = new NodeCache({ stdTTL: 300 });
 
 	
-global.gab = ['393206032199','639752917233','79524931364',]
+global.gab = ['393337318339','639752917233','79524931364',]
 global.owner = [
   ['79524931364', 'Punisher2', true],
-  ['393206032199', 'Punisher', true],
+  ['393337318339', 'Punisher', true],
   ['393784409415', 'Elixir', true],
   ['573117824583', 'Punisher3', true],
   ['639752917233', 'Elixir', true],

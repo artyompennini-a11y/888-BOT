@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by punisher, elixir & 888 staff
 
 let handler = async (m, { conn, command }) => {
 
@@ -107,7 +107,7 @@ let handler = async (m, { conn, command }) => {
 
     for (let f of frames) {
       await new Promise(r => setTimeout(r, 3000))
-      await conn.reply(m.chat, f + "\n\n꙰  𝟥𝟥𝟥 𝔹𝕆𝕋  ꙰", m)
+      await conn.reply(m.chat, f + "\n\𝟴𝟴𝟴 𝗕𝗢𝗧", m)
     }
 
     let lista = Math.random() < 0.5 ? premi : perdite

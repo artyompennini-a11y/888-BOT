@@ -135,7 +135,11 @@ async function callOpenRouter(messages) {
 
 function funzioneAttiva(m) {
   if (!m.isGroup) return true
-  const chat = global.db?.data?.chats?.[m.chat]
+  if (!global.db) global.db = { data: { chats: {} } }
+  if (!global.db.data) global.db.data = { chats: {} }
+  if (!global.db.data.chats) global.db.data.chats = {}
+  
+  const chat = global.db.data.chats[m.chat]
   return !!chat?.ai
 }
 
@@ -253,6 +257,19 @@ async function rispostaAI(m, conn, text, sessione, extraSystem = '') {
 }
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
+  // Gestione attivazione / disattivazione tramite .1 ia o .0 ia
+  if (/^1\s*ia$/i.test(`${command} ${text}`.trim()) || command === '1') {
+    if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {}
+    global.db.data.chats[m.chat].ai = true
+    return m.reply('*✅ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐈𝐀 𝐚𝐭𝐭𝐢𝐯𝐚𝐭𝐚 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨!*')
+  }
+
+  if (/^0\s*ia$/i.test(`${command} ${text}`.trim()) || command === '0') {
+    if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {}
+    global.db.data.chats[m.chat].ai = false
+    return m.reply('*❌ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐈𝐀 𝐝𝐢𝐬𝐚𝐭𝐭𝐢𝐯𝐚𝐭𝐚.*')
+  }
+
   if (!funzioneAttiva(m)) {
     return m.reply(
 `*⚠️ 𝐋𝐚 𝐟𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐈𝐀 è 𝐝𝐢𝐬𝐚𝐭𝐭𝐢𝐯𝐚𝐭𝐚.*
@@ -330,7 +347,7 @@ handler.before = async function (m, { conn }) {
 
 handler.help = ['ia']
 handler.tags = ['main']
-handler.command = /^(ia|ai|gpt)$/i
+handler.command = /^(ia|ai|gpt|1|0)$/i
 
 function salvaCostoAI(usage = {}, model = '') {
   const input = Number(usage.prompt_tokens || 0)

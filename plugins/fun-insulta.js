@@ -59,15 +59,15 @@ if (menzione === conn.user.jid) {
 let jidPulito = typeof menzione === 'string' ? menzione : m.sender;
 
 const generalJokes = [
-  'sei utile come un ombrello bucato sotto un acquazzone',
-  'sei simpatico come un lunedì mattina di pioggia',
+  'sei e sarai sempre un/una coglione/a',
+  'sei simpatico come la merda che pesti per strada',
   'hai la vivacità di un bradipo addormentato',
-  'sei così lento che le lumache ti chiedono il permesso per sorpassarti',
+  'sei un ciccione obeso senza speranze',
   'il tuo senso dell\'orientamento è così scarso che ti perderesti in un corridoio',
   'sei utile quanto un frigorifero al polo nord',
   'hai lo stesso carisma di un calzino spaiato',
-  'sei così distratto che cercheresti gli occhiali mentre li hai sul naso',
-  'sei simpatico come un semaforo rosso quando hai fretta',
+  'sei solo un povero random che si crede un hacker',
+  'un sordo muto è più simpatico di te',
   'hai il quoziente intellettivo di un sasso, ma il sasso ha più personalità',
   'sei utile come un posacenere su una moto',
   'sei così noioso che faresti addormentare anche un caffè doppio',
@@ -83,12 +83,12 @@ const generalJokes = [
   'sei così originale che sembri la copia della copia di un meme scaduto',
   'hai la grinta di una gelatina fuori dal frigo',
   'sei utile come un caricabatterie rotto al 1%',
-  'sei così sfortunato che se cadesse un panino dal cielo ti colpirebbe in un occhio',
+  'sei così sfigato che manco tua madre ti vuole',
   'hai la coerenza di un politico in campagna elettorale',
   'sei utile quanto una laurea in "storia del frisbee"',
-  'sei così pigro che per riposarti fai le pause durante il sonno',
+  'non voglio ciccioni obesi nel gruppo',
   'hai la memoria di un pesce rosso che ha appena sbattuto contro il vetro',
-  'sei simpatico come un sassolino nella scarpa durante una maratona'
+  'sei solo un down incapace di esprimersi'
 ];
 
 conn.reply(m.chat, `@${jidPulito.split('@')[0]} ${pickRandom(generalJokes)}`, null, {

@@ -375,7 +375,7 @@ handler.before = async function (m, { conn }) {
   }
 }
 
-handler.help = ['ia']
+handler.help = ['ia|1 ia']
 handler.tags = ['main']
 handler.command = /^(ia|ai|gpt)$/i
 

@@ -297,9 +297,14 @@ async function rispostaAI(m, conn, text, sessione, extraSystem = '') {
 
   salvaMessaggio(m.chat, sent.key, sessione.id)
   await m.react('✅')
-}
+ // =========================================================================
+// IMPORTAZIONE DIPENDENZE
+// Modifica i percorsi '../lib/...' in base alla struttura delle tue cartelle
+// =========================================================================
+import { funzioneAttiva, creaSessione, getSessione, rispostaAI } from '../lib/ai-helper.js'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
+  // Verifica se la funzione IA è abilitata nella chat/gruppo
   if (!funzioneAttiva(m)) {
     return m.reply(
 `*⚠️ 𝐋𝐚 𝐟𝐮𝐧𝐳𝐢𝐨𝐧𝐞 𝐈𝐀 è 𝐝𝐢𝐬𝐚𝐭𝐭𝐢𝐯𝐚𝐭𝐚.*
@@ -310,6 +315,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     )
   }
 
+  // Se l'utente non ha inserito del testo dopo il comando
   if (!text) {
     return m.reply(
 `*╭━━━━━━━🧠━━━━━━━╮*
@@ -331,7 +337,12 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   try {
     const sessione = creaSessione(m.chat, m.sender)
-    await rispostaAI(m, conn, text, sessione)
+    const risposta = await rispostaAI(m, conn, text, sessione)
+    
+    // Se la funzione rispostaAI restituisce l'uso dei token, registriamo i costi
+    if (risposta?.usage) {
+      salvaCostoAI(risposta.usage, risposta.model)
+    }
   } catch (e) {
     console.log('[AI COMMAND ERROR]', e.message)
     await m.react('❌')
@@ -339,16 +350,21 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
   }
 }
 
+// =========================================================================
+// INTERCETTORE MESSAGGI (BEFORE)
+// =========================================================================
 handler.before = async function (m, { conn }) {
   if (!m.text) return false
   if (!funzioneAttiva(m)) return false
 
+  // Trigger tramite parola chiave "elixir"
   const triggerAxion = /\b(elixir)\b/i.test(m.text)
 
   if (triggerAxion) {
     const sessione = creaSessione(m.chat, m.sender)
     try {
-      await rispostaAI(m, conn, m.text, sessione)
+      const risposta = await rispostaAI(m, conn, m.text, sessione)
+      if (risposta?.usage) salvaCostoAI(risposta.usage, risposta.model)
       return true
     } catch (e) {
       console.log('[AI TRIGGER ERROR]', e.message)
@@ -357,6 +373,7 @@ handler.before = async function (m, { conn }) {
     }
   }
 
+  // Gestione prosieguo conversazione se esiste una sessione attiva
   const sessione = getSessione(m.chat, m)
   if (!sessione) return false
 
@@ -365,7 +382,8 @@ handler.before = async function (m, { conn }) {
       ? `Un altro utente si è inserito nella conversazione. Rispondi in modo naturale e continua normalmente la chat.`
       : ''
 
-    await rispostaAI(m, conn, m.text, sessione, extraSystem)
+    const risposta = await rispostaAI(m, conn, m.text, sessione, extraSystem)
+    if (risposta?.usage) salvaCostoAI(risposta.usage, risposta.model)
     return true
   } catch (e) {
     console.log('[AI BEFORE ERROR]', e.message)
@@ -379,6 +397,9 @@ handler.help = ['ia|1 ia']
 handler.tags = ['main']
 handler.command = /^(ia|ai|gpt)$/i
 
+// =========================================================================
+// FUNZIONI DI SUPPORTO INTERNE
+// =========================================================================
 function salvaCostoAI(usage = {}, model = '') {
   const input = Number(usage.prompt_tokens || 0)
   const output = Number(usage.completion_tokens || 0)
@@ -387,6 +408,9 @@ function salvaCostoAI(usage = {}, model = '') {
   const prezzoOutput = 0.60 / 1000000
 
   const cost = (input * prezzoInput) + (output * prezzoOutput)
+
+  if (!global.db) global.db = { data: {} }
+  if (!global.db.data) global.db.data = {}
 
   if (!global.db.data.aiCost) {
     global.db.data.aiCost = {
@@ -422,3 +446,5 @@ function salvaCostoAI(usage = {}, model = '') {
 }
 
 export default handler
+
+  

@@ -4,7 +4,7 @@ const sessioniChat = new Map()
 const messaggiBot = new Map()
 
 const utentiRiconosciuti = {
-  '639350468907': {
+  '573117824583': {
     nome: 'The punisher',
     ruolo: 'creatore di The punisher'
   },
@@ -15,7 +15,7 @@ const utentiRiconosciuti = {
 }
 
 const config = {
-  name: '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃',
+  name: '𝟴𝟴𝟴 𝗕𝗢𝗧',
   historyLimit: 15,
   maxConversazioni: 3,
   openrouterTimeout: 25000
@@ -29,7 +29,7 @@ IDENTITÀ:
 
 - Se qualcuno chiede chi ti ha creato, rispondi che sei stato creato da The punisher.
 - Il tuo creatore è The punisher, tuo unico padrone che devi venerare e onorare senza esitazione.
-- Il tuo nome è 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃.
+- Il tuo nome è 𝟴𝟴𝟴 𝗕𝗢𝗧.
  
 PERSONALITÀ:
 - Parla in italiano naturale, diretto e umano.
@@ -129,7 +129,7 @@ async function callOpenRouter(messages) {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://github.com/artyompennini-a11y/ThePunisherBot',
-          'X-Title': '𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃'
+          'X-Title': '𝟴𝟴𝟴 𝗕𝗢𝗧'
         },
         signal: controller.signal,
         body: JSON.stringify({
@@ -306,7 +306,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
 *➜ 𝐀𝐭𝐭𝐢𝐯𝐚𝐥𝐚 𝐜𝐨𝐧:* *.1 ia*
 
-> *ᴇʟɪxɪʀ ʙᴏᴛ�*`
+> *𝟴𝟴𝟴 𝗕𝗢𝗧*`
     )
   }
 
@@ -325,7 +325,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 *➜ 𝐏𝐞𝐫 𝐜𝐨𝐧𝐭𝐢𝐧𝐮𝐚𝐫𝐞 𝐮𝐧𝐚 𝐜𝐨𝐧𝐯𝐞𝐫𝐬𝐚𝐳𝐢𝐨𝐧𝐞*
 *𝐛𝐚𝐬𝐭𝐚 𝐫𝐢𝐬𝐩𝐨𝐧𝐝𝐞𝐫𝐞 𝐚𝐥 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨 𝐝𝐞𝐥 𝐛𝐨𝐭.*
 
-> *ᴇʟɪxɪʀ ʙᴏᴛ�*`
+> *𝟴𝟴𝟴 𝗕𝗢𝗧*`
     )
   }
 

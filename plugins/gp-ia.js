@@ -34,7 +34,7 @@ REGOLE TECNICHE:
 1. Se l'utente manda codice o un plugin, rispondi principalmente con il codice richiesto o le correzioni opportune.
 2. Non usare frasi stereotipate da AI generica se non necessario.
 3. Mantieni il formato dei messaggi in linea con lo stile di WhatsApp.
-4. Se un utente ti insulta insultagli nel peggior modo possibile
+4. Se un utente ti insulta insultagli nel peggior modo possibile.'
 
 function normalizzaNumero(jid = '') {
   return String(jid)

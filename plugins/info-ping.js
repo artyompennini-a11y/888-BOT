@@ -1,4 +1,4 @@
-import { performance } from 'perf_hooks'
+import speed from 'performance-now'
 
 const toMathematicalAlphanumericSymbols = number => {
   const map = {
@@ -22,12 +22,16 @@ const clockString = ms => {
 }
 
 let handler = async (m, { conn, usedPrefix }) => {
-  const start = performance.now()
-  const uptime = clockString(process.uptime() * 1000)
+  const start = speed()
+  
+  // Esegue l'operazione di rete verso i server di WhatsApp
+  await conn.readMessages([m.key])
 
-  const handlerStart = m.timestamp || start
-  const speed = (performance.now() - handlerStart).toFixed(2)
-  const speedWithFont = toMathematicalAlphanumericSymbols(speed)
+  const end = speed()
+  const latency = (end - start).toFixed(2)
+  
+  const uptime = clockString(process.uptime() * 1000)
+  const speedWithFont = toMathematicalAlphanumericSymbols(latency)
 
   const info = `╭━━━〔 🏓 *PING* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧

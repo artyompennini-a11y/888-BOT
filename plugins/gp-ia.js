@@ -82,7 +82,7 @@ async function callOpenRouter(messages) {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://github.com/888-BOT',
-          'X-Title': '𝟴𝟴𝟴-𝗕𝗢𝗧'
+          'X-Title': '888-BOT'
         },
         signal: controller.signal,
         body: JSON.stringify({
@@ -138,7 +138,7 @@ function funzioneAttiva(m) {
   if (!global.db) global.db = { data: { chats: {} } }
   if (!global.db.data) global.db.data = { chats: {} }
   if (!global.db.data.chats) global.db.data.chats = {}
-  
+
   const chat = global.db.data.chats[m.chat]
   return !!chat?.ai
 }
@@ -257,7 +257,6 @@ async function rispostaAI(m, conn, text, sessione, extraSystem = '') {
 }
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  // Gestione attivazione / disattivazione tramite .1 ia o .0 ia
   if (/^1\s*ia$/i.test(`${command} ${text}`.trim()) || command === '1') {
     if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {}
     global.db.data.chats[m.chat].ai = true
@@ -350,47 +349,52 @@ handler.tags = ['main']
 handler.command = /^(ia|ai|gpt|1|0)$/i
 
 function salvaCostoAI(usage = {}, model = '') {
-  const input = Number(usage.prompt_tokens || 0)
-  const output = Number(usage.completion_tokens || 0)
+  try {
+    const input = Number(usage.prompt_tokens || 0)
+    const output = Number(usage.completion_tokens || 0)
 
-  const prezzoInput = 0.15 / 1000000
-  const prezzoOutput = 0.60 / 1000000
+    const prezzoInput = 0.15 / 1000000
+    const prezzoOutput = 0.60 / 1000000
 
-  const cost = (input * prezzoInput) + (output * prezzoOutput)
+    const cost = (input * prezzoInput) + (output * prezzoOutput)
 
-  if (!global.db?.data) return
+    if (!global.db) global.db = { data: {} }
+    if (!global.db.data) global.db.data = {}
 
-  if (!global.db.data.aiCost) {
-    global.db.data.aiCost = {
-      totalInput: 0,
-      totalOutput: 0,
-      totalCost: 0,
-      requests: 0,
-      today: {}
+    if (!global.db.data.aiCost) {
+      global.db.data.aiCost = {
+        totalInput: 0,
+        totalOutput: 0,
+        totalCost: 0,
+        requests: 0,
+        today: {}
+      }
     }
-  }
 
-  const stats = global.db.data.aiCost
-  const oggi = new Date().toISOString().slice(0, 10)
+    const stats = global.db.data.aiCost
+    const oggi = new Date().toISOString().slice(0, 10)
 
-  if (!stats.today[oggi]) {
-    stats.today[oggi] = {
-      input: 0,
-      output: 0,
-      cost: 0,
-      requests: 0
+    if (!stats.today[oggi]) {
+      stats.today[oggi] = {
+        input: 0,
+        output: 0,
+        cost: 0,
+        requests: 0
+      }
     }
+
+    stats.totalInput += input
+    stats.totalOutput += output
+    stats.totalCost += cost
+    stats.requests += 1
+
+    stats.today[oggi].input += input
+    stats.today[oggi].output += output
+    stats.today[oggi].cost += cost
+    stats.today[oggi].requests += 1
+  } catch (err) {
+    console.error('[AI COST ERROR]', err.message)
   }
-
-  stats.totalInput += input
-  stats.totalOutput += output
-  stats.totalCost += cost
-  stats.requests += 1
-
-  stats.today[oggi].input += input
-  stats.today[oggi].output += output
-  stats.today[oggi].cost += cost
-  stats.today[oggi].requests += 1
 }
 
 export default handler

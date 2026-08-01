@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by punisher, elixir & 888 staff
 
 import fs from 'fs'
 import path from 'path'

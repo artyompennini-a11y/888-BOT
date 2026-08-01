@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+
 
 global.estrazione = global.estrazione || {
   players: {},
@@ -27,13 +27,13 @@ let handler = async (m, { conn, args, command }) => {
 
     await conn.sendMessage(m.chat, {
       text:
-`╔═══🎯 𝐄𝐒𝐓𝐑𝐀𝐙𝐈𝐎𝐍𝐄 𝐋𝐈𝐕𝐄 ═══╗
+`╭━━━〔🎯 𝐄𝐒𝐓𝐑𝐀𝐙𝐈𝐎𝐍𝐄 𝐋𝐈𝐕𝐄 〕━━━┈
 ┃ 💰 𝐏𝐨𝐫𝐭𝐚𝐟𝐨𝐠𝐥𝐢𝐨: *${money}€*
 ┃
 ┃ ⏳ Tempo: *60 secondi*
 ┃ 🎲 Scegli *1 numero (1–100)*
 ┃ 🏆 3 numeri vincenti
-╚════════════════════╝`,
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
         { buttonId: bet(100), buttonText: { displayText: "💵 100€" }, type: 1 },
         { buttonId: bet(200), buttonText: { displayText: "💵 200€" }, type: 1 },
@@ -53,11 +53,11 @@ let handler = async (m, { conn, args, command }) => {
         global.estrazione.active = false
         return conn.sendMessage(m.chat, {
           text:
-`╔═💀 𝐄𝐒𝐓𝐑𝐀𝐙𝐈𝐎𝐍𝐄 𝐀𝐍𝐍𝐔𝐋𝐋𝐀𝐓𝐀 ═╗
+`╭━━━〔💀 𝐄𝐒𝐓𝐑𝐀𝐙𝐈𝐎𝐍𝐄 𝐀𝐍𝐍𝐔𝐋𝐋𝐀𝐓𝐀 〕━━━┈
 ┃ Nessuno ha partecipato...
 ┃
 ┃ Che tristezza 😐
-╚═══════════════════╝`
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━┈`
         })
       }
 
@@ -77,13 +77,13 @@ let handler = async (m, { conn, args, command }) => {
       let pool = list.reduce((acc, [_, v]) => acc + v.bet, 0)
 
       let text =
-`╔═══🎯 𝐑𝐈𝐒𝐔𝐋𝐓𝐀𝐓𝐎 ═══╗
+`╭━━━〔🎯 𝐑𝐈𝐒𝐔𝐋𝐓𝐀𝐓𝐎 〕━━━┈
 ┃ 🎲 Numeri usciti:
 ┃ ➤ ${winNumbers.join(" • ")}
 ┃
 ┃ 💰 Montepremi:
 ┃ ➤ *${pool}€*
-╚═══════════════════╝\n\n`
+╰━━━━━━━━━━━━━━━━━━━━━┈\n\n`
 
       if (winners.length) {
 
@@ -139,7 +139,7 @@ let handler = async (m, { conn, args, command }) => {
     user.money -= bet
 
     return m.reply(
-`╔═🎯 𝐏𝐀𝐑𝐓𝐄𝐂𝐈𝐏𝐀𝐙𝐈𝐎𝐍𝐄 ═╗
+`╭━━━〔🎯 𝐏𝐀𝐑𝐓𝐄𝐂𝐈𝐏𝐀𝐙𝐈𝐎𝐍𝐄 〕━━━┈
 ┃ 💰 Puntata: *${bet}€*
 ┃
 ┃ ✍️ Scrivi:
@@ -147,7 +147,7 @@ let handler = async (m, { conn, args, command }) => {
 ┃
 ┃ Esempio:
 ┃ *.scegli 77*
-╚══════════════════╝`)
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┈`)
   }
 
   if (command === "scegli") {
@@ -174,11 +174,11 @@ let handler = async (m, { conn, args, command }) => {
     game.number = num
 
     return m.reply(
-`╔═✅ 𝐍𝐔𝐌𝐄𝐑𝐎 𝐒𝐂𝐄𝐋𝐓𝐎 ═╗
+`╭━━━〔✅ 𝐍𝐔𝐌𝐄𝐑𝐎 𝐒𝐂𝐄𝐋𝐓𝐎 〕━━━┈
 ┃ 🎯 Numero: *${num}*
 ┃
 ┃ ⏳ Attendi l’estrazione...
-╚════════════════════╝`)
+╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┈`)
   }
 }
 

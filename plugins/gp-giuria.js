@@ -1,4 +1,4 @@
-// Plugin by Gab, Lucifero & 333 staff
+// Plugin by Elixir, Punisher & 888 staff
 
 let handler = async (m, { conn, participants, groupMetadata, args, isAdmin }) => {
   try {
@@ -74,17 +74,17 @@ let handler = async (m, { conn, participants, groupMetadata, args, isAdmin }) =>
       return;
     }
 
-    // normale apertura caso
+
     const target = m.mentionedJid?.[0] || m.quoted?.sender;
     if (!target) return m.reply('❌ Usa il comando così: .giuria @user motivo');
     if (target === m.sender) return m.reply('❌ Non puoi aprire un processo contro te stesso.');
     if (groupAdmins.some(p => p.id === target || p.jid === target)) return m.reply('❌ Non puoi aprire un processo contro un altro admin.');
 
-    // blocca contro owner del bot (global.owner entries)
+ 
     const isBotOwnerTarget = (global.owner || []).some(([num]) => (`${num}@s.whatsapp.net` === target) || (num === target.split('@')[0]));
     if (isBotOwnerTarget) return m.reply('❌ Non puoi aprire un processo contro il proprietario del bot.');
 
-    // Evita più processi contemporanei nello stesso gruppo
+
     for (const [, v] of global.giuriaCases) {
       if (v && v.chat === m.chat) return m.reply('❌ È già in corso un processo in questo gruppo. Attendi la sua conclusione.');
     }

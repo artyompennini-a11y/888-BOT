@@ -70,7 +70,7 @@ let handler = async (m, { conn, args, command }) => {
 
     let cavalli = {
       1: "Jonny",
-      2: "Gab",
+      2: "Dav",
       3: "Franco"
     }
 

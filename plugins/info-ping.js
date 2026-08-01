@@ -24,7 +24,7 @@ const clockString = ms => {
 let handler = async (m, { conn, usedPrefix }) => {
   const start = speed()
   
-  // Esegue l'operazione di rete verso i server di WhatsApp
+  
   await conn.readMessages([m.key])
 
   const end = speed()

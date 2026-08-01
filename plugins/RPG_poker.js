@@ -1,8 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
-
 const SEMI = ['♠️', '♥️', '♦️', '♣️']
 const VALORI = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 const VALORE_NUM = { '2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14 }
@@ -55,7 +50,7 @@ let handler = async (m, { conn, text }) => {
   if (!puntata || puntata <= 0) {
     return await conn.sendMessage(m.chat, {
       text:
-`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
+`╭━━━〔 ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃ 🎴 *Poker a 5 carte*
 ┃ *Vinci in base alla mano!*
@@ -74,7 +69,7 @@ let handler = async (m, { conn, text }) => {
 ┃ 🎖️ Scala Col.  → x20
 ┃ 🏆 Scala Reale  → x50
 ┃
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
       footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
       buttons: [
         { buttonId: ".poker 10",  buttonText: { displayText: "💸 Punta 10€"  }, type: 1 },
@@ -108,7 +103,7 @@ let handler = async (m, { conn, text }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╔═ ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
+`╭━━━〔 ♠️ 𝐏𝐎𝐊𝐄𝐑 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃ 🎴 *Le tue carte:*
 ┃ ${carteStr}
@@ -119,7 +114,7 @@ let handler = async (m, { conn, text }) => {
 ┃
 ┃ 💼 Saldo: *${user.money}€*
 ┃
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
     footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
     buttons: [
       { buttonId: `.poker ${puntata}`, buttonText: { displayText: "🔄 Gioca ancora" }, type: 1 },

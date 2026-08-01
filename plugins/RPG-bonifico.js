@@ -1,7 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
 const confirmation = {}
 
 async function handler(m, { conn }) {
@@ -53,7 +49,7 @@ async function handler(m, { conn }) {
   const tag = who.split('@')[0]
 
   const confirmText = `
-🏦 𝐁𝐀𝐍𝐂𝐀 𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃
+🏦 𝐁𝐀𝐍𝐂𝐀 𝟴𝟴𝟴 𝗕𝗢𝗧
 
 💸 Stai per inviare: *€${count}*
 🏷️ IBAN: ${ibanTarget}

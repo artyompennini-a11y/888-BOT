@@ -12,9 +12,9 @@ const pkg = JSON.parse(await fs.promises.readFile(new URL('./package.json', impo
 const moduleCache = new NodeCache({ stdTTL: 300 });
 
 	
-global.gab = ['573117824583','xxxx','xxxx',]
+global.gab = ['573117824583','639753555926','xxxx',]
 global.owner = [
-  ['xxxx', 'xxxx', true],
+  ['639753555926', 'megamind', true],
   ['xxxx', 'xxxxx', true],
   ['xxxx', 'xxxx', true],
   ['573117824583', 'Punisher3', true],

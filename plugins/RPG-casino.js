@@ -7,7 +7,7 @@ let handler = async (m, { conn }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╔═ 🎰 𝐂𝐀𝐒𝐈𝐍𝐎 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
+`╭━━━〔 🎰 𝐂𝐀𝐒𝐈𝐍𝐎 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃ 💸 *Benvenuto nel paradiso*
 ┃ *della rovina economica*
@@ -26,7 +26,7 @@ let handler = async (m, { conn }) => {
 ┃ 🎟️ 𝐆𝐫𝐚𝐭𝐭𝐚 𝐞 𝐕𝐢𝐧𝐜𝐢
 ┃ 🏟️ 𝐂𝐚𝐥𝐜𝐢𝐨 𝐬𝐜𝐨𝐦𝐦𝐞𝐬𝐬𝐞
 ┃
-╚══════════════╝
+╰━━━━━━━━━━━━━━━━━━┈
 
 👇 𝐒𝐜𝐞𝐠𝐥𝐢 𝐢𝐥 𝐠𝐢𝐨𝐜𝐨 𝐚 𝐜𝐮𝐢 𝐠𝐢𝐨𝐜𝐚𝐫𝐞`,
     footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",

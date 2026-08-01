@@ -51,7 +51,7 @@ let handler = async (m, { conn, text }) => {
   if (!puntata || puntata <= 0) {
     return await conn.sendMessage(m.chat, {
       text:
-`╔═ 🎳 𝐁𝐎𝐖𝐋𝐈𝐍𝐆 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
+`╭━━━〔 🎳 𝐁𝐎𝐖𝐋𝐈𝐍𝐆 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃ 🎳 *Lancia la palla!*
 ┃
@@ -64,7 +64,7 @@ let handler = async (m, { conn, text }) => {
 ┃ 😬 1-4 pin       → perdi metà
 ┃ 😭 Gutter (0)    → perdi tutto
 ┃
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
       footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 CASINO",
       buttons: [
         { buttonId: ".bowling 10",  buttonText: { displayText: "💸 Punta 10€"  }, type: 1 },
@@ -110,7 +110,7 @@ let handler = async (m, { conn, text }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╔═ 🎳 𝐁𝐎𝐖𝐋𝐈𝐍𝐆 𝟴𝟴𝟴 𝗕𝗢𝗧 ═╗
+`╭━━━〔 🎳 𝐁𝐎𝐖𝐋𝐈𝐍𝐆 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃ 🎳 *Hai lanciato...*
 ┃
@@ -122,7 +122,7 @@ let handler = async (m, { conn, text }) => {
 ┃
 ┃ 💼 Saldo: *${user.money}€*
 ┃
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
     footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
     buttons: [
       { buttonId: `.bowling ${puntata}`, buttonText: { displayText: "🔄 Lancia ancora" }, type: 1 },

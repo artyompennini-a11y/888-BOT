@@ -12,12 +12,12 @@ let handler = async (m, { conn, args, command }) => {
 
     return conn.sendMessage(m.chat, {
       text:
-`╔═🎯 𝐅𝐑𝐄𝐂𝐂𝐄𝐓𝐓𝐄 ═╗
+`╭━━━〔🎯 𝐅𝐑𝐄𝐂𝐂𝐄𝐓𝐓𝐄 〕━━━┈
 ┃ 💰 Portafoglio: *${money}€*
 ┃
 ┃ 🎯 Colpisci il bersaglio!
 ┃ Più punti fai, più vinci
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
         { buttonId: bet(100), buttonText: { displayText: "💵 100€" }, type: 1 },
         { buttonId: bet(200), buttonText: { displayText: "💵 200€" }, type: 1 },
@@ -48,9 +48,9 @@ let handler = async (m, { conn, args, command }) => {
     let score = Math.floor(Math.random() * 61)
 
     let text =
-`╔═🎯 𝐅𝐑𝐄𝐂𝐂𝐄𝐓𝐓𝐀 ═╗
+`╭━━━〔🎯 𝐅𝐑𝐄𝐂𝐂𝐄𝐓𝐓𝐀 〕━━━┈
 ┃ 🎯 Punteggio: *${score}*
-╚══════════════╝\n\n`
+╰━━━━━━━━━━━━━━━━━━┈\n\n`
 
     let win = 0
 

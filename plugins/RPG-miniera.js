@@ -13,11 +13,11 @@ let handler = async (m, { conn, args, command }) => {
 
     return conn.sendMessage(m.chat, {
       text:
-`╔═💎 𝐌𝐈𝐍𝐈𝐄𝐑𝐀 ═╗
+`╭━━━〔💎 𝐌𝐈𝐍𝐈𝐄𝐑𝐀 〕━━━┈
 ┃ 💰 Portafoglio: *${money}€*
 ┃
 ┃ Scegli la puntata
-╚══════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
         { buttonId: bet(100), buttonText: { displayText: "100€" }, type: 1 },
         { buttonId: bet(200), buttonText: { displayText: "200€" }, type: 1 },
@@ -118,12 +118,12 @@ function sendGrid(conn, m, sender) {
   let game = global.miniera[sender]
 
   let text =
-`╔═💎 𝐌𝐈𝐍𝐈𝐄𝐑𝐀 ═╗
+`╭━━━〔💎 𝐌𝐈𝐍𝐈𝐄𝐑𝐀 〕━━━┈
 ┃ 💰 Puntata: *${game.bet}€*
 ┃ 📈 Moltiplicatore: *x${game.multiplier.toFixed(2)}*
 ┃
 ┃ Scegli una casella
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
 
   let buttons = []
 

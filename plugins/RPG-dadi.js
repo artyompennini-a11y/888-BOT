@@ -14,29 +14,29 @@ let handler = async (m, { conn, args }) => {
   if (u > b) {
     user.money += bet
     text =
-`╔═🎲 𝐃𝐀𝐃𝐈 ═╗
+`╭━━━〔🎲 𝐃𝐀𝐃𝐈 〕━━━┈
 ┃ 🎲 Tu: ${u} | Bot: ${b}
 ┃ 🏆 VITTORIA +${bet}€
 ┃
 ┃ 💼 Saldo: ${user.money}€
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
   } else if (u < b) {
     user.money -= bet
     text =
-`╔═🎲 𝐃𝐀𝐃𝐈 ═╗
+`╭━━━〔🎲 𝐃𝐀𝐃𝐈 〕━━━┈
 ┃ 🎲 Tu: ${u} | Bot: ${b}
 ┃ 💀 SCONFITTA -${bet}€
 ┃
 ┃ 💼 Saldo: ${user.money}€
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
   } else {
     text =
-`╔═🎲 𝐃𝐀𝐃𝐈 ═╗
+`╭━━━〔🎲 𝐃𝐀𝐃𝐈 〕━━━┈
 ┃ 🎲 Tu: ${u} | Bot: ${b}
 ┃ 😐 Pareggio
 ┃
 ┃ 💼 Saldo: ${user.money}€
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
   }
 
   await conn.sendMessage(m.chat, {

@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by punisher, elixir & 888 staff
 
 const COOLDOWN = 2 * 60 * 1000; // 2 minuti
 
@@ -63,7 +63,7 @@ let handler = async (m, { conn }) => {
   }
 
   let messaggio = `
-╔══『 𝟴𝟴𝟴 𝗕𝗢𝗧 』══╗
+╭━━━〔 𝟴𝟴𝟴 𝗕𝗢𝗧 〕━━━┈
 ┃
 ┃   ${griglia[0]}  │  ${griglia[1]}  │  ${griglia[2]}
 ┃━━━━━━━━━━━━━━
@@ -72,7 +72,7 @@ let handler = async (m, { conn }) => {
 ┃ 💵 𝐂𝐨𝐧𝐭𝐚𝐧𝐭𝐢: ${user.money}€
 ┃ 🏦 𝐁𝐚𝐧𝐜𝐚: ${user.bank}€
 ┃
-╚═════════╝
+╰━━━━━━━━━━━━━━━━━━┈
 `.trim();
 
   conn.sendMessage(m.chat, { text: messaggio }, { quoted: m });

@@ -85,7 +85,7 @@ let handler = async (m, { conn, text }) => {
                 }
             }
         }
-        diagnosticReport = `*[RISULTATO DIAGNOSI  𝚃𝙷𝙴 𝙿𝚄𝙽𝙸𝚂𝙷𝙴𝚁-𝙱𝙾𝚃 ]*\n\n`
+        diagnosticReport = `*[RISULTATO DIAGNOSI 𝟴𝟴𝟴 𝗕𝗢𝗧 ]*\n\n`
         
         if (errors.length > 0) {
             diagnosticReport += `Trovati ${errors.length} file con potenziali problemi:\n\n`

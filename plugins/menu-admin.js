@@ -106,7 +106,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}arresta
 ┃  ⮕ ${prefix}giuria
 ┃  ⮕ ${prefix}simula
-┃  ⮕ ${prefix}fakenuke
+┃  ⮕ ${prefix}nuke
 ┃  ⮕ ${prefix}ds
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici, 

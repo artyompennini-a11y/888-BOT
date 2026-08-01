@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+
 
 let pesca = () => Math.floor(Math.random() * 10) + 1
 

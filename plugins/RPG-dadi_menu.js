@@ -7,11 +7,11 @@ let handler = async (m, { conn }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╔═🎲 𝐃𝐀𝐃𝐈 ═╗
+`╭━━━〔🎲 𝐃𝐀𝐃𝐈 〕━━━┈
 ┃ 💰 Portafoglio: *${money}€*
 ┃
 ┃ Scegli la puntata
-╚══════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
     buttons: [
       { buttonId: bet(100), buttonText: { displayText: "100€" }, type: 1 },
       { buttonId: bet(200), buttonText: { displayText: "200€" }, type: 1 },

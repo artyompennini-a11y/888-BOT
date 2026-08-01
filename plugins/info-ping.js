@@ -33,7 +33,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   const uptime = clockString(process.uptime() * 1000)
   const speedWithFont = toMathematicalAlphanumericSymbols(latency)
 
-  const info = `╭━━━〔 🏓 *PING* 〕━━━┈
+  const info = `╭━━━〔 🏓 *PONG* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Stato:* Online / Attivo
 ┃━━━━━━━━━━━━━━━━━━

@@ -14,11 +14,6 @@ const formatBytes = (bytes) => {
   return `${formatted} ${units[unitIndex]}`
 }
 
-const cpu = cpus()[0].model
-  .replace(/(TM|CPU|@.*?)|\(.*?\)/gi, '')
-  .replace(/\s+/g, ' ')
-  .trim()
-
 let handler = async (m, { conn }) => {
   const p = speed()
   await conn.sendPresenceUpdate('composing', m.chat)
@@ -31,10 +26,19 @@ let handler = async (m, { conn }) => {
   const ramHeapTotal = process.memoryUsage().heapTotal
   const perc = ((ramusata / ramtot) * 100).toFixed(1)
   const percBot = ((ramBot / ramtot) * 100).toFixed(2)
-  const cpuThreads = cpus().length
-  const cpuArch = process.arch
-  const platform = process.platform
-  const nodeVersion = process.version
+  
+  // Gestione sicura di cpus() per evitare crash e 'undefined' su Termux
+  const cpusList = cpus() || []
+  const cpuThreads = cpusList.length || 1
+  const rawModel = cpusList[0]?.model || 'Android / Termux Generic CPU'
+  const cpu = rawModel
+    .replace(/(TM|CPU|@.*?)|\(.*?\)/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  const cpuArch = process.arch || 'sconosciuta'
+  const platform = process.platform || 'android'
+  const nodeVersion = process.version || 'unknown'
   const dlSpeed = (Math.random() * 100 + 50).toFixed(2)
   const ulSpeed = (Math.random() * 50 + 10).toFixed(2)
 
@@ -70,6 +74,7 @@ let handler = async (m, { conn }) => {
 ╰━━━━━━━━━━━━━━━━━━┈`.trim()
 
   await conn.reply(m.chat, text, m, { ...global.rcanal })
+  return true
 }
 
 handler.help = ['speed']

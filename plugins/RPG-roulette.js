@@ -35,25 +35,25 @@ Scegli dove puntare:`,
   if (win) {
     user.money += bet
     text =
-`╔═🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 ═╗
+`╭━━━〔🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 〕━━━┈
 ┃ 🎯 Risultato: *${result.toUpperCase()}*
 ┃ 🟢 Hai vinto!
 ┃ 💰 Guadagno: +${bet}€
 ┃
 ┃ 💼 Saldo: ${user.money}€
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
   } else {
     user.money -= bet
     if (user.money < 0) user.money = 0
 
     text =
-`╔═🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 ═╗
+`╭━━━〔🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 〕━━━┈
 ┃ 🎯 Risultato: *${result.toUpperCase()}*
 ┃ 🔴 Hai perso!
 ┃ 💸 Perso: -${bet}€
 ┃
 ┃ 💼 Saldo: ${user.money}€
-╚══════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
   }
 
   await conn.sendMessage(m.chat, {

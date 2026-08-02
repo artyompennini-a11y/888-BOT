@@ -1,11 +1,10 @@
 // Codice di euforiagenerator.js
-// Generazione pulita con rispetto del maiuscolo/minuscolo originale
+// Forza il formato Maiuscolo/Minuscolo automatico (es. Abisso)
 
 let handler = async (m, { conn, text, command, usedPrefix }) => {
-  // Prende il testo grezzo inviato dall'utente e rimuove il comando iniziale (es. .euphoria)
-  let testoOriginale = m.text ? m.text.replace(new RegExp(`^${usedPrefix}${command}\\s*`, 'i'), '') : '';
+  let testoInput = text || (m.text ? m.text.replace(new RegExp(`^${usedPrefix}${command}\\s*`, 'i'), '') : '');
 
-  if (!testoOriginale.trim()) {
+  if (!testoInput.trim()) {
     return conn.reply(
       m.chat, 
       `❌ Inserisci il nome da generare!\n\n💡 *Esempio:*\n${usedPrefix + command} Abisso`, 
@@ -13,10 +12,13 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     );
   }
 
-  // Mantiene l'esatta combinazione di maiuscole e minuscole scritte dall'utente
-  let nomePulito = testoOriginale.trim();
+  // Prende il testo, lo rende minuscolo e trasforma la prima lettera di ogni parola in Maiuscola
+  let nomePulito = testoInput
+    .trim()
+    .toLowerCase()
+    .replace(/(^\w|\s\w)/g, m => m.toUpperCase());
 
-  // Formattazione pulita: NOME ᵋᵘᵠᵒʳᶦᵃ 
+  // Formattazione: Nome ᵋᵘᵠᵒʳᶦᵃ 
   let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ`;
 
   await conn.reply(

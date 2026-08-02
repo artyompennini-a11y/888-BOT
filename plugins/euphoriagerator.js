@@ -13,8 +13,8 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
   // Pulisce il testo inserito dall'utente e lo converte in maiuscolo
   let nomePulito = text.trim().toUpperCase();
 
-  // Formattazione pulita: NOME ᵋᵘᵠᵒʳᶦᵃ ᵐᵇʳ
-  let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ ᵐᵇʳ`;
+  // Formattazione pulita: NOME ᵋᵘᵠᵒʳᶦᵃ 
+  let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ`;
 
   await conn.reply(
     m.chat, 
@@ -26,8 +26,8 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
   return await conn.reply(m.chat, `${risultato}`, m);
 };
 
-handler.help = ['euphmbr <nome>'];
+handler.help = ['euphoria <nome>'];
 handler.tags = ['euphoria', 'tools'];
-handler.command = ['euphmbr'];
+handler.command = ['euphoria'];
 
 export default handler;

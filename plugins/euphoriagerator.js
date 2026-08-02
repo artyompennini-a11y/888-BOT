@@ -1,18 +1,9 @@
 // Codice di euforiagenerator.js
-// Genera solo la stringa ᵋᵘᵠᵒʳᶦᵃ (accetta il comando con o senza testo dopo)
+// Genera SOLO ed esclusivamente la scritta ᵋᵘᵠᵒʳᶦᵃ
 
-let handler = async (m, { conn, text }) => {
-  // Output fisso
-  let risultato = `ᵋᵘᵠᵒʳᶦᵃ`;
-
-  await conn.reply(
-    m.chat, 
-    `✨ *Generato con successo!*`, 
-    m
-  );
-
-  // Invia solo ed esclusivamente la stringa stilizzata
-  return await conn.reply(m.chat, `${risultato}`, m);
+let handler = async (m, { conn }) => {
+  // Risposta singola e pulita senza alcun controllo sul testo
+  return await conn.reply(m.chat, `ᵋᵘᵠᵒʳᶦᵃ`, m);
 };
 
 handler.help = ['euphoria'];

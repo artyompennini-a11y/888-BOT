@@ -185,7 +185,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command, groupMetadata
   }
 };
 
-handler.command = ['setuser', 'profilo', 'cur', 'stats', 'top', 'fuoco', 'like'];
+handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like'];
 handler.tags    = ['fun'];
 handler.group   = true;
 

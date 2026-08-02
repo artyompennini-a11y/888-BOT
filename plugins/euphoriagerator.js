@@ -1,8 +1,11 @@
 // Codice di euforiagenerator.js
-// Generazione pulita del nome Membro senza simboli speciali
+// Generazione pulita con rispetto del maiuscolo/minuscolo originale
 
 let handler = async (m, { conn, text, command, usedPrefix }) => {
-  if (!text) {
+  // Prende il testo grezzo inviato dall'utente e rimuove il comando iniziale (es. .euphoria)
+  let testoOriginale = m.text ? m.text.replace(new RegExp(`^${usedPrefix}${command}\\s*`, 'i'), '') : '';
+
+  if (!testoOriginale.trim()) {
     return conn.reply(
       m.chat, 
       `❌ Inserisci il nome da generare!\n\n💡 *Esempio:*\n${usedPrefix + command} Abisso`, 
@@ -10,10 +13,10 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     );
   }
 
-  // Rimuove solo gli spazi vuoti inutili all'inizio e alla fine, mantenendo il maiuscolo/minuscolo originale
-  let nomePulito = text.trim().toLowerCase();
+  // Mantiene l'esatta combinazione di maiuscole e minuscole scritte dall'utente
+  let nomePulito = testoOriginale.trim();
 
-  // Formattazione pulita: nome ᵋᵘᵠᵒʳᶦᵃ 
+  // Formattazione pulita: NOME ᵋᵘᵠᵒʳᶦᵃ 
   let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ`;
 
   await conn.reply(

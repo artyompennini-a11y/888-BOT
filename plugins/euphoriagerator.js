@@ -11,7 +11,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
   }
 
   // Rimuove solo gli spazi vuoti inutili all'inizio e alla fine, mantenendo il maiuscolo/minuscolo originale
-  let nomePulito = text.trim();
+  let nomePulito = text.trim().toLowerCase();
 
   // Formattazione pulita: nome ᵋᵘᵠᵒʳᶦᵃ 
   let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ`;

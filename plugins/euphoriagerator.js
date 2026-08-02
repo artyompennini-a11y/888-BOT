@@ -1,7 +1,7 @@
 // Codice di euforiagenerator.js
-// Genera unicamente la stringa ᵋᵘᵠᵒʳᶦᵃ
+// Genera solo la stringa ᵋᵘᵠᵒʳᶦᵃ (accetta il comando con o senza testo dopo)
 
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, text }) => {
   // Output fisso
   let risultato = `ᵋᵘᵠᵒʳᶦᵃ`;
 
@@ -11,7 +11,7 @@ let handler = async (m, { conn }) => {
     m
   );
 
-  // Invia solo la stringa stilizzata
+  // Invia solo ed esclusivamente la stringa stilizzata
   return await conn.reply(m.chat, `${risultato}`, m);
 };
 

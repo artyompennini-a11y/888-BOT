@@ -1,12 +1,9 @@
 let handler = async (m, { conn, text, args, command }) => {
-    // Inizializza i dati dell'utente nel database
-    let user = global.db.data.users[m.sender];
-    if (!user) {
-        user = global.db.data.users[m.sender] = {};
-    }
+    if (!global.db?.data?.users) return;
 
-    // Default valori RPG
-    user.rpg = user.rpg || {
+    let user = global.db.data.users[m.sender] ||= {};
+
+    user.rpg ||= {
         livello: 1,
         exp: 0,
         hp: 100,
@@ -17,155 +14,239 @@ let handler = async (m, { conn, text, args, command }) => {
         danno: 5
     };
 
-    const rpg = user.rpg;
+    let rpg = user.rpg;
 
-    // 🔍 LETTURA UNIVERSALE INPUT:
-    // Uniamo tutto quello che l'utente ha inviato (sia come argomenti che testo grezzo)
-    const input = (text || args.join(' ') || m.text || '').toLowerCase().trim();
+    let input = [
+        text,
+        args.join(' '),
+        m.text,
+        m.message?.conversation,
+        m.message?.extendedTextMessage?.text,
+        m.message?.buttonsResponseMessage?.selectedButtonId,
+        m.message?.templateButtonReplyMessage?.selectedId,
+        m.message?.listResponseMessage?.singleSelectReply?.selectedRowId
+    ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+    .trim();
 
-    // 1. SCELTA DELLA CLASSE
+
     if (!rpg.classe) {
-        if (/guerriero/i.test(input)) {
+
+        if (input.includes('guerriero')) {
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
             rpg.hp = 150;
             rpg.arma = 'Spada di Legno';
             rpg.danno = 15;
-        } else if (/mago/i.test(input)) {
+
+        } else if (input.includes('mago')) {
             rpg.classe = 'Mago';
             rpg.hpMax = 80;
             rpg.hp = 80;
             rpg.arma = 'Bastone Vecchio';
             rpg.danno = 25;
-        } else if (/ladro/i.test(input)) {
+
+        } else if (input.includes('ladro')) {
             rpg.classe = 'Ladro';
             rpg.hpMax = 100;
             rpg.hp = 100;
             rpg.arma = 'Pugnale Arrugginito';
             rpg.danno = 20;
-        } else {
-            // Se non c'è nessuna classe selezionata, invia le opzioni di scelta rapida
-            let msgClasse = `🗡️ *BENVENUTO NELL'AVVENTURA!* 🛡️\n\n`;
-            msgClasse += `Non hai ancora una classe per il tuo eroe!\n`;
-            msgClasse += `Scrivi o tocca uno dei comandi qui sotto per iniziare:\n\n`;
-            msgClasse += `▫️ *.${command} guerriero*\n`;
-            msgClasse += `▫️ *.${command} mago*\n`;
-            msgClasse += `▫️ *.${command} ladro*`;
 
-            return await conn.sendMessage(m.chat, { text: msgClasse }, { quoted: m });
+        } else {
+
+            return conn.sendMessage(
+                m.chat,
+                {
+                    text:
+`🗡️ *BENVENUTO NELL'AVVENTURA!* 🛡️
+
+Scegli la tua classe:
+
+⚔️ Guerriero
+🪄 Mago
+🗡️ Ladro
+
+Usa:
+.${command} guerriero
+.${command} mago
+.${command} ladro`
+                },
+                { quoted:m }
+            );
         }
 
-        return await conn.sendMessage(m.chat, {
-            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\n\nUsa di nuovo *.${command}* per partire in missione!`
-        }, { quoted: m });
+
+        return conn.sendMessage(
+            m.chat,
+            {
+                text:
+`🎉 Sei entrato nella Gilda come *${rpg.classe}*!
+
+Usa ancora:
+.${command}
+
+per iniziare l'avventura.`
+            },
+            { quoted:m }
+        );
     }
 
-    // Controllo morte/riposo
+
     if (rpg.hp <= 0) {
-        if (Math.random() < 0.5) {
-            rpg.hp = Math.floor(rpg.hpMax * 0.5);
-            return await conn.sendMessage(m.chat, {
-                text: `💀 Eri svenuto! Un chierico di passaggio ti ha rianimato. Ora hai *${rpg.hp} HP*.`
-            }, { quoted: m });
-        } else {
-            return await conn.sendMessage(m.chat, {
-                text: `💀 Sei troppo debole per combattere! Usa *.riposa* prima di tornare in avventura.`
-            }, { quoted: m });
-        }
+
+        rpg.hp = Math.floor(rpg.hpMax / 2);
+
+        return conn.sendMessage(
+            m.chat,
+            {
+                text:
+`💀 Sei stato rianimato!
+
+❤️ HP ripristinati: ${rpg.hp}`
+            },
+            { quoted:m }
+        );
     }
 
-    // 2. SISTEMA DI EVENTI CASUALI
-    const armiTrovabili = [
-        { nome: 'Katana affilata', danno: 35 },
-        { nome: 'Scettro Arcano', danno: 45 },
-        { nome: 'Daga dell\'Ombra', danno: 30 }
+
+    const armi = [
+        ["Katana Affilata",35],
+        ["Scettro Arcano",45],
+        ["Daga dell'Ombra",30]
     ];
 
-    const eventi = [
-        {
-            titolo: "👾 *ATTACCO DI UN MOSTRO!*",
-            azione: (u) => {
-                const dannoSubito = Math.floor(Math.random() * 20) + 5;
-                const guadagnoExp = 40 + (u.livello * 5);
-                const guadagnoMonete = Math.floor(Math.random() * 30) + 10;
 
-                u.hp = Math.max(0, u.hp - dannoSubito);
-                u.exp += guadagnoExp;
-                u.monete += guadagnoMonete;
+    let eventi = [
 
-                return `Hai sconfitto un *Goblin selvaggio* con il tuo/a _${u.arma}_\n` +
-                       `🩸 Danni subiti: -${dannoSubito} HP\n` +
-                       `✨ XP ottenuti: +${guadagnoExp}\n` +
-                       `💰 Monete trovate: +${guadagnoMonete}`;
-            }
+        () => {
+
+            let danno = Math.floor(Math.random()*20)+5;
+            let xp = 40+(rpg.livello*5);
+            let soldi = Math.floor(Math.random()*30)+10;
+
+            rpg.hp=Math.max(0,rpg.hp-danno);
+            rpg.exp+=xp;
+            rpg.monete+=soldi;
+
+            return `👾 Hai sconfitto un Goblin!
+
+🩸-${danno} HP
+✨+${xp} XP
+💰+${soldi} monete`;
         },
-        {
-            titolo: "📦 *BAULE DEL TESORO*",
-            azione: (u) => {
-                if (Math.random() < 0.3) {
-                    const nuovaArma = armiTrovabili[Math.floor(Math.random() * armiTrovabili.length)];
-                    if (nuovaArma.danno > u.danno) {
-                        u.arma = nuovaArma.nome;
-                        u.danno = nuovaArma.danno;
-                        return `Hai aperto un baule e trovato una nuova arma: *${nuovaArma.nome}* (Danno: ${nuovaArma.danno})! 🔥`;
-                    }
+
+
+        () => {
+
+            if(Math.random()<0.3){
+
+                let arma=armi[Math.floor(Math.random()*armi.length)];
+
+                if(arma[1]>rpg.danno){
+
+                    rpg.arma=arma[0];
+                    rpg.danno=arma[1];
+
+                    return `📦 Hai trovato:
+⚔️ *${arma[0]}*
+Danno: ${arma[1]}`;
                 }
-                const moneteExtra = 80;
-                u.monete += moneteExtra;
-                return `Hai trovato un vecchio baule pieno d'oro! +${moneteExtra} Monete 🪙`;
             }
+
+            rpg.monete+=80;
+
+            return `📦 Hai trovato un tesoro!
+
+💰+80 monete`;
         },
-        {
-            titolo: "⚠️ *TRAPPOLA SCATTATA!*",
-            azione: (u) => {
-                const dannoTrappola = 25;
-                u.hp = Math.max(0, u.hp - dannoTrappola);
-                return `Sei caduto in una fossa con spuntoni! Hai perso *${dannoTrappola} HP* 🩸`;
-            }
+
+
+        () => {
+
+            rpg.hp=Math.max(0,rpg.hp-25);
+
+            return `⚠️ Trappola!
+
+🩸-25 HP`;
         },
-        {
-            titolo: "🏛️ *SANTUARIO ANTICO*",
-            azione: (u) => {
-                const cura = 40;
-                u.hp = Math.min(u.hpMax, u.hp + cura);
-                return `Una luce divina ti avvolge. Hai recuperato *${cura} HP* ❤️`;
-            }
+
+
+        () => {
+
+            let cura=40;
+
+            rpg.hp=Math.min(rpg.hpMax,rpg.hp+cura);
+
+            return `🏛️ Santuario antico!
+
+❤️+${cura} HP`;
         }
     ];
 
-    const eventoScelto = eventi[Math.floor(Math.random() * eventi.length)];
-    const risultato = eventoScelto.azione(rpg);
 
-    // 3. CONTROLLO LEVEL UP
-    let msgLevelUp = '';
-    const expNecessaria = rpg.livello * 100;
-    if (rpg.exp >= expNecessaria) {
-        rpg.livello += 1;
-        rpg.exp -= expNecessaria;
-        rpg.hpMax += 20;
-        rpg.hp = rpg.hpMax;
-        rpg.danno += 5;
-        msgLevelUp = `\n\n🎉 *LEVEL UP!* Sei salito al *Livello ${rpg.livello}*!`;
+    let risultato =
+        eventi[Math.floor(Math.random()*eventi.length)]();
+
+
+    let level = rpg.livello*100;
+
+    let levelup='';
+
+    if(rpg.exp>=level){
+
+        rpg.livello++;
+        rpg.exp-=level;
+        rpg.hpMax+=20;
+        rpg.hp=rpg.hpMax;
+        rpg.danno+=5;
+
+        levelup=
+`\n\n🎉 LEVEL UP!
+Nuovo livello: ${rpg.livello}`;
     }
 
-    // 4. MESSAGGIO FINALE
-    let risposta = `${eventoScelto.titolo}\n\n`;
-    risposta += `@${m.sender.split('@')[0]}\n`;
-    risposta += `${risultato}${msgLevelUp}\n\n`;
-    risposta += `───────────────\n`;
-    risposta += `🎭 *Classe:* ${rpg.classe} | 🎖️ *Livello:* ${rpg.livello}\n`;
-    risposta += `❤️ *HP:* ${rpg.hp}/${rpg.hpMax} | ⚔️ *Arma:* ${rpg.arma} (${rpg.danno} DMG)\n`;
-    risposta += `💰 *Monete:* ${rpg.monete} | ✨ *XP:* ${rpg.exp}/${rpg.livello * 100}`;
 
-    await conn.sendMessage(m.chat, {
-        text: risposta,
-        mentions: [m.sender]
-    }, { quoted: m });
+    let msg =
+`⚔️ *AVVENTURA*
+
+@${m.sender.split('@')[0]}
+
+${risultato}
+${levelup}
+
+────────────
+
+🎭 Classe: ${rpg.classe}
+🎖️ Livello: ${rpg.livello}
+
+❤️ HP: ${rpg.hp}/${rpg.hpMax}
+
+⚔️ Arma: ${rpg.arma}
+💥 Danno: ${rpg.danno}
+
+💰 Monete: ${rpg.monete}
+✨ XP: ${rpg.exp}/${rpg.livello*100}`;
+
+
+    await conn.sendMessage(
+        m.chat,
+        {
+            text:msg,
+            mentions:[m.sender]
+        },
+        {quoted:m}
+    );
 };
 
-handler.help = ['avventura'];
-handler.tags = ['game'];
-// Regex estesa: cattura sia il comando base che le opzioni immediate
-handler.command = /^(avventura|esplora|rpg)(?:\s+(guerriero|mago|ladro))?$/i;
+
+handler.help=['avventura'];
+handler.tags=['game'];
+
+handler.command =
+/^(avventura|esplora|rpg)(.*)?$/i;
+
 
 export default handler;

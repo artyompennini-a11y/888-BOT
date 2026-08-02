@@ -5,13 +5,13 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
   if (!text) {
     return conn.reply(
       m.chat, 
-      `❌ Inserisci il nome da generare!\n\n💡 *Esempio:*\n${usedPrefix + command} abisso`, 
+      `❌ Inserisci il nome da generare!\n\n💡 *Esempio:*\n${usedPrefix + command} Abisso`, 
       m
     );
   }
 
-  // Pulisce il testo inserito dall'utente e lo converte in maiuscolo
-  let nomePulito = text.trim().toUpperCase();
+  // Rimuove solo gli spazi vuoti inutili all'inizio e alla fine, mantenendo il maiuscolo/minuscolo originale
+  let nomePulito = text.trim();
 
   // Formattazione pulita: NOME ᵋᵘᵠᵒʳᶦᵃ 
   let risultato = `${nomePulito} ᵋᵘᵠᵒʳᶦᵃ`;
@@ -21,7 +21,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
     `✨ *Nome Membro ᵋᵘᵠᵒʳᶦᵃ generato con successo!*`, 
     m
   );
-  
+
   // Invia il risultato finale
   return await conn.reply(m.chat, `${risultato}`, m);
 };

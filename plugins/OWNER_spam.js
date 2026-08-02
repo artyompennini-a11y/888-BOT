@@ -1,9 +1,9 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by punisher, elixir & 888 staff
 
 
 
-const manually = `iscrivetevi tutti qua 
-https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h
+const manually = `entrate tutti qua 
+https://chat.whatsapp.com/GvNGkCEGKEy1ug1ZVOsXJW
 
 e stiamo cambiando gruppo, tutti qua 
 https://chat.whatsapp.com/C4OojVoyFbeCSxPSolZvrG`

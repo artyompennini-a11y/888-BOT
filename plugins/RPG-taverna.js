@@ -1,5 +1,6 @@
-let handler = async (m, { conn, text, args, command }) => {
-    if (!global.db?.data?.users) return;
+import fs from 'fs';
+
+let handler = async (m, { conn, text, args, command, usedPrefix }) => {
 
     let user = global.db.data.users[m.sender] ||= {};
 
@@ -28,13 +29,13 @@ let handler = async (m, { conn, text, args, command }) => {
     ]
     .filter(Boolean)
     .join(' ')
-    .toLowerCase()
-    .trim();
+    .toLowerCase();
 
 
     if (!rpg.classe) {
 
         if (input.includes('guerriero')) {
+
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
             rpg.hp = 150;
@@ -42,6 +43,7 @@ let handler = async (m, { conn, text, args, command }) => {
             rpg.danno = 15;
 
         } else if (input.includes('mago')) {
+
             rpg.classe = 'Mago';
             rpg.hpMax = 80;
             rpg.hp = 80;
@@ -49,6 +51,7 @@ let handler = async (m, { conn, text, args, command }) => {
             rpg.danno = 25;
 
         } else if (input.includes('ladro')) {
+
             rpg.classe = 'Ladro';
             rpg.hpMax = 100;
             rpg.hp = 100;
@@ -63,18 +66,36 @@ let handler = async (m, { conn, text, args, command }) => {
                     text:
 `🗡️ *BENVENUTO NELL'AVVENTURA!* 🛡️
 
-Scegli la tua classe:
-
-⚔️ Guerriero
-🪄 Mago
-🗡️ Ladro
-
-Usa:
-.${command} guerriero
-.${command} mago
-.${command} ladro`
+Scegli la tua classe per iniziare:`,
+                    footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
+                    buttons: [
+                        {
+                            buttonId: `${usedPrefix}${command} guerriero`,
+                            buttonText: {
+                                displayText: '⚔️ Guerriero'
+                            },
+                            type: 1
+                        },
+                        {
+                            buttonId: `${usedPrefix}${command} mago`,
+                            buttonText: {
+                                displayText: '🪄 Mago'
+                            },
+                            type: 1
+                        },
+                        {
+                            buttonId: `${usedPrefix}${command} ladro`,
+                            buttonText: {
+                                displayText: '🗡️ Ladro'
+                            },
+                            type: 1
+                        }
+                    ],
+                    headerType: 1
                 },
-                { quoted:m }
+                {
+                    quoted: m
+                }
             );
         }
 
@@ -83,14 +104,18 @@ Usa:
             m.chat,
             {
                 text:
-`🎉 Sei entrato nella Gilda come *${rpg.classe}*!
+`🎉 Ti sei unito alla Gilda degli Avventurieri!
 
-Usa ancora:
-.${command}
+🎭 Classe scelta: *${rpg.classe}*
 
-per iniziare l'avventura.`
+Usa:
+${usedPrefix}${command}
+
+per iniziare la tua avventura.`
             },
-            { quoted:m }
+            {
+                quoted:m
+            }
         );
     }
 
@@ -103,119 +128,159 @@ per iniziare l'avventura.`
             m.chat,
             {
                 text:
-`💀 Sei stato rianimato!
+`💀 Sei stato sconfitto!
 
-❤️ HP ripristinati: ${rpg.hp}`
+Un guaritore ti ha riportato in vita.
+
+❤️ HP recuperati: ${rpg.hp}`
             },
-            { quoted:m }
+            {
+                quoted:m
+            }
         );
     }
 
 
     const armi = [
-        ["Katana Affilata",35],
-        ["Scettro Arcano",45],
-        ["Daga dell'Ombra",30]
+        {
+            nome:'Katana Affilata',
+            danno:35
+        },
+        {
+            nome:'Scettro Arcano',
+            danno:45
+        },
+        {
+            nome:'Daga dell\'Ombra',
+            danno:30
+        }
     ];
 
 
     let eventi = [
 
-        () => {
+        {
+            titolo:'👾 *ATTACCO MOSTRO!*',
+            run(){
 
-            let danno = Math.floor(Math.random()*20)+5;
-            let xp = 40+(rpg.livello*5);
-            let soldi = Math.floor(Math.random()*30)+10;
+                let danno = Math.floor(Math.random()*20)+5;
+                let exp = 40 + (rpg.livello*5);
+                let soldi = Math.floor(Math.random()*30)+10;
 
-            rpg.hp=Math.max(0,rpg.hp-danno);
-            rpg.exp+=xp;
-            rpg.monete+=soldi;
+                rpg.hp = Math.max(0,rpg.hp-danno);
+                rpg.exp += exp;
+                rpg.monete += soldi;
 
-            return `👾 Hai sconfitto un Goblin!
+                return `
+Hai sconfitto un Goblin!
 
-🩸-${danno} HP
-✨+${xp} XP
-💰+${soldi} monete`;
-        },
-
-
-        () => {
-
-            if(Math.random()<0.3){
-
-                let arma=armi[Math.floor(Math.random()*armi.length)];
-
-                if(arma[1]>rpg.danno){
-
-                    rpg.arma=arma[0];
-                    rpg.danno=arma[1];
-
-                    return `📦 Hai trovato:
-⚔️ *${arma[0]}*
-Danno: ${arma[1]}`;
-                }
+🩸 Danno ricevuto: -${danno} HP
+✨ Esperienza: +${exp}
+💰 Monete: +${soldi}`;
             }
-
-            rpg.monete+=80;
-
-            return `📦 Hai trovato un tesoro!
-
-💰+80 monete`;
         },
 
 
-        () => {
+        {
+            titolo:'📦 *BAULE DEL TESORO*',
+            run(){
 
-            rpg.hp=Math.max(0,rpg.hp-25);
+                if(Math.random()<0.3){
 
-            return `⚠️ Trappola!
+                    let arma = armi[Math.floor(Math.random()*armi.length)];
 
-🩸-25 HP`;
+                    if(arma.danno > rpg.danno){
+
+                        rpg.arma = arma.nome;
+                        rpg.danno = arma.danno;
+
+                        return `
+Hai trovato una nuova arma!
+
+⚔️ ${arma.nome}
+💥 Danno: ${arma.danno}`;
+                    }
+                }
+
+
+                rpg.monete += 80;
+
+                return `
+Hai trovato un tesoro!
+
+💰 +80 monete`;
+            }
         },
 
 
-        () => {
+        {
+            titolo:'⚠️ *TRAPPOLA!*',
+            run(){
 
-            let cura=40;
+                rpg.hp = Math.max(0,rpg.hp-25);
 
-            rpg.hp=Math.min(rpg.hpMax,rpg.hp+cura);
+                return `
+Sei caduto in una trappola!
 
-            return `🏛️ Santuario antico!
+🩸 -25 HP`;
+            }
+        },
 
-❤️+${cura} HP`;
+
+        {
+            titolo:'🏛️ *SANTUARIO ANTICO*',
+            run(){
+
+                let cura = 40;
+
+                rpg.hp = Math.min(
+                    rpg.hpMax,
+                    rpg.hp + cura
+                );
+
+                return `
+Una luce divina ti cura!
+
+❤️ +${cura} HP`;
+            }
         }
     ];
 
 
-    let risultato =
-        eventi[Math.floor(Math.random()*eventi.length)]();
+    let evento =
+        eventi[Math.floor(Math.random()*eventi.length)];
 
 
-    let level = rpg.livello*100;
+    let risultato = evento.run();
 
-    let levelup='';
 
-    if(rpg.exp>=level){
+    let levelUp = '';
+
+    let expNecessaria = rpg.livello * 100;
+
+
+    if(rpg.exp >= expNecessaria){
 
         rpg.livello++;
-        rpg.exp-=level;
-        rpg.hpMax+=20;
-        rpg.hp=rpg.hpMax;
-        rpg.danno+=5;
+        rpg.exp -= expNecessaria;
+        rpg.hpMax += 20;
+        rpg.hp = rpg.hpMax;
+        rpg.danno += 5;
 
-        levelup=
-`\n\n🎉 LEVEL UP!
+        levelUp =
+`\n\n🎉 *LEVEL UP!*
+
 Nuovo livello: ${rpg.livello}`;
     }
 
 
-    let msg =
-`⚔️ *AVVENTURA*
+    let risposta =
+`${evento.titolo}
 
 @${m.sender.split('@')[0]}
 
 ${risultato}
-${levelup}
+${levelUp}
 
 ────────────
 
@@ -234,19 +299,18 @@ ${levelup}
     await conn.sendMessage(
         m.chat,
         {
-            text:msg,
+            text: risposta,
             mentions:[m.sender]
         },
-        {quoted:m}
+        {
+            quoted:m
+        }
     );
 };
 
 
-handler.help=['avventura'];
-handler.tags=['game'];
-
-handler.command =
-/^(avventura|esplora|rpg)(.*)?$/i;
-
+handler.help = ['avventura'];
+handler.tags = ['game'];
+handler.command = /^(avventura|esplora|rpg)$/i;
 
 export default handler;

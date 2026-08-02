@@ -1,4 +1,4 @@
-let handler = async (m, { conn, text, command }) => {
+let handler = async (m, { conn, text, args, command }) => {
     // Inizializza i dati dell'utente nel database
     let user = global.db.data.users[m.sender];
     if (!user) {
@@ -19,47 +19,44 @@ let handler = async (m, { conn, text, command }) => {
 
     const rpg = user.rpg;
 
-    // 🔍 ESTRAZIONE PULITA DELL'INPUT (Risolve il problema dei comandi non riconosciuti)
-    // Prende il testo sia da `text` sia direttamente dal corpo del messaggio `m.text`
-    let fullText = (text || m.text || '').toLowerCase().trim();
+    // 🔍 LETTURA UNIVERSALE INPUT:
+    // Uniamo tutto quello che l'utente ha inviato (sia come argomenti che testo grezzo)
+    const input = (text || args.join(' ') || m.text || '').toLowerCase().trim();
 
     // 1. SCELTA DELLA CLASSE
     if (!rpg.classe) {
-        if (fullText.includes('guerriero')) {
+        if (/guerriero/i.test(input)) {
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
             rpg.hp = 150;
             rpg.arma = 'Spada di Legno';
             rpg.danno = 15;
-        } else if (fullText.includes('mago')) {
+        } else if (/mago/i.test(input)) {
             rpg.classe = 'Mago';
             rpg.hpMax = 80;
             rpg.hp = 80;
             rpg.arma = 'Bastone Vecchio';
             rpg.danno = 25;
-        } else if (fullText.includes('ladro')) {
+        } else if (/ladro/i.test(input)) {
             rpg.classe = 'Ladro';
             rpg.hpMax = 100;
             rpg.hp = 100;
             rpg.arma = 'Pugnale Arrugginito';
             rpg.danno = 20;
         } else {
-            // INVIO DEL SONDAGGIO (Bottoni funzionanti al 100%)
-            return await conn.sendMessage(m.chat, {
-                poll: {
-                    name: "🗡️ *BENVENUTO NELL'AVVENTURA!*\nScegli la tua classe cliccando su un'opzione:",
-                    values: [
-                        `.${command} guerriero`,
-                        `.${command} mago`,
-                        `.${command} ladro`
-                    ],
-                    selectableCount: 1
-                }
-            }, { quoted: m });
+            // Se non c'è nessuna classe selezionata, invia le opzioni di scelta rapida
+            let msgClasse = `🗡️ *BENVENUTO NELL'AVVENTURA!* 🛡️\n\n`;
+            msgClasse += `Non hai ancora una classe per il tuo eroe!\n`;
+            msgClasse += `Scrivi o tocca uno dei comandi qui sotto per iniziare:\n\n`;
+            msgClasse += `▫️ *.${command} guerriero*\n`;
+            msgClasse += `▫️ *.${command} mago*\n`;
+            msgClasse += `▫️ *.${command} ladro*`;
+
+            return await conn.sendMessage(m.chat, { text: msgClasse }, { quoted: m });
         }
 
         return await conn.sendMessage(m.chat, {
-            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\n\nUsa di nuovo *.${command}* per partire in missione.`
+            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\n\nUsa di nuovo *.${command}* per partire in missione!`
         }, { quoted: m });
     }
 
@@ -168,6 +165,7 @@ let handler = async (m, { conn, text, command }) => {
 
 handler.help = ['avventura'];
 handler.tags = ['game'];
-handler.command = /^(avventura|esplora|rpg)$/i;
+// Regex estesa: cattura sia il comando base che le opzioni immediate
+handler.command = /^(avventura|esplora|rpg)(?:\s+(guerriero|mago|ladro))?$/i;
 
 export default handler;

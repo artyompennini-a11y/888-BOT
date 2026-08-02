@@ -9,7 +9,7 @@ let handler = async (m, { conn }) => {
 *╭─── 👑 𝐂𝐑𝐄𝐀𝐓𝐎𝐑𝐄 ───╮*
 *│ ✦ 𝐍𝐨𝐦𝐞:* The punisher
 *│ ✦ 𝐑𝐮𝐨𝐥𝐨:* Owner / Developer
-*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @79524931364
+*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @573117824583
 *│ ✦ 𝐈𝐆:* instagram.com/arty.340
 *│ ✦ 𝐓𝐆:* @punishth
 *╰────────────────────╯*
@@ -41,7 +41,7 @@ let handler = async (m, { conn }) => {
         {
             contextInfo: {
                 mentionedJid: [
-                    '79524931364@s.whatsapp.net',
+                    '573117824583@s.whatsapp.net',
                     '639752917233@s.whatsapp.net',  
                     '212785655331@s.whatsapp.net'
                 ]
@@ -59,7 +59,7 @@ let handler = async (m, { conn }) => {
 VERSION:3.0
 FN:The punisher
 ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Owner / Dev
-TEL;type=CELL;type=VOICE;waid=79524931364:+79524931364
+TEL;type=CELL;type=VOICE;waid=573117824583:+573117824583
 END:VCARD`
                     },
                     {

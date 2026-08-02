@@ -1,13 +1,4 @@
 let handler = async (m, { conn, text, command }) => {
-    // 🔍 INTERCETTAZIONE DELLA RISPOSTA AI SONDAGGI / BOTTONI NATIVI
-    let inputUser = text ? text.toLowerCase().trim() : '';
-
-    // Se l'utente risponde tramite un sondaggio/bottone nativo
-    if (m.message?.pollUpdateMessage) {
-        // La gestione del poll update viene intercettata dal listener dei sondaggi
-        return;
-    }
-
     // Inizializza i dati dell'utente nel database
     let user = global.db.data.users[m.sender];
     if (!user) {
@@ -28,31 +19,35 @@ let handler = async (m, { conn, text, command }) => {
 
     const rpg = user.rpg;
 
+    // 🔍 ESTRAZIONE PULITA DELL'INPUT (Risolve il problema dei comandi non riconosciuti)
+    // Prende il testo sia da `text` sia direttamente dal corpo del messaggio `m.text`
+    let fullText = (text || m.text || '').toLowerCase().trim();
+
     // 1. SCELTA DELLA CLASSE
     if (!rpg.classe) {
-        if (inputUser.includes('guerriero')) {
+        if (fullText.includes('guerriero')) {
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
             rpg.hp = 150;
             rpg.arma = 'Spada di Legno';
             rpg.danno = 15;
-        } else if (inputUser.includes('mago')) {
+        } else if (fullText.includes('mago')) {
             rpg.classe = 'Mago';
             rpg.hpMax = 80;
             rpg.hp = 80;
             rpg.arma = 'Bastone Vecchio';
             rpg.danno = 25;
-        } else if (inputUser.includes('ladro')) {
+        } else if (fullText.includes('ladro')) {
             rpg.classe = 'Ladro';
             rpg.hpMax = 100;
             rpg.hp = 100;
             rpg.arma = 'Pugnale Arrugginito';
             rpg.danno = 20;
         } else {
-            // INVIO DEL SONDAGGIO COME "BOTTONI" (Funziona su tutte le versioni)
+            // INVIO DEL SONDAGGIO (Bottoni funzionanti al 100%)
             return await conn.sendMessage(m.chat, {
                 poll: {
-                    name: "🗡️ *BENVENUTO NELL'AVVENTURA!*\nNon hai ancora una classe. Clicca un'opzione qui sotto per scegliere:",
+                    name: "🗡️ *BENVENUTO NELL'AVVENTURA!*\nScegli la tua classe cliccando su un'opzione:",
                     values: [
                         `.${command} guerriero`,
                         `.${command} mago`,
@@ -64,7 +59,7 @@ let handler = async (m, { conn, text, command }) => {
         }
 
         return await conn.sendMessage(m.chat, {
-            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\nUsa di nuovo *.${command}* per partire in missione.`
+            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\n\nUsa di nuovo *.${command}* per partire in missione.`
         }, { quoted: m });
     }
 

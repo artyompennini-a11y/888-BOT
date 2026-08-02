@@ -1,17 +1,23 @@
 let handler = async (m, { conn, participants }) => {
-    const chat = global.db.data.chats[m.chat];
-    if (!chat?.topUsers || Object.keys(chat.topUsers).length === 0) {
+    // Inizializza l'oggetto della chat se non esiste
+    const chat = global.db.data.chats[m.chat] || {};
+    
+    if (!chat.topUsers || Object.keys(chat.topUsers).length === 0) {
         return await conn.sendMessage(m.chat, { text: 'Nessun messaggio registrato in questo gruppo.' });
     }
 
-    const groupMembers = new Set(participants?.map(p => p.id) || [])
+    // Filtra i membri presenti nel gruppo ed esclude il bot stesso
+    const groupMembers = new Set(participants?.map(p => p.id) || []);
+    const botJid = conn.user.jid || conn.user.id;
+    
     const users = Object.entries(chat.topUsers)
-        .filter(([jid]) => groupMembers.has(jid) && jid !== conn.user.jid);
+        .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
 
     if (users.length === 0) {
         return await conn.sendMessage(m.chat, { text: 'Nessun messaggio registrato in questo gruppo.' });
     }
 
+    // Ordina gli utenti dal più attivo al meno attivo
     users.sort((a, b) => b[1] - a[1]);
     const top = users.slice(0, 10);
 
@@ -28,41 +34,44 @@ let handler = async (m, { conn, participants }) => {
         '𝐅𝐚𝐢 𝐩𝐫𝐢𝐦𝐚 𝐚 𝐪𝐮𝐢𝐭𝐭𝐚𝐫𝐞'
     ];
 
-    chat.prevFirst = chat.prevFirst || null;
     const newFirst = top[0][0];
 
+    // Controlla se il primo posto è cambiato
     if (chat.prevFirst && chat.prevFirst !== newFirst) {
         await conn.sendMessage(m.chat, {
-            text: `🏆 @${newFirst.split('@')[0]} ha superato @${chat.prevFirst.split('@')[0]} ed è diventato primo!`,
+            text: `🏆 @${newFirst.split('@')[0]} ha superato @${chat.prevFirst.split('@')[0]} ed è diventato il nuovo primo in classifica!`,
             mentions: [newFirst, chat.prevFirst]
         });
     }
 
     chat.prevFirst = newFirst;
 
-    let text = `🏆 𝐓𝐎𝐏 𝟏𝟎 𝐔𝐓𝐄𝐍𝐓𝐈 𝐏𝐈𝐔̀ 𝐀𝐓𝐓𝐈𝐕𝐈 𝐃𝐄𝐋 𝐆𝐑𝐔𝐏𝐏𝐎\n> 𝐬𝐞 𝐬𝐞𝐢 𝐢𝐥 𝐩𝐫𝐢𝐦𝐨 𝐫𝐢𝐜𝐨𝐫𝐝𝐚 𝐝𝐢 𝐫𝐢𝐬𝐜𝐚𝐭𝐭𝐚𝐫𝐞 𝐢𝐥 𝐭𝐮𝐨 𝐩𝐫𝐞𝐦𝐢𝐨 𝐜𝐨𝐧 ’’.𝐩𝐫𝐞𝐦𝐢𝐨𝐭𝐨𝐩’’!\n\n`;
+    // Costruzione del messaggio
+    let text = `🏆 𝐓𝐎𝐏 𝟏𝟎 𝐔𝐓𝐄𝐍𝐓𝐈 𝐏𝐈𝐔̀ 𝐀𝐓𝐓𝐈𝐕𝐈 𝐃𝐄𝐋 𝐆𝐑𝐔𝐏𝐏𝐎\n`;
+    text += `> 𝐬𝐞 𝐬𝐞𝐢 𝐢𝐥 𝐩𝐫𝐢𝐦𝐨 𝐫𝐢𝐜𝐨𝐫𝐝𝐚 𝐝𝐢 𝐫𝐢𝐬𝐜𝐚𝐭𝐭𝐚𝐫𝐞 𝐢𝐥 𝐭𝐮𝐨 𝐩𝐫𝐞𝐦𝐢𝐨 𝐜𝐨𝐧 .𝐩𝐫𝐞𝐦𝐢𝐨𝐭𝐨𝐩!\n\n`;
 
-    const posEmojis = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+    const posEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 
     for (let i = 0; i < top.length; i++) {
         const [jid, count] = top[i];
-        const title = titles[i] || 'Chat member';
+        const title = titles[i] || 'Membro della chat';
         text += `${posEmojis[i]} @${jid.split('@')[0]} — ${title} • ${count} messaggi\n`;
     }
 
+    // Invio del messaggio
     await conn.sendMessage(m.chat, {
-    text,
-    mentions: top.map(u => u[0]),
-    buttons: [
-        { buttonId: ".topgruppi", buttonText: { displayText: "🌍 𝐓𝐨𝐩 𝐠𝐫𝐮𝐩𝐩𝐢" }, type: 1 },
-        { buttonId: ".statsgiornaliere", buttonText: { displayText: "📊 𝐒𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐡𝐞 𝐠𝐢𝐨𝐫𝐧𝐚𝐥𝐢𝐞𝐫𝐞" }, type: 1 },
-    ],
-    headerType: 1
-});
+        text: text,
+        mentions: top.map(u => u[0]),
+        buttons: [
+            { buttonId: '.topgruppi', buttonText: { displayText: '🌍 𝐓𝐨𝐩 𝐠𝐫𝐮𝐩𝐩𝐢' }, type: 1 },
+            { buttonId: '.statsgiornaliere', buttonText: { displayText: '📊 𝐒𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐡𝐞 𝐠𝐢𝐨𝐫𝐧𝐚𝐥𝐢𝐞𝐫𝐞' }, type: 1 }
+        ],
+        headerType: 1
+    });
 };
 
 handler.help = ['top10'];
 handler.tags = ['group'];
-handler.command = ['top'];
+handler.command = ['top', 'top10'];
 
 export default handler;

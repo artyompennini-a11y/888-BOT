@@ -1,4 +1,13 @@
 let handler = async (m, { conn, text, command }) => {
+    // 🔍 INTERCETTAZIONE DELLA RISPOSTA AI SONDAGGI / BOTTONI NATIVI
+    let inputUser = text ? text.toLowerCase().trim() : '';
+
+    // Se l'utente risponde tramite un sondaggio/bottone nativo
+    if (m.message?.pollUpdateMessage) {
+        // La gestione del poll update viene intercettata dal listener dei sondaggi
+        return;
+    }
+
     // Inizializza i dati dell'utente nel database
     let user = global.db.data.users[m.sender];
     if (!user) {
@@ -19,59 +28,43 @@ let handler = async (m, { conn, text, command }) => {
 
     const rpg = user.rpg;
 
-    // 1. SCELTA DELLA CLASSE (Se l'utente non ne ha una)
+    // 1. SCELTA DELLA CLASSE
     if (!rpg.classe) {
-        const classeScelta = text ? text.toLowerCase().trim() : '';
-
-        if (classeScelta === 'guerriero') {
+        if (inputUser.includes('guerriero')) {
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
             rpg.hp = 150;
             rpg.arma = 'Spada di Legno';
             rpg.danno = 15;
-        } else if (classeScelta === 'mago') {
+        } else if (inputUser.includes('mago')) {
             rpg.classe = 'Mago';
             rpg.hpMax = 80;
             rpg.hp = 80;
             rpg.arma = 'Bastone Vecchio';
             rpg.danno = 25;
-        } else if (classeScelta === 'ladro') {
+        } else if (inputUser.includes('ladro')) {
             rpg.classe = 'Ladro';
             rpg.hpMax = 100;
             rpg.hp = 100;
             rpg.arma = 'Pugnale Arrugginito';
             rpg.danno = 20;
         } else {
-            // Messaggio con BOTTONI per scegliere la classe
-            let msgClasse = `🗡️ *BENVENUTO NELL'AVVENTURA!* 🛡️\n\n`;
-            msgClasse += `Non hai ancora scelto una classe per il tuo eroe!\n`;
-            msgClasse += `Seleziona una classe premendo uno dei pulsanti qui sotto:`;
-
-            const buttons = [
-                { buttonId: `${command} guerriero`, buttonText: { displayText: '🗡️ Guerriero' }, type: 1 },
-                { buttonId: `${command} mago`, buttonText: { displayText: '🧙‍♂️ Mago' }, type: 1 },
-                { buttonId: `${command} ladro`, buttonText: { displayText: '🗡️ Ladro' }, type: 1 }
-            ];
-
-            const buttonMessage = {
-                text: msgClasse,
-                footer: 'Scegli saggiamente la tua classe!',
-                buttons: buttons,
-                headerType: 1
-            };
-
-            return await conn.sendMessage(m.chat, buttonMessage, { quoted: m });
+            // INVIO DEL SONDAGGIO COME "BOTTONI" (Funziona su tutte le versioni)
+            return await conn.sendMessage(m.chat, {
+                poll: {
+                    name: "🗡️ *BENVENUTO NELL'AVVENTURA!*\nNon hai ancora una classe. Clicca un'opzione qui sotto per scegliere:",
+                    values: [
+                        `.${command} guerriero`,
+                        `.${command} mago`,
+                        `.${command} ladro`
+                    ],
+                    selectableCount: 1
+                }
+            }, { quoted: m });
         }
 
-        // Messaggio di conferma iscrizione con bottone per iniziare subito
-        const startButtons = [
-            { buttonId: `${command}`, buttonText: { displayText: '🗺️ Inizia Avventura' }, type: 1 }
-        ];
-
         return await conn.sendMessage(m.chat, {
-            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\nPremi il pulsante sotto per partire in missione.`,
-            buttons: startButtons,
-            footer: 'Gilda degli Avventurieri'
+            text: `🎉 Ti sei iscritto alla Gilda degli Avventurieri come *${rpg.classe}*!\nUsa di nuovo *.${command}* per partire in missione.`
         }, { quoted: m });
     }
 
@@ -83,13 +76,8 @@ let handler = async (m, { conn, text, command }) => {
                 text: `💀 Eri svenuto! Un chierico di passaggio ti ha rianimato. Ora hai *${rpg.hp} HP*.`
             }, { quoted: m });
         } else {
-            const restButtons = [
-                { buttonId: `.riposa`, buttonText: { displayText: '🏕️ Riposa' }, type: 1 }
-            ];
             return await conn.sendMessage(m.chat, {
-                text: `💀 Sei troppo debole per combattere! Riposa prima di tornare in avventura.`,
-                buttons: restButtons,
-                footer: 'Salute troppo bassa'
+                text: `💀 Sei troppo debole per combattere! Usa *.riposa* prima di tornare in avventura.`
             }, { quoted: m });
         }
     }
@@ -102,7 +90,6 @@ let handler = async (m, { conn, text, command }) => {
     ];
 
     const eventi = [
-        // Scontro Mostro
         {
             titolo: "👾 *ATTACCO DI UN MOSTRO!*",
             azione: (u) => {
@@ -120,7 +107,6 @@ let handler = async (m, { conn, text, command }) => {
                        `💰 Monete trovate: +${guadagnoMonete}`;
             }
         },
-        // Tesoro/Arma
         {
             titolo: "📦 *BAULE DEL TESORO*",
             azione: (u) => {
@@ -137,7 +123,6 @@ let handler = async (m, { conn, text, command }) => {
                 return `Hai trovato un vecchio baule pieno d'oro! +${moneteExtra} Monete 🪙`;
             }
         },
-        // Trappola
         {
             titolo: "⚠️ *TRAPPOLA SCATTATA!*",
             azione: (u) => {
@@ -146,7 +131,6 @@ let handler = async (m, { conn, text, command }) => {
                 return `Sei caduto in una fossa con spuntoni! Hai perso *${dannoTrappola} HP* 🩸`;
             }
         },
-        // Santuario Heal
         {
             titolo: "🏛️ *SANTUARIO ANTICO*",
             azione: (u) => {
@@ -157,7 +141,6 @@ let handler = async (m, { conn, text, command }) => {
         }
     ];
 
-    // Scegli evento
     const eventoScelto = eventi[Math.floor(Math.random() * eventi.length)];
     const risultato = eventoScelto.azione(rpg);
 
@@ -168,12 +151,12 @@ let handler = async (m, { conn, text, command }) => {
         rpg.livello += 1;
         rpg.exp -= expNecessaria;
         rpg.hpMax += 20;
-        rpg.hp = rpg.hpMax; // Full heal al level up
+        rpg.hp = rpg.hpMax;
         rpg.danno += 5;
-        msgLevelUp = `\n\n🎉 *LEVEL UP!* Sei salito al *Livello ${rpg.livello}*! (HP Max e Danno aumentati!)`;
+        msgLevelUp = `\n\n🎉 *LEVEL UP!* Sei salito al *Livello ${rpg.livello}*!`;
     }
 
-    // 4. MESSAGGIO FINALE CON BOTTONE REPEAT
+    // 4. MESSAGGIO FINALE
     let risposta = `${eventoScelto.titolo}\n\n`;
     risposta += `@${m.sender.split('@')[0]}\n`;
     risposta += `${risultato}${msgLevelUp}\n\n`;
@@ -182,14 +165,8 @@ let handler = async (m, { conn, text, command }) => {
     risposta += `❤️ *HP:* ${rpg.hp}/${rpg.hpMax} | ⚔️ *Arma:* ${rpg.arma} (${rpg.danno} DMG)\n`;
     risposta += `💰 *Monete:* ${rpg.monete} | ✨ *XP:* ${rpg.exp}/${rpg.livello * 100}`;
 
-    const actionButtons = [
-        { buttonId: `${command}`, buttonText: { displayText: '🔄 Esplora Ancora' }, type: 1 }
-    ];
-
     await conn.sendMessage(m.chat, {
         text: risposta,
-        buttons: actionButtons,
-        footer: 'RPG Game',
         mentions: [m.sender]
     }, { quoted: m });
 };

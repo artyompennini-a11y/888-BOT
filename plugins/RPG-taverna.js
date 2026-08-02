@@ -21,8 +21,8 @@ let handler = async (m, { conn, text, command }) => {
 
     // 1. SCELTA DELLA CLASSE (Se l'utente non ne ha una)
     if (!rpg.classe) {
-        const classeScelta = text.toLowerCase().trim();
-        
+        const classeScelta = text ? text.toLowerCase().trim() : '';
+
         if (classeScelta === 'guerriero') {
             rpg.classe = 'Guerriero';
             rpg.hpMax = 150;
@@ -74,7 +74,7 @@ let handler = async (m, { conn, text, command }) => {
     const armiTrovabili = [
         { nome: 'Katana affilata', danno: 35 },
         { nome: 'Scettro Arcano', danno: 45 },
-        { nome: 'Daga dell'Ombra', danno: 30 }
+        { nome: 'Daga dell\'Ombra', danno: 30 }
     ];
 
     const eventi = [
@@ -82,7 +82,6 @@ let handler = async (m, { conn, text, command }) => {
         {
             titolo: "👾 **ATTACCO DI UN MOSTRO!**",
             azione: (u) => {
-                const mostroHp = 40 + (u.livello * 10);
                 const dannoSubito = Math.floor(Math.random() * 20) + 5;
                 const guadagnoExp = 40 + (u.livello * 5);
                 const guadagnoMonete = Math.floor(Math.random() * 30) + 10;
@@ -165,8 +164,9 @@ let handler = async (m, { conn, text, command }) => {
     });
 };
 
+// --- CORREZIONI APPORTATE QUI SOTTO ---
 handler.help = ['avventura'];
 handler.tags = ['game'];
-handler.command = ['avventura', 'esplora', 'rpg'];
+handler.command = /^(avventura|esplora|rpg)$/i; // Regex per rendere più stabili i comandi
 
 export default handler;

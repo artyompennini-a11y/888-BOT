@@ -16,7 +16,7 @@ global.gab = ['573117824583','639753555926','xxxx',]
 global.owner = [
   ['639753555926', 'megamind', true],
   ['xxxx', 'xxxxx', true],
-  ['xxxx', 'xxxx', true],
+  ['213790413542', 'Momo', true],
   ['573117824583', 'Punisher3', true],
   ['14384448399', '888bot', true],
   ['212785655331', 'Ghost', true],

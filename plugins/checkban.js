@@ -114,7 +114,7 @@ let handler = async (m, { conn, text, command, usedPrefix: prefix }) => {
 ┃  ⮕ *Esito:* ${isBanned ? '*BANNATO / LOCK* 🔴' : '*AUTORIZZATO / SAFE* 🟢'}
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${prefix || '#'}ticket* per 
+> utilizza il comando *${prefix || '#'}segnala* per 
 > segnalarlo subito allo staff.`.trim()
 
     await conn.sendMessage(m.chat, { 

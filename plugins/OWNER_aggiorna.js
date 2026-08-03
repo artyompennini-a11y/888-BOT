@@ -100,7 +100,7 @@ let handler = async (m, { conn, command, usedPrefix: prefix }) => {
 ${filesContent}
 
 ───
-_💡 In caso di bug o anomalie, usa il comando *${prefix || '#'}ticket*._`.trim()
+_💡 In caso di bug o anomalie, usa il comando *${prefix || '#'}segnala*._`.trim()
 
     await conn.reply(m.chat, truncate(resultMsg), m)
     await m.react('✅')

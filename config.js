@@ -32,7 +32,7 @@ global.autore = 'The punisher'
 global.dev = 'Elixir'
 global.testobot = `𝟴𝟴𝟴 𝗕𝗢𝗧`
 global.versione = pkg.version
-global.errore = '⚠️ *Errore inatteso!* Usa il comando `.ticket` per avvisare gli owner.'
+global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala` per avvisare gli owner.'
 
 
 global.repobot = 'https//wa.me/393206032199'

@@ -8,7 +8,7 @@ let handler = async (m, { conn, text, command, usedPrefix }) => {
 
     // 2. Inserisci qui l'ID della chat o del gruppo dello STAFF (es. 12036301234567890@g.us)
     // Se lasci vuoto o usi m.chat, invierà le informazioni relative alla chat corrente.
-    const staffGroupJid = 'INSERISCI_QUI_JID_GRUPPO_STAFF@g.us'; 
+    const staffGroupJid = 'DXiACIzNLGhL0V5qeGt9Gg@g.us@g.us'; 
 
     try {
         let chatName = 'Chat Privata';

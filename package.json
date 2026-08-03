@@ -1,12 +1,12 @@
 {
-  "name": "333-bot",
-  "version": "10.0.0",
+  "name": "888-bot",
+  "version": "1.0",
   "description": "Il bot whatsapp più richiesto in Italia.",
-  "main": "333.js",
+  "main": "punisher.js",
   "type": "module",
   "license": "Apache-2.0",
   "author": {
-    "name": "333",
+    "name": "888",
     "url": "https://github.com/GabWT333/Gab333"
   },
   "homepage": "https://github.com/GabWT333/Gab333",

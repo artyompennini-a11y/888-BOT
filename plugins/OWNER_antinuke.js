@@ -7,7 +7,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
   const chat = global.db.data.chats[m.chat];
   if (!chat?.antinuke) return;
 
-  // 21: Nome gruppo | 22: Icona | 26: Impostazioni gruppo | 28: Rimozione utente | 29: Promozione | 30: Retrocessione
+  
   if (![21, 22, 26, 28, 29, 30].includes(m.messageStubType)) return;
 
   const sender = m.key?.participant || m.participant || m.sender;
@@ -41,10 +41,10 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     ownerGroup
   ].filter(Boolean);
 
-  // Se l'autore dell'azione è in whitelist, ignora
+  
   if (allowed.includes(sender)) return;
 
-  // Se l'utente sta uscendo spontaneamente dal gruppo, ignora
+  
   if (m.messageStubType === 28) {
     const affected = m.messageStubParameters?.[0];
     if (affected === sender) return;
@@ -56,13 +56,13 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
   const senderData = currentParticipants.find(p => p.jid === sender);
   if (!senderData?.admin) return;
 
-  // Degradiamo solo l'autore dell'infrazione se non è in whitelist
+  
   const usersToDemote = [sender];
 
   try {
-    // Retrocessione dell'autore
+    
     await conn.groupParticipantsUpdate(m.chat, usersToDemote, 'demote');
-    // Blocco del gruppo in sola lettura
+    
     await conn.groupSettingUpdate(m.chat, 'announcement');
   } catch (e) {
     console.error('[ANTINUKE ERRORE] Impossibile eseguire azioni di sicurezza:', e);

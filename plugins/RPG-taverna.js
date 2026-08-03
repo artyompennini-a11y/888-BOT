@@ -4,7 +4,7 @@ let handler = async (m, { conn, text, args, command, usedPrefix }) => {
 
     let user = global.db.data.users[m.sender] ||= {};
 
-    user.rpg ||= {
+    user.avventura ||= {
         livello: 1,
         exp: 0,
         hp: 100,
@@ -15,7 +15,7 @@ let handler = async (m, { conn, text, args, command, usedPrefix }) => {
         danno: 5
     };
 
-    let rpg = user.rpg;
+    let avventura = user.avventura;
 
     let input = [
         text,
@@ -32,31 +32,31 @@ let handler = async (m, { conn, text, args, command, usedPrefix }) => {
     .toLowerCase();
 
 
-    if (!rpg.classe) {
+    if (!avventura.classe) {
 
         if (input.includes('guerriero')) {
 
-            rpg.classe = 'Guerriero';
-            rpg.hpMax = 150;
-            rpg.hp = 150;
-            rpg.arma = 'Spada di Legno';
-            rpg.danno = 15;
+            avventura.classe = 'Guerriero';
+            avventura.hpMax = 150;
+            avventura.hp = 150;
+            avventura.arma = 'Spada di Legno';
+            avventura.danno = 15;
 
         } else if (input.includes('mago')) {
 
-            rpg.classe = 'Mago';
-            rpg.hpMax = 80;
-            rpg.hp = 80;
-            rpg.arma = 'Bastone Vecchio';
-            rpg.danno = 25;
+            avventura.classe = 'Mago';
+            avventura.hpMax = 80;
+            avventura.hp = 80;
+            avventura.arma = 'Bastone Vecchio';
+            avventura.danno = 25;
 
         } else if (input.includes('ladro')) {
 
-            rpg.classe = 'Ladro';
-            rpg.hpMax = 100;
-            rpg.hp = 100;
-            rpg.arma = 'Pugnale Arrugginito';
-            rpg.danno = 20;
+            avventura.classe = 'Ladro';
+            avventura.hpMax = 100;
+            avventura.hp = 100;
+            avventura.arma = 'Pugnale Arrugginito';
+            avventura.danno = 20;
 
         } else {
 
@@ -106,7 +106,7 @@ Scegli la tua classe per iniziare:`,
                 text:
 `🎉 Ti sei unito alla Gilda degli Avventurieri!
 
-🎭 Classe scelta: *${rpg.classe}*
+🎭 Classe scelta: *${avventura.classe}*
 
 Usa:
 ${usedPrefix}${command}
@@ -120,9 +120,9 @@ per iniziare la tua avventura.`
     }
 
 
-    if (rpg.hp <= 0) {
+    if (avventura.hp <= 0) {
 
-        rpg.hp = Math.floor(rpg.hpMax / 2);
+        avventura.hp = Math.floor(rpg.hpMax / 2);
 
         return conn.sendMessage(
             m.chat,
@@ -132,7 +132,7 @@ per iniziare la tua avventura.`
 
 Un guaritore ti ha riportato in vita.
 
-❤️ HP recuperati: ${rpg.hp}`
+❤️ HP recuperati: ${avventura.hp}`
             },
             {
                 quoted:m
@@ -164,10 +164,10 @@ Un guaritore ti ha riportato in vita.
             run(){
 
                 let danno = Math.floor(Math.random()*20)+5;
-                let exp = 40 + (rpg.livello*5);
+                let exp = 40 + (avventura.livello*5);
                 let soldi = Math.floor(Math.random()*30)+10;
 
-                rpg.hp = Math.max(0,rpg.hp-danno);
+                rpg.hp = Math.max(0,avventura.hp-danno);
                 rpg.exp += exp;
                 rpg.monete += soldi;
 
@@ -191,8 +191,8 @@ Hai sconfitto un Goblin!
 
                     if(arma.danno > rpg.danno){
 
-                        rpg.arma = arma.nome;
-                        rpg.danno = arma.danno;
+                        avventura.arma = arma.nome;
+                        avventura.danno = arma.danno;
 
                         return `
 Hai trovato una nuova arma!
@@ -203,7 +203,7 @@ Hai trovato una nuova arma!
                 }
 
 
-                rpg.monete += 80;
+                avventura.monete += 80;
 
                 return `
 Hai trovato un tesoro!
@@ -217,7 +217,7 @@ Hai trovato un tesoro!
             titolo:'⚠️ *TRAPPOLA!*',
             run(){
 
-                rpg.hp = Math.max(0,rpg.hp-25);
+                rpg.hp = Math.max(0, avventura.hp-25);
 
                 return `
 Sei caduto in una trappola!
@@ -233,9 +233,9 @@ Sei caduto in una trappola!
 
                 let cura = 40;
 
-                rpg.hp = Math.min(
-                    rpg.hpMax,
-                    rpg.hp + cura
+                avventura.hp = Math.min(
+                    avvenrura.hpMax,
+                    avventura.hp + cura
                 );
 
                 return `
@@ -256,21 +256,21 @@ Una luce divina ti cura!
 
     let levelUp = '';
 
-    let expNecessaria = rpg.livello * 100;
+    let expNecessaria = avventura.livello * 100;
 
 
     if(rpg.exp >= expNecessaria){
 
-        rpg.livello++;
-        rpg.exp -= expNecessaria;
-        rpg.hpMax += 20;
-        rpg.hp = rpg.hpMax;
-        rpg.danno += 5;
+        avventura.livello++;
+        avventura.exp -= expNecessaria;
+        avventura.hpMax += 20;
+        avventura.hp = rpg.hpMax;
+        avventura.danno += 5;
 
         levelUp =
 `\n\n🎉 *LEVEL UP!*
 
-Nuovo livello: ${rpg.livello}`;
+Nuovo livello: ${avventura.livello}`;
     }
 
 
@@ -284,16 +284,16 @@ ${levelUp}
 
 ────────────
 
-🎭 Classe: ${rpg.classe}
-🎖️ Livello: ${rpg.livello}
+🎭 Classe: ${avventura.classe}
+🎖️ Livello: ${avventura.livello}
 
-❤️ HP: ${rpg.hp}/${rpg.hpMax}
+❤️ HP: ${rpg.hp}/${avventura.hpMax}
 
-⚔️ Arma: ${rpg.arma}
-💥 Danno: ${rpg.danno}
+⚔️ Arma: ${avventura.arma}
+💥 Danno: ${avventura.danno}
 
-💰 Monete: ${rpg.monete}
-✨ XP: ${rpg.exp}/${rpg.livello*100}`;
+💰 Monete: ${avventura.monete}
+✨ XP: ${rpg.exp}/${avventura.livello*100}`;
 
 
     await conn.sendMessage(

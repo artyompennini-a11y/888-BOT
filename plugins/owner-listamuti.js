@@ -55,7 +55,7 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1, isOwne
   _0x2aa101 += 
 `╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${_0x3f73c1}ticket* per 
+> utilizza il comando *${_0x3f73c1}segnala* per 
 > segnalarlo subito allo staff.`.trim();
 
   _0x542b94.sendMessage(_0x512ed3.chat, { 

@@ -97,7 +97,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}statsgiornaliere
 ┃  ⮕ ${prefix}riassunto
 ┃  ⮕ ${prefix}logadmin
-┃  ⮕ ${prefix}ticket
+┃  ⮕ ${prefix}segnala
 ┃ 
 ┃ 🃏 *Fun & Mod:*
 ┃  ⮕ ${prefix}addmod @user
@@ -110,7 +110,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}ds
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${prefix}ticket* per 
+> utilizza il comando *${prefix}segnala* per 
 > segnalarlo subito allo staff.`.trim()
 
   conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation })

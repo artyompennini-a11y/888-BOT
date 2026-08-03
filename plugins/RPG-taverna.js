@@ -311,6 +311,6 @@ ${levelUp}
 
 handler.help = ['avventura'];
 handler.tags = ['game'];
-handler.command = /^(avventura|esplora|rpg)$/i;
+handler.command = /^(avventura|esplora)$/i;
 
 export default handler;

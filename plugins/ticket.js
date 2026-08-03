@@ -1,156 +1,66 @@
-import { generateWAMessageFromContent, proto } from '@realvare/baileys'
-
-const SUPPORT_GROUP = '120363427251015414@g.us'
-const pendingFirma = {}
-
-const getGroupJid = async (conn) => {
-  if (SUPPORT_GROUP?.endsWith?.('@g.us')) return SUPPORT_GROUP
-  try {
-    const meta = await conn.groupGetInviteInfo(SUPPORT_GROUP)
-    return meta?.id || null
-  } catch {
-    return null
-  }
-}
-
-let handler = async (m, { conn, text, command }) => {
-  if (!global.db.data.tickets) global.db.data.tickets = {}
-  const cmd = command?.toLowerCase()
-
-  if (cmd === 'ticket') {
-    if (!text || text.trim().length < 10)
-      return m.reply('⚠️ Il motivo deve contenere almeno 10 caratteri.\nEsempio: .ticket non riesco ad accedere al gruppo')
-
-    const groupJid = await getGroupJid(conn)
-    if (!groupJid) return m.reply('❌ Errore nel trovare il gruppo di supporto.')
-
-    const ticketId = `TKT-${Date.now()}`
-    const numero = m.sender.split('@')[0]
-
-    global.db.data.tickets[ticketId] = {
-      sender: m.sender,
-      chat: m.chat,
-      motivo: text.trim(),
-      numero,
-      status: 'open',
-      timestamp: Date.now()
+let handler = async (m, { conn, text, command, usedPrefix }) => {
+    // 1. Controllo se è stato fornito un testo
+    if (!text) {
+        return await conn.sendMessage(m.chat, { 
+            text: `⚠️ *Uso corretto del comando:*\n\nScrivi la tua segnalazione dopo il comando.\n*Esempio:* \`${usedPrefix + command} L'utente @Mario sta facendo spam\` o un bug che hai trovato.` 
+        }, { quoted: m });
     }
 
-    const staffMessage = {
-      viewOnceMessage: {
-        message: {
-          interactiveMessage: {
-            header: {
-              title: '🎫 Nuovo Ticket',
-              hasMediaAttachment: false
-            },
-            body: {
-              text: `• *ID:* ${ticketId}\n• *Utente:* +${numero}\n• *Motivo:* ${text.trim()}\n\n_Rispondi con:_ .risposta ${ticketId} [testo]`
-            },
-            footer: {
-              text: 'Usa il pulsante per copiare il codice del ticket'
-            },
-            nativeFlowMessage: {
-              buttons: [
-                {
-                  name: 'cta_copy',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: '📋 Copia ID',
-                    id: ticketId,
-                    copy_code: ticketId
-                  })
-                }
-              ]
+    // 2. Inserisci qui l'ID della chat o del gruppo dello STAFF (es. 12036301234567890@g.us)
+    // Se lasci vuoto o usi m.chat, invierà le informazioni relative alla chat corrente.
+    const staffGroupJid = 'INSERISCI_QUI_JID_GRUPPO_STAFF@g.us'; 
+
+    try {
+        let chatName = 'Chat Privata';
+        
+        // Se usati in un gruppo, raccoglie in sicurezza le informazioni evitando l'errore 403 Forbidden
+        if (m.isGroup) {
+            try {
+                let metadata = await conn.groupMetadata(m.chat);
+                chatName = metadata.subject;
+            } catch (err) {
+                chatName = 'Gruppo (Metadata non accessibile)';
             }
-          }
         }
-      }
-    }
 
-    await conn.relayMessage(groupJid, staffMessage, {})
+        // 3. Formattazione del messaggio di segnalazione per lo Staff
+        let reportMsg = `🚨 *NUOVA SEGNALAZIONE / REPORT* 🚨\n\n`;
+        reportMsg += `👤 *Utente:* @${m.sender.split('@')[0]}\n`;
+        reportMsg += `📍 *Origine:* ${m.isGroup ? `Gruppo (*${chatName}*)` : 'Chat Privata'}\n`;
+        reportMsg += `📅 *ID Chat:* \`${m.chat}\`\n\n`;
+        reportMsg += `📝 *Messaggio:* \n"${text}"`;
 
-    await m.reply(`✅ *Ticket aperto con successo!*\n\n• *ID:* ${ticketId}\n_Il nostro staff ti risponderà il prima possibile._`)
-    return
-  }
+        // 4. Invio della segnalazione allo staff (o nella chat corrente se non configurato)
+        let destination = staffGroupJid.includes('@g.us') ? staffGroupJid : m.chat;
 
-  if (cmd === 'risposta') {
-    const parts = text?.trim().split(' ')
-    if (!parts || parts.length < 2)
-      return m.reply('⚠️ Uso corretto: .risposta TKT-123456 testo della risposta')
+        await conn.sendMessage(destination, {
+            text: reportMsg,
+            mentions: [m.sender]
+        });
 
-    const ticketId = parts[0].toUpperCase()
-    const testo = parts.slice(1).join(' ')
+        // 5. Conferma all'utente
+        return await conn.sendMessage(m.chat, {
+            text: `✅ *Segnalazione inviata con successo!*\nUn membro dello staff la prenderà in carico il prima possibile.`
+        }, { quoted: m });
 
-    const ticket = global.db.data.tickets[ticketId]
-    if (!ticket) return m.reply(`❌ Ticket ${ticketId} non trovato.`)
-    if (ticket.status === 'closed') return m.reply(`⚠️ Il ticket ${ticketId} è già stato chiuso.`)
-
-    pendingFirma[m.sender] = { ticketId, testo }
-
-    const signPrompt = {
-      viewOnceMessage: {
-        message: {
-          interactiveMessage: {
-            header: {
-              title: '✏️ Firma della risposta',
-              hasMediaAttachment: false
-            },
-            body: {
-              text: `Invia il tuo *nome* in chat per firmare la risposta al ticket *${ticketId}*.\n\n_Oppure usa il pulsante per annullare._`
-            },
-            nativeFlowMessage: {
-              buttons: [
-                {
-                  name: 'quick_reply',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: '❌ Annulla',
-                    id: '.annullafirma'
-                  })
-                }
-              ]
-            }
-          }
+    } catch (e) {
+        console.error("Errore nel comando segnala:", e);
+        
+        // Gestione specifica dell'errore Forbidden (403)
+        if (e?.data === 403 || e?.message?.includes('forbidden')) {
+            return await conn.sendMessage(m.chat, {
+                text: `❌ *Errore:* Impossibile inviare la segnalazione. Il bot non ha i permessi necessari o non fa parte della chat di destinazione.`
+            }, { quoted: m });
         }
-      }
+
+        return await conn.sendMessage(m.chat, {
+            text: `❌ Si è verificato un errore durante l'invio della segnalazione. Riprova più tardi.`
+        }, { quoted: m });
     }
+};
 
-    return await conn.relayMessage(m.chat, signPrompt, { quoted: m })
-  }
+handler.help = ['segnala <testo>', 'report <testo>'];
+handler.tags = ['main', 'supporto'];
+handler.command = /^(segnala|report|reporta)$/i;
 
-  if (cmd === 'annullafirma') {
-    delete pendingFirma[m.sender]
-    return m.reply('🗑️ Invio della risposta annullato.')
-  }
-}
-
-handler.all = async function (m) {
-  if (!m.text || m.fromMe) return
-  if (!pendingFirma[m.sender]) return
-
-  const { ticketId, testo } = pendingFirma[m.sender]
-  const firma = m.text.trim()
-  delete pendingFirma[m.sender]
-
-  const ticket = global.db.data.tickets?.[ticketId]
-  if (!ticket) return
-
-  ticket.status = 'closed'
-  ticket.closedBy = firma
-
-  try {
-    await this.sendMessage(ticket.sender, {
-      text: `📩 *Risposta al tuo ticket* (${ticketId})\n\n${testo}\n\n• *Firmato:* ${firma}\n• _888 Staff_`
-    })
-
-    await this.sendMessage(m.chat, {
-      text: `✅ Risposta inviata a *+${ticket.numero}*\n\n• *Ticket:* ${ticketId} (Chiuso)\n• *Firma:* ${firma}`
-    })
-  } catch (e) {
-    await this.sendMessage(m.chat, {
-      text: `❌ Errore durante l'invio: ${e.message}`
-    })
-  }
-}
-
-handler.command = /^(ticket|risposta|annullafirma)$/i
-export default handler
+export default handler;

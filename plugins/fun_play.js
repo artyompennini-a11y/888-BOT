@@ -5,37 +5,37 @@ import path from 'path';
 import os from 'os';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  if (!text) return m.reply(`⚡ *𝟴𝟴𝟴 𝗕𝗢𝗧*\n\n💡 _Scrivi:_ ${usedPrefix + command} nome canzone`);
+  if (!text) return m.reply(`╭───〔 𝟴𝟴𝟴 𝗕𝗢𝗧 〕───╮\n│\n│ 💡 *Uso corretto:* \n│ ${usedPrefix + command} <nome canzone>\n│\n╰───────────────────╯`);
 
   try {
     const search = await yts(text);
     const vid = search.videos[0];
-    if (!vid) return m.reply('⚠️ *𝗥𝗶𝘀𝘂𝗹𝘁𝗮𝘁𝗼 𝗻𝗼𝗻 𝘁𝗿𝗼𝘃𝗮𝘁𝗼.*');
+    if (!vid) return m.reply('❌ *Nessun risultato trovato per la ricerca.*');
 
     const url = vid.url;
 
-    // Struttura originale dei pulsanti mantenuta intatta
+    // Struttura dei pulsanti e logica mantenuta intatta con nuova grafica
     if (command === 'play') {
-        let infoMsg = `┏━━━━━━━━━━━━━━━━━━━┓\n` +
-                      `   🎧  *𝙋𝙡𝙖𝙮 𝟴𝟴𝟴 𝗕𝗢𝗧* 🎧\n` +
-                      `┗━━━━━━━━━━━━━━━━━━━┛\n\n` +
-                      `◈ 📌 *𝗧𝗶𝘁𝗼𝗹𝗼:* ${vid.title}\n` +
-                      `◈ ⏱️ *𝗗𝘂𝗿𝗮𝘁𝗮:* ${vid.timestamp}\n\n` +
-                      `*Seleziona il formato:*`;
+        let infoMsg = `─── Matrix 𝟴𝟴𝟴 𝗕𝗢𝗧 ───\n\n` +
+                      `🎵 *Titolo:* ${vid.title}\n` +
+                      `⏱️ *Durata:* ${vid.timestamp}\n` +
+                      `👤 *Canale:* ${vid.author.name}\n` +
+                      `👁️ *Visualizzazioni:* ${vid.views.toLocaleString()}\n\n` +
+                      `👇 *Scegli il formato da scaricare:*`;
 
         return await conn.sendMessage(m.chat, {
             image: { url: vid.thumbnail },
             caption: infoMsg,
-            footer: '\n𝟴𝟴𝟴 𝗕𝗢𝗧',
+            footer: '𝟴𝟴𝟴 𝗕𝗢𝗧 • Downloader',
             buttons: [
-                { buttonId: `${usedPrefix}playaud ${url}`, buttonText: { displayText: '🎵 𝗔𝗨𝗗𝗜𝗢 (𝗠𝗣𝟯)' }, type: 1 },
-                { buttonId: `${usedPrefix}playvid ${url}`, buttonText: { displayText: '🎬 𝗩𝗜𝗗𝗘𝗢 (𝗠𝗣𝟰)' }, type: 1 }
+                { buttonId: `${usedPrefix}playaud ${url}`, buttonText: { displayText: '🎧 Audio (MP3)' }, type: 1 },
+                { buttonId: `${usedPrefix}playvid ${url}`, buttonText: { displayText: '📹 Video (MP4)' }, type: 1 }
             ],
             headerType: 4
         }, { quoted: m });
     }
 
-    await conn.sendMessage(m.chat, { react: { text: "🎵", key: m.key } });
+    await conn.sendMessage(m.chat, { react: { text: "⏳", key: m.key } });
 
     const isAudio = command === 'playaud';
     const tmpDir = os.tmpdir();
@@ -47,7 +47,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         let cmd = isAudio 
             ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${url}"`
             : `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -o "${outputPath}" "${url}"`;
-        
+
         exec(cmd, (err) => {
             if (err) reject(err);
             else resolve();
@@ -83,7 +83,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, {
             video: fs.readFileSync(outputPath),
             mimetype: 'video/mp4',
-            caption: `✅ *𝐒𝐜𝐚𝐫𝐢𝐜𝐚𝐭𝐨 𝐝𝐚 𝟴𝟴𝟴 𝗕𝗢𝗧*`
+            caption: `✨ *Completato da 𝟴𝟴𝟴 𝗕𝗢𝗧*`
         }, { quoted: m });
     }
 
@@ -92,7 +92,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   } catch (e) {
     console.error("Handler Error:", e.message);
-    m.reply('🚀 *𝙋𝙡𝙖𝙮 𝙀𝙧𝙧or:* Impossibile elaborare la richiesta in questo momento. Riprova.');
+    m.reply('⚠️ *Errore:* Impossibile completare il download. Riprova più tardi.');
   }
 };
 

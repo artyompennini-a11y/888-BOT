@@ -16,7 +16,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     // Struttura dei pulsanti e logica mantenuta intatta con nuova grafica
     if (command === 'play') {
-        let infoMsg = `─── Matrix 𝟴𝟴𝟴 𝗕𝗢𝗧 ───\n\n` +
+        let infoMsg = `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n` +
                       `🎵 *Titolo:* ${vid.title}\n` +
                       `⏱️ *Durata:* ${vid.timestamp}\n` +
                       `👤 *Canale:* ${vid.author.name}\n` +

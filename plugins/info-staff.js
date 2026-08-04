@@ -26,6 +26,9 @@ let handler = async (m, { conn }) => {
 *│ ✦ Ghost*
 *│   ├ 𝐑𝐮𝐨𝐥𝐨:* Manager
 *│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @212785655331
+*│ ✦ Malphas*
+*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Manager
+*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:*@212656627725
 *╰────────────────────╯*
 
 *╭─── 📌 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋𝐈 ───╮*
@@ -43,7 +46,8 @@ let handler = async (m, { conn }) => {
                 mentionedJid: [
                     '573117824583@s.whatsapp.net',
                     '639752917233@s.whatsapp.net',  
-                    '212785655331@s.whatsapp.net'
+                    '212785655331@s.whatsapp.net',
+                    '212656627725@s.whatsapp.net'
                 ]
             }
         }

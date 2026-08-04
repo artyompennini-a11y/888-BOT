@@ -16,7 +16,7 @@ let handler = async (m, { conn }) => {
 
 *╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*
 *│ ✦ Elixir*
-*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner
+*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner / Developer
 *│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639752917233     
 *│   ├ 𝐈𝐆:* instagram.com/eli.xir_gg 
 *│   └ 𝐓𝐆:* @ElixirKG
@@ -70,7 +70,7 @@ END:VCARD`
                         vcard: `BEGIN:VCARD
 VERSION:3.0
 FN:Elixir
-ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner
+ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner / Dev
 TEL;type=CELL;type=VOICE;waid=639752917233:+639752917233
 END:VCARD`
                     },

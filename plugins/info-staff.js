@@ -15,11 +15,11 @@ let handler = async (m, { conn }) => {
 *╰────────────────────╯*
 
 *╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*
-*│ ✦ Elixir*
+*│ ✦ Megamind*
 *│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner / Developer
-*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639752917233     
-*│   ├ 𝐈𝐆:* instagram.com/eli.xir_gg 
-*│   └ 𝐓𝐆:* @ElixirKG
+*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639753555926     
+*│   ├ 𝐈𝐆:* 
+*│   └ 𝐓𝐆:* 
 *╰────────────────────╯*
 
 *╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*
@@ -45,7 +45,7 @@ let handler = async (m, { conn }) => {
             contextInfo: {
                 mentionedJid: [
                     '573117824583@s.whatsapp.net',
-                    '639752917233@s.whatsapp.net',  
+                    '639753555926@s.whatsapp.net',  
                     '212785655331@s.whatsapp.net',
                     '212656627725@s.whatsapp.net'
                 ]
@@ -69,9 +69,9 @@ END:VCARD`
                     {
                         vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:Elixir
+FN:Megamind
 ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner / Dev
-TEL;type=CELL;type=VOICE;waid=639752917233:+639752917233
+TEL;type=CELL;type=VOICE;waid=639753555926:+639753555926
 END:VCARD`
                     },
                     {

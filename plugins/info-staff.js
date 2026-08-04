@@ -81,6 +81,14 @@ FN:Ghost
 ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Manager
 TEL;type=CELL;type=VOICE;waid=212785655331:+212785655331
 END:VCARD`
+                    },
+                    {
+                        vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:Malphas
+ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Manager
+TEL;type=CELL;type=VOICE;waid=212656627725:+212656627725
+END:VCARD`
                     }
                 ]
             }

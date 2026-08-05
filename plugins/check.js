@@ -1,7 +1,5 @@
 // Plugin by Elixir, Punisher & 888 staff
-import { createCanvas, loadImage } from 'canvas';
-
-let handler = async (m, { conn, text, isOwner }) => {
+let handler = async (m, { conn, text }) => {
   try {
     console.log(`[check] Avvio scan per utente: ${m.sender}`);
 
@@ -79,123 +77,41 @@ let handler = async (m, { conn, text, isOwner }) => {
       }
     }
 
-    let loadingMsg = await conn.sendMessage(m.chat, { 
-      text: '⚡ `[𝟴𝟴𝟴 𝗕𝗢𝗧] Estrazione pacchetti dati e analisi hardware...` ⚡' 
-    }, { quoted: m });
-
-    let ppUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png';
-    try {
-      ppUrl = await conn.profilePictureUrl(who, 'image');
-    } catch {
-      // Usa l'immagine placeholder
-    }
-
-    const canvas = createCanvas(950, 480);
-    const ctx = canvas.getContext('2d');
-
-    // Sfondo
-    ctx.fillStyle = '#0f111a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Barra decorativa
-    ctx.fillStyle = '#00ffcc';
-    ctx.fillRect(0, 0, 15, canvas.height);
-
-    // Avatar
-    let avatar = null;
-    try {
-      avatar = await loadImage(ppUrl);
-    } catch {
-      avatar = null;
-    }
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(160, 150, 80, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
-
-    if (avatar) {
-      ctx.drawImage(avatar, 80, 70, 160, 160);
-    } else {
-      ctx.fillStyle = '#3f475f';
-      ctx.fill();
-    }
-    ctx.restore();
-
-    ctx.strokeStyle = '#00ffcc';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(160, 150, 82, 0, Math.PI * 2, true);
-    ctx.stroke();
-
-    // Testi
-    ctx.textBaseline = 'top';
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 38px sans-serif';
-    const displayName = userName.length > 22 ? userName.substring(0, 22) + '...' : userName;
-    ctx.fillText(displayName, 280, 65);
-
-    ctx.fillStyle = '#8f9cae';
-    ctx.font = '20px sans-serif';
-    ctx.fillText(`JID: ${who}`, 280, 115);
-
-    ctx.fillStyle = '#3f475f';
-    ctx.fillRect(280, 155, 620, 1);
-
-    ctx.fillStyle = '#00ffcc';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('OS HARDWARE RILEVATO', 280, 175);
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText(device, 280, 200);
-
-    ctx.fillStyle = '#3f475f';
-    ctx.fillRect(280, 250, 620, 1);
-
-    ctx.fillStyle = '#00ffcc';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText('METADATI PACCHETTO DI RETE', 280, 270);
-
-    ctx.fillStyle = '#8f9cae';
-    ctx.font = '18px sans-serif';
-    ctx.fillText(`ID Messaggio: ${msgID}`, 280, 295);
-    ctx.fillText(`Tipo Payload: ${msgType}`, 280, 325);
-    ctx.fillText(`Dimensione Buffer: ${msgLength} bytes`, 280, 355);
-    ctx.fillText(`Ora Esatta Ricezione: ${formattedTime}`, 280, 385);
-
-    const buffer = canvas.toBuffer('image/png');
-
     let reportDidascalia = `╭━━━〔 🎰 *SCANNER DEVICE* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Categoria:* Utility & Controllo
 ┃━━━━━━━━━━━━━━━━━━
-┃ 🔍 *Risultati Rilevamento:*
+┃ 👤 *Info Utente:*
+┃ ⮕ *Nome:* ${userName}
 ┃ ⮕ *Target:* @${tagUtente}
-┃ ⮕ *Hardware:* \`${device}\`
+┃ 
+┃ 💻 *OS Hardware Rilevato:*
+┃ ⮕ *Dispositivo:* \`${device}\`
+┃ 
+┃ 📦 *Metadati Pacchetto:*
+┃ ⮕ *ID Messaggio:* \`${msgID}\`
+┃ ⮕ *Tipo Payload:* ${msgType}
+┃ ⮕ *Dimensione Buffer:* ${msgLength} bytes
+┃ ⮕ *Ora Ricezione:* ${formattedTime}
 ┃ 
 ┃ ⚙️ *Stato Analisi:*
 ┃ ⮕ Completato 100%
-┃ ⮕ Stringa ID: \`${msgID || 'N/D'}\`
 ╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
     await conn.sendMessage(m.chat, { 
-      image: buffer, 
-      caption: reportDidascalia,
+      text: reportDidascalia,
       mentions: [who]
-    }, { quoted: loadingMsg });
+    }, { quoted: m });
 
   } catch (error) {
     console.error(`[check] Errore critico:`, error);
-    m.reply('`[!] Errore durante la generazione del report grafico.`');
+    m.reply('`[!] Errore durante l\'estrazione dei dati.`');
   }
 };
 
 handler.help = ['check', 'device'];  
 handler.tags = ['tools'];  
 handler.command = /^(check|device)$/i; 
-handler.owner = false; // Impostato a false così può usarlo chiunque per testare
+handler.owner = false;
 
 export default handler;

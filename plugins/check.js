@@ -1,7 +1,7 @@
 // Plugin by Elixir, Punisher & 888 staff
 import { createCanvas, loadImage } from 'canvas';
 
-let handler = async (m, { conn, text }) => {
+let handler = async (m, { conn, text, isOwner }) => {
   try {
     console.log(`[check] Avvio scan per utente: ${m.sender}`);
 
@@ -23,6 +23,8 @@ let handler = async (m, { conn, text }) => {
     } else {
       who = m.sender;
     }
+
+    if (!who) who = m.sender;
 
     const tagUtente = who.replace(/@.+/, '');
     const userName = (await conn.getName(who)) || tagUtente;
@@ -77,8 +79,6 @@ let handler = async (m, { conn, text }) => {
       }
     }
 
-    console.log(`[check] Target: ${who}, Device: ${device}, MsgType: ${msgType}`);
-
     let loadingMsg = await conn.sendMessage(m.chat, { 
       text: '⚡ `[𝟴𝟴𝟴 𝗕𝗢𝗧] Estrazione pacchetti dati e analisi hardware...` ⚡' 
     }, { quoted: m });
@@ -87,21 +87,21 @@ let handler = async (m, { conn, text }) => {
     try {
       ppUrl = await conn.profilePictureUrl(who, 'image');
     } catch {
-      // Mantiene l'immagine placeholder di default
+      // Usa l'immagine placeholder
     }
 
     const canvas = createCanvas(950, 480);
     const ctx = canvas.getContext('2d');
 
-    // Sfondo principale
+    // Sfondo
     ctx.fillStyle = '#0f111a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Barra laterale
+    // Barra decorativa
     ctx.fillStyle = '#00ffcc';
     ctx.fillRect(0, 0, 15, canvas.height);
 
-    // Caricamento sicuro dell'avatar
+    // Avatar
     let avatar = null;
     try {
       avatar = await loadImage(ppUrl);
@@ -123,14 +123,13 @@ let handler = async (m, { conn, text }) => {
     }
     ctx.restore();
 
-    // Bordo Avatar
     ctx.strokeStyle = '#00ffcc';
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(160, 150, 82, 0, Math.PI * 2, true);
     ctx.stroke();
 
-    // Testi sul Canvas
+    // Testi
     ctx.textBaseline = 'top';
 
     ctx.fillStyle = '#ffffff';
@@ -169,8 +168,6 @@ let handler = async (m, { conn, text }) => {
 
     const buffer = canvas.toBuffer('image/png');
 
-    console.log(`[check] Report grafico generato per ${tagUtente}`);
-
     let reportDidascalia = `╭━━━〔 🎰 *SCANNER DEVICE* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Categoria:* Utility & Controllo
@@ -192,13 +189,13 @@ let handler = async (m, { conn, text }) => {
 
   } catch (error) {
     console.error(`[check] Errore critico:`, error);
-    m.reply('`[!] Errore durante la generazione del report grafico esteso.`');
+    m.reply('`[!] Errore durante la generazione del report grafico.`');
   }
 };
 
-handler.help = ['check <@tag/numero/reply>', 'device'];  
-handler.tags = ['owner'];  
+handler.help = ['check', 'device'];  
+handler.tags = ['tools'];  
 handler.command = /^(check|device)$/i; 
-handler.owner = true;
+handler.owner = false; // Impostato a false così può usarlo chiunque per testare
 
 export default handler;

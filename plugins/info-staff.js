@@ -69,7 +69,7 @@ END:VCARD`
                     {
                         vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:Megamind
+FN:Elixir
 ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner / Dev
 TEL;type=CELL;type=VOICE;waid=639753555926:+639753555926
 END:VCARD`

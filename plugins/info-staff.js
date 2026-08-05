@@ -17,7 +17,7 @@ let handler = async (m, { conn }) => {
 *╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*
 *│ ✦ Elixir*
 *│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner / Developer
-*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639753555926     
+*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @393297014539     
 *│   ├ 𝐈𝐆:* instagram.com/elixir._regna
 *│   └ 𝐓𝐆:* @ElixirKG
 *╰────────────────────╯*
@@ -45,7 +45,7 @@ let handler = async (m, { conn }) => {
             contextInfo: {
                 mentionedJid: [
                     '573117824583@s.whatsapp.net',
-                    '639753555926@s.whatsapp.net',  
+                    '393297014539@s.whatsapp.net',  
                     '212785655331@s.whatsapp.net',
                     '212656627725@s.whatsapp.net'
                 ]
@@ -71,7 +71,7 @@ END:VCARD`
 VERSION:3.0
 FN:Elixir
 ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner / Dev
-TEL;type=CELL;type=VOICE;waid=639753555926:+639753555926
+TEL;type=CELL;type=VOICE;waid=393297014539:+393297014539
 END:VCARD`
                     },
                     {

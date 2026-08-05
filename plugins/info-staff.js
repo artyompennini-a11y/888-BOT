@@ -18,8 +18,8 @@ let handler = async (m, { conn }) => {
 *│ ✦ Elixir*
 *│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner / Developer
 *│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @639753555926     
-*│   ├ 𝐈𝐆:* 
-*│   └ 𝐓𝐆:* 
+*│   ├ 𝐈𝐆:* instagram.com/elixir._regna
+*│   └ 𝐓𝐆:* @ElixirKG
 *╰────────────────────╯*
 
 *╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*

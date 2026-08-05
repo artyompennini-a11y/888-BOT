@@ -3,14 +3,14 @@ import { createCanvas, loadImage } from 'canvas';
 
 let handler = async (m, { conn, text }) => {
   try {
-    console.log(`[check] Avvio scan per utente: ${m.sender}`)
+    console.log(`[check] Avvio scan per utente: ${m.sender}`);
 
     let who;
     let targetMsg = m;
 
     if (text) {
-      let cleanedText = text.replace(/[@\s+-]/g, '')
-      let number = cleanedText
+      let cleanedText = text.replace(/[@\s+-]/g, '');
+      let number = cleanedText;
       if (!isNaN(number) && number.length >= 7 && number.length <= 15) {
         who = number + '@s.whatsapp.net';
         targetMsg = null;
@@ -25,7 +25,7 @@ let handler = async (m, { conn, text }) => {
     }
 
     const tagUtente = who.replace(/@.+/, '');
-    const userName = await conn.getName(who) || tagUtente;
+    const userName = (await conn.getName(who)) || tagUtente;
 
     let device = 'Sconosciuto 🕵️‍♂️';
     let msgID = 'N/D';
@@ -77,29 +77,32 @@ let handler = async (m, { conn, text }) => {
       }
     }
 
-    console.log(`[check] Target: ${who}, Device: ${device}, MsgType: ${msgType}`)
+    console.log(`[check] Target: ${who}, Device: ${device}, MsgType: ${msgType}`);
 
     let loadingMsg = await conn.sendMessage(m.chat, { 
-      text: '⚡ `⚡ [𝟴𝟴𝟴 𝗕𝗢𝗧] Estrazione pacchetti dati e analisi hardware...` ⚡' 
+      text: '⚡ `[𝟴𝟴𝟴 𝗕𝗢𝗧] Estrazione pacchetti dati e analisi hardware...` ⚡' 
     }, { quoted: m });
 
-    let ppUrl;
+    let ppUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png';
     try {
       ppUrl = await conn.profilePictureUrl(who, 'image');
     } catch {
-      ppUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Portrait_Placeholder.png/240px-Portrait_Placeholder.png'; 
+      // Mantiene l'immagine placeholder di default
     }
 
     const canvas = createCanvas(950, 480);
     const ctx = canvas.getContext('2d');
 
+    // Sfondo principale
     ctx.fillStyle = '#0f111a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Barra laterale
     ctx.fillStyle = '#00ffcc';
     ctx.fillRect(0, 0, 15, canvas.height);
-    
-    let avatar;
+
+    // Caricamento sicuro dell'avatar
+    let avatar = null;
     try {
       avatar = await loadImage(ppUrl);
     } catch {
@@ -120,51 +123,53 @@ let handler = async (m, { conn, text }) => {
     }
     ctx.restore();
 
+    // Bordo Avatar
     ctx.strokeStyle = '#00ffcc';
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.arc(160, 150, 82, 0, Math.PI * 2, true);
     ctx.stroke();
 
+    // Testi sul Canvas
     ctx.textBaseline = 'top';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 38px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = 'bold 38px sans-serif';
     const displayName = userName.length > 22 ? userName.substring(0, 22) + '...' : userName;
     ctx.fillText(displayName, 280, 65);
 
     ctx.fillStyle = '#8f9cae';
-    ctx.font = '20px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = '20px sans-serif';
     ctx.fillText(`JID: ${who}`, 280, 115);
 
     ctx.fillStyle = '#3f475f';
     ctx.fillRect(280, 155, 620, 1);
 
     ctx.fillStyle = '#00ffcc';
-    ctx.font = 'bold 14px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = 'bold 14px sans-serif';
     ctx.fillText('OS HARDWARE RILEVATO', 280, 175);
 
     ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 26px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = 'bold 26px sans-serif';
     ctx.fillText(device, 280, 200);
 
     ctx.fillStyle = '#3f475f';
     ctx.fillRect(280, 250, 620, 1);
 
     ctx.fillStyle = '#00ffcc';
-    ctx.font = 'bold 14px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = 'bold 14px sans-serif';
     ctx.fillText('METADATI PACCHETTO DI RETE', 280, 270);
 
     ctx.fillStyle = '#8f9cae';
-    ctx.font = '18px Arial, Verdana, Helvetica, sans-serif';
+    ctx.font = '18px sans-serif';
     ctx.fillText(`ID Messaggio: ${msgID}`, 280, 295);
     ctx.fillText(`Tipo Payload: ${msgType}`, 280, 325);
     ctx.fillText(`Dimensione Buffer: ${msgLength} bytes`, 280, 355);
     ctx.fillText(`Ora Esatta Ricezione: ${formattedTime}`, 280, 385);
 
-    const buffer = canvas.toBuffer();
-    
-    console.log(`[check] Report grafico generato per ${tagUtente}`)
+    const buffer = canvas.toBuffer('image/png');
+
+    console.log(`[check] Report grafico generato per ${tagUtente}`);
 
     let reportDidascalia = `╭━━━〔 🎰 *SCANNER DEVICE* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
@@ -186,7 +191,7 @@ let handler = async (m, { conn, text }) => {
     }, { quoted: loadingMsg });
 
   } catch (error) {
-    console.error(`[check] Errore critico:`, error)
+    console.error(`[check] Errore critico:`, error);
     m.reply('`[!] Errore durante la generazione del report grafico esteso.`');
   }
 };

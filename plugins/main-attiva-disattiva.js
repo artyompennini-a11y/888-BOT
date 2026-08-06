@@ -65,7 +65,8 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     { key: 'antilinktiktok', name: 'AntiTikTok', desc: 'Blocca link TikTok con warn' },
     { key: 'antilink', name: 'antilink', desc: 'antilink whatsapp' },
     { key: 'reaction', name: 'Reazioni', desc: 'Reazioni automatiche' },
-    { key: 'bestemmiometro', name: 'Bestemmiometro', desc: 'Rileva e conta le bestemmie' }
+    { key: 'bestemmiometro', name: 'Bestemmiometro', desc: 'Rileva e conta le bestemmie' },
+    { key: 'antifake', name: 'AntiFake', desc: 'Rimuove numeri temporanei usa-e-getta' }
   ];
 
   const ownerFeatures = [
@@ -199,6 +200,9 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
       case 'antilink': case 'nolink':
         if (adminCheck) { adminGuard(); break; }
         setChat('antiLink'); break;
+      case 'antifake':
+        if (adminCheck) { adminGuard(); break; }
+        setChat('antifake'); break;
       default:
         result.status = `Modulo non riconosciuto. Scrivi *${usedPrefix}funzioni* per la lista completa.`; break;
     }

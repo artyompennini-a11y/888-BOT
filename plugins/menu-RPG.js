@@ -59,20 +59,23 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃  ⮕ ${_0x3f73c1}spara
 ┃  ⮕ ${_0x3f73c1}duello
 ┃  ⮕ ${_0x3f73c1}colpo
-┃  ⮕ ${_0x3f73c1}avventura
 ┃ 
-┃  💼 *Lavoro & Commercio:*
+┃ 💼 *Lavoro & Commercio:*
 ┃  ⮕ ${_0x3f73c1}lavora
 ┃  ⮕ ${_0x3f73c1}prostituta
 ┃  ⮕ ${_0x3f73c1}compra
 ┃  ⮕ ${_0x3f73c1}vendi
 ┃  ⮕ ${_0x3f73c1}magazzino
+┃  ⮕ ${_0x3f73c1}negozio
+┃  ⮕ ${_0x3f73c1}asta
+┃  ⮕ ${_0x3f73c1}posizione
 ┃ 
 ┃ 🏆 *Classifiche & Quiz:*
 ┃  ⮕ ${_0x3f73c1}calcioscommesse
 ┃  ⮕ ${_0x3f73c1}premiotop
 ┃  ⮕ ${_0x3f73c1}quiz
-┃  ⮕ ${_0x3f73c1}rank
+┃  ⮕ ${_0x3f73c1}rank (@user)
+┃  ⮕ ${_0x3f73c1}topranks
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici, 
 > utilizza il comando *${_0x3f73c1}segnala* per 

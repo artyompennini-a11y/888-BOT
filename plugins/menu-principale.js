@@ -31,7 +31,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
 
   const commandList = `
-╭━━━〔 ⚡️ *MENU* 〕━━━┈
+╭━━━〔 ⚡️ *MENU PRINCIPALE* 〕━━━┈
 ┃ *Bot:* ${botName}
 ┃ *Versione:* ${botVersion}
 ┃━━━━━━━━━━━━━━━━━━
@@ -42,6 +42,9 @@ let handler = async (m, { conn, usedPrefix }) => {
 ┃ ⮕ ${usedPrefix}rpg
 ┃ ⮕ ${usedPrefix}audio
 ┃ ⮕ ${usedPrefix}owner
+┃ ⮕ ${usedPrefix}posizione
+┃ ⮕ ${usedPrefix}aiimg
+┃ ⮕ ${usedPrefix}aivision
 ╰━━━━━━━━━━━━━━━━━━┈`.trim();
 
   const buttons = [

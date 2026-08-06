@@ -40,7 +40,11 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃ ♟️ *GIOCHI DA TAVOLO:*
 ┃  ⮕ ${_0x3f73c1}scacchi
 ┃  ⮕ ${_0x3f73c1}startblast
-┃g
+┃  ⮕ ${_0x3f73c1}trivia
+┃  ⮕ ${_0x3f73c1}indovina
+┃  ⮕ ${_0x3f73c1}indovinamedio
+┃  ⮕ ${_0x3f73c1}indovinadifficile
+┃  ⮕ ${_0x3f73c1}toptrivia
 ┃ 🧩 *FUNNY:*
 ┃  ⮕ ${_0x3f73c1}impiccato
 ┃  ⮕ ${_0x3f73c1}tris
@@ -108,6 +112,14 @@ let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
 ┃  ⮕ ${_0x3f73c1}quiz
 ┃  ⮕ ${_0x3f73c1}quizpatente
 ┃  ⮕ ${_0x3f73c1}calcioquiz
+┃  ⮕ ${_0x3f73c1}meteo
+┃  ⮕ ${_0x3f73c1}notizie
+┃  ⮕ ${_0x3f73c1}oroscopo
+┃  ⮕ ${_0x3f73c1}urly
+┃  ⮕ ${_0x3f73c1}spotify
+┃  ⮕ ${_0x3f73c1}twitter
+┃  ⮕ ${_0x3f73c1}reddit
+┃  ⮕ ${_0x3f73c1}pinterest
 ┃ 
 ┃ 🎲 *RANDOM:*
 ┃  ⮕ ${_0x3f73c1}identita

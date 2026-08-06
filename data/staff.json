@@ -1,0 +1,38 @@
+[
+  {
+    "nome": "Elixir",
+    "ruolo": "Owner / Developer",
+    "emoji": "👑",
+    "telefono": "393297014539",
+    "instagram": "elixir._regna",
+    "telegram": "ElixirKG",
+    "bio": "Creatore e sviluppatore principale del bot"
+  },
+  {
+    "nome": "Punisher",
+    "ruolo": "Co-Owner",
+    "emoji": "🔱",
+    "telefono": "573117824583",
+    "instagram": "arty.340",
+    "telegram": "punishth",
+    "bio": "Co-fondatore e supporto del bot"
+  },
+  {
+    "nome": "Ghost",
+    "ruolo": "Manager",
+    "emoji": "🛡️",
+    "telefono": "212785655331",
+    "instagram": null,
+    "telegram": null,
+    "bio": "Gestione giorno-per-giorno del bot"
+  },
+  {
+    "nome": "Malphas",
+    "ruolo": "Manager",
+    "emoji": "🛡️",
+    "telefono": "212656627725",
+    "instagram": null,
+    "telegram": null,
+    "bio": "Staff del bot"
+  }
+]

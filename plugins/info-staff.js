@@ -1,106 +1,118 @@
+// Plugin by Elixir & 888 staff
+import { readFileSync } from 'fs'
+import path, { join } from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 let handler = async (m, { conn }) => {
-    let staff = `*⋆｡˚✦『 𝐒𝐓𝐀𝐅𝐅 𝟴𝟴𝟴 𝗕𝗢𝗧 』✦˚｡⋆*
+  const staffData = JSON.parse(readFileSync(join(__dirname, '../data/staff.json'), 'utf8'))
 
-*╭───────────────╮*
-*│ 🤖 𝐁𝐨𝐭:* ${global.nomebot}
-*│ 🆚 𝐕𝐞𝐫𝐬𝐢𝐨𝐧𝐞:* ${global.versione}
-*╰───────────────╯*
+  const botName = global.db?.data?.nomedelbot || global.nomebot || "𝟴𝟴𝟴 𝗕𝗢𝗧"
+  const botVersion = global.versione || global.db?.data?.version || "1.0"
 
-*╭─── 👑 𝐂𝐑𝐄𝐀𝐓𝐎𝐑𝐄 ───╮*
-*│ ✦ 𝐍𝐨𝐦𝐞:* The punisher
-*│ ✦ 𝐑𝐮𝐨𝐥𝐨:* Owner / Developer
-*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @573117824583
-*│ ✦ 𝐈𝐆:* instagram.com/arty.340
-*│ ✦ 𝐓𝐆:* @punishth
-*╰────────────────────╯*
+  let staff = `*⋆｡˚✦『 𝐒𝐓𝐀𝐅𝐅 ${botName.toUpperCase()} 』✦˚｡⋆*`
+  staff += `\n\n*╭───────────────╮*`
+  staff += `\n*│ 🤖 𝐁𝐨𝐭:* ${botName}`
+  staff += `\n*│ 🆚 𝐕𝐞𝐫𝐬𝐢𝐨𝐧𝐞:* ${botVersion}`
+  staff += `\n*╰───────────────╯*`
 
-*╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*
-*│ ✦ Elixir*
-*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Co-Owner / Developer
-*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @393297014539     
-*│   ├ 𝐈𝐆:* instagram.com/elixir._regna
-*│   └ 𝐓𝐆:* @ElixirKG
-*╰────────────────────╯*
+  if (staffData.length > 0) {
+    const owner = staffData[0]
+    staff += `\n\n*╭─── 👑 𝐂𝐑𝐄𝐀𝐓𝐎𝐑𝐄 ───╮*`
+    staff += `\n*│ ✦ 𝐍𝐨𝐦𝐞:* ${owner.nome}`
+    staff += `\n*│ ✦ 𝐑𝐮𝐨𝐥𝐨:* ${owner.ruolo}`
+    if (owner.telefono) {
+      staff += `\n*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${owner.telefono}`
+    }
+    if (owner.instagram) {
+      staff += `\n*│ ✦ 𝐈𝐆:* instagram.com/${owner.instagram}`
+    }
+    if (owner.telegram) {
+      staff += `\n*│ ✦ 𝐓𝐆:* @${owner.telegram}`
+    }
+    staff += `\n*╰────────────────────╯*`
+  }
 
-*╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*
-*│ ✦ Ghost*
-*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Manager
-*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* @212785655331
-*│ ✦ Malphas*
-*│   ├ 𝐑𝐮𝐨𝐥𝐨:* Manager
-*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:*@212656627725
-*╰────────────────────╯*
-
-*╭─── 📌 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋𝐈 ───╮*
-*│ ✦ 𝐂𝐚𝐧𝐚𝐥𝐞:* whatsapp.com/channel/0029Vb7NyC67tkj0robcbw24
-*╰────────────────────╯*
-
-> *𝟴𝟴𝟴 𝗕𝗢𝗧*`
-
-    await conn.reply(
-        m.chat,
-        staff.trim(),
-        m,
-        {
-            contextInfo: {
-                mentionedJid: [
-                    '573117824583@s.whatsapp.net',
-                    '393297014539@s.whatsapp.net',  
-                    '212785655331@s.whatsapp.net',
-                    '212656627725@s.whatsapp.net'
-                ]
-            }
+  if (staffData.length > 1) {
+    const coOwners = staffData.filter(m => m.ruolo && m.ruolo.toLowerCase().includes('co-owner') || m.ruolo && m.ruolo.toLowerCase().includes('owner'))
+    if (coOwners.length > 0) {
+      staff += `\n\n*╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*`
+      for (const co of coOwners) {
+        staff += `\n*│ ✦ ${co.nome}*`
+        staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${co.ruolo}`
+        if (co.telefono) {
+          staff += `\n*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${co.telefono}`
         }
-    )
+        if (co.instagram) {
+          staff += `\n*│   ├ 𝐈𝐆:* instagram.com/${co.instagram}`
+        }
+        if (co.telegram) {
+          staff += `\n*│   └ 𝐓𝐆:* @${co.telegram}`
+        }
+        staff += `\n*│*`
+      }
+      staff += `*╰────────────────────╯*`
+    }
+  }
 
-    await conn.sendMessage(
-        m.chat,
-        {
-            contacts: {
-                contacts: [
-                    {
-                        vcard: `BEGIN:VCARD 
-VERSION:3.0
-FN:The punisher
-ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Owner / Dev
-TEL;type=CELL;type=VOICE;waid=573117824583:+573117824583
-END:VCARD`
-                    },
-                    {
-                        vcard: `BEGIN:VCARD
-VERSION:3.0
-FN:Elixir
-ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Co-Owner / Dev
-TEL;type=CELL;type=VOICE;waid=393297014539:+393297014539
-END:VCARD`
-                    },
-                    {
-                        vcard: `BEGIN:VCARD
-VERSION:3.0
-FN:Ghost
-ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Manager
-TEL;type=CELL;type=VOICE;waid=212785655331:+212785655331
-END:VCARD`
-                    },
-                    {
-                        vcard: `BEGIN:VCARD
-VERSION:3.0
-FN:Malphas
-ORG:𝟴𝟴𝟴 𝗕𝗢𝗧 - Manager
-TEL;type=CELL;type=VOICE;waid=212656627725:+212656627725
-END:VCARD`
-                    }
-                ]
-            }
-        },
-        { quoted: m }
-    )
+  const managers = staffData.filter(m => m.ruolo && m.ruolo.toLowerCase().includes('manager'))
+  if (managers.length > 0) {
+    staff += `\n\n*╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*`
+    for (const mgr of managers) {
+      staff += `\n*│ ✦ ${mgr.nome}*`
+      staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${mgr.ruolo}`
+      if (mgr.telefono) {
+        staff += `\n*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${mgr.telefono}`
+      }
+      staff += `\n*│*`
+    }
+    staff += `*╰────────────────────╯*`
+  }
 
-    m.react('👑')
+  staff += `\n\n*╭─── 📌 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋𝐈 ───╮*`
+  staff += `\n*│ ✦ 𝐆𝐢𝐭𝐡𝐮𝐛:* https://github.com/Elixir-png/ElixirBot_`
+  staff += `\n*│ ✦ 𝐂𝐚𝐧𝐚𝐥𝐞:* https://whatsapp.com/channel/0029Vb8Y0igGufJ0xMYJmU40`
+  staff += `\n*│ ✦ 𝐄𝐦𝐚𝐢𝐥:* ElixirBoTSupporto@proton.me`
+  staff += `\n*╰────────────────────╯*`
+
+  staff += `\n\n> *${botName}*`
+
+  const mentionedJids = staffData
+    .filter(m => m.telefono)
+    .map(m => `${m.telefono}@s.whatsapp.net`)
+
+  const contacts = staffData
+    .filter(m => m.telefono)
+    .map(m => ({
+      vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:${m.nome}
+ORG:${botName} - ${m.ruolo}
+TEL;type=CELL;type=VOICE;waid=${m.telefono}:${m.telefono.startsWith('39') ? '+' : '+'}${m.telefono}
+END:VCARD`
+    }))
+
+  await conn.reply(m.chat, staff.trim(), m, {
+    contextInfo: { mentionedJid: mentionedJids }
+  })
+
+  if (contacts.length > 0) {
+    try {
+      await conn.sendMessage(m.chat, {
+        contacts: {
+          contacts: contacts,
+          subject: `Team ${botName}`
+        }
+      }, { quoted: m })
+    } catch (e) {}
+  }
+
+  m.react('👑')
 }
 
-handler.help = ['staff']
+handler.help = ['staff', 'team']
 handler.tags = ['main']
-handler.command = ['staff']
+handler.command = ['staff', 'team']
 
 export default handler

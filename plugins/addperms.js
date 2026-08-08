@@ -1,7 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
+//Plugin by Elixir, Punisher & 888 staff
 
 const RUOLI_SPECIALI = ['developer', 'staff']
 

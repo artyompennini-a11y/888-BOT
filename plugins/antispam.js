@@ -1,4 +1,4 @@
-// Tracker sticker
+// Plugin by Elixir, Punisher & 888 staff
 const stickerTracker = {}
 const spamWarnings = {}
 

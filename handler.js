@@ -25,6 +25,16 @@ global.ignoredUsersGlobal = global.ignoredUsersGlobal || new Set()
 global.ignoredUsersGroup = global.ignoredUsersGroup || {}
 global.groupSpam = global.groupSpam || {}
 global.processedMessages = global.processedMessages || new Set()
+// Pulisce processedMessages ogni 5 minuti per evitare memory leak
+if (!global._processedMessagesCleanupInterval) {
+    global._processedMessagesCleanupInterval = setInterval(() => {
+        if (global.processedMessages && global.processedMessages.size > 1000) {
+            const entries = [...global.processedMessages];
+            const toRemove = entries.slice(0, entries.length - 500);
+            toRemove.forEach(id => global.processedMessages.delete(id));
+        }
+    }, 5 * 60 * 1000);
+}
 global.processedCalls = global.processedCalls || new Map()
 global.spamTracker = global.spamTracker || {}
 global.activeEvents = global.activeEvents || new Map()
@@ -292,46 +302,47 @@ export async function handler(chatUpdate) {
     if (!chatUpdate || !chatUpdate.messages) return
     if (!Array.isArray(chatUpdate.messages) || chatUpdate.messages.length === 0) return
 
-    this.pushMessage(chatUpdate.messages).catch(err => {
-        if (!err.message?.includes('Bad MAC') && !err.message?.includes('absent')) {
-            console.error('[ERRORE] pushMessage:', err)
-        }
-    })
+    try {
+        this.pushMessage(chatUpdate.messages).catch(err => {
+            if (!err.message?.includes('Bad MAC') && !err.message?.includes('absent')) {
+                console.error('[ERRORE] pushMessage:', err)
+            }
+        })
 
-    for (let m of chatUpdate.messages) {
-        if (!m || !m.key || !m.key.remoteJid) continue
+        for (let m of chatUpdate.messages) {
+            if (!m || !m.key || !m.key.remoteJid) continue
 
-        if (!m.message && m.messageStubType == null) {
-            try {
-                const failedSender = m.key.participant || m.key.remoteJid
-                if (failedSender) {
-                    if (!global._decryptRetried) global._decryptRetried = new Map()
-                    const retries = global._decryptRetried.get(failedSender) || 0
-                    if (retries < 3) {
-                        global._decryptRetried.set(failedSender, retries + 1)
-                        setTimeout(() => global._decryptRetried?.delete(failedSender), 120000)
-                        if (typeof this.authState?.keys?.remove === 'function') {
-                            try { await this.authState.keys.remove('session', [failedSender]) } catch {}
-                        }
-                        if (typeof this.requestPrivacyTokens === 'function') {
-                            try { await this.requestPrivacyTokens([failedSender]) } catch {}
-                        }
-                        await new Promise(r => setTimeout(r, 1500))
-                        try {
-                            const retried = await this.loadMessage(m.key.id)
-                            if (retried?.message) {
-                                m = retried
-                            } else {
-                                continue
+            if (!m.message && m.messageStubType == null) {
+                try {
+                    const failedSender = m.key.participant || m.key.remoteJid
+                    if (failedSender) {
+                        if (!global._decryptRetried) global._decryptRetried = new Map()
+                        const retries = global._decryptRetried.get(failedSender) || 0
+                        if (retries < 3) {
+                            global._decryptRetried.set(failedSender, retries + 1)
+                            setTimeout(() => global._decryptRetried?.delete(failedSender), 120000)
+                            if (typeof this.authState?.keys?.remove === 'function') {
+                                try { await this.authState.keys.remove('session', [failedSender]) } catch {}
                             }
-                        } catch { continue }
-                    } else {
-                        global._decryptRetried.delete(failedSender)
-                        continue
+                            if (typeof this.requestPrivacyTokens === 'function') {
+                                try { await this.requestPrivacyTokens([failedSender]) } catch {}
+                            }
+                            await new Promise(r => setTimeout(r, 1500))
+                            try {
+                                const retried = await this.loadMessage(m.key.id)
+                                if (retried?.message) {
+                                    m = retried
+                                } else {
+                                    continue
+                                }
+                            } catch { continue }
+                        } else {
+                            global._decryptRetried.delete(failedSender)
+                            continue
+                        }
                     }
-                }
-            } catch (e) { continue }
-        }
+                } catch (e) { continue }
+            }
 
         if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
             const key = m.message.protocolMessage.key
@@ -448,7 +459,11 @@ export async function handler(chatUpdate) {
         try {
             Object.defineProperty(m, 'sender', { value: normalizedSender, writable: true, configurable: true })
         } catch (e) {
-            m.normalizedSender = normalizedSender
+            try {
+                m.sender = normalizedSender
+            } catch (err) {
+                m.normalizedSender = normalizedSender
+            }
         }
 
         if (!global.db.data.users[normalizedSender]) {
@@ -826,8 +841,23 @@ if (user.banned) {
                 }
 
                 try {
-                    await plugin.call(this, m, extra)
-                    if (!isPrems) m.euro = plugin.euro || false
+                    try {
+                        await plugin.call(this, m, extra)
+                        if (!isPrems) m.euro = plugin.euro || false
+                    } catch (e) {
+                        const statusCode = e?.output?.statusCode || e?.output?.payload?.statusCode
+                        if (statusCode === 428 || statusCode === 500 || statusCode === 408) {
+                            console.log('⚠️ Rilevato blocco 428 durante l\'invio. Riavvio handler in corso...')
+                            try {
+                                if (global.conn && typeof global.conn.logout === 'function') global.conn.logout().catch(() => {});
+                                if (typeof global.reloadHandler === 'function') global.reloadHandler(true).catch(console.error);
+                            } catch (err) {
+                                console.error('[HANDLER] Errore riavvio:', err.message);
+                            }
+                            return
+                        }
+                        throw e
+                    }
                 } catch (e) {
                     m.error = e
                     console.error(`[ERRORE] Plugin ${m.plugin}:`, e)
@@ -907,8 +937,22 @@ if (user.banned) {
                 await this.sendMessage(m.chat, { react: { text: emot, key: m.key } }).catch(e => console.error('[ERRORE]', e))
             }
 
-            if (typeof global.markDbDirty === 'function') global.markDbDirty()
+                if (typeof global.markDbDirty === 'function') global.markDbDirty()
+            }
         }
+    } catch (e) {
+        const statusCode = e?.output?.statusCode || e?.output?.payload?.statusCode
+        if (statusCode === 428 || statusCode === 500 || statusCode === 408) {
+            console.log('⚠️ Rilevato blocco 428 durante l\'invio. Riavvio handler in corso...')
+            try {
+                if (global.conn && typeof global.conn.logout === 'function') global.conn.logout().catch(() => {});
+                if (typeof global.reloadHandler === 'function') global.reloadHandler(true).catch(console.error);
+            } catch (err) {
+                console.error('[HANDLER] Errore riavvio:', err.message);
+            }
+            return
+        }
+        console.error(`[ERRORE] Handler per ${chatUpdate?.messages?.[0]?.key?.remoteJid || 'chat'}:`, e)
     }
 }
 

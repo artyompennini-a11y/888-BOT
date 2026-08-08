@@ -17,12 +17,11 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   const { antiprivato, soloCreatore, read, anticall } = bot
 
-  
   let imgBuffer
   try {
     imgBuffer = fs.readFileSync('icone/888.jpg')
   } catch (e) {
-    
+   
     imgBuffer = Buffer.alloc(0)
   }
 
@@ -30,12 +29,12 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     key: {
       participants: '0@s.whatsapp.net',
       fromMe: false,
-      id: '888Funzioni'
+      id: '333Funzioni'
     },
     message: {
       locationMessage: {
         name: '⚙️ MENU FUNZIONI 888',
-        jpegThumbnail: imgBuffer, 
+        jpegThumbnail: imgBuffer,
         vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;333;;;\nFN:333\nEND:VCARD'
       }
     },
@@ -81,6 +80,9 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 ┃  [${s(slowmode)}] ⮕ ${p}slowmode
 ┃  [${s(bestemmiometro)}] ⮕ ${p}bestemmiometro
 ┃  [${s(logrichieste)}] ⮕ ${p}logrichieste
+┃  🤖 *AI AVANZATE:*
+┃   ⮕ ${p}groq
+┃   ⮕ ${p}mistral
 ┃ 
 ┃ 🚫 *MODULI DI PROTEZIONE (ANTI):*
 ┃  [${s(antinuke)}] ⮕ ${p}antinuke

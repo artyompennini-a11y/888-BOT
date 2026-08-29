@@ -1,0 +1,3 @@
+[submodule "based-main"]
+	path = based-main
+	url = https://github.com/Elixir-png/888baileys.git

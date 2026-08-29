@@ -1,0 +1,9 @@
+node_modules/
+auth_session/
+*.log
+.env
+.DS_Store
+Thumbs.db
+
+# Symlink per 888baileys (creato da setup.js)
+node_modules/888baileys

@@ -1,0 +1,29 @@
+// Plugin by Elixir, Punisher & 888 staff
+
+const manually = `𝐆𝐑𝐔𝐏𝐏𝐈 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
+
+╭───⭓
+│ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟭
+│ https://chat.whatsapp.com/DEBHQ2OYL58CRKCksqAp9o
+│
+│ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟮
+│ https://chat.whatsapp.com/DjDBrPXWZLOCAoHMA1oNND
+╰───⭓`
+import { generateWAMessageFromContent } from '@realvare/baileys'
+const handler = async (m, { args, text }) => {
+if (parseInt(args[1])) return m.reply(`Inserisci prima la quantità di messaggi da inviare e poi il testo`)
+if (!parseInt(args[0])) return m.reply(`Inserisci nel comando la quantità di messaggi da inviare`)
+var number = parseInt(args[0]) ? parseInt(args[0]) : 1
+
+var count = 0
+while(true) {
+count++
+const msg = conn.cMod(m.chat, generateWAMessageFromContent(m.chat, { ['extendedTextMessage'] : { text: args[1] ? text.replace(args[0] + ' ', []) : manually } }, { userJid: conn.user.id }), null, conn.user.jid, { mentions: conn.chats[m.chat].metadata.participants.map(u => conn.decodeJid(u.id)) })
+await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id })
+if (count===parseInt(args[0])) break
+}}
+handler.command = ['spam']
+handler.help = ['𝐬𝐩𝐚𝐦'];
+handler.tags = ['owner']
+handler.owner = true
+export default handler

@@ -1,4 +1,4 @@
-// AFK con Foto + Timer + Anti-Tag — Premium Edition
+// AFK con Timer + Anti-Tag — Premium Edition (NO FOTO)
 // by Elixir, Punisher & 888 Staff
 
 import fs from 'fs'
@@ -9,9 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
 
 let afkData = {}
-let antiSpam = {}   // 🔥 Anti-tag cache
+let antiSpam = {}   // Anti-tag cache
 
-// 📌 Carica dati AFK
+// Carica dati AFK
 function loadAfkData() {
     try {
         if (fs.existsSync(AFK_FILE)) {
@@ -25,7 +25,7 @@ function loadAfkData() {
     }
 }
 
-// 📌 Salva dati AFK
+// Salva dati AFK
 function saveAfkData() {
     try {
         fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2), 'utf8')
@@ -36,7 +36,7 @@ function saveAfkData() {
 
 loadAfkData()
 
-// 📌 Timer leggibile
+// Timer leggibile
 function formatAFK(ms) {
     const sec = Math.floor(ms / 1000)
     const min = Math.floor(sec / 60)
@@ -58,7 +58,7 @@ handler.all = async function (m) {
     const sender = m.sender
     const body = m.text.trim().toLowerCase()
 
-    // 🟣 Se l'utente è AFK e scrive → rimuovi AFK
+    // Se l'utente è AFK e scrive → rimuovi AFK
     if (afkData[sender] && !body.startsWith('.afk')) {
         const { since, reason } = afkData[sender]
         const ms = Date.now() - since
@@ -74,7 +74,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🟣 Attiva AFK con o senza motivo
+    // Attiva AFK
     if (body.startsWith('.afk')) {
         let reason = m.text.slice(4).trim()
         if (!reason) reason = 'Nessun motivo specificato'
@@ -92,7 +92,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🟣 Se tagghi qualcuno AFK → avvisa con foto + timer + anti-tag
+    // Tag AFK → Timer + Anti-tag (NO FOTO)
     const mentioned = m.mentionedJid || []
     if (mentioned.length > 0) {
         for (const jid of mentioned) {
@@ -100,9 +100,8 @@ handler.all = async function (m) {
 
                 const now = Date.now()
 
-                // 🔥 Anti-tag: evita spam
+                // Anti-tag: evita spam
                 if (antiSpam[jid] && now - antiSpam[jid] < 10000) {
-                    // meno di 10 secondi → ignora
                     return
                 }
 
@@ -113,17 +112,8 @@ handler.all = async function (m) {
                 const readable = formatAFK(ms)
                 const name = await this.getName(jid)
 
-                // 📸 Ottieni foto profilo
-                let pfp
-                try {
-                    pfp = await this.profilePictureUrl(jid, 'image')
-                } catch {
-                    pfp = null
-                }
-
                 await this.sendMessage(m.chat, {
-                    image: pfp ? { url: pfp } : undefined,
-                    caption: `💤 *${name}* è AFK da *${readable}*\n📝 Motivo: ${reason}\n🚫 Anti-tag attivo (evita spam)`
+                    text: `💤 *${name}* è AFK da *${readable}*\n📝 Motivo: ${reason}\n🚫 Anti-tag attivo (evita spam)`
                 }, { quoted: m })
             }
         }

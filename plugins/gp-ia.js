@@ -104,7 +104,7 @@ async function stopTyping(conn, chatId) {
 // ─────────────────────────────────────────────────────────────────────────────
 function buildSystemPrompt(withCreatorInfo, mode) {
   const criBlock = withCreatorInfo
-    ? `\nINFO CREATORE: Il tuo creatore si chiama Punisher, sviluppatore di 888 BOT. Menzionalo a volte e digli che il suo numero è @++57 311 782 4583.\n`
+    ? `\nINFO CREATORE: Il tuo creatore si chiama Punisher, sviluppatore di 888 BOT. Menzionalo a volte e digli che il suo numero è @+57 311 7824583.\n`
     : '';
 
   if (mode === 'creative') {

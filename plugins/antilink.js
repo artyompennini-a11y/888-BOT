@@ -35,13 +35,22 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
-  if (isAdmin || !isBotAdmin) return true
+  // Se admin/owner → bypass totale
+  if (isAdmin) {
+    console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
+    return true
+  }
+
+  if (!isBotAdmin) return true
 
   const text = m.text || ''
   const linkRegex = /(https?:\/\/)?(chat\.whatsapp\.com|wa\.me|whatsapp\.com)\/\S+/gi
 
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
+  // ============================
+  //        LINK NORMALI
+  // ============================
   if (linkRegex.test(text)) {
 
     lastCheck[m.chat] = Date.now()
@@ -61,6 +70,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
     if (text.includes(thisGroupCode)) return true
 
+    // --- Cancella messaggio ---
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -77,9 +87,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
     await conn.sendMessage(m.chat, {
       text: warningMessage,
-      contextInfo: {
-        mentionedJid: [m.sender]
-      }
+      contextInfo: { mentionedJid: [m.sender] }
     })
 
     // --- Controllo admin bot + admin utente ---
@@ -114,7 +122,9 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
     return false
   }
 
-  // --- QR CODE HANDLER ---
+  // ============================
+  //        QR CODE
+  // ============================
   async function handleQrMedia(m, buffer, isSticker = false) {
     let qrText = null
 
@@ -170,6 +180,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
     if (qrTextLower.includes(thisGroupCode)) return true
 
+    // --- Cancella messaggio ---
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -186,9 +197,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
     await conn.sendMessage(m.chat, {
       text: warningMessage,
-      contextInfo: {
-        mentionedJid: [m.sender]
-      }
+      contextInfo: { mentionedJid: [m.sender] }
     })
 
     // --- Controllo admin bot + admin utente ---

@@ -33,16 +33,16 @@ function normalizeOwnerList(list) {
    LISTE GLOBALI
    ============================================================ */
 
-global.gab = ['573117824583','639753555926','xxxx']
+global.gab = ['573117824583','393297014539','xxxx']
 
 global.owner = normalizeOwnerList([
   ['393297014539', 'elixir', true],
-  ['xxxx', 'xxxx', true],              
-  ['51910474215', 'Punisher2', true],
+  ['393331663641', 'Manu', true],              
+  ['xxxx', 'xxxx', true],
   ['573117824583', 'Punisher', true],
   ['573180770909', '888bot', true],
   ['212785655331', 'Ghost', true],
-  ['212656627725', 'Malphas', true],
+  ['447785114563', 'Dado', true],
 ])
 
 global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'

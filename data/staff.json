@@ -27,11 +27,20 @@
     "bio": "Gestione giorno-per-giorno del bot"
   },
   {
-    "nome": "Malphas",
-    "ruolo": "Manager",
+    "nome": "Manu",
+    "ruolo": "Developer&tester",
     "emoji": "🛡️",
-    "telefono": "212656627725",
+    "telefono": "393331663641",
     "instagram": null,
+    "telegram": "manuxxxo",
+    "bio": "Staff del bot"
+  },
+   {
+    "nome": "Dado",
+    "ruolo": "Developer test&tester",
+    "emoji": "🛡️",
+    "telefono": "447785114563",
+    "instagram": "insta.dados00",
     "telegram": null,
     "bio": "Staff del bot"
   }

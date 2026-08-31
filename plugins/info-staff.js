@@ -17,59 +17,75 @@ let handler = async (m, { conn }) => {
   staff += `\n*│ 🆚 𝐕𝐞𝐫𝐬𝐢𝐨𝐧𝐞:* ${botVersion}`
   staff += `\n*╰───────────────╯*`
 
+  // CREATOR
   if (staffData.length > 0) {
     const owner = staffData[0]
     staff += `\n\n*╭─── 👑 𝐂𝐑𝐄𝐀𝐓𝐎𝐑𝐄 ───╮*`
     staff += `\n*│ ✦ 𝐍𝐨𝐦𝐞:* ${owner.nome}`
     staff += `\n*│ ✦ 𝐑𝐮𝐨𝐥𝐨:* ${owner.ruolo}`
-    if (owner.telefono) {
-      staff += `\n*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${owner.telefono}`
-    }
-    if (owner.instagram) {
-      staff += `\n*│ ✦ 𝐈𝐆:* instagram.com/${owner.instagram}`
-    }
-    if (owner.telegram) {
-      staff += `\n*│ ✦ 𝐓𝐆:* @${owner.telegram}`
-    }
+    if (owner.telefono) staff += `\n*│ ✦ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${owner.telefono}`
+    if (owner.instagram) staff += `\n*│ ✦ 𝐈𝐆:* instagram.com/${owner.instagram}`
+    if (owner.telegram) staff += `\n*│ ✦ 𝐓𝐆:* @${owner.telegram}`
     staff += `\n*╰────────────────────╯*`
   }
 
-  if (staffData.length > 1) {
-    const coOwners = staffData.filter(m => m.ruolo && m.ruolo.toLowerCase().includes('co-owner') || m.ruolo && m.ruolo.toLowerCase().includes('owner'))
-    if (coOwners.length > 0) {
-      staff += `\n\n*╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*`
-      for (const co of coOwners) {
-        staff += `\n*│ ✦ ${co.nome}*`
-        staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${co.ruolo}`
-        if (co.telefono) {
-          staff += `\n*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${co.telefono}`
-        }
-        if (co.instagram) {
-          staff += `\n*│   ├ 𝐈𝐆:* instagram.com/${co.instagram}`
-        }
-        if (co.telegram) {
-          staff += `\n*│   └ 𝐓𝐆:* @${co.telegram}`
-        }
-        staff += `\n*│*`
-      }
-      staff += `*╰────────────────────╯*`
-    }
-  }
+  // CO-OWNER
+  const coOwners = staffData.filter(m =>
+    m.ruolo &&
+    (m.ruolo.toLowerCase().includes('co-owner') ||
+     m.ruolo.toLowerCase().includes('owner'))
+  ).slice(1)
 
-  const managers = staffData.filter(m => m.ruolo && m.ruolo.toLowerCase().includes('manager'))
-  if (managers.length > 0) {
-    staff += `\n\n*╭─── 🛡️ 𝐒𝐓𝐀𝐅𝐅 ───╮*`
-    for (const mgr of managers) {
-      staff += `\n*│ ✦ ${mgr.nome}*`
-      staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${mgr.ruolo}`
-      if (mgr.telefono) {
-        staff += `\n*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${mgr.telefono}`
-      }
+  if (coOwners.length > 0) {
+    staff += `\n\n*╭─── 🔱 𝐂𝐎-𝐎𝐖𝐍𝐄𝐑 ───╮*`
+    for (const co of coOwners) {
+      staff += `\n*│ ✦ ${co.nome}*`
+      staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${co.ruolo}`
+      if (co.telefono) staff += `\n*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${co.telefono}`
+      if (co.instagram) staff += `\n*│   ├ 𝐈𝐆:* instagram.com/${co.instagram}`
+      if (co.telegram) staff += `\n*│   └ 𝐓𝐆:* @${co.telegram}`
       staff += `\n*│*`
     }
     staff += `*╰────────────────────╯*`
   }
 
+  // MANAGER
+  const managers = staffData.filter(m =>
+    m.ruolo && m.ruolo.toLowerCase().includes('manager')
+  )
+
+  if (managers.length > 0) {
+    staff += `\n\n*╭─── 🛡️ 𝐌𝐀𝐍𝐀𝐆𝐄𝐑 ───╮*`
+    for (const mgr of managers) {
+      staff += `\n*│ ✦ ${mgr.nome}*`
+      staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${mgr.ruolo}`
+      if (mgr.telefono) staff += `\n*│   └ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${mgr.telefono}`
+      staff += `\n*│*`
+    }
+    staff += `*╰────────────────────╯*`
+  }
+
+  // ALTRI MEMBRI DELLO STAFF (Developer, Tester, ecc.)
+  const altri = staffData.filter(m =>
+    !m.ruolo.toLowerCase().includes('owner') &&
+    !m.ruolo.toLowerCase().includes('co-owner') &&
+    !m.ruolo.toLowerCase().includes('manager')
+  )
+
+  if (altri.length > 0) {
+    staff += `\n\n*╭─── 🌟 𝐌𝐄𝐌𝐁𝐑𝐈 𝐒𝐓𝐀𝐅𝐅 ───╮*`
+    for (const a of altri) {
+      staff += `\n*│ ✦ ${a.nome}*`
+      staff += `\n*│   ├ 𝐑𝐮𝐨𝐥𝐨:* ${a.ruolo}`
+      if (a.telefono) staff += `\n*│   ├ 𝐂𝐨𝐧𝐭𝐚𝐭𝐭𝐨:* wa.me/${a.telefono}`
+      if (a.instagram) staff += `\n*│   ├ 𝐈𝐆:* instagram.com/${a.instagram}`
+      if (a.telegram) staff += `\n*│   └ 𝐓𝐆:* @${a.telegram}`
+      staff += `\n*│*`
+    }
+    staff += `*╰────────────────────╯*`
+  }
+
+  // INFO UTILI
   staff += `\n\n*╭─── 📌 𝐈𝐍𝐅𝐎 𝐔𝐓𝐈𝐋𝐈 ───╮*`
   staff += `\n*│ ✦ 𝐆𝐢𝐭𝐡𝐮𝐛:* https://github.com/Elixir-png/ElixirBot_`
   staff += `\n*│ ✦ 𝐂𝐚𝐧𝐚𝐥𝐞:* https://whatsapp.com/channel/0029Vb8Y0igGufJ0xMYJmU40`
@@ -116,3 +132,4 @@ handler.tags = ['main']
 handler.command = ['staff', 'team']
 
 export default handler
+

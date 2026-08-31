@@ -389,11 +389,17 @@ export async function handler(chatUpdate) {
             }
         }
 
+        // Un messaggio modificato (edit) può arrivare in 2 modi:
+        //  - come protocolMessage (MESSAGE_EDIT) dentro messages.upsert
+        //  - come contenuto già estratto da messages.update (marcato _edited in print.js)
+        // In entrambi i casi lo segniamo per non farlo scartare dalla dedup dei duplicati
+        // (altrimenti un edit fatto entro pochi secondi dal messaggio originale verrebbe ignorato).
+        let isEdited = !!m._edited;
         if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
             const { key: eKey, editedMessage } = m.message.protocolMessage;
+            isEdited = true;
             m.key = eKey;
             m.message = editedMessage;
-            m.text = editedMessage.conversation ?? editedMessage.extendedTextMessage?.text ?? '';
             m.mtype = Object.keys(editedMessage)[0];
         }
 
@@ -424,9 +430,13 @@ export async function handler(chatUpdate) {
 
         const msgId = m.key?.id;
         if (msgId) {
-            if (global.processedMessages.has(msgId)) continue;
-            global.processedMessages.add(msgId);
-            setTimeout(() => global.processedMessages.delete(msgId), DUPLICATE_WINDOW);
+            // Gli edit riutilizzano l'id del messaggio originale: se li dedupichiamo con lo
+            // stesso id rischiamo di scartarli subito (quando il msg. originale è stato visto
+            // da poco). Usiamo un id "dedup" diverso per i messaggi modificati.
+            const dedupId = isEdited ? `${msgId}:edit` : msgId;
+            if (global.processedMessages.has(dedupId)) continue;
+            global.processedMessages.add(dedupId);
+            setTimeout(() => global.processedMessages.delete(dedupId), DUPLICATE_WINDOW);
         }
 
         initResponseHandler(this);

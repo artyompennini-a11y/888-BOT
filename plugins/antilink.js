@@ -4,6 +4,57 @@ import webp from 'node-webpmux'
 let inviteCache = {}
 let lastCheck = {}
 
+// Regex "non-global" così possiamo usare .test() senza problemi di lastIndex.
+const WHATSAPP_LINK_REGEX = /(?:https?:\/\/)?(?:www\.|chat\.|api\.|business\.)?whatsapp\.com(?:\/channel)?\/[0-9A-Za-z_-]+/
+const WA_ME_REGEX = /(?:https?:\/\/)?(?:www\.)?wa\.me\/[0-9+]+/
+const WHATSAPP_DOMAIN_REGEX = /(?:chat\.|www\.)?whatsapp\.com|wa\.me/i
+
+/**
+ * Raccoglie in un'unica stringa tutto il testo (e gli URL) reperibile dal messaggio.
+ * Fondamentale perché:
+ *  - nelle "link preview" WhatsApp mette l'URL solo in msg.contextInfo.matchedText;
+ *  - nei messaggi inoltrati il link può stare in externalAdReply / quoted text;
+ *  - in un messaggio con @mention (bot taggato) il testo contiene il link, mentre un
+ *    link "nudo" viene relegato nei campi contextInfo e m.text può risultare vuoto.
+ */
+function extractLinkText(m) {
+  const chunks = []
+  const add = (v) => { if (v && typeof v === 'string') chunks.push(v) }
+
+  add(m.text)
+  add(m.caption)
+
+  const msg = m.msg
+  if (msg && typeof msg === 'object') {
+    add(msg.text)
+    add(msg.conversation)
+    add(msg.caption)
+    add(msg.contentText)
+    add(msg.canonicalUrl)
+    const ci = msg.contextInfo
+    if (ci) {
+      add(ci.matchedText)
+      add(ci.quotedText)
+      const eat = ci.externalAdReply
+      if (eat) {
+        add(eat.sourceUrl)
+        add(eat.url)
+        add(eat.originalUrl)
+        add(eat.canonicalUrl)
+      }
+    }
+  }
+
+  // Se è una risposta (quoted), prende in considerazione anche l'originale citato.
+  // Il getter m.quoted può caricare il messaggio dal store: lo proteggiamo per non
+  // far lanciare eccezioni e saltare la rilevazione.
+  try {
+    if (m.quoted) add(m.quoted.text)
+  } catch {}
+
+  return chunks.length ? chunks.join('\n') : ''
+}
+
 function isWebP(buffer) {
   return buffer?.length >= 12 &&
     buffer.subarray(0, 4).toString() === 'RIFF' &&
@@ -43,15 +94,15 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
   if (!isBotAdmin) return true
 
-  const text = m.text || ''
-  const linkRegex = /(https?:\/\/)?(chat\.whatsapp\.com|wa\.me|whatsapp\.com)\/\S+/gi
+  const text = extractLinkText(m)
+  const isWhatsAppLink = WHATSAPP_LINK_REGEX.test(text) || WA_ME_REGEX.test(text) || WHATSAPP_DOMAIN_REGEX.test(text)
 
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
   // ============================
   //        LINK NORMALI
   // ============================
-  if (linkRegex.test(text)) {
+  if (isWhatsAppLink) {
 
     lastCheck[m.chat] = Date.now()
 
@@ -68,7 +119,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
       }
     }
 
-    if (text.includes(thisGroupCode)) return true
+    if (thisGroupCode && text.toLowerCase().includes(thisGroupCode.toLowerCase())) return true
 
     // --- Cancella messaggio ---
     await conn.sendMessage(m.chat, {

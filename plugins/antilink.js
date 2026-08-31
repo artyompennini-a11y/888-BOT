@@ -141,33 +141,28 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
       contextInfo: { mentionedJid: [m.sender] }
     })
 
-    // --- Controllo admin bot + admin utente ---
-    const metadata = await conn.groupMetadata(m.chat)
-    const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net'
-
-    const botIsAdmin = metadata.participants.some(p =>
-      p.id === botNumber && (p.admin === 'admin' || p.admin === 'superadmin')
-    )
-
-    if (!botIsAdmin) {
-      console.log('❌ Il bot non è admin, impossibile espellere.')
-      return true
-    }
-
-    const targetIsAdmin = metadata.participants.some(p =>
-      p.id === m.sender && (p.admin === 'admin' || p.admin === 'superadmin')
-    )
-
-    if (targetIsAdmin) {
-      console.log('⚠️ Utente admin, non posso espellere.')
-      return true
-    }
-
     // --- Espulsione ---
+    // isBotAdmin / isAdmin arrivano GIÀ calcolati in modo affidabile dall'handler
+    // (con normalizzazione via decodeJid) e sono già stati validati all'inizio del
+    // plugin. NON ricalcolarli da metadata.participants + conn.user.id.split:
+    // nelle versioni recenti di Baileys i jid dei partecipanti possono essere LID
+    // e non corrispondere a conn.user.id → botIsAdmin risultava false e il bot
+    // stampava "non admin" senza mai espellere (questo era il bug del "rileva ma
+    // non rimuove").
     try {
-      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+      const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+      console.log(`✅ Utente ${m.sender} rimosso per link`, res ?? '')
     } catch (e) {
-      console.error('Errore durante espulsione:', e)
+      console.error('❌ Errore durante espulsione:', e)
+      // Fallback: ritenta con lo jid "da numero" puro, per maggiore robustezza
+      // contro eventuali LID/lidi normalizzati dall'handler.
+      try {
+        const plainJid = m.sender.split('@')[0] + '@s.whatsapp.net'
+        await conn.groupParticipantsUpdate(m.chat, [plainJid], 'remove')
+        console.log(`✅ Utente rimosso con jid alternativo ${plainJid}`)
+      } catch (e2) {
+        console.error('❌ Espulsione fallita anche con jid alternativo:', e2)
+      }
     }
 
     return false
@@ -251,32 +246,22 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
       contextInfo: { mentionedJid: [m.sender] }
     })
 
-    // --- Controllo admin bot + admin utente ---
-    const metadata = await conn.groupMetadata(m.chat)
-    const botNumber = conn.user.id.split(':')[0] + '@s.whatsapp.net'
-
-    const botIsAdmin = metadata.participants.some(p =>
-      p.id === botNumber && (p.admin === 'admin' || p.admin === 'superadmin')
-    )
-
-    if (!botIsAdmin) {
-      console.log('❌ Il bot non è admin, impossibile espellere.')
-      return true
-    }
-
-    const targetIsAdmin = metadata.participants.some(p =>
-      p.id === m.sender && (p.admin === 'admin' || p.admin === 'superadmin')
-    )
-
-    if (targetIsAdmin) {
-      console.log('⚠️ Utente admin, non posso espellere.')
-      return true
-    }
-
+    // --- Espulsione ---
+    // Stesso fix del ramo "link": usa isBotAdmin/isAdmin già calcolati dall'handler
+    // invece dei controlli su metadata.participants + conn.user.id.split (che in
+    // Baileys recenti falliscono a causa dei LID e impedivano l'espulsione).
     try {
-      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+      const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+      console.log(`✅ Utente ${m.sender} rimosso per QR con link`, res ?? '')
     } catch (e) {
-      console.error('Errore espulsione QR:', e)
+      console.error('❌ Errore espulsione QR:', e)
+      try {
+        const plainJid = m.sender.split('@')[0] + '@s.whatsapp.net'
+        await conn.groupParticipantsUpdate(m.chat, [plainJid], 'remove')
+        console.log(`✅ Utente rimosso con jid alternativo ${plainJid}`)
+      } catch (e2) {
+        console.error('❌ Espulsione QR fallita anche con jid alternativo:', e2)
+      }
     }
 
     return false

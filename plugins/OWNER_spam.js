@@ -4,7 +4,7 @@ const manually = `𝐆𝐑𝐔𝐏𝐏𝐈 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
 
 ╭───⭓
 │ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟭
-│ https://chat.whatsapp.com/DEBHQ2OYL58CRKCksqAp9o
+│ https://chat.whatsapp.com/F7kkULKYEeJAsydfNlx1WM?s=cl&p=a&ilr=1
 │
 │ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟮
 │ https://chat.whatsapp.com/DjDBrPXWZLOCAoHMA1oNND

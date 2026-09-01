@@ -20,8 +20,6 @@ Digita *rank* per vedere la tua posizione.
 
 }
 
-handler.help = ['rank']
 handler.tags = ['rpg']
-handler.command = /^rank$/i
 
 export default handler

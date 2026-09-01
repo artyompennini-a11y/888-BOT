@@ -5,98 +5,131 @@ import '@realvare/baileys';
 import 'fs';
 import 'perf_hooks';
 
-let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
-  const { welcome: _0x16d809, detect: _0x4c3a9f } = global.db.data.chats[_0x512ed3.chat];
-  let _0x5bfb0b = _0x512ed3.quoted ? _0x512ed3.quoted.sender : _0x512ed3.mentionedJid && _0x512ed3.mentionedJid[0] ? _0x512ed3.mentionedJid[0] : _0x512ed3.fromMe ? _0x542b94.user.jid : _0x512ed3.sender;
-  const _0x197a8a = (await _0x542b94.profilePictureUrl(_0x5bfb0b, "image").catch(_0x2cb040 => null)) || "./src/avatar_contact.png";
+let handler = async (m, { conn, usedPrefix: prefix }) => {
+  const { welcome, detect } = global.db.data.chats[m.chat] || {};
 
-  let _0x53e6f1;
-  if (_0x197a8a !== "./src/avatar_contact.png") {
-    _0x53e6f1 = await (await fetch(_0x197a8a)).buffer();
-  } else {
-    _0x53e6f1 = await (await fetch("https://qu.ax/DQsgr.png")).buffer();
+  // TARGET UTENTE
+  let target = m.quoted
+    ? m.quoted.sender
+    : m.mentionedJid && m.mentionedJid[0]
+    ? m.mentionedJid[0]
+    : m.fromMe
+    ? conn.user.jid
+    : m.sender;
+
+  // FOTO PROFILO + FALLBACK
+  const profilePicUrl =
+    (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
+    "./src/avatar_contact.png";
+
+  let profileBuffer;
+  try {
+    if (profilePicUrl !== "./src/avatar_contact.png") {
+      profileBuffer = await (await fetch(profilePicUrl)).buffer();
+    } else {
+      profileBuffer = await (
+        await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")
+      ).buffer();
+    }
+  } catch {
+    profileBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")
+    ).buffer();
   }
 
-  let _0x6bd16e = {
-    'key': {
-      'participants': "0@s.whatsapp.net",
-      'fromMe': false,
-      'id': "Halo"
+  // THUMBNAIL MENU OWNER + FALLBACK
+  let thumbBuffer;
+  try {
+    thumbBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/menu-owner.jpg")
+    ).buffer();
+  } catch {
+    thumbBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/menu-owner.jpg")
+    ).buffer();
+  }
+
+  // FAKE LOCATION
+  let fakeLocation = {
+    key: {
+      participants: "0@s.whatsapp.net",
+      fromMe: false,
+      id: "Halo",
     },
-    'message': {
-      'locationMessage': {
-        'name': "🔐 MENU OWNER 888",
-        'jpegThumbnail': await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
-      }
+    message: {
+      locationMessage: {
+        name: "🔐 MENU OWNER 888",
+        jpegThumbnail: thumbBuffer,
+      },
     },
-    'participant': "0@s.whatsapp.net"
+    participant: "0@s.whatsapp.net",
   };
 
-  let _0x2aa101 = 
+  // TESTO MENU
+  let menuText = 
 `╭━━━〔 🔐 *MENU OWNER* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Livello:* Sviluppatore / Creatore Core
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ⚙️ *Gestione Bot & Credenziali:*
-┃  ⮕ ${_0x3f73c1}impostanome
-┃  ⮕ ${_0x3f73c1}resettanome
-┃  ⮕ ${_0x3f73c1}addowner
-┃  ⮕ ${_0x3f73c1}delowner
-┃  ⮕ ${_0x3f73c1}addperms
-┃  ⮕ ${_0x3f73c1}setppbot
-┃  ⮕ ${_0x3f73c1}prefisso
-┃  ⮕ ${_0x3f73c1}resettaprefisso
+┃  ⮕ ${prefix}impostanome
+┃  ⮕ ${prefix}resettanome
+┃  ⮕ ${prefix}addowner
+┃  ⮕ ${prefix}delowner
+┃  ⮕ ${prefix}addperms
+┃  ⮕ ${prefix}setppbot
+┃  ⮕ ${prefix}prefisso
+┃  ⮕ ${prefix}resettaprefisso
 ┃ 
 ┃ 🛡️ *Sicurezza & Protezione:*
-┃  ⮕ ${_0x3f73c1}antinuke
-┃  ⮕ ${_0x3f73c1}banchat
-┃  ⮕ ${_0x3f73c1}banuser (@)
-┃  ⮕ ${_0x3f73c1}unbanuser (@)
-┃  ⮕ ${_0x3f73c1}block (@)
-┃  ⮕ ${_0x3f73c1}unblock (@)
-┃  ⮕ ${_0x3f73c1}banlist
-┃  ⮕ ${_0x3f73c1}listamuti
-┃  ⮕ ${_0x3f73c1}delprem
+┃  ⮕ ${prefix}antinuke
+┃  ⮕ ${prefix}banchat
+┃  ⮕ ${prefix}banuser (@)
+┃  ⮕ ${prefix}unbanuser (@)
+┃  ⮕ ${prefix}block (@)
+┃  ⮕ ${prefix}unblock (@)
+┃  ⮕ ${prefix}banlist
+┃  ⮕ ${prefix}listamuti
+┃  ⮕ ${prefix}delprem
 ┃ 
 ┃ 💻 *Gestione Sviluppo & Plugin:*
-┃  ⮕ ${_0x3f73c1}getfile
-┃  ⮕ ${_0x3f73c1}saveplugin
-┃  ⮕ ${_0x3f73c1}getplugin
-┃  ⮕ ${_0x3f73c1}editplugin
-┃  ⮕ ${_0x3f73c1}listpl
-┃  ⮕ ${_0x3f73c1}disablepl
-┃  ⮕ ${_0x3f73c1}enablepl
-┃  ⮕ ${_0x3f73c1}dp (plugin)
-┃  ⮕ ${_0x3f73c1}codifica
-┃  ⮕ ${_0x3f73c1}offusca
+┃  ⮕ ${prefix}getfile
+┃  ⮕ ${prefix}saveplugin
+┃  ⮕ ${prefix}getplugin
+┃  ⮕ ${prefix}editplugin
+┃  ⮕ ${prefix}listpl
+┃  ⮕ ${prefix}disablepl
+┃  ⮕ ${prefix}enablepl
+┃  ⮕ ${prefix}dp (plugin)
+┃  ⮕ ${prefix}codifica
+┃  ⮕ ${prefix}offusca
 ┃ 
 ┃ 🚪 *Controllo Gruppi & Spostamenti:*
-┃  ⮕ ${_0x3f73c1}hidetagall
-┃  ⮕ ${_0x3f73c1}ispeziona <link gruppo>
-┃  ⮕ ${_0x3f73c1}join (link gruppo)
-┃  ⮕ ${_0x3f73c1}gruppi
-┃  ⮕ ${_0x3f73c1}adminall
-┃  ⮕ ${_0x3f73c1}out
-┃  ⮕ ${_0x3f73c1}outall
+┃  ⮕ ${prefix}hidetagall
+┃  ⮕ ${prefix}ispeziona <link gruppo>
+┃  ⮕ ${prefix}join (link gruppo)
+┃  ⮕ ${prefix}gruppi
+┃  ⮕ ${prefix}adminall
+┃  ⮕ ${prefix}out
+┃  ⮕ ${prefix}outall
 ┃ 
 ┃ 🔧 *Modifiche Database & Logica:*
-┃  ⮕ ${_0x3f73c1}azzera (@)
-┃  ⮕ ${_0x3f73c1}aggiungi (n° messaggi)
-┃  ⮕ ${_0x3f73c1}rimuovi (n° messaggi)
-┃  ⮕ ${_0x3f73c1}addrank (n° livelli) (@user)
-┃  ⮕ ${_0x3f73c1}delrank (n° livelli) (@user)
-┃  ⮕ ${_0x3f73c1}lock
+┃  ⮕ ${prefix}azzera (@)
+┃  ⮕ ${prefix}aggiungi (n° messaggi)
+┃  ⮕ ${prefix}rimuovi (n° messaggi)
+┃  ⮕ ${prefix}addrank (n° livelli) (@user)
+┃  ⮕ ${prefix}delrank (n° livelli) (@user)
+┃  ⮕ ${prefix}lock
 ┃ 
 ┃ 📊 *Diagnostica & Server:*
-┃  ⮕ ${_0x3f73c1}diagnosi
-┃  ⮕ ${_0x3f73c1}sistema
-┃  ⮕ ${_0x3f73c1}dio
+┃  ⮕ ${prefix}diagnosi
+┃  ⮕ ${prefix}sistema
+┃  ⮕ ${prefix}dio
 ╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${_0x3f73c1}segnala* per 
-> segnalarlo subito allo staff.`.trim();
+> ⚠️ In caso di bug o problemi tecnici,
+> usa *${prefix}segnala*.`.trim();
 
-  _0x542b94.sendMessage(_0x512ed3.chat, { text: _0x2aa101 }, { quoted: _0x6bd16e });
+  conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation });
 };
 
 handler.help = ["menu"];

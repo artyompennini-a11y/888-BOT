@@ -1,19 +1,24 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
 let handler = async (m, { conn }) => {
 
   let user = global.db.data.users[m.sender]
 
-  let cooldown = 1000 * 60 * 30
+  let cooldown = 1000 * 60 * 30 // 30 minuti
   let now = Date.now()
 
   if (!user.workCooldown) user.workCooldown = 0
 
+  // ───────────────────────────────
+  // 🔥 COOLDOWN — 888
+  // ───────────────────────────────
   if (now < user.workCooldown) {
     let time = msToTime(user.workCooldown - now)
-    return m.reply(`⏳ Hai già lavorato recentemente\nRiprova tra ${time}`)
+    return m.reply(
+`╭━━━〔 ⏳ *COOLDOWN LAVORO* 〕━━━┈
+┃ Hai già lavorato recentemente.
+┃ Puoi lavorare di nuovo tra:
+┃ ➜ *${time}*
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
   }
 
   user.workCooldown = now + cooldown
@@ -21,15 +26,18 @@ let handler = async (m, { conn }) => {
   let successRate = 0.7
   let success = Math.random() < successRate
 
+  // ───────────────────────────────
+  // 🔥 EVENTI LAVORO — 888
+  // ───────────────────────────────
   let lavori = [
     "hai lavorato come sviluppatore e non è esploso nulla",
     "hai fatto il rider sotto la pioggia come un eroe",
-    "hai venduto roba inutile a prezzo folle",
+    "hai venduto oggetti inutili a prezzo folle",
     "hai fatto il DJ e nessuno si è lamentato",
-    "hai lavorato in nero ma ti è andata bene",
+    "hai lavorato in nero e ti è andata bene",
     "hai fatto il meccanico e l’auto funziona ancora",
-    "hai fatto il programmatore e hai fixato un bug",
-    "hai fatto il muratore senza morire di caldo",
+    "hai fixato un bug da programmatore",
+    "hai fatto il muratore senza scioglierti dal caldo",
     "hai truffato qualcuno con successo",
     "hai fatto il freelance e ti hanno pagato davvero"
   ]
@@ -50,23 +58,31 @@ let handler = async (m, { conn }) => {
   let evento = pickRandom(success ? lavori : fallimenti)
   let amount = Math.floor(Math.random() * 2000) + 1
 
-  let text = `╭━━━ 💼 *LAVORO* ━━━╮\n\n`
+  // ───────────────────────────────
+  // 🔥 RISULTATO — 888
+  // ───────────────────────────────
+  let text =
+`╭━━━〔 💼 *LAVORO 888* 〕━━━┈
+┃ ${evento}
+┃━━━━━━━━━━━━━━━━━━`
 
   if (success) {
     user.money += amount
-    text += `✨ ${evento}\n\n💰 Guadagno: +${amount}€`
+    text += `
+┃ ✨ Guadagno: *+${amount}€*`
   } else {
     user.money -= amount
     if (user.money < 0) user.money = 0
-    text += `💀 ${evento}\n\n💸 Perdita: -${amount}€`
+    text += `
+┃ 💀 Perdita: *-${amount}€*`
   }
 
-  text += `\n\n💼 Saldo: ${user.money}€`
-  text += `\n╰━━━━━━━━━━━━━━╯`
+  text += `
+┃━━━━━━━━━━━━━━━━━━
+┃ 💼 Saldo attuale: *${user.money}€*
+╰━━━━━━━━━━━━━━━━━━┈`
 
-  return conn.sendMessage(m.chat, {
-    text
-  }, { quoted: m })
+  return conn.sendMessage(m.chat, { text }, { quoted: m })
 }
 
 handler.command = ['lavora']

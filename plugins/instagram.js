@@ -1,6 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
 const RAPID_KEY = "c9d9e589b3mshc7eecec96ccc03ep126bb1jsnbd4082441abd"
 const IG_HOST = "instagram120.p.rapidapi.com"
 
@@ -33,20 +30,21 @@ let handler = async (m, { conn, args }) => {
 
   if (!cmd) {
     return m.reply(
-`╭──────────────────╮
-┃ 📸 𝐂𝐎𝐌𝐀𝐍𝐃𝐈 𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 📸 *COMANDI INSTAGRAM* 〕━━━┈
 ┃ *.instagram profilo @utente*
-┃ → info profilo completo
+┃ → Info profilo completo
 ┃
 ┃ *.instagram post @utente*
-┃ → ultimi post dell'utente
+┃ → Ultimi post
 ┃
 ┃ *.instagram storie @utente*
-┃ → storie attive
-╰──────────────────╯`)
+┃ → Storie attive
+╰━━━━━━━━━━━━━━━━━━┈`)
   }
 
+  // ───────────────────────────────
+  // 🔥 PROFILO — STILE 888
+  // ───────────────────────────────
   if (cmd === "profilo") {
     const username = args[1]?.replace("@", "")
     if (!username) return m.reply("❌ Specifica un utente!\nEs: *.instagram profilo @cristiano*")
@@ -69,20 +67,18 @@ let handler = async (m, { conn, args }) => {
     const avatar = u.profile_pic_url || u.hd_profile_pic_url_info?.url
 
     const testo =
-`╭──────────────────╮
-┃ 📸 𝐏𝐑𝐎𝐅𝐈𝐋𝐎 𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 📸 *PROFILO INSTAGRAM* 〕━━━┈
 ┃ 👤 *${nome}* ${verificato}
 ┃ 🔗 @${u.username || username}
 ┃ ${privato}${categoria ? `\n┃ 📌 ${categoria}` : ""}${sito}
 ┃━━━━━━━━━━━━━━━━━━
-┃ 👥 Follower: *${followers}*
-┃ ➡️ Following: *${following}*
-┃ 🖼 Post: *${post}*
+┃ 👥 *Follower:* ${followers}
+┃ ➡️ *Following:* ${following}
+┃ 🖼 *Post:* ${post}
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 📝 *Bio:*
 ┃ ${bio}
-╰──────────────────╯`
+╰━━━━━━━━━━━━━━━━━━┈`
 
     if (avatar) {
       await conn.sendMessage(chat, { image: { url: avatar }, caption: testo }, { quoted: m })
@@ -92,6 +88,9 @@ let handler = async (m, { conn, args }) => {
     return
   }
 
+  // ───────────────────────────────
+  // 🔥 POST — STILE 888
+  // ───────────────────────────────
   if (cmd === "post") {
     const username = args[1]?.replace("@", "")
     if (!username) return m.reply("❌ Specifica un utente!\nEs: *.instagram post @cristiano*")
@@ -103,7 +102,9 @@ let handler = async (m, { conn, args }) => {
 
     const posts = data.result.edges.slice(0, 6)
 
-    let testo = `╭──────────────────╮\n┃ 🖼 𝐔𝐋𝐓𝐈𝐌𝐈 𝐏𝐎𝐒𝐓 @${username}\n┃━━━━━━━━━━━━━━━━━━\n`
+    let testo = 
+`╭━━━〔 🖼 *ULTIMI POST @${username}* 〕━━━┈
+┃━━━━━━━━━━━━━━━━━━`
 
     for (let i = 0; i < posts.length; i++) {
       const node = posts[i].node
@@ -112,10 +113,15 @@ let handler = async (m, { conn, args }) => {
       const commenti = formatNum(node.comment_count || node.edge_media_to_comment?.count)
       const tipo = node.is_video ? "🎬 Video" : node.__typename === "XDTGraphSidecar" ? "🖼 Carosello" : "🖼 Foto"
       const link = `https://instagram.com/p/${node.code}`
-      testo += `┃\n┃ *${i + 1}.* ${tipo}\n┃ ❤️ ${likes} 💬 ${commenti}\n┃ 📝 ${caption.replace(/\n/g, " ")}...\n┃ 🔗 ${link}\n`
+
+      testo += 
+`\n┃ *${i + 1}.* ${tipo}
+┃ ❤️ ${likes}   💬 ${commenti}
+┃ 📝 ${caption.replace(/\n/g, " ")}...
+┃ 🔗 ${link}`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `\n╰━━━━━━━━━━━━━━━━━━┈`
 
     const primoNode = posts[0].node
     const primaImg = primoNode.thumbnail_src || primoNode.display_url || primoNode.image_versions2?.candidates?.[0]?.url
@@ -128,6 +134,9 @@ let handler = async (m, { conn, args }) => {
     return
   }
 
+  // ───────────────────────────────
+  // 🔥 STORIE — STILE 888
+  // ───────────────────────────────
   if (cmd === "storie") {
     const username = args[1]?.replace("@", "")
     if (!username) return m.reply("❌ Specifica un utente!\nEs: *.instagram storie @cristiano*")
@@ -139,7 +148,14 @@ let handler = async (m, { conn, args }) => {
 
     const storie = data.result
 
-    await m.reply(`📖 *@${username}* ha *${storie.length}* storie attive!\nLe mando una per una...`)
+    await m.reply(
+`╭━━━〔 📖 *STORIE ATTIVE* 〕━━━┈
+┃ 👤 @${username}
+┃ 📚 Totale: ${storie.length}
+┃━━━━━━━━━━━━━━━━━━
+┃ Le invio una per una...
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
 
     for (let i = 0; i < Math.min(storie.length, 10); i++) {
       const storia = storie[i]
@@ -163,13 +179,11 @@ let handler = async (m, { conn, args }) => {
   }
 
   return m.reply(
-`╭──────────────────╮
-┃ 📸 𝐂𝐎𝐌𝐀𝐍𝐃𝐈 𝐈𝐍𝐒𝐓𝐀𝐆𝐑𝐀𝐌
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 📸 *COMANDI INSTAGRAM* 〕━━━┈
 ┃ *.instagram profilo @utente*
 ┃ *.instagram post @utente*
 ┃ *.instagram storie @utente*
-╰──────────────────╯`)
+╰━━━━━━━━━━━━━━━━━━┈`)
 }
 
 handler.command = ["instagram"]

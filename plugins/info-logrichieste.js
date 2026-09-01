@@ -49,7 +49,7 @@ const attachListener = () => {
                         const totaleAccettati = global.richiesteAntiSpam[chiaveUnica].jids.size || 0
                         const testoMessaggio = totaleAccettati === 1
                             ? `*📢 Richiesta accettata dall’admin @${adminNumero}*\n> *Se non vuoi questa funzione ti basta fare ''.disabilita logrichieste''*`
-                            : `*📢 ${totaleAccettati} richieste accettate dall’admin @${adminNumero}*\n> *Se non vuoi questa funzione ti basta fare ''.disabilita logrichieste''* `
+                            : `*📢 ${totaleAccettati} richieste accettate dall’admin @${adminNumero}*\n> *Se non vuoi questa funzione ti basta fare ''.disattiva logrichieste''* `
 
                         await conn.sendMessage(chatId, {
                             text: testoMessaggio,

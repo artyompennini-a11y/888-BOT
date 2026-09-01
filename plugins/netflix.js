@@ -1,6 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
 const RAPID_KEY = "c9d9e589b3mshc7eecec96ccc03ep126bb1jsnbd4082441abd"
 const NF_HOST = "netflix54.p.rapidapi.com"
 
@@ -33,22 +30,26 @@ let handler = async (m, { conn, args }) => {
   const chat = m.chat
   const cmd = args[0]?.toLowerCase()
 
+  // ───────────────────────────────
+  // 🔥 MENU — STILE 888
+  // ───────────────────────────────
   if (!cmd) {
     return m.reply(
-`╭──────────────────╮
-┃ 🎬 𝐂𝐎𝐌𝐀𝐍𝐃𝐈 𝐍𝐄𝐓𝐅𝐋𝐈𝐗
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 🎬 *COMANDI NETFLIX 888* 〕━━━┈
 ┃ *.netflix cerca [titolo]*
-┃ → cerca film o serie
+┃ → Cerca film o serie
 ┃
 ┃ *.netflix info [titolo]*
-┃ → trama, cast, generi, rating
+┃ → Trama, cast, rating
 ┃
 ┃ *.netflix episodi [titolo]*
-┃ → lista episodi serie
-╰──────────────────╯`)
+┃ → Lista episodi serie
+╰━━━━━━━━━━━━━━━━━━┈`)
   }
 
+  // ───────────────────────────────
+  // 🔥 CERCA — STILE 888
+  // ───────────────────────────────
   if (cmd === "cerca") {
     const titolo = args.slice(1).join(" ")
     if (!titolo) return m.reply("❌ Specifica un titolo!\nEs: *.netflix cerca Stranger Things*")
@@ -58,7 +59,9 @@ let handler = async (m, { conn, args }) => {
     const data = await fetchNF(`search/?query=${encodeURIComponent(titolo)}&offset=0&limit=10&lang=en`)
     if (!data?.titles?.length) return m.reply("❌ Nessun risultato trovato.")
 
-    let testo = `╭──────────────────╮\n┃ 🔍 RISULTATI: *${titolo}*\n┃━━━━━━━━━━━━━━━━━━\n`
+    let testo =
+`╭━━━〔 🔍 *RISULTATI: ${titolo}* 〕━━━┈
+┃━━━━━━━━━━━━━━━━━━`
 
     for (let item of data.titles.slice(0, 8)) {
       const id = item.summary?.id
@@ -67,13 +70,21 @@ let handler = async (m, { conn, args }) => {
       const nome = item.jawSummary?.title || item.title || "N/D"
       const generi = item.jawSummary?.genres?.map(g => g.name).join(", ") || "N/D"
       const rating = item.jawSummary?.maturity?.rating?.value || ""
-      testo += `┃\n┃ ${emoji} *${nome}*\n┃ ${getTipoLabel(tipo)} | ${rating}\n┃ 🎭 ${generi}\n┃ 🆔 ${id}\n`
+
+      testo += 
+`\n┃ ${emoji} *${nome}*
+┃ ${getTipoLabel(tipo)} | ${rating}
+┃ 🎭 ${generi}
+┃ 🆔 ${id}`
     }
 
-    testo += `┃\n┃━━━━━━━━━━━━━━━━━━\n┃ Usa *.netflix info [titolo]*\n╰──────────────────╯`
+    testo += `\n╰━━━━━━━━━━━━━━━━━━┈\nUsa *.netflix info [titolo]*`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 INFO — STILE 888
+  // ───────────────────────────────
   if (cmd === "info") {
     const titolo = args.slice(1).join(" ")
     if (!titolo) return m.reply("❌ Specifica un titolo!\nEs: *.netflix info Breaking Bad*")
@@ -101,10 +112,8 @@ let handler = async (m, { conn, args }) => {
     const isOriginal = item.summary?.isOriginal ? "🔴 Netflix Original" : ""
 
     let testo =
-`╭──────────────────╮
-┃ ${emoji} 𝐈𝐍𝐅𝐎 𝐍𝐄𝐓𝐅𝐋𝐈𝐗
-┃━━━━━━━━━━━━━━━━━━
-┃ *${nome}* ${isOriginal}
+`╭━━━〔 🎬 *INFO NETFLIX 888* 〕━━━┈
+┃ ${emoji} *${nome}* ${isOriginal}
 ┃ ${getTipoLabel(tipo)} | 🔞 ${rating}
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 📝 *Trama:*
@@ -115,11 +124,14 @@ ${tags ? `┃ 🏷 *Tags:* ${tags}\n` : ""}${creators ? `┃ 🎬 *Creatore:* ${
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ⚠️ ${ratingDesc}
 ┃ 🆔 ID: ${id}
-╰──────────────────╯`
+╰━━━━━━━━━━━━━━━━━━┈`
 
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 EPISODI — STILE 888
+  // ───────────────────────────────
   if (cmd === "episodi") {
     const titolo = args.slice(1).join(" ")
     if (!titolo) return m.reply("❌ Specifica una serie!\nEs: *.netflix episodi Squid Game*")
@@ -133,13 +145,18 @@ ${tags ? `┃ 🏷 *Tags:* ${tags}\n` : ""}${creators ? `┃ 🎬 *Creatore:* ${
     const id = item.summary?.id
     const nome = item.jawSummary?.title || titolo
 
-    if (item.summary?.type !== "show") return m.reply(`❌ *${nome}* è un film, non ha episodi.`)
+    if (item.summary?.type !== "show")
+      return m.reply(`❌ *${nome}* è un film, non ha episodi.`)
 
     const data = await fetchNF(`season/episodes/?ids=${id}&offset=0&limit=30&lang=en`)
-    if (!data?.[0]?.episodes?.length) return m.reply("❌ Episodi non disponibili per questa serie.")
+    if (!data?.[0]?.episodes?.length)
+      return m.reply("❌ Episodi non disponibili per questa serie.")
 
     const episodi = data[0].episodes
-    let testo = `╭──────────────────╮\n┃ 📺 *${nome}*\n┃━━━━━━━━━━━━━━━━━━\n`
+
+    let testo =
+`╭━━━〔 📺 *${nome} — EPISODI* 〕━━━┈
+┃━━━━━━━━━━━━━━━━━━`
 
     let currentStagione = ""
     for (let ep of episodi) {
@@ -150,27 +167,27 @@ ${tags ? `┃ 🏷 *Tags:* ${tags}\n` : ""}${creators ? `┃ 🎬 *Creatore:* ${
 
       if (stagione && stagione !== currentStagione) {
         currentStagione = stagione
-        testo += `┃\n┃ 📂 *${stagione}*\n`
+        testo += `\n┃ 📂 *${stagione}*`
       }
 
-      testo += `┃ *${numEp}.* ${titoloEp} ${durata ? `(${durata})` : ""}\n`
+      testo += `\n┃ *${numEp}.* ${titoloEp} ${durata ? `(${durata})` : ""}`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `\n╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 MENU FINALE — STILE 888
+  // ───────────────────────────────
   return m.reply(
-`╭──────────────────╮
-┃ 🎬 𝐂𝐎𝐌𝐀𝐍𝐃𝐈 𝐍𝐄𝐓𝐅𝐋𝐈𝐗
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 🎬 *COMANDI NETFLIX 888* 〕━━━┈
 ┃ *.netflix cerca [titolo]*
 ┃ *.netflix info [titolo]*
 ┃ *.netflix episodi [titolo]*
-╰──────────────────╯`)
+╰━━━━━━━━━━━━━━━━━━┈`)
 }
 
 handler.command = ["netflix"]
 handler.before = async () => false
 export default handler
-

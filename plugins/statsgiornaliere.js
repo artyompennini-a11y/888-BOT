@@ -194,7 +194,25 @@ let handler = async (m, { conn, participants, groupMetadata, isAdmin }) => {
     }
     const day = global.dailyStats.date || todayDate()
 
-    const out = `*📊 STATISTICHE GIORNALIERE — ${groupName}*\n*Data:* ${day}\n\n*Messaggi totali oggi:* ${total}\n\n*Top 3 utenti:*${topText || '\nNessun messaggio registrato oggi.'}\n\n*Premi assegnati:*${prizesText || '\nNessun premio'}\n\n${positionText}\n\n> *Nota: la classifica viene resettata ogni giorno a 00:00 ora italiana.*`
+    // ─────────────────────────────────────────────
+    // 🔥 GRAFICA 888 — MESSAGGIO FINALE
+    // ─────────────────────────────────────────────
+    const out =
+`╭━━━〔 📊 *STATISTICHE GIORNALIERE* 〕━━━┈
+┃ 🏷️ *Gruppo:* ${groupName}
+┃ 📅 *Data:* ${day}
+┃━━━━━━━━━━━━━━━━━━
+┃ 💬 *Messaggi totali:* ${total}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🥇 *Top 3 utenti:*${topText || '\nNessun messaggio registrato oggi.'}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🎁 *Premi assegnati:*${prizesText || '\nNessun premio'}
+┃━━━━━━━━━━━━━━━━━━
+┃ 📌 *Posizione del gruppo:*
+┃ ${positionText}
+╰━━━━━━━━━━━━━━━━━━┈
+
+> 🕛 La classifica viene resettata ogni giorno alle *00:00* (ora italiana).`
 
     const mentions = top3.map(r=> r[0]).filter(Boolean)
     await conn.sendMessage(chat, { text: out, mentions })

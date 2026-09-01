@@ -1,13 +1,14 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 let handler = async (m, { conn }) => {
   const chat = global.db.data.chats[m.chat] || {}
 
   if (chat.isBanned) {
     return conn.sendMessage(m.chat, {
-      text: `⚠️ *CHAT GIÀ BLOCCATA*
-
-Il bot è già disattivato in questo gruppo.`
+      text: `╭━━━〔 🚫 *BANCHAT* 〕━━━┈
+┃ *Stato:* ❗ Già disattivato
+┃━━━━━━━━━━━━━━━━━━
+┃ Il bot è già bloccato
+┃ in questo gruppo.
+╰━━━━━━━━━━━━━━━━━━┈`
     }, { quoted: m })
   }
 
@@ -15,18 +16,18 @@ Il bot è già disattivato in questo gruppo.`
   global.db.data.chats[m.chat] = chat
 
   await conn.sendMessage(m.chat, {
-    text: `╭─────────────╮
-│ 🚫 *BANCHAT ATTIVATO*
-│
-│ Il bot è stato disattivato
-│ in questo gruppo.
-│
-│ 📵 Nessun comando verrà eseguito
-│ finché non verrà riattivato.
-│
-│ 👑 Azione eseguita da:
-│ @${m.sender.split('@')[0]}
-╰─────────────╯`,
+    text: `╭━━━〔 🚫 *BANCHAT* 〕━━━┈
+┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
+┃ *Stato:* 🔒 Disattivato nel gruppo
+┃━━━━━━━━━━━━━━━━━━
+┃ 📵 *Comandi bloccati*
+┃ Il bot non eseguirà più
+┃ alcun comando finché
+┃ non verrà riattivato.
+┃
+┃ 👑 *Azione eseguita da:*
+┃ @${m.sender.split('@')[0]}
+╰━━━━━━━━━━━━━━━━━━┈`,
     mentions: [m.sender]
   }, { quoted: m })
 }

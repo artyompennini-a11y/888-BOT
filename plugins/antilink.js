@@ -1,3 +1,4 @@
+
 import jsQR from 'jsqr'
 import webp from 'node-webpmux'
 
@@ -19,19 +20,11 @@ function isBotSender(m, conn) {
   return decode(m.sender) === decode(botJid)
 }
 
-// Regex "non-global" così possiamo usare .test() senza problemi di lastIndex.
+
 const WHATSAPP_LINK_REGEX = /(?:https?:\/\/)?(?:www\.|chat\.|api\.|business\.)?whatsapp\.com(?:\/channel)?\/[0-9A-Za-z_-]+/
 const WA_ME_REGEX = /(?:https?:\/\/)?(?:www\.)?wa\.me\/[0-9+]+/
 const WHATSAPP_DOMAIN_REGEX = /(?:chat\.|www\.)?whatsapp\.com|wa\.me/i
 
-/**
- * Raccoglie in un'unica stringa tutto il testo (e gli URL) reperibile dal messaggio.
- * Fondamentale perché:
- *  - nelle "link preview" WhatsApp mette l'URL solo in msg.contextInfo.matchedText;
- *  - nei messaggi inoltrati il link può stare in externalAdReply / quoted text;
- *  - in un messaggio con @mention (bot taggato) il testo contiene il link, mentre un
- *    link "nudo" viene relegato nei campi contextInfo e m.text può risultare vuoto.
- */
 function extractLinkText(m) {
   const chunks = []
   const add = (v) => { if (v && typeof v === 'string') chunks.push(v) }
@@ -60,9 +53,6 @@ function extractLinkText(m) {
     }
   }
 
-  // Se è una risposta (quoted), prende in considerazione anche l'originale citato.
-  // Il getter m.quoted può caricare il messaggio dal store: lo proteggiamo per non
-  // far lanciare eccezioni e saltare la rilevazione.
   try {
     if (m.quoted) add(m.quoted.text)
   } catch {}
@@ -95,20 +85,13 @@ async function decodeQrFromWebpBuffer(buffer) {
 }
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
-  if (isBotSender(m, conn)) return true
   if (m.isBaileys && m.fromMe) return true
   if (!m.isGroup) return false
 
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
-  // Se owner (inclusi rowner) o admin → bypass totale.
-
-  // Vale sia per un link inviato direttamente, sia per un link inviato
-  // tramite .tag: in entrambi i casi il mittente è sempre l'owner
-  // (handler passa isOwner/isROwner come jad normalizzati), quindi qui
-  // non viene mai conteggiato/eliminato.
-
+ 
   if (isAdmin || isOwner || isROwner) {
     console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
     return true
@@ -117,13 +100,14 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   if (!isBotAdmin) return true
 
   const text = extractLinkText(m)
-  const isWhatsAppLink = WHATSAPP_LINK_REGEX.test(text) || WA_ME_REGEX.test(text) || WHATSAPP_DOMAIN_REGEX.test(text)
+  const isWhatsAppLink =
+    WHATSAPP_LINK_REGEX.test(text) ||
+    WA_ME_REGEX.test(text) ||
+    WHATSAPP_DOMAIN_REGEX.test(text)
 
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
-  // ============================
-  //        LINK NORMALI
-  // ============================
+ 
   if (isWhatsAppLink) {
 
     lastCheck[m.chat] = Date.now()
@@ -143,7 +127,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
     if (thisGroupCode && text.toLowerCase().includes(thisGroupCode.toLowerCase())) return true
 
-    // --- Cancella messaggio ---
+    
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -163,21 +147,11 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
       contextInfo: { mentionedJid: [m.sender] }
     })
 
-    // --- Espulsione ---
-    // isBotAdmin / isAdmin arrivano GIÀ calcolati in modo affidabile dall'handler
-    // (con normalizzazione via decodeJid) e sono già stati validati all'inizio del
-    // plugin. NON ricalcolarli da metadata.participants + conn.user.id.split:
-    // nelle versioni recenti di Baileys i jid dei partecipanti possono essere LID
-    // e non corrispondere a conn.user.id → botIsAdmin risultava false e il bot
-    // stampava "non admin" senza mai espellere (questo era il bug del "rileva ma
-    // non rimuove").
     try {
       const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
       console.log(`✅ Utente ${m.sender} rimosso per link`, res ?? '')
     } catch (e) {
       console.error('❌ Errore durante espulsione:', e)
-      // Fallback: ritenta con lo jid "da numero" puro, per maggiore robustezza
-      // contro eventuali LID/lidi normalizzati dall'handler.
       try {
         const plainJid = m.sender.split('@')[0] + '@s.whatsapp.net'
         await conn.groupParticipantsUpdate(m.chat, [plainJid], 'remove')
@@ -190,9 +164,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     return false
   }
 
-  // ============================
-  //        QR CODE
-  // ============================
+  
   async function handleQrMedia(m, buffer, isSticker = false) {
     let qrText = null
 
@@ -248,7 +220,6 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
     if (qrTextLower.includes(thisGroupCode)) return true
 
-    // --- Cancella messaggio ---
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -268,10 +239,6 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
       contextInfo: { mentionedJid: [m.sender] }
     })
 
-    // --- Espulsione ---
-    // Stesso fix del ramo "link": usa isBotAdmin/isAdmin già calcolati dall'handler
-    // invece dei controlli su metadata.participants + conn.user.id.split (che in
-    // Baileys recenti falliscono a causa dei LID e impedivano l'espulsione).
     try {
       const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
       console.log(`✅ Utente ${m.sender} rimosso per QR con link`, res ?? '')

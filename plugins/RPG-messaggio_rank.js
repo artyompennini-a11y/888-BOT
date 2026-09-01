@@ -1,6 +1,6 @@
 let handler = async (m, { conn }) => {
 
-  let user = global.db.data.users[m.sender]
+  const user = global.db.data.users[m.sender] || (global.db.data.users[m.sender] = {})  //let user = global.db.data.users[m.sender]
   let reward = 100 // esempio
 
   await conn.sendMessage(m.chat, {

@@ -55,5 +55,3 @@ ${bar} ${percent}%
 
 handler.command = ['rank']
 export default handler
-
-

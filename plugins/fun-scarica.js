@@ -1,52 +1,89 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fetch from 'node-fetch'
 
 let handler = async (m, { conn, text }) => {
 
+  // ───────────────────────────────
+  // 🔥 ERRORE: NESSUN LINK — 888
+  // ───────────────────────────────
   if (!text) {
-    return m.reply('❌ Inserisci un link TikTok')
+    return m.reply(
+`╭━━━〔 ❌ *ERRORE LINK* 〕━━━┈
+┃ Inserisci un link TikTok valido.
+┃ Esempio:
+┃ ➜ .tt https://www.tiktok.com/...
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
   }
 
+  // ───────────────────────────────
+  // 🔥 ERRORE: LINK NON VALIDO — 888
+  // ───────────────────────────────
   if (
     !text.includes('tiktok.com') &&
     !text.includes('vm.tiktok.com')
   ) {
-    return m.reply('❌ Link TikTok non valido')
+    return m.reply(
+`╭━━━〔 ❌ *LINK NON VALIDO* 〕━━━┈
+┃ Il link inserito non è un
+┃ link TikTok riconosciuto.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
   }
 
+  // ───────────────────────────────
+  // 🔥 AVVIO DOWNLOAD — 888
+  // ───────────────────────────────
   await m.reply(
-`⏳ 𝐒𝐜𝐚𝐫𝐢𝐜𝐨 𝐢𝐥 𝐯𝐢𝐝𝐞𝐨...
-
-> 𝟴𝟴𝟴 𝗕𝗢𝗧 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
+`╭━━━〔 ⏳ *DOWNLOAD IN CORSO* 〕━━━┈
+┃ Sto scaricando il video...
+┃ Attendere qualche secondo.
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔰 888 BOT Downloader
+╰━━━━━━━━━━━━━━━━━━┈`
   )
 
   try {
-
     const api = `https://www.tikwm.com/api/?url=${encodeURIComponent(text)}`
-
     const res = await fetch(api)
-
     const json = await res.json()
 
     if (!json.data || !json.data.play) {
-      return m.reply('❌ Impossibile scaricare il video')
+      return m.reply(
+`╭━━━〔 ❌ *ERRORE DOWNLOAD* 〕━━━┈
+┃ Impossibile scaricare il video.
+┃ Riprova più tardi.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
-    await conn.sendMessage(m.chat, {
-      video: { url: json.data.play },
-      mimetype: 'video/mp4',
-      caption:
-`🎬 𝐕𝐢𝐝𝐞𝐨 𝐬𝐜𝐚𝐫𝐢𝐜𝐚𝐭𝐨
-
-🎵 ${json.data.title || 'TikTok Video'}
-
-> 𝟴𝟴𝟴 𝗕𝗢𝗧 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫`
-    }, { quoted: m })
+    // ───────────────────────────────
+    // 🔥 INVIO VIDEO — 888
+    // ───────────────────────────────
+    await conn.sendMessage(
+      m.chat,
+      {
+        video: { url: json.data.play },
+        mimetype: 'video/mp4',
+        caption:
+`╭━━━〔 🎬 *VIDEO SCARICATO* 〕━━━┈
+┃ 🎵 Titolo:
+┃ ➜ ${json.data.title || 'TikTok Video'}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔰 888 BOT Downloader
+╰━━━━━━━━━━━━━━━━━━┈`
+      },
+      { quoted: m }
+    )
 
   } catch (e) {
     console.error('[fun-scarica] Errore download TikTok:', e || 'Errore non specificato')
-    m.reply(`❌ Errore download TikTok`)
+
+    return m.reply(
+`╭━━━〔 ❌ *ERRORE* 〕━━━┈
+┃ Si è verificato un errore
+┃ durante il download.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
   }
 }
 

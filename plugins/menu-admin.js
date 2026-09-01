@@ -5,42 +5,55 @@ import { performance } from 'perf_hooks'
 
 let handler = async (m, { conn, usedPrefix: prefix }) => {
   const { welcome, detect } = global.db.data.chats[m.chat] || {}
-  
- 
-  let target = m.quoted ? m.quoted.sender : m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.fromMe ? conn.user.jid : m.sender
-  
-  
+
+  // TARGET UTENTE
+  let target = m.quoted 
+    ? m.quoted.sender 
+    : m.mentionedJid && m.mentionedJid[0] 
+    ? m.mentionedJid[0] 
+    : m.fromMe 
+    ? conn.user.jid 
+    : m.sender
+
+  // FOTO PROFILO + FALLBACK
   const profilePicUrl = await conn.profilePictureUrl(target, "image").catch(() => null) || "./src/avatar_contact.png"
 
   let profileBuffer
-  if (profilePicUrl !== "./src/avatar_contact.png") {
-    let res = await fetch(profilePicUrl)
-    profileBuffer = await res.buffer()
-  } else {
-    let res = await fetch("https://qu.ax/DQsgr.png")
-    profileBuffer = await res.buffer()
+  try {
+    if (profilePicUrl !== "./src/avatar_contact.png") {
+      profileBuffer = await (await fetch(profilePicUrl)).buffer()
+    } else {
+      profileBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")).buffer()
+    }
+  } catch {
+    profileBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")).buffer()
   }
 
- 
-  let thumbRes = await fetch("https://qu.ax/JKCXP.jpg")
-  let thumbBuffer = await thumbRes.buffer()
+  // THUMBNAIL MENU ADMIN + FALLBACK
+  let thumbBuffer
+  try {
+    thumbBuffer = await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
+  } catch {
+    thumbBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/menu-admin.jpg")).buffer()
+  }
 
+  // FAKE LOCATION
   let fakeLocation = {
-    'key': {
-      'participants': "0@s.whatsapp.net",
-      'fromMe': false,
-      'id': "Halo"
+    key: {
+      participants: "0@s.whatsapp.net",
+      fromMe: false,
+      id: "Halo"
     },
-    'message': {
-      'locationMessage': {
-        'name': "👑 MENU ADMIN 888",
-        'jpegThumbnail': thumbBuffer
+    message: {
+      locationMessage: {
+        name: "👑 MENU ADMIN 888",
+        jpegThumbnail: thumbBuffer
       }
     },
-    'participant': "0@s.whatsapp.net"
+    participant: "0@s.whatsapp.net"
   }
 
- 
+  // TESTO MENU
   let menuText = 
 `╭━━━〔 👑 *MENU ADMIN* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
@@ -109,9 +122,8 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}nuke
 ┃  ⮕ ${prefix}ds
 ╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${prefix}segnala* per 
-> segnalarlo subito allo staff.`.trim()
+> ⚠️ In caso di bug o problemi tecnici,
+> usa *${prefix}segnala*.`.trim()
 
   conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation })
 }

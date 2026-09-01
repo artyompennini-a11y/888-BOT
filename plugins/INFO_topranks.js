@@ -1,4 +1,5 @@
-//Plugin by Elixir, Punisher & 888 staff
+// Plugin by Elixir, Punisher & 888 staff
+import { xpRange } from '../lib/levelling.js'
 
 const handler = async (m, { conn, groupMetadata }) => {
   if (!m.isGroup) return await conn.sendMessage(m.chat, { text: 'Questo comando funziona solo nei gruppi.' })
@@ -18,44 +19,52 @@ const handler = async (m, { conn, groupMetadata }) => {
     .filter(jid => jid && !jid.endsWith('@g.us'))
     .map(jid => {
       const user = usersDb[jid] || {}
-      const lvl = Number(user.lvl ?? user.level ?? user.rankData?.level ?? 0) || 0
-      const msgCount = Number(user.msgCount ?? user.rankData?.messages ?? 0) || 0
-      return { jid, lvl, msgCount }
+
+      const level = Number(user.level || 0)
+      const exp = Number(user.exp || 0)
+      const role = user.role || 'Novizio'
+      const money = Number(user.money || 0)
+
+      return { jid, level, exp, role, money }
     })
-    .filter(user => user.lvl > 0 || user.msgCount > 0)
+    .filter(u => u.level > 0 || u.exp > 0)
 
   if (!values.length) {
     return await conn.sendMessage(m.chat, { text: 'Nessun rank disponibile per i membri di questo gruppo.' })
   }
 
-  values.sort((a, b) => b.lvl - a.lvl || b.msgCount - a.msgCount)
+  // Ordina per livello, poi XP
+  values.sort((a, b) => b.level - a.level || b.exp - a.exp)
 
   const top = values.slice(0, 10)
-  const header = `🏆 𝐓𝐎𝐏 𝟏𝟎 𝐑𝐀𝐍𝐊 𝐃𝐄𝐋 𝐆𝐑𝐔𝐏𝐏𝐎\n` +
+
+  const header =
+    `🏆 *TOP 10 RANK DEL GRUPPO*\n` +
     `👥 Gruppo: ${groupMetadata.subject || m.chat.split('@')[0]}\n\n`
 
   const titles = [
-    '𝐑𝐞 𝐝𝐞𝐥 𝐆𝐫𝐮𝐩𝐩𝐨',
-    '𝐍𝐞𝐫𝐝',
-    '𝐍𝐞𝐫𝐝 𝐢𝐧𝐞𝐬𝐩𝐞𝐫𝐭𝐨',
-    '𝐏𝐫𝐞𝐬𝐞𝐧𝐭𝐞',
-    '𝐀 𝐯𝐨𝐥𝐭𝐞 𝐜\'è',
-    '𝐓𝐢𝐦𝐢𝐝𝐨',
-    '𝐈𝐧𝐮𝐭𝐢𝐥𝐞',
-    '𝐅𝐚 𝐟𝐢𝐧𝐭𝐚',
-    '𝐕𝐢𝐭𝐚 𝐬𝐨𝐜𝐢𝐚𝐥𝐞',
-    '𝐐𝐮𝐢𝐭𝐭𝐚'
+    '👑 Re del gruppo',
+    '💎 Elite',
+    '🔥 Attivo',
+    '⚡ Presente',
+    '⭐ Contributore',
+    '📘 Studente',
+    '🧊 Timido',
+    '🌫️ Fantasma',
+    '🌱 Novizio',
+    '💤 Dormiente'
   ]
 
   const lines = top.map((user, idx) => {
-    const rank = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][idx] || `${idx + 1}.`
+    const rank = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][idx]
     const title = titles[idx] || ''
-    return `${rank} @${user.jid.split('@')[0]} — ${title} • Lv.${user.lvl} (${user.msgCount} msg)`
+    return `${rank} @${user.jid.split('@')[0]} — ${title}\n` +
+           `• Lv.${user.level} • XP: ${user.exp} • ${user.role} • ${user.money}€\n`
   }).join('\n')
 
   await conn.sendMessage(m.chat, {
     text: header + lines,
-    mentions: top.map(user => user.jid)
+    mentions: top.map(u => u.jid)
   })
 }
 

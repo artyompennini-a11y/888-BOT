@@ -9,9 +9,9 @@ let handler = async (m, { conn }) => {
   const mods = global.db.data.chats[chatId].moderatori
   if (mods.length === 0) return m.reply('📋 Nessun moderatore registrato in questo gruppo.')
 
-  // ============================
-  //     GRAFICA MIGLIORATA
-  // ============================
+  
+  
+  
 
   let text = `🛡️ *Pannello Moderatori del Gruppo*\n`
   text += `━━━━━━━━━━━━━━━━━━━━━━\n\n`

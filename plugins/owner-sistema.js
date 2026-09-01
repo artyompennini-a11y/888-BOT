@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import os, { cpus } from 'os';
 import { execSync } from 'child_process';
 
@@ -56,35 +54,41 @@ const handler = async (m, { conn }) => {
     const diskSpace = getDiskSpace();
     const cpuInfo = getCpuUsage();
 
-    const message = `✅ *STATO DEL SISTEMA*
-
-🚩 *Host ⪼* ${hostname}
-🏆 *Sistema Operativo ⪼* ${platform}
-💫 *Architettura ⪼* ${arch}
-🕒 *Uptime ⪼* ${muptime}
-
-🖥️ *CPU:*
-→ Modello: ${cpuInfo.model}
-→ Core: ${cpuInfo.cores}
-→ Utilizzo: ${cpuInfo.usagePercent}%
-
-🥷 *RAM Totale ⪼* ${formatBytes(totalMem)}
-🚀 *RAM Libera ⪼* ${formatBytes(freeMem)}
-⌛ *RAM Usata ⪼* ${formatBytes(usedMem)}
-
-🪴 *Memoria Node.js:*
-→ RSS: ${formatBytes(nodeUsage.rss)}
-→ Heap Totale: ${formatBytes(nodeUsage.heapTotal)}
-→ Heap Usata: ${formatBytes(nodeUsage.heapUsed)}
-→ Esterna: ${formatBytes(nodeUsage.external)}
-→ ArrayBuffer: ${formatBytes(nodeUsage.arrayBuffers)}
-${diskSpace ? `
-☁️ *Spazio su Disco:*
-→ Totale: ${diskSpace.size}
-→ Usato: ${diskSpace.used}
-→ Disponibile: ${diskSpace.available}
-→ Percentuale di Uso: ${diskSpace.usePercent}` : '❌ Errore nel recupero dello spazio su disco.'}
-`;
+    const message =
+`╭━━━〔 🖥️ *SYSTEM STATUS 888* 〕━━━┈
+┃ 🏷️ *Host:* ${hostname}
+┃ 💠 *OS:* ${platform}
+┃ 🧩 *Arch:* ${arch}
+┃ ⏱️ *Uptime:* ${muptime}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔥 *CPU*
+┃ → Modello: ${cpuInfo.model}
+┃ → Core: ${cpuInfo.cores}
+┃ → Utilizzo: ${cpuInfo.usagePercent}%
+┃━━━━━━━━━━━━━━━━━━
+┃ 🧠 *RAM*
+┃ → Totale: ${formatBytes(totalMem)}
+┃ → Libera: ${formatBytes(freeMem)}
+┃ → Usata: ${formatBytes(usedMem)}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🪴 *Node.js Memory*
+┃ → RSS: ${formatBytes(nodeUsage.rss)}
+┃ → Heap Totale: ${formatBytes(nodeUsage.heapTotal)}
+┃ → Heap Usata: ${formatBytes(nodeUsage.heapUsed)}
+┃ → Esterna: ${formatBytes(nodeUsage.external)}
+┃ → ArrayBuffer: ${formatBytes(nodeUsage.arrayBuffers)}
+┃━━━━━━━━━━━━━━━━━━
+${diskSpace ? 
+`┃ ☁️ *Spazio Disco*
+┃ → Totale: ${diskSpace.size}
+┃ → Usato: ${diskSpace.used}
+┃ → Disponibile: ${diskSpace.available}
+┃ → Utilizzo: ${diskSpace.usePercent}
+╰━━━━━━━━━━━━━━━━━━┈`
+:
+`┃ ❌ Errore nel recupero dello spazio su disco.
+╰━━━━━━━━━━━━━━━━━━┈`
+}`;
 
     await conn.reply(m.chat, message.trim(), m);
 };

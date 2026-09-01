@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fetch from "node-fetch"
 
 let handler = async (m, { conn, text }) => {
@@ -39,7 +37,14 @@ let handler = async (m, { conn, text }) => {
   }
 
   await conn.sendMessage(m.chat, {
-    text: `🚫 *𝐔𝐓𝐄𝐍𝐓𝐄 𝐁𝐀𝐍𝐍𝐀𝐓𝐎*\n\n👤 ${tag}\n📞 wa.me/${number}`,
+    text:
+`╭━━━〔 🚫 *UTENTE BANNATO* 〕━━━┈
+┃ 👤 *Target:* ${tag}
+┃ 📞 wa.me/${number}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔒 L’utente è stato bloccato
+┃ dai moduli del bot.
+╰━━━━━━━━━━━━━━━━━━┈`,
     mentions: [who]
   }, { quoted: fake })
 }

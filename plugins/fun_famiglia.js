@@ -1,10 +1,8 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fetch from 'node-fetch'
 
 const handler = async (m, { conn }) => {
   const users = global.db.data.users
-  const mention = m.mentionedJid[0] || m.quoted?.sender
+  const mention = m.mentionedJid?.[0] || m.quoted?.sender
   const who = mention || m.sender
 
   if (!users[who]) {
@@ -22,7 +20,7 @@ const handler = async (m, { conn }) => {
 
   let adottatoDa = null
   for (const jid in users) {
-    if (users[jid].adottati && users[jid].adottati.includes(who)) {
+    if (users[jid].adottati?.includes(who)) {
       adottatoDa = jid
       break
     }
@@ -44,7 +42,7 @@ const handler = async (m, { conn }) => {
     key: {
       participants: '0@s.whatsapp.net',
       fromMe: false,
-      id: '333Famiglia'
+      id: '888Famiglia'
     },
     message: {
       locationMessage: {
@@ -56,31 +54,36 @@ const handler = async (m, { conn }) => {
     participant: '0@s.whatsapp.net'
   }
 
-  await conn.sendMessage(m.chat, {
-    text: `ೋೋ══ • ══ೋೋ
-> 𝐅𝐀𝐌𝐈𝐆𝐋𝐈𝐀
-ೋೋ══ • ══ೋೋ
-𝐍𝐨𝐦𝐞: ${tag}
+  const testo =
+`╭━━━〔 👨‍👩‍👧 *FAMIGLIA 888* 〕━━━┈
+┃ 👤 *Utente:* ${tag}
+┃━━━━━━━━━━━━━━━━━━
+┃ 💍 *Sposato:* ${user.sposato ? 'Sì' : 'No'}
+┃ ❤️ *Coniuge:* ${user.coniuge ? '@' + user.coniuge.split('@')[0] : 'Nessuno'}
+┃━━━━━━━━━━━━━━━━━━
+┃ 💔 *Ex Coniugi:* ${exList.length ? exList.join(', ') : 'Nessuno'}
+┃━━━━━━━━━━━━━━━━━━
+┃ 👪 *Adottato da:* ${adottatoDa ? '@' + adottatoDa.split('@')[0] : 'Nessuno'}
+┃ 👶 *Figli adottati:* ${adopList.length ? adopList.join(', ') : 'Nessuno'}
+┃━━━━━━━━━━━━━━━━━━
+┃ ⭐ *Migliore amico:* ${user.miglioreamico ? '@' + user.miglioreamico.split('@')[0] : 'Nessuno'}
+╰━━━━━━━━━━━━━━━━━━┈`
 
-𝐒𝐩𝐨𝐬𝐚𝐭𝐨/𝐚: ${user.sposato ? 'si' : 'no'}
-𝐂𝐨𝐧𝐢𝐮𝐠𝐞: ${user.coniuge ? '@' + user.coniuge.split('@')[0] : 'nessuno'}
-
-𝐄𝐱 𝐂𝐨𝐧𝐢𝐮𝐠𝐢: ${exList.length ? exList.join(', ') : 'Nessuno'}
-
-𝐀𝐝𝐨𝐭𝐭𝐚𝐭𝐨 𝐝𝐚: ${adottatoDa ? '@' + adottatoDa.split('@')[0] : 'Nessuno'}
-𝐅𝐢𝐠𝐥𝐢 𝐚𝐝𝐨𝐭𝐭𝐚𝐭𝐢: ${adopList.length ? adopList.join(', ') : 'Nessuno'}
-
-𝐌𝐢𝐠𝐥𝐢𝐨𝐫𝐞 𝐚𝐦𝐢𝐜𝐨: ${user.miglioreamico ? '@' + user.miglioreamico.split('@')[0] : 'nessuno'}
-ೋೋ══ • ══ೋೋ`,
-    mentions: [
-      who,
-      user.coniuge,
-      user.miglioreamico,
-      adottatoDa,
-      ...(user.ex || []),
-      ...(user.adottati || [])
-    ].filter(Boolean)
-  }, { quoted: fake })
+  await conn.sendMessage(
+    m.chat,
+    {
+      text: testo,
+      mentions: [
+        who,
+        user.coniuge,
+        user.miglioreamico,
+        adottatoDa,
+        ...(user.ex || []),
+        ...(user.adottati || [])
+      ].filter(Boolean)
+    },
+    { quoted: fake }
+  )
 }
 
 handler.help = ['famiglia']

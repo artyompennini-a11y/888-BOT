@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 const COOLDOWN = 10 * 60 * 1000; // 10 minuti
 const BLOCCO_ARRESTO = 20 * 60 * 1000; // 20 minuti
 
@@ -9,18 +7,44 @@ async function handler(m, { conn }) {
   const user = users[m.sender];
   const now = Date.now();
 
+  // ───────────────────────────────
+  // 🔥 ARRESTO ATTIVO — 888
+  // ───────────────────────────────
   if (user.arrestatoFino && now < user.arrestatoFino) {
     const remaining = msToTime(user.arrestatoFino - now);
-    return conn.sendMessage(m.chat, { 
-      text: `🚔 𝐒𝐞𝐢 𝐬𝐨𝐭𝐭𝐨 𝐜𝐨𝐧𝐭𝐫𝐨𝐥𝐥𝐨 𝐝𝐞𝐥𝐥𝐚 𝐩𝐨𝐥𝐢𝐳𝐢𝐚!\n\n⏳ 𝐩𝐨𝐭𝐫𝐚𝐢 𝐭𝐨𝐫𝐧𝐚𝐫𝐞 𝐚 𝐫𝐚𝐩𝐢𝐧𝐚𝐫𝐞 𝐭𝐫𝐚 *${remaining}*.`
-    }, { quoted: m });
+    return conn.sendMessage(
+      m.chat,
+      {
+        text:
+`╭━━━〔 🚔 *SEI IN ARRESTO* 〕━━━┈
+┃ Non puoi rapinare ora.
+┃━━━━━━━━━━━━━━━━━━
+┃ ⏳ Torna operativo tra:
+┃ ➜ *${remaining}*
+╰━━━━━━━━━━━━━━━━━━┈`
+      },
+      { quoted: m }
+    );
   }
 
+  // ───────────────────────────────
+  // 🔥 COOLDOWN RAPINA — 888
+  // ───────────────────────────────
   if (now - user.lastRapina < COOLDOWN) {
     const remaining = msToTime(COOLDOWN - (now - user.lastRapina));
-    return conn.sendMessage(m.chat, { 
-      text: `⏳ 𝐏𝐮𝐨𝐢 𝐟𝐚𝐫𝐞 𝐮𝐧𝐚 𝐫𝐚𝐩𝐢𝐧𝐚 𝐨𝐠𝐧𝐢 𝟏𝟎 𝐦𝐢𝐧𝐮𝐭𝐢.\n𝐑𝐢𝐩𝐫𝐨𝐯𝐚 𝐭𝐫𝐚 *${remaining}*.` 
-    }, { quoted: m });
+    return conn.sendMessage(
+      m.chat,
+      {
+        text:
+`╭━━━〔 ⏳ *COOLDOWN RAPINA* 〕━━━┈
+┃ Puoi rapinare ogni *10 minuti*.
+┃━━━━━━━━━━━━━━━━━━
+┃ Riprova tra:
+┃ ➜ *${remaining}*
+╰━━━━━━━━━━━━━━━━━━┈`
+      },
+      { quoted: m }
+    );
   }
 
   user.lastRapina = now;
@@ -34,32 +58,74 @@ async function handler(m, { conn }) {
   const target = targets[Math.floor(Math.random() * targets.length)];
   const esito = Math.random();
 
-
+  // ───────────────────────────────
+  // 🔥 RAPINA RIUSCITA — 888
+  // ───────────────────────────────
   if (esito < target.successo) {
     const guadagno = Math.floor(Math.random() * (target.max - target.min + 1)) + target.min;
     user.money += guadagno;
 
-    return conn.sendMessage(m.chat, {
-      text: `💣 𝐑𝐀𝐏𝐈𝐍𝐀 𝐑𝐈𝐔𝐒𝐂𝐈𝐓𝐀!\n\n🎯 𝐎𝐛𝐛𝐢𝐞𝐭𝐭𝐢𝐯𝐨: ${target.nome}\n💰 𝐁𝐨𝐭𝐭𝐢𝐧𝐨 𝐫𝐢𝐜𝐚𝐯𝐚𝐭𝐨: *${guadagno}€*\n\n🔥 𝐒𝐞𝐢 𝐬𝐜𝐚𝐩𝐩𝐚𝐭𝐨 𝐬𝐞𝐧𝐳𝐚 𝐥𝐚𝐬𝐜𝐢𝐚𝐫𝐞 𝐭𝐫𝐚𝐜𝐜𝐞!`
-    }, { quoted: m });
+    return conn.sendMessage(
+      m.chat,
+      {
+        text:
+`╭━━━〔 💣 *RAPINA RIUSCITA* 〕━━━┈
+┃ 🎯 Obiettivo: ${target.nome}
+┃━━━━━━━━━━━━━━━━━━
+┃ 💰 Bottino ottenuto:
+┃ ➜ *${guadagno}€*
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔥 Sei scappato senza lasciare tracce!
+╰━━━━━━━━━━━━━━━━━━┈`
+      },
+      { quoted: m }
+    );
   }
 
-
+  // ───────────────────────────────
+  // 🔥 ARRESTO — 888
+  // ───────────────────────────────
   if (esito > 0.9) {
     user.arrestatoFino = now + BLOCCO_ARRESTO;
 
-    return conn.sendMessage(m.chat, {
-      text: `🚨 𝐀𝐑𝐑𝐄𝐒𝐓𝐀𝐓𝐎!\n\n𝐋𝐚 𝐩𝐨𝐥𝐢𝐳𝐢𝐚 𝐭𝐢 𝐡𝐚 𝐛𝐞𝐜��𝐚𝐭𝐨 𝐝𝐮𝐫𝐚𝐧𝐭𝐞 𝐥𝐚 𝐫𝐚𝐩𝐢𝐧𝐚 𝐚𝐥𝐥𝐚 ${target.nome}.\n\n⛓️ 𝐏𝐞𝐫 𝟐𝟎 𝐦𝐢𝐧𝐮𝐭𝐢 𝐬𝐚𝐫𝐚𝐢 𝐢𝐧 𝐜𝐚𝐫𝐜𝐞𝐫𝐞 𝐞 𝐧𝐨𝐧 𝐩𝐨𝐭𝐫𝐚𝐢 𝐟𝐚𝐫𝐞 𝐚𝐥𝐭𝐫𝐞 𝐫𝐚𝐩𝐢𝐧𝐞`
-    }, { quoted: m });
+    return conn.sendMessage(
+      m.chat,
+      {
+        text:
+`╭━━━〔 🚨 *ARRESTATO!* 〕━━━┈
+┃ La polizia ti ha catturato
+┃ durante la rapina a:
+┃ ➜ ${target.nome}
+┃━━━━━━━━━━━━━━━━━━
+┃ ⛓️ Sarai in carcere per:
+┃ ➜ *20 minuti*
+╰━━━━━━━━━━━━━━━━━━┈`
+      },
+      { quoted: m }
+    );
   }
 
-
+  // ───────────────────────────────
+  // 🔥 RAPINA FALLITA — 888
+  // ───────────────────────────────
   const multa = Math.floor(user.bank * 0.3);
   user.bank = Math.max(0, user.bank - multa);
 
-  return conn.sendMessage(m.chat, {
-    text: `🚔 𝐑𝐀𝐏𝐈𝐍𝐀 𝐅𝐀𝐋𝐋𝐈𝐓𝐀!\n\n🎯 𝐎𝐛𝐛𝐢𝐞𝐭𝐭𝐢𝐯𝐨: ${target.nome}\n💸 𝐋𝐚 𝐩𝐨𝐥𝐢𝐳𝐢𝐚 𝐭𝐢 𝐡𝐚 𝐟𝐚𝐭𝐭𝐨 𝐮𝐧𝐚 𝐦𝐮𝐥𝐭𝐚 𝐝𝐢 *${multa}€*.\n\n𝐏𝐫𝐨𝐬𝐬𝐢𝐦𝐚 𝐯𝐨𝐥𝐭𝐚 𝐩𝐢𝐚𝐧𝐢𝐟𝐢𝐜𝐚 𝐦𝐞𝐠𝐥𝐢𝐨 𝐥𝐚 𝐫𝐚𝐩𝐢𝐧𝐚...`
-  }, { quoted: m });
+  return conn.sendMessage(
+    m.chat,
+    {
+      text:
+`╭━━━〔 🚔 *RAPINA FALLITA* 〕━━━┈
+┃ 🎯 Obiettivo: ${target.nome}
+┃━━━━━━━━━━━━━━━━━━
+┃ 💸 Multa ricevuta:
+┃ ➜ *${multa}€*
+┃━━━━━━━━━━━━━━━━━━
+┃ Pianifica meglio la prossima rapina…
+╰━━━━━━━━━━━━━━━━━━┈`
+    },
+    { quoted: m }
+  );
 }
 
 handler.command = /^rapina$/i;

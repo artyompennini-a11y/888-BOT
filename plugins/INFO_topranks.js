@@ -14,8 +14,15 @@ const handler = async (m, { conn, groupMetadata }) => {
   const usersDb = global.db.data.users || (global.db.data.users = {})
 
   const groupMemberJids = new Set(participants.map(p => p.id))
+const botJid = conn.user && (conn.user.jid || conn.user.id)
 
   let values = Array.from(groupMemberJids)
+.filter(jid => {
+      if (!botJid) return true
+      const normJ = typeof conn.decodeJid === 'function' ? conn.decodeJid(jid) : jid
+      const normBot = typeof conn.decodeJid === 'function' ? conn.decodeJid(botJid) : botJid
+      return normJ !== normBot
+    })
     .filter(jid => jid && !jid.endsWith('@g.us'))
     .map(jid => {
       const user = usersDb[jid] || {}

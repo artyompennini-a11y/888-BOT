@@ -19,6 +19,17 @@ export async function all(m) {
   user.level = user.level || 0
   user.role = user.role || 'Novizio'
   user.autolevelup = user.autolevelup !== false
+// -----------------------------------------------------------
+  // XP ogni 150 messaggi: al raggiungimento del 150°,  300°,...
+  // vengono concessi 5 XP. Contatore dedicato per non dipendere
+  // da user.messaggi (che l'handler incrementa solo nel finally).)
+  // -----------------------------------------------------------
+  const XP_EVERY_MESSAGES = 150
+  const XP_REWARD =5
+  user._xpMsgCount = (user._xpMsgCount || 0) + 1
+  if (user._xpMsgCount % XP_EVERY_MESSAGES === 0) {
+    user.exp = (user.exp || 0) + XP_REWARD
+  }
 
   const currentLevel = user.level
   const xpNeeded = xpRange(currentLevel + 1).min

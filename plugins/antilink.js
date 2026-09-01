@@ -79,15 +79,21 @@ async function decodeQrFromWebpBuffer(buffer) {
   return qr?.data || null
 }
 
-export async function before(m, { conn, isAdmin, isBotAdmin }) {
+export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
   if (m.isBaileys && m.fromMe) return true
   if (!m.isGroup) return false
 
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
-  // Se admin/owner → bypass totale
-  if (isAdmin) {
+  // Se owner (inclusi rowner) o admin → bypass totale.
+
+  // Vale sia per un link inviato direttamente, sia per un link inviato
+  // tramite .tag: in entrambi i casi il mittente è sempre l'owner
+  // (handler passa isOwner/isROwner come jad normalizzati), quindi qui
+  // non viene mai conteggiato/eliminato.
+
+  if (isAdmin || isOwner || isROwner) {
     console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
     return true
   }

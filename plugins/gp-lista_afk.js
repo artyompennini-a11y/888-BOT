@@ -14,7 +14,7 @@ let handler = async (m, { conn }) => {
         }, { quoted: m })
     }
 
-    // 🔹 Ricarica SEMPRE i dati AFK dal file
+    
     let afkData = {}
     try {
         if (fs.existsSync(AFK_FILE)) {
@@ -26,11 +26,11 @@ let handler = async (m, { conn }) => {
 
     const entries = Object.entries(afkData)
 
-    // 🔹 Ottieni i membri del gruppo
+    
     const meta = await conn.groupMetadata(m.chat)
     const groupMembers = meta.participants.map(p => p.id)
 
-    // 🔹 Filtra SOLO utenti presenti nel gruppo
+    
     const filtered = entries.filter(([jid]) => groupMembers.includes(jid))
 
     if (filtered.length === 0) {
@@ -60,8 +60,8 @@ let handler = async (m, { conn }) => {
     await conn.sendMessage(m.chat, { text: txt }, { quoted: m })
 }
 
-handler.help = ['listaafk']
+handler.help = ['listafk']
 handler.tags = ['info']
-handler.command = /^(listaafk)$/i
+handler.command = /^(listafk)$/i
 
 export default handler

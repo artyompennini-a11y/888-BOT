@@ -17,7 +17,7 @@ let handler = async (m, { conn, usedPrefix }) => {
 
   const pfp = (await conn.profilePictureUrl(target, "image").catch(_ => null)) || "./src/avatar_contact.png";
 
-  // FOTO PROFILO + FALLBACK
+  
   let avatar;
   try {
     avatar = await (await fetch(pfp)).buffer();
@@ -25,7 +25,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     avatar = await (await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")).buffer();
   }
 
-  // THUMBNAIL MENU RPG + FALLBACK
+  
   let thumbnail;
   try {
     thumbnail = await (await fetch("https://qu.ax/JKCXP.jpg")).buffer();

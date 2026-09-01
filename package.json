@@ -1,6 +1,6 @@
 {
   "name": "888-bot",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Il bot whatsapp più richiesto in Italia.",
   "main": "888.js",
   "type": "module",

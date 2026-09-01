@@ -1,31 +1,67 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fs from 'fs'
 import fetch from 'node-fetch'
 
 let handler = async (m, { conn, text }) => {
-    if (!text) return m.reply('Scrivi qualcosa\n\nEsempio:\n.audio ciao ragazzi')
 
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=it&client=tw-ob`
+  // ───────────────────────────────
+  // 🔥 ERRORE: NESSUN TESTO — 888
+  // ───────────────────────────────
+  if (!text) {
+    return m.reply(
+`╭━━━〔 ❌ *NESSUN TESTO* 〕━━━┈
+┃ Scrivi qualcosa da convertire
+┃ in audio TTS.
+┃━━━━━━━━━━━━━━━━━━
+┃ Esempio:
+┃ ➜ .audio ciao ragazzi
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
+  }
 
-    let res
-    try {
-        res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } })
-    } catch (e) {
-        return m.reply('Errore nel recuperare l’audio TTS.')
-    }
+  // ───────────────────────────────
+  // 🔥 AVVIO TTS — 888
+  // ───────────────────────────────
+  await m.reply(
+`╭━━━〔 ⏳ *GENERAZIONE AUDIO* 〕━━━┈
+┃ Sto creando il tuo audio...
+┃ Attendere qualche secondo.
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔰 888 BOT TTS Engine
+╰━━━━━━━━━━━━━━━━━━┈`
+  )
 
-    const buffer = Buffer.from(await res.arrayBuffer())
+  const url =
+    `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=it&client=tw-ob`
 
-    const filePath = `./tmp_${Date.now()}.mp3`
-    fs.writeFileSync(filePath, buffer)
+  let res
+  try {
+    res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } })
+  } catch (e) {
+    return m.reply(
+`╭━━━〔 ❌ *ERRORE TTS* 〕━━━┈
+┃ Impossibile recuperare l’audio.
+┃ Riprova più tardi.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
+  }
 
-    await conn.sendMessage(m.chat, {
-        audio: fs.readFileSync(filePath),
-        mimetype: 'audio/mpeg'
-    }, { quoted: m })
+  const buffer = Buffer.from(await res.arrayBuffer())
+  const filePath = `./tmp_${Date.now()}.mp3`
+  fs.writeFileSync(filePath, buffer)
 
-    fs.unlinkSync(filePath)
+  // ───────────────────────────────
+  // 🔥 INVIO AUDIO — 888
+  // ───────────────────────────────
+  await conn.sendMessage(
+    m.chat,
+    {
+      audio: fs.readFileSync(filePath),
+      mimetype: 'audio/mpeg'
+    },
+    { quoted: m }
+  )
+
+  fs.unlinkSync(filePath)
 }
 
 handler.command = ['audio']

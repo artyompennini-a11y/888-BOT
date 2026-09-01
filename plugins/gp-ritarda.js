@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 const sessions = new Map()
 const scheduledTasks = new Map()
 let restored = false
@@ -43,8 +41,7 @@ const removeScheduled = (id) => {
 }
 
 const buildFooter = (sender) => {
-  const username = sender.split('@')[0]
-  return `\n\n*messaggio posticipato*`
+  return `\n\n🕒 *Messaggio posticipato*`
 }
 
 const scheduleTask = (task, conn) => {
@@ -99,11 +96,7 @@ const parseTimeInput = (timeInput) => {
   timeInput = timeInput.trim().toLowerCase()
 
   const now = getNowRome()
-  const result = {
-    original: timeInput,
-    delay: 0,
-    when: ''
-  }
+  const result = { original: timeInput, delay: 0, when: '' }
 
   if (timeInput.includes(':')) {
     const [hoursStr, minutesStr] = timeInput.split(':')
@@ -142,20 +135,32 @@ const handler = async (m, { conn, args, isBotAdmin }) => {
   restorePendingSchedules(conn)
 
   if (!m.isGroup) {
-    return conn.reply(m.chat, '❌ Questo comando funziona solo nei gruppi.', m)
+    return conn.reply(m.chat,
+`╭━━━〔 ❌ *ERRORE* 〕━━━┈
+┃ Questo comando funziona
+┃ solo nei gruppi.
+╰━━━━━━━━━━━━━━━━━━┈`, m)
   }
 
   if (!isBotAdmin) {
-    return conn.reply(m.chat, '❌ Devo essere admin del gruppo per inviare messaggi con hidetag.', m)
+    return conn.reply(m.chat,
+`╭━━━〔 ⚠️ *PERMESSO NEGATO* 〕━━━┈
+┃ Devo essere *admin* per
+┃ inviare messaggi con hidetag.
+╰━━━━━━━━━━━━━━━━━━┈`, m)
   }
 
   const text = args.join(' ').trim()
   if (!text) {
     return conn.reply(m.chat,
-`╔═✦ 𝐑𝐈𝐓𝐀𝐑𝐃𝐀𝐓𝐀𝐆 ✦═╗
+`╭━━━〔 ⏳ *RITARDATAG 888* 〕━━━┈
 ┃ Uso: .ritardatag <messaggio>
-┃ Esempio: .ritardatag messaggio casuale
-╚═════════════════╝`, m)
+┃ Esempio: .ritardatag Buongiorno a tutti
+┃━━━━━━━━━━━━━━━━━━
+┃ Dopo aver scritto il messaggio,
+┃ indica l’orario: *18:30*
+┃ oppure un ritardo: *10m*
+╰━━━━━━━━━━━━━━━━━━┈`, m)
   }
 
   const key = `${m.chat}|${m.sender}`
@@ -167,9 +172,12 @@ const handler = async (m, { conn, args, isBotAdmin }) => {
   })
 
   return conn.sendMessage(m.chat, {
-    text: `⏳ Messaggio salvato.
-A che ora vuoi mandarlo?
-Scrivi un orario come *18:30* oppure un ritardo come *10m*`,
+    text:
+`╭━━━〔 ⏳ *MESSAGGIO SALVATO* 〕━━━┈
+┃ Ora indica quando inviarlo.
+┃ Scrivi un orario: *18:30*
+┃ Oppure un ritardo: *10m*
+╰━━━━━━━━━━━━━━━━━━┈`
   }, { quoted: m })
 }
 
@@ -193,7 +201,12 @@ handler.before = async (m, { conn }) => {
   const time = parseTimeInput(m.text.trim())
   if (!time) {
     await conn.sendMessage(m.chat, {
-      text: '❌ Orario non valido. Scrivi un orario tipo *18:30* oppure un ritardo come *10m*.'
+      text:
+`╭━━━〔 ❌ *ORARIO NON VALIDO* 〕━━━┈
+┃ Usa un formato valido:
+┃ • 18:30
+┃ • 10m / 30s / 2h
+╰━━━━━━━━━━━━━━━━━━┈`
     }, { quoted: m })
     return true
   }
@@ -217,7 +230,13 @@ handler.before = async (m, { conn }) => {
   scheduleTask(scheduled, conn)
 
   await conn.sendMessage(m.chat, {
-    text: `✅ Messaggio posticipato a *${time.when}* (${formattedAt}).`
+    text:
+`╭━━━〔 ✅ *MESSAGGIO PROGRAMMATO* 〕━━━┈
+┃ Verrà inviato:
+┃ ➜ *${time.when}*
+┃ Orario esatto:
+┃ ➜ ${formattedAt}
+╰━━━━━━━━━━━━━━━━━━┈`
   }, { quoted: m })
 
   return true
@@ -229,6 +248,5 @@ handler.help = ['ritardatag <messaggio>']
 handler.group = true
 handler.mods = true
 handler.botAdmin = true
-
 
 export default handler

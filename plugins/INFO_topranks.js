@@ -10,7 +10,7 @@ const handler = async (m, { conn, groupMetadata }) => {
     return await conn.sendMessage(m.chat, { text: 'Impossibile recuperare i membri del gruppo.' })
   }
 
-  const usersDb = global.db.data.users || {}
+  const usersDb = global.db.data.users || (global.db.data.users = {})
 
   const groupMemberJids = new Set(participants.map(p => p.id))
 

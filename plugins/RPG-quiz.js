@@ -1,12 +1,22 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 let handler = async (m, { conn, command }) => {
   global.quizSession = global.quizSession || {};
   global.db.data.users[m.sender] = global.db.data.users[m.sender] || { money: 0 };
   let user = global.db.data.users[m.sender];
 
+  // ───────────────────────────────
+  // 🔥 SALDO INSUFFICIENTE — 888
+  // ───────────────────────────────
   if (user.money < 100) {
-    return conn.reply(m.chat, `💸 𝐒𝐨𝐥𝐨 𝐜𝐡𝐢 𝐡𝐚 𝐮𝐧 𝐬𝐚𝐥𝐝𝐨 𝐝𝐢 𝐚𝐥𝐦𝐞𝐧𝐨 𝟏𝟎𝟎€ 𝐩𝐮𝐨 𝐠𝐢𝐨𝐜𝐚𝐫𝐞 𝐚𝐥 𝐪𝐮𝐢𝐳! 𝐀𝐭𝐭𝐮𝐚𝐥𝐞: *${user.money}€*`, m);
+    return conn.reply(
+      m.chat,
+`╭━━━〔 💸 *SALDO INSUFFICIENTE* 〕━━━┈
+┃ Per giocare al quiz devi avere
+┃ almeno *100€*.
+┃━━━━━━━━━━━━━━━━━━
+┃ Saldo attuale: *${user.money}€*
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    );
   }
 
   const categories = ['facile', 'media', 'difficile', 'impossibile'];
@@ -71,33 +81,43 @@ let handler = async (m, { conn, command }) => {
     amount: category === 'facile' ? 5 : category === 'media' ? 10 : category === 'difficile' ? 50 : 100
   };
 
+  // Timeout 20 secondi
   setTimeout(() => {
     if (global.quizSession[m.sender]) {
       delete global.quizSession[m.sender];
-      conn.reply(m.chat, `⏰ 𝐓𝐞𝐦𝐩𝐨 𝐬𝐜𝐚𝐝𝐮𝐭𝐨!`, m);
+      conn.reply(m.chat,
+`╭━━━〔 ⏰ *TEMPO SCADUTO* 〕━━━┈
+┃ Hai impiegato troppo tempo.
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m);
     }
   }, 20000);
 
-  return conn.sendMessage(m.chat, {
-    text:
-`╭─────────╮
-┃ 𝐐𝐔𝐈𝐙 𝐃𝐈
-┃ 𝟴𝟴𝟴 𝗕𝗢𝗧
-┃ 🎓 𝐂𝐀𝐓𝐄𝐆𝐎𝐑𝐈𝐀: *${category}*
-┃━━━━━━━━━━━━━━
-┃ 𝐃𝐨𝐦𝐚𝐧𝐝𝐚:
+  // ───────────────────────────────
+  // 🔥 DOMANDA QUIZ — 888
+  // ───────────────────────────────
+  return conn.sendMessage(
+    m.chat,
+    {
+      text:
+`╭━━━〔 🎓 *QUIZ 888* 〕━━━┈
+┃ Categoria: *${category}*
+┃━━━━━━━━━━━━━━━━━━
+┃ ❓ Domanda:
 ┃ *${question.q}*
-┃━━━━━━━━━━━━━━
-┃ ⏳ 20 secondi
-╰─────────╯`,
-    buttons: [
-      { buttonId: '.quizans A', buttonText: { displayText: question.choices[0] }, type: 1 },
-      { buttonId: '.quizans B', buttonText: { displayText: question.choices[1] }, type: 1 },
-      { buttonId: '.quizans C', buttonText: { displayText: question.choices[2] }, type: 1 },
-      { buttonId: '.quizans D', buttonText: { displayText: question.choices[3] }, type: 1 }
-    ],
-    headerType: 1
-  }, { quoted: m });
+┃━━━━━━━━━━━━━━━━━━
+┃ ⏳ Hai 20 secondi
+╰━━━━━━━━━━━━━━━━━━┈`,
+      buttons: [
+        { buttonId: '.quizans A', buttonText: { displayText: question.choices[0] }, type: 1 },
+        { buttonId: '.quizans B', buttonText: { displayText: question.choices[1] }, type: 1 },
+        { buttonId: '.quizans C', buttonText: { displayText: question.choices[2] }, type: 1 },
+        { buttonId: '.quizans D', buttonText: { displayText: question.choices[3] }, type: 1 }
+      ],
+      headerType: 1
+    },
+    { quoted: m }
+  );
 };
 
 handler.before = async (m, { conn }) => {
@@ -112,23 +132,37 @@ handler.before = async (m, { conn }) => {
   let ans = m.text.split(' ')[1];
   delete global.quizSession[m.sender];
 
+  // ───────────────────────────────
+  // 🔥 RISPOSTA CORRETTA — 888
+  // ───────────────────────────────
   if (ans === session.answer) {
     user.money += session.amount;
-    return conn.reply(m.chat,
-`✅ 𝐂𝐨𝐫𝐫𝐞𝐭𝐭𝐨!
-💰 +${session.amount}€
-Saldo: ${user.money}€`,
-    m);
-  } else {
-    user.money -= session.amount;
-    if (user.money < 0) user.money = 0;
-
-    return conn.reply(m.chat,
-`❌ 𝐒𝐛𝐚𝐠𝐥𝐢𝐚𝐭𝐨!
-💸 -${session.amount}€
-Saldo: ${user.money}€`,
-    m);
+    return conn.reply(
+      m.chat,
+`╭━━━〔 ✅ *RISPOSTA CORRETTA* 〕━━━┈
+┃ Guadagni: +${session.amount}€
+┃━━━━━━━━━━━━━━━━━━
+┃ Saldo attuale: *${user.money}€*
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    );
   }
+
+  // ───────────────────────────────
+  // 🔥 RISPOSTA SBAGLIATA — 888
+  // ───────────────────────────────
+  user.money -= session.amount;
+  if (user.money < 0) user.money = 0;
+
+  return conn.reply(
+    m.chat,
+`╭━━━〔 ❌ *RISPOSTA SBAGLIATA* 〕━━━┈
+┃ Perdi: -${session.amount}€
+┃━━━━━━━━━━━━━━━━━━
+┃ Saldo attuale: *${user.money}€*
+╰━━━━━━━━━━━━━━━━━━┈`,
+    m
+  );
 };
 
 handler.command = /^quiz$/i;

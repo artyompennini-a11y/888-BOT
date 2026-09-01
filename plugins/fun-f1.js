@@ -1,6 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
 const F1_API_KEY = "c9d9e589b3mshc7eecec96ccc03ep126bb1jsnbd4082441abd"
 const F1_API_HOST = "api-formula-1.p.rapidapi.com"
 
@@ -67,14 +64,20 @@ let handler = async (m, { conn, args }) => {
   const chat = m.chat
   const cmd = args[0]?.toLowerCase()
 
+  // ───────────────────────────────
+  // 🔥 PROSSIMA GARA — 888
+  // ───────────────────────────────
   if (!cmd || cmd === "prossima") {
-    await m.reply("🏎 Cerco la prossima gara F1...")
+    await m.reply("🏎💨 *Ricerca prossima gara F1...*")
+
     const data = await fetchF1("races?season=current&type=race")
-    if (!data?.response?.length) return m.reply("❌ Errore nel recuperare le gare.")
+    if (!data?.response?.length)
+      return m.reply("╭━━━〔 ❌ *ERRORE DATI* 〕━━━┈\n┃ Impossibile recuperare le gare.\n╰━━━━━━━━━━━━━━━━━━┈")
 
     const now = new Date()
     const prossima = data.response.find(r => new Date(r.date) >= now)
-    if (!prossima) return m.reply("❌ Nessuna gara in programma.")
+    if (!prossima)
+      return m.reply("╭━━━〔 ❌ *NESSUNA GARA* 〕━━━┈\n┃ Non ci sono gare in programma.\n╰━━━━━━━━━━━━━━━━━━┈")
 
     const flag = getFlagEmoji(prossima.competition?.location?.country)
     const circuito = prossima.circuit?.name || "N/D"
@@ -87,60 +90,70 @@ let handler = async (m, { conn, args }) => {
     let sessioni = ""
     if (prossima.sessions) {
       const s = prossima.sessions
-      if (s.fp1) sessioni += `┃ 🔧 *Prove 1:* ${formatDateTime(s.fp1)}\n`
-      if (s.fp2) sessioni += `┃ 🔧 *Prove 2:* ${formatDateTime(s.fp2)}\n`
-      if (s.fp3) sessioni += `┃ 🔧 *Prove 3:* ${formatDateTime(s.fp3)}\n`
+      if (s.fp1) sessioni += `┃ 🔧 *FP1:* ${formatDateTime(s.fp1)}\n`
+      if (s.fp2) sessioni += `┃ 🔧 *FP2:* ${formatDateTime(s.fp2)}\n`
+      if (s.fp3) sessioni += `┃ 🔧 *FP3:* ${formatDateTime(s.fp3)}\n`
       if (s.sprint_qualifying) sessioni += `┃ ⚡ *Sprint Quali:* ${formatDateTime(s.sprint_qualifying)}\n`
       if (s.sprint) sessioni += `┃ ⚡ *Sprint:* ${formatDateTime(s.sprint)}\n`
       if (s.qualifying) sessioni += `┃ 🏁 *Qualifiche:* ${formatDateTime(s.qualifying)}\n`
-      if (s.race) sessioni += `┃ 🏆 *GARA:* ${formatDateTime(s.race)}\n`
+      if (s.race) sessioni += `┃ 🏆 *Gara:* ${formatDateTime(s.race)}\n`
     }
 
     return conn.sendMessage(chat, { text:
-`╭──────────────────╮
-┃ 🏎 𝐏𝐑𝐎𝐒𝐒𝐈𝐌𝐀 𝐆𝐀𝐑𝐀 𝐅𝟏
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 🏎 *PROSSIMA GARA F1* 〕━━━┈
 ┃ ${flag} *${gara}*
 ┃ 📍 Round ${round} — ${city}, ${country}
 ┃━━━━━━━━━━━━━━━━━━
-┃ 🏟 *${circuito}*
+┃ 🏟 Circuito: *${circuito}*
 ┃ 📅 ${dataGara}
 ┃━━━━━━━━━━━━━━━━━━
 ${sessioni}┃━━━━━━━━━━━━━━━━━━
-┃ *.f1 calendario* → tutte le gare
-┃ *.f1 classifica* → Mondiale piloti
-┃ *.f1 costruttori* → Mondiale team
-┃ *.f1 ultima* → risultati ultima gara
-╰──────────────────╯` }, { quoted: m })
+┃ 📅 *.f1 calendario*
+┃ 🏆 *.f1 classifica*
+┃ 🏭 *.f1 costruttori*
+┃ 🏁 *.f1 ultima*
+╰━━━━━━━━━━━━━━━━━━┈` }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 CALENDARIO — 888
+  // ───────────────────────────────
   if (cmd === "calendario") {
-    await m.reply("📅 Carico il calendario F1...")
+    await m.reply("📅 *Caricamento calendario F1...*")
+
     const data = await fetchF1("races?season=current&type=race")
-    if (!data?.response?.length) return m.reply("❌ Errore nel recuperare il calendario.")
+    if (!data?.response?.length)
+      return m.reply("❌ Errore nel recuperare il calendario.")
 
     const now = new Date()
-    let testo = `╭──────────────────╮\n┃ 🏎 𝐂𝐀𝐋𝐄𝐍𝐃𝐀𝐑𝐈𝐎 𝐅𝟏 ${new Date().getFullYear()}\n┃━━━━━━━━━━━━━━━━━━\n`
+    let testo =
+`╭━━━〔 📅 *CALENDARIO F1 ${new Date().getFullYear()}* 〕━━━┈\n`
 
     for (let race of data.response) {
       const flag = getFlagEmoji(race.competition?.location?.country)
       const nome = race.competition?.name || race.name || "N/D"
-      const data_gara = race.date ? new Date(race.date).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) : "N/D"
+      const data_gara = new Date(race.date).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" })
       const passata = new Date(race.date) < now
       const stato = passata ? "✅" : "🔜"
       testo += `┃ ${stato} *R${race.round}* ${flag} ${nome} — ${data_gara}\n`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 CLASSIFICA PILOTI — 888
+  // ───────────────────────────────
   if (cmd === "classifica") {
-    await m.reply("🏆 Carico il Mondiale Piloti...")
-    const data = await fetchF1("rankings/drivers?season=current")
-    if (!data?.response?.length) return m.reply("❌ Errore nel recuperare la classifica.")
+    await m.reply("🏆 *Caricamento classifica piloti...*")
 
-    let testo = `╭──────────────────╮\n┃ 🏆 𝐌𝐎𝐍𝐃𝐈𝐀𝐋𝐄 𝐏𝐈𝐋𝐎𝐓𝐈\n┃━━━━━━━━━━━━━━━━━━\n`
+    const data = await fetchF1("rankings/drivers?season=current")
+    if (!data?.response?.length)
+      return m.reply("❌ Errore nel recuperare la classifica.")
+
+    let testo =
+`╭━━━〔 🏆 *MONDIALE PILOTI* 〕━━━┈\n`
 
     for (let d of data.response.slice(0, 20)) {
       const pos = d.position
@@ -153,16 +166,22 @@ ${sessioni}┃━━━━━━━━━━━━━━━━━━
       testo += `┃ ${medal} *${nome}*\n┃    ${teamEmoji} ${team} — *${punti} pts* 🏆${wins}\n`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 CLASSIFICA COSTRUTTORI — 888
+  // ───────────────────────────────
   if (cmd === "costruttori") {
-    await m.reply("🏭 Carico il Mondiale Costruttori...")
-    const data = await fetchF1("rankings/teams?season=current")
-    if (!data?.response?.length) return m.reply("❌ Errore nel recuperare la classifica costruttori.")
+    await m.reply("🏭 *Caricamento classifica costruttori...*")
 
-    let testo = `╭──────────────────╮\n┃ 🏭 𝐌𝐎𝐍𝐃𝐈𝐀𝐋𝐄 𝐂𝐎𝐒𝐓𝐑𝐔𝐓𝐓𝐎𝐑𝐈\n┃━━━━━━━━━━━━━━━━━━\n`
+    const data = await fetchF1("rankings/teams?season=current")
+    if (!data?.response?.length)
+      return m.reply("❌ Errore nel recuperare la classifica.")
+
+    let testo =
+`╭━━━〔 🏭 *MONDIALE COSTRUTTORI* 〕━━━┈\n`
 
     for (let t of data.response) {
       const pos = t.position
@@ -174,25 +193,33 @@ ${sessioni}┃━━━━━━━━━━━━━━━━━━
       testo += `┃ ${medal} ${teamEmoji} *${team}*\n┃    *${punti} pts* 🏆${wins}\n`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 ULTIMA GARA — 888
+  // ───────────────────────────────
   if (cmd === "ultima") {
-    await m.reply("🏁 Cerco i risultati dell'ultima gara...")
+    await m.reply("🏁 *Caricamento risultati ultima gara...*")
+
     const data = await fetchF1("races?season=current&type=race")
     if (!data?.response?.length) return m.reply("❌ Errore.")
 
     const now = new Date()
     const passate = data.response.filter(r => new Date(r.date) < now)
-    if (!passate.length) return m.reply("❌ Nessuna gara ancora disputata.")
-    const ultima = passate[passate.length - 1]
+    if (!passate.length) return m.reply("❌ Nessuna gara disputata.")
 
+    const ultima = passate[passate.length - 1]
     const risultati = await fetchF1(`rankings/races?race=${ultima.id}`)
+
     const flag = getFlagEmoji(ultima.competition?.location?.country)
     const nomeGara = ultima.competition?.name || ultima.name || "N/D"
 
-    let testo = `╭──────────────────╮\n┃ 🏁 ${flag} *${nomeGara}*\n┃━━━━━━━━━━━━━━━━━━\n`
+    let testo =
+`╭━━━〔 🏁 *RISULTATI ULTIMA GARA* 〕━━━┈
+┃ ${flag} *${nomeGara}*
+┃━━━━━━━━━━━━━━━━━━\n`
 
     if (risultati?.response?.length) {
       for (let r of risultati.response.slice(0, 10)) {
@@ -206,21 +233,29 @@ ${sessioni}┃━━━━━━━━━━━━━━━━━━
         testo += `┃ ${medal} *${nome}*\n┃    ${teamEmoji} ${team} ${tempo} ${punti}\n`
       }
     } else {
-      testo += `┃ Risultati non ancora disponibili.\n`
+      testo += `┃ Risultati non disponibili.\n`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 PILOTI — 888
+  // ───────────────────────────────
   if (cmd === "piloti") {
-    await m.reply("🧑‍✈️ Carico i piloti della stagione...")
+    await m.reply("🧑‍✈️ *Caricamento piloti stagione...*")
+
     const data = await fetchF1("drivers?season=current")
     if (!data?.response?.length) return m.reply("❌ Errore.")
 
-    let testo = `╭──────────────────╮\n┃ 🧑‍✈️ 𝐏𝐈𝐋𝐎𝐓𝐈 ${new Date().getFullYear()}\n┃━━━━━━━━━━━━━━━━━━\n`
+    let testo =
+`╭━━━〔 🧑‍✈️ *PILOTI ${new Date().getFullYear()}* 〕━━━┈\n`
 
-    const sorted = data.response.sort((a, b) => (a.teams?.[0]?.team?.name || "").localeCompare(b.teams?.[0]?.team?.name || ""))
+    const sorted = data.response.sort((a, b) =>
+      (a.teams?.[0]?.team?.name || "").localeCompare(b.teams?.[0]?.team?.name || "")
+    )
+
     let currentTeam = ""
 
     for (let p of sorted) {
@@ -229,28 +264,31 @@ ${sessioni}┃━━━━━━━━━━━━━━━━━━
       const numero = p.number || "?"
       const naz = getFlagEmoji(p.nationality)
       const teamEmoji = getTeamEmoji(team)
+
       if (team !== currentTeam) {
         currentTeam = team
         testo += `┃\n┃ ${teamEmoji} *${team}*\n`
       }
+
       testo += `┃  #${numero} ${naz} ${nome}\n`
     }
 
-    testo += `╰──────────────────╯`
+    testo += `╰━━━━━━━━━━━━━━━━━━┈`
     return conn.sendMessage(chat, { text: testo }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 MENU F1 — 888
+  // ───────────────────────────────
   return m.reply(
-`╭──────────────────╮
-┃ 🏎 𝐂𝐎𝐌𝐀𝐍𝐃𝐈 𝐅𝟏
-┃━━━━━━━━━━━━━━━━━━
+`╭━━━〔 🏎 *COMANDI F1 888* 〕━━━┈
 ┃ *.f1* → prossima gara
 ┃ *.f1 calendario* → stagione completa
 ┃ *.f1 classifica* → Mondiale Piloti
 ┃ *.f1 costruttori* → Mondiale Team
 ┃ *.f1 ultima* → risultati ultima gara
-┃ *.f1 piloti* → tutti i piloti 2025
-╰──────────────────╯`)
+┃ *.f1 piloti* → piloti stagione
+╰━━━━━━━━━━━━━━━━━━┈`)
 }
 
 handler.command = ["f1"]

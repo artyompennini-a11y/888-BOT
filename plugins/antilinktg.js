@@ -1,6 +1,10 @@
 //Plugin by Gab, Lucifero & 333 staff
 
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
+  const isMine = conn.user && (conn.user.jid || conn.user.id) &&
+    typeof conn.decodeJid === 'function' &&
+    conn.decodeJid(m.sender) === conn.decodeJid(conn.user.jid || conn.user.id)
+  if (isMine) return true;
   if (m.isBaileys && m.fromMe) return true;
   if (!m.isGroup) return false;
 

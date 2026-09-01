@@ -4,6 +4,21 @@ import webp from 'node-webpmux'
 let inviteCache = {}
 let lastCheck = {}
 
+/**
+ * * True se il messaggio è stato inviato dal bot stesso (.tag,, risposte
+ * automatiche, echo dei propri invii, ecc.).
+ * *
+ * NB: il getter m.isBaileys && m.fromMe può fallire con gli switch
+ * LID/PN (quell'id '3EB0' + areJidsSameUser non combaciano), quindi
+ * qui confrontiamo direttamente gli jid normalizzati con decodeJid. *)
+ */
+function isBotSender(m, conn) {
+  const botJid = conn.user && (conn.user.jid || conn.user.id)
+  if (!botJid) return false
+  const decode = typeof conn.decodeJid === 'function' ? conn.decodeJid : (j) => j
+  return decode(m.sender) === decode(botJid)
+}
+
 // Regex "non-global" così possiamo usare .test() senza problemi di lastIndex.
 const WHATSAPP_LINK_REGEX = /(?:https?:\/\/)?(?:www\.|chat\.|api\.|business\.)?whatsapp\.com(?:\/channel)?\/[0-9A-Za-z_-]+/
 const WA_ME_REGEX = /(?:https?:\/\/)?(?:www\.)?wa\.me\/[0-9+]+/
@@ -80,6 +95,7 @@ async function decodeQrFromWebpBuffer(buffer) {
 }
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
+  if (isBotSender(m, conn)) return true
   if (m.isBaileys && m.fromMe) return true
   if (!m.isGroup) return false
 

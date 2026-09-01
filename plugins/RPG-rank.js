@@ -1,3 +1,5 @@
+import { xpRange } from '../lib/levelling.js'
+
 let handler = async (m, { conn, args }) => {
 
   // Target: menzione, numero, oppure tu
@@ -18,7 +20,6 @@ let handler = async (m, { conn, args }) => {
   user.role = user.role || 'Novizio'
 
   // XP range per il livello successivo
-  const { min, max } = xpRange(user.level)
   const nextXP = xpRange(user.level + 1).min
 
   // Percentuale barra XP
@@ -54,4 +55,5 @@ ${bar} ${percent}%
 
 handler.command = ['rank']
 export default handler
+
 

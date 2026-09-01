@@ -1,14 +1,36 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 const handler = async (m, { conn, args }) => {
-  if (!args[0]) return conn.reply(m.chat, 'Che nome gli metto?', m)
+  if (!args[0]) return conn.reply(
+    m.chat,
+`╭━━━〔 ⚠️ *ERRORE* 〕━━━┈
+┃ Devi indicare il nuovo nome
+┃ del gruppo.
+┃ Esempio:
+┃ ➜ .nomegp Elite Squad 888
+╰━━━━━━━━━━━━━━━━━━┈`, 
+    m
+  )
 
   const nuovoNome = args.join(' ')
   if (nuovoNome.length > 100)
-    return conn.reply(m.chat, 'Il nome del gruppo non può superare i 100 caratteri.', m)
+    return conn.reply(
+      m.chat,
+`╭━━━〔 ❌ *NOME TROPPO LUNGO* 〕━━━┈
+┃ Il nome del gruppo non può
+┃ superare i *100 caratteri*.
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    )
 
   await conn.groupUpdateSubject(m.chat, nuovoNome)
-  await conn.reply(m.chat, `✅ Nome del gruppo cambiato:\n> *${nuovoNome}*`, m)
+
+  await conn.reply(
+    m.chat,
+`╭━━━〔 ✅ *NOME GRUPPO AGGIORNATO* 〕━━━┈
+┃ Il nuovo nome è stato impostato:
+┃ ➜ *${nuovoNome}*
+╰━━━━━━━━━━━━━━━━━━┈`,
+    m
+  )
 }
 
 handler.help = ['𝐧𝐨𝐦𝐞𝐠𝐩 <𝐧𝐨𝐦𝐞>']

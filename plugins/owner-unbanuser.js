@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 let handler = async (m, { conn, text }) => {
 
   let who
@@ -38,7 +36,14 @@ let handler = async (m, { conn, text }) => {
   }
 
   await conn.sendMessage(m.chat, {
-    text: `✅ *𝐔𝐓𝐄𝐍𝐓𝐄 𝐒𝐁𝐀𝐍𝐍𝐀𝐓𝐎*\n\n👤 ${tag}\n📞 wa.me/${number}`,
+    text:
+`╭━━━〔 ✅ *UTENTE SBANNATO* 〕━━━┈
+┃ 👤 *Target:* ${tag}
+┃ 📞 wa.me/${number}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔓 L’utente è stato riattivato
+┃ ed ora può usare il bot.
+╰━━━━━━━━━━━━━━━━━━┈`,
     mentions: [who]
   }, { quoted: fake })
 }

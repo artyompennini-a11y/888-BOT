@@ -1,7 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-
-
 global.prelievi = global.prelievi || {}
 
 let handler = async (m, { conn, command, text }) => {
@@ -13,14 +9,26 @@ let handler = async (m, { conn, command, text }) => {
   users[who].bank = Number(users[who].bank) || 0
   users[who].money = Number(users[who].money) || 0
 
+  // ───────────────────────────────
+  // 🔥 CONFERMA PRELIEVO — 888
+  // ───────────────────────────────
   if (command === "confermaprelievo") {
     let data = global.prelievi[who]
-    if (!data) return m.reply("❌ Nessun prelievo in corso")
+    if (!data)
+      return m.reply(
+`╭━━━〔 ❌ *NESSUN PRELIEVO* 〕━━━┈
+┃ Non hai alcun prelievo in corso.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
 
     let amount = Number(data) || 0
 
     if (amount > users[who].bank)
-      return m.reply("🏦 Fondi insufficienti")
+      return m.reply(
+`╭━━━〔 🏦 *FONDI INSUFFICIENTI* 〕━━━┈
+┃ Non hai abbastanza soldi in banca.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
 
     users[who].bank -= amount
     users[who].money += amount
@@ -28,40 +36,77 @@ let handler = async (m, { conn, command, text }) => {
 
     delete global.prelievi[who]
 
-    let testo = `══════ •⊰✦⊱• ══════
-𝐇𝐚𝐢 𝐩𝐫𝐞𝐥𝐞𝐯𝐚𝐭𝐨 ${amount} €
-
-💰𝐂𝐨𝐧𝐭𝐚𝐧𝐭𝐢: ${users[who].money} €
-🏦 𝐁𝐚𝐧𝐜𝐚: ${users[who].bank} €
-══════ •⊰✦⊱• ══════`
+    let testo =
+`╭━━━〔 💸 *PRELIEVO EFFETTUATO* 〕━━━┈
+┃ Hai prelevato: *${amount}€*
+┃━━━━━━━━━━━━━━━━━━
+┃ 💰 Contanti: *${users[who].money}€*
+┃ 🏦 Banca: *${users[who].bank}€*
+╰━━━━━━━━━━━━━━━━━━┈`
 
     return conn.reply(m.chat, testo, m)
   }
 
+  // ───────────────────────────────
+  // 🔥 ANNULLA PRELIEVO — 888
+  // ───────────────────────────────
   if (command === "annullaprelievo") {
     delete global.prelievi[who]
-    return m.reply("❌ Prelievo annullato")
+    return m.reply(
+`╭━━━〔 ❌ *PRELIEVO ANNULLATO* 〕━━━┈
+┃ L’operazione è stata annullata.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
   }
 
-  if (!text) throw '𝐐𝐮𝐚𝐧𝐭𝐢 𝐬𝐨𝐥𝐝𝐢 𝐯𝐮𝐨𝐢 𝐩𝐫𝐞𝐥𝐞𝐯𝐚𝐫𝐞?'
+  // ───────────────────────────────
+  // 🔥 RICHIESTA IMPORTO — 888
+  // ───────────────────────────────
+  if (!text)
+    throw `╭━━━〔 💸 *QUANTO VUOI PRELEVARE?* 〕━━━┈
+┃ Inserisci l’importo da prelevare.
+╰━━━━━━━━━━━━━━━━━━┈`
 
   const prelievo = parseInt(text)
 
-  if (isNaN(prelievo)) throw "𝐍𝐨𝐧 𝐡𝐚𝐢 𝐢𝐧𝐬𝐞𝐫𝐢𝐭𝐨 𝐮𝐧 𝐧𝐮𝐦𝐞𝐫𝐨"
-  if (prelievo < 0) throw "𝐍𝐨𝐧 𝐩𝐮𝐨𝐢 𝐩𝐫𝐞𝐥𝐞𝐯𝐚𝐫𝐞 soldi negativi"
+  // ───────────────────────────────
+  // 🔥 VALIDAZIONE IMPORTO — 888
+  // ───────────────────────────────
+  if (isNaN(prelievo))
+    throw `╭━━━〔 ❌ *IMPORTO NON VALIDO* 〕━━━┈
+┃ Devi inserire un numero.
+╰━━━━━━━━━━━━━━━━━━┈`
+
+  if (prelievo < 0)
+    throw `╭━━━〔 ❌ *IMPORTO NEGATIVO* 〕━━━┈
+┃ Non puoi prelevare soldi negativi.
+╰━━━━━━━━━━━━━━━━━━┈`
+
   if (prelievo > users[who].bank)
-    throw "🏦 Non hai abbastanza soldi"
+    throw `╭━━━〔 🏦 *FONDI INSUFFICIENTI* 〕━━━┈
+┃ Non hai abbastanza soldi in banca.
+╰━━━━━━━━━━━━━━━━━━┈`
 
   global.prelievi[who] = prelievo
 
-  await conn.sendMessage(m.chat, {
-    text: `💸 Sei sicuro di voler prelevare *${prelievo}€*?`,
-    buttons: [
-      { buttonId: ".confermaprelievo", buttonText: { displayText: "✅ SI" }, type: 1 },
-      { buttonId: ".annullaprelievo", buttonText: { displayText: "❌ NO" }, type: 1 }
-    ],
-    headerType: 1
-  }, { quoted: m })
+  // ───────────────────────────────
+  // 🔥 CONFERMA CON BOTTONI — 888
+  // ───────────────────────────────
+  await conn.sendMessage(
+    m.chat,
+    {
+      text:
+`╭━━━〔 💸 *CONFERMA PRELIEVO* 〕━━━┈
+┃ Vuoi prelevare *${prelievo}€*?
+╰━━━━━━━━━━━━━━━━━━┈`,
+      buttons: [
+        { buttonId: ".confermaprelievo", buttonText: { displayText: "✅ SI" }, type: 1 },
+        { buttonId: ".annullaprelievo", buttonText: { displayText: "❌ NO" }, type: 1 }
+      ],
+      headerType: 1
+    },
+    { quoted: m }
+  )
 }
 
 handler.command = /^(preleva|prelievo|ritira|confermaprelievo|annullaprelievo)$/i

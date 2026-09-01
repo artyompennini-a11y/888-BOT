@@ -1,6 +1,10 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-const stopWords = new Set(["e","a","o","che","il","la","lo","gli","le","un","uno","una","con","per","da","di","del","della","dei","delle","nel","nella","nei","nelle","sul","sulla","sui","sulle","al","allo","ai","agli","allo","hai","ha","ho","sei","si","ci","mi","ti","ne","ma","se","anche","anche","come","dove","quando","quale","quali","questo","questa","questi","quelle","sono","era","stato","stata","stati","state","fatto","fare","farete","faremo","farei","può","puoi","potrei","deve","devo","dovrebbe","sono","sta","quello","quella","queste","ogni","più","meno","non","nel","nella"]);
+const stopWords = new Set([
+  "e","a","o","che","il","la","lo","gli","le","un","uno","una","con","per","da","di","del","della","dei","delle",
+  "nel","nella","nei","nelle","sul","sulla","sui","sulle","al","allo","ai","agli","allo","hai","ha","ho","sei",
+  "si","ci","mi","ti","ne","ma","se","anche","come","dove","quando","quale","quali","questo","questa","questi",
+  "quelle","sono","era","stato","stata","stati","state","fatto","fare","farete","faremo","farei","può","puoi",
+  "potrei","deve","devo","dovrebbe","sono","sta","quello","quella","queste","ogni","più","meno","non","nel","nella"
+]);
 
 const getTextFromMessage = (msg) => {
   const message = msg?.message || {};
@@ -177,7 +181,11 @@ const handler = async (m, { conn, args }) => {
   const requested = args?.[0] ? parseInt(args[0], 10) : NaN;
   if (!requested || isNaN(requested)) {
     return await conn.sendMessage(m.chat, {
-      text: '⚠️ Seleziona una quantità di messaggi da riassumere (max 150). Esempio: *.riassunto 20*'
+      text:
+`╭━━━〔 ⚠️ *PARAMETRO MANCANTE* 〕━━━┈
+┃ Inserisci quanti messaggi riassumere.
+┃ Esempio: *.riassunto 20*
+╰━━━━━━━━━━━━━━━━━━┈`
     }, { quoted: m });
   }
 
@@ -213,7 +221,12 @@ const handler = async (m, { conn, args }) => {
   }
 
   if (!storedMessages || storedMessages.length === 0) {
-    return await conn.sendMessage(chat, { text: '⚠️ Non è possibile recuperare la cronologia dei messaggi in questo momento.' }, { quoted: m });
+    return await conn.sendMessage(chat, {
+      text:
+`╭━━━〔 ⚠️ *NESSUNA CRONOLOGIA* 〕━━━┈
+┃ Non posso recuperare messaggi ora.
+╰━━━━━━━━━━━━━━━━━━┈`
+    }, { quoted: m });
   }
 
   const history = storedMessages
@@ -225,7 +238,12 @@ const handler = async (m, { conn, args }) => {
 
   const selected = history.slice(-count);
   if (!selected.length) {
-    return await conn.sendMessage(chat, { text: '⚠️ Non ho trovato messaggi da riassumere.' }, { quoted: m });
+    return await conn.sendMessage(chat, {
+      text:
+`╭━━━〔 ⚠️ *NESSUN MESSAGGIO* 〕━━━┈
+┃ Non ho trovato messaggi da riassumere.
+╰━━━━━━━━━━━━━━━━━━┈`
+    }, { quoted: m });
   }
 
   const parsed = selected.map(msg => {
@@ -240,7 +258,12 @@ const handler = async (m, { conn, args }) => {
   }).filter(entry => entry.text.length > 0);
 
   if (!parsed.length) {
-    return await conn.sendMessage(chat, { text: '⚠️ Non ci sono contenuti testuali negli ultimi messaggi selezionati.' }, { quoted: m });
+    return await conn.sendMessage(chat, {
+      text:
+`╭━━━〔 ⚠️ *NESSUN TESTO* 〕━━━┈
+┃ I messaggi selezionati non contengono testo.
+╰━━━━━━━━━━━━━━━━━━┈`
+    }, { quoted: m });
   }
 
   const groups = parsed.reduce((acc, entry) => {
@@ -262,19 +285,16 @@ const handler = async (m, { conn, args }) => {
   const mentionJids = [...new Set(senders.flatMap(([, data]) => [...data.jids]))];
   const keywords = collectKeywords(parsed.map(p => p.text)).slice(0, 6);
   const actualCount = parsed.length;
-  const totalMessages = Math.min(count, history.length);
 
-  let summary = `📝 *Riassunto chat*\n`;
-  summary += `• *Messaggi analizzati:* ${actualCount} su ${count} richiesti\n`;
-  summary += `• *Partecipanti rilevanti:* ${senders.map(([senderName, data]) => `@${senderName} (${data.texts.length})`).join(' • ')}\n`;
-  summary += `• *Argomenti principali:* ${keywords.length ? keywords.join(' • ') : 'Nessuno chiaro'}\n\n`;
-  summary += `💬 *Sintesi:*\n${senderSummaries.map((line, idx) => `${idx + 1}. ${line}`).join('\n\n')}`;
-
-  if (actualCount < count) {
-    summary += `\n\n⚠️ Ho usato solo ${actualCount} messaggi disponibili per questa chat.`;
-  }
-
-  summary += `\n\nℹ️ Questo riassunto è creato dai messaggi memorizzati e disponibili nel gruppo.`;
+  let summary =
+`╭━━━〔 📝 *RIASSUNTO CHAT* 〕━━━┈
+┃ *Messaggi analizzati:* ${actualCount}
+┃ *Partecipanti rilevanti:* ${senders.map(([senderName, data]) => `@${senderName} (${data.texts.length})`).join(' • ')}
+┃ *Argomenti principali:* ${keywords.length ? keywords.join(' • ') : 'Nessuno chiaro'}
+┃━━━━━━━━━━━━━━━━━━
+┃ *Sintesi:*
+${senderSummaries.map((line, idx) => `${idx + 1}. ${line}`).join('\n\n')}
+╰━━━━━━━━━━━━━━━━━━┈`;
 
   await conn.sendMessage(chat, {
     text: summary,

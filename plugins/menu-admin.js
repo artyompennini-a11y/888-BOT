@@ -1,40 +1,45 @@
-import os from 'os'
-import util from 'util'
-import fs from 'fs'
-import { performance } from 'perf_hooks'
+import 'os';
+import 'util';
+import 'human-readable';
+import '@realvare/baileys';
+import 'fs';
+import 'perf_hooks';
 
 let handler = async (m, { conn, usedPrefix: prefix }) => {
-  const { welcome, detect } = global.db.data.chats[m.chat] || {}
+  const { welcome, detect } = global.db.data.chats[m.chat] || {};
 
   // TARGET UTENTE
-  let target = m.quoted 
-    ? m.quoted.sender 
-    : m.mentionedJid && m.mentionedJid[0] 
-    ? m.mentionedJid[0] 
-    : m.fromMe 
-    ? conn.user.jid 
-    : m.sender
+  let target = m.quoted
+    ? m.quoted.sender
+    : m.mentionedJid && m.mentionedJid[0]
+    ? m.mentionedJid[0]
+    : m.fromMe
+    ? conn.user.jid
+    : m.sender;
 
-  // FOTO PROFILO + FALLBACK
-  const profilePicUrl = await conn.profilePictureUrl(target, "image").catch(() => null) || "./src/avatar_contact.png"
+  // FOTO PROFILO + FALLBACK LOCALE
+  const profilePicUrl =
+    (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
+    "./src/avatar_contact.png";
 
-  let profileBuffer
+  let profileBuffer;
   try {
     if (profilePicUrl !== "./src/avatar_contact.png") {
-      profileBuffer = await (await fetch(profilePicUrl)).buffer()
+      profileBuffer = await (await fetch(profilePicUrl)).buffer();
     } else {
-      profileBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")).buffer()
+      profileBuffer = fs.readFileSync("./src/avatar_contact.png");
     }
   } catch {
-    profileBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")).buffer()
+    profileBuffer = fs.readFileSync("./src/avatar_contact.png");
   }
 
-  // THUMBNAIL MENU ADMIN + FALLBACK
-  let thumbBuffer
+  // THUMBNAIL MENU ADMIN — SOLO IMMAGINE LOCALE (NO FETCH)
+  let thumbBuffer;
   try {
-    thumbBuffer = await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
+    thumbBuffer = fs.readFileSync("./src/menu-admin.jpg");
   } catch {
-    thumbBuffer = await (await fetch("https://i.postimg.cc/3JwB9YkX/menu-admin.jpg")).buffer()
+    // fallback se manca il file
+    thumbBuffer = fs.readFileSync("./src/avatar_contact.png");
   }
 
   // FAKE LOCATION
@@ -42,16 +47,16 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     key: {
       participants: "0@s.whatsapp.net",
       fromMe: false,
-      id: "Halo"
+      id: "Halo",
     },
     message: {
       locationMessage: {
         name: "👑 MENU ADMIN 888",
-        jpegThumbnail: thumbBuffer
-      }
+        jpegThumbnail: thumbBuffer,
+      },
     },
-    participant: "0@s.whatsapp.net"
-  }
+    participant: "0@s.whatsapp.net",
+  };
 
   // TESTO MENU
   let menuText = 
@@ -123,13 +128,14 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}ds
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici,
-> usa *${prefix}segnala*.`.trim()
+> usa *${prefix}segnala*.`.trim();
 
-  conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation })
-}
+  conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation });
+};
 
-handler.help = ["menu"]
-handler.tags = ["menu"]
-handler.command = /^(admin)$/i
+handler.help = ["menu"];
+handler.tags = ["menu"];
+handler.command = /^(admin)$/i;
 
-export default handler
+export default handler;
+

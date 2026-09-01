@@ -1,6 +1,9 @@
 let handler = async (m, { conn }) => {
 
+  const target = m.mentionedJid[0];
   const user = global.db.data.users[m.sender] || (global.db.data.users[m.sender] = {})
+
+
 
   if (typeof user.lvl !== 'number') user.lvl = Number(user.level ?? user.rankData?.level ?? 0) || 0
   if (typeof user.msgCount !== 'number') user.msgCount = Number(user.rankData?.messages ?? 0) || 0
@@ -40,5 +43,6 @@ ${bar} ${percent}%
   }, { quoted: m })
 }
 
+handler.help = ['rank']
 handler.command = ['rank']
 export default handler

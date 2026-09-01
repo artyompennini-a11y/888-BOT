@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import axios from 'axios';
 
 const langMap = {
@@ -69,43 +67,97 @@ const langMap = {
 };
 
 let handler = async (m, { conn, args }) => {
+
+  // ───────────────────────────────
+  // 🔥 TUTORIAL — STILE 888
+  // ───────────────────────────────
   if (!args.length) {
-    let tutorial = `*🌍 Uso del comando .traduci 🌍*\n`;
-    tutorial += `📌 Formato: *.traduci <testo> <lingua>*\n📖 Esempio: *.traduci ciao giapponese*\n\n`;
-    tutorial += `🌐 *Lingue supportate:* 🌐\n\n`;
+    let tutorial =
+`╭━━━〔 🌍 *TRADUCI 888* 〕━━━┈
+┃ 📌 Uso: *.traduci <testo> <lingua>*
+┃ Esempio: *.traduci ciao giapponese*
+┃━━━━━━━━━━━━━━━━━━
+┃ 🌐 *Lingue disponibili:*
+╰━━━━━━━━━━━━━━━━━━┈\n`;
 
     for (const [nome, codice] of Object.entries(langMap)) {
-      tutorial += `🔹 ${nome} = \`${codice}\`\n`;
+      tutorial += `🔹 ${nome} → \`${codice}\`\n`;
     }
 
     return conn.reply(m.chat, tutorial, m);
   }
 
+  // ───────────────────────────────
+  // 🔥 ERRORE PARAMETRI — STILE 888
+  // ───────────────────────────────
   if (args.length < 2) {
-    return conn.reply(m.chat, `⚠️ Uso corretto: *.traduci <testo> <lingua>*\n📖 Esempio: *.traduci ciao cinese*`, m);
+    return conn.reply(
+      m.chat,
+`╭━━━〔 ⚠️ *USO NON VALIDO* 〕━━━┈
+┃ Usa: *.traduci <testo> <lingua>*
+┃ Esempio: *.traduci ciao cinese*
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    );
   }
 
   const text = args.slice(0, -1).join(" ");
   const langInput = args[args.length - 1].toLowerCase();
-  const targetLang = Object.values(langMap).includes(langInput) ? langInput : langMap[Object.keys(langMap).find(k => k.toLowerCase().includes(langInput))];
 
+  const targetLang =
+    Object.values(langMap).includes(langInput)
+      ? langInput
+      : langMap[
+          Object.keys(langMap).find(k =>
+            k.toLowerCase().includes(langInput)
+          )
+        ];
+
+  // ───────────────────────────────
+  // 🔥 LINGUA NON TROVATA — STILE 888
+  // ───────────────────────────────
   if (!targetLang) {
-    return conn.reply(m.chat, `❌ Lingua non riconosciuta. Usa *.traduci* per vedere la lista delle lingue disponibili.`, m);
+    return conn.reply(
+      m.chat,
+`╭━━━〔 ❌ *LINGUA NON RICONOSCIUTA* 〕━━━┈
+┃ Usa *.traduci* per vedere
+┃ la lista completa delle lingue.
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    );
   }
 
+  // ───────────────────────────────
+  // 🔥 TRADUZIONE — STILE 888
+  // ───────────────────────────────
   try {
-    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const url =
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+
     const { data } = await axios.get(url);
     const translatedText = data[0]?.[0]?.[0] || "Nessuna traduzione trovata.";
 
     return conn.reply(
       m.chat,
-      `🌍 *Traduzione:* 🌍\n📌 *Testo originale:* ${text}\n📖 *Lingua di destinazione:* ${langInput} (${targetLang})\n\n🔹 *Risultato:* ${translatedText}`,
+`╭━━━〔 🌍 *TRADUZIONE 888* 〕━━━┈
+┃ 📝 *Originale:* ${text}
+┃ 🌐 *Lingua:* ${langInput} (${targetLang})
+┃━━━━━━━━━━━━━━━━━━
+┃ 🔹 *Risultato:* ${translatedText}
+╰━━━━━━━━━━━━━━━━━━┈`,
       m
     );
   } catch (error) {
     console.error("Errore nella traduzione:", error);
-    return conn.reply(m.chat, `❌ Errore nella traduzione. Verifica i parametri e riprova.`, m);
+
+    return conn.reply(
+      m.chat,
+`╭━━━〔 ❌ *ERRORE TRADUZIONE* 〕━━━┈
+┃ Qualcosa è andato storto.
+┃ Riprova tra qualche secondo.
+╰━━━━━━━━━━━━━━━━━━┈`,
+      m
+    );
   }
 };
 

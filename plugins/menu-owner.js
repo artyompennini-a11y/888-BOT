@@ -8,7 +8,7 @@ import 'perf_hooks';
 let handler = async (m, { conn, usedPrefix: prefix }) => {
   const { welcome, detect } = global.db.data.chats[m.chat] || {};
 
-  // TARGET UTENTE
+  
   let target = m.quoted
     ? m.quoted.sender
     : m.mentionedJid && m.mentionedJid[0]
@@ -17,7 +17,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     ? conn.user.jid
     : m.sender;
 
-  // FOTO PROFILO + FALLBACK
+  
   const profilePicUrl =
     (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
     "./src/avatar_contact.png";
@@ -37,7 +37,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     ).buffer();
   }
 
-  // THUMBNAIL MENU OWNER + FALLBACK
+  
   let thumbBuffer;
   try {
     thumbBuffer = await (
@@ -49,7 +49,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     ).buffer();
   }
 
-  // FAKE LOCATION
+  
   let fakeLocation = {
     key: {
       participants: "0@s.whatsapp.net",
@@ -65,7 +65,7 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     participant: "0@s.whatsapp.net",
   };
 
-  // TESTO MENU
+  
   let menuText = 
 `╭━━━〔 🔐 *MENU OWNER* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧

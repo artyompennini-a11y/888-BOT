@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 global.rigori = global.rigori || {}
 
 let handler = async (m, { conn, command }) => {
@@ -9,19 +7,22 @@ let handler = async (m, { conn, command }) => {
 
   user.rigori = user.rigori || { goal: 0 }
 
+  // ───────────────────────────────
+  // 🔥 AVVIO RIGORE — 888
+  // ───────────────────────────────
   if (command === "rigore") {
 
     global.rigori[m.sender] = true
 
     return conn.sendMessage(m.chat, {
       text:
-`╔═⚽ 𝐑𝐈𝐆𝐎𝐑𝐄 ═╗
-┃ Scegli dove tirare
-┃
+`╭━━━〔 ⚽ *RIGORE 888* 〕━━━┈
+┃ Scegli dove tirare:
+┃━━━━━━━━━━━━━━━━━━
 ┃ 🟢 Sinistra
 ┃ ⚪ Centro
 ┃ 🔴 Destra
-╚══════════════╝`,
+╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
         { buttonId: ".tira sinistra", buttonText: { displayText: "🟢 Sinistra" }, type: 1 },
         { buttonId: ".tira centro", buttonText: { displayText: "⚪ Centro" }, type: 1 },
@@ -31,17 +32,20 @@ let handler = async (m, { conn, command }) => {
     }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 TIRA IL RIGORE — 888
+  // ───────────────────────────────
   if (command === "tira") {
 
     if (!global.rigori[m.sender])
-      return m.reply("❌ Usa prima .rigore")
+      return m.reply(
+`╭━━━〔 ❌ *ERRORE* 〕━━━┈
+┃ Devi prima usare *.rigore*
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
 
     let scelta = m.text.split(" ")[1]
-
-    let portiere = ["sinistra", "centro", "destra"][
-      Math.floor(Math.random() * 3)
-    ]
-
+    let portiere = ["sinistra", "centro", "destra"][Math.floor(Math.random() * 3)]
     let gol = scelta !== portiere
 
     let text = ""
@@ -50,21 +54,21 @@ let handler = async (m, { conn, command }) => {
       user.rigori.goal += 1
 
       text =
-`╔═⚽ 𝐆𝐎𝐋 ═╗
-┃ 🥅 Il portiere va ${portiere}
-┃ Tu tiri ${scelta}
-┃
-┃ ⚽ SEGNI!
+`╭━━━〔 ⚽ *GOL!* 〕━━━┈
+┃ 🥅 Il portiere va: *${portiere}*
+┃ Tu tiri: *${scelta}*
+┃━━━━━━━━━━━━━━━━━━
+┃ ⚽ *Segni!*
 ┃ Totale gol: *${user.rigori.goal}*
-╚══════════════╝`
+╰━━━━━━━━━━━━━━━━━━┈`
     } else {
       text =
-`╔═🧤 𝐏𝐀𝐑𝐀𝐓𝐀 ═╗
-┃ 🧤 Il portiere legge tutto
-┃ Vai ${scelta} pure tu
-┃
-┃ 💀 Che figura
-╚══════════════╝`
+`╭━━━〔 🧤 *PARATA!* 〕━━━┈
+┃ Il portiere legge tutto.
+┃ Tu tiri: *${scelta}*
+┃━━━━━━━━━━━━━━━━━━
+┃ 💀 Che figura…
+╰━━━━━━━━━━━━━━━━━━┈`
     }
 
     delete global.rigori[m.sender]
@@ -79,6 +83,9 @@ let handler = async (m, { conn, command }) => {
     }, { quoted: m })
   }
 
+  // ───────────────────────────────
+  // 🔥 CLASSIFICA RIGORI — 888
+  // ───────────────────────────────
   if (command === "toprigori") {
 
     let users = Object.entries(global.db.data.users)
@@ -91,13 +98,22 @@ let handler = async (m, { conn, command }) => {
       .slice(0, 10)
 
     if (!users.length)
-      return m.reply("❌ Nessun gol registrato")
+      return m.reply(
+`╭━━━〔 ❌ *NESSUN GOL* 〕━━━┈
+┃ Nessun giocatore ha segnato.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
 
-    let text = "🏆 𝐓𝐎𝐏 𝐑𝐈𝐆𝐎𝐑𝐈\n\n"
+    let text =
+`╭━━━〔 🏆 *TOP RIGORI* 〕━━━┈
+┃ Classifica dei migliori rigoristi:
+┃━━━━━━━━━━━━━━━━━━\n`
 
     users.forEach((u, i) => {
-      text += `${i + 1}. @${u.jid.split("@")[0]} — *${u.goal} gol*\n`
+      text += `┃ ${i + 1}. @${u.jid.split("@")[0]} — *${u.goal} gol*\n`
     })
+
+    text += `╰━━━━━━━━━━━━━━━━━━┈`
 
     return conn.sendMessage(m.chat, {
       text,

@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import yts from 'yt-search'
 import { exec } from 'child_process'
 import fs from 'fs'
@@ -12,11 +10,11 @@ const songs = [
   { title: 'Un Nuovo Bacio', artist: 'Gigi D\'Alessio' },
   { title: 'Il Cammino dell\'età', artist: 'Gigi D\'Alessio' },
   { title: 'Mi Aiuti', artist: 'Gigi D\'Alessio' },
-    { title: 'La prima stella', artist: 'Gigi D\'Alessio' },
-    { title: 'Quando', artist: 'Gigi D\'Alessio' },
-    { title: 'Tu Che Ne Sai', artist: 'Gigi D\'Alessio' },
-    { title: 'Malaterra', artist: 'Gigi D\'Alessio' },
-    { title: 'Non Dirgli Mai', artist: 'Gigi D\'Alessio' },
+  { title: 'La prima stella', artist: 'Gigi D\'Alessio' },
+  { title: 'Quando', artist: 'Gigi D\'Alessio' },
+  { title: 'Tu Che Ne Sai', artist: 'Gigi D\'Alessio' },
+  { title: 'Malaterra', artist: 'Gigi D\'Alessio' },
+  { title: 'Non Dirgli Mai', artist: 'Gigi D\'Alessio' },
   { title: 'Vida Loca', artist: 'Izi' },
   { title: 'Finestre', artist: 'Izi' },
   { title: 'Cane Nero', artist: 'Izi' },
@@ -106,7 +104,12 @@ let handler = async (m, { conn, command }) => {
   let chat = m.chat
   global.activeIC = global.activeIC || {}
   if (global.activeIC[chat])
-    return m.reply('⏳ C\'è già una partita di IC in corso qui. Aspetta che finisca.')
+    return m.reply(
+`╭━━━〔 ⏳ *PARTITA IN CORSO* 〕━━━┈
+┃ C'è già una partita IC attiva.
+┃ Attendi che finisca.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
 
   let song = getRandomSong()
   let prize = 30 + Math.floor(Math.random() * 41)
@@ -116,24 +119,33 @@ let handler = async (m, { conn, command }) => {
   let search = await yts(query)
   let video = search.videos && search.videos[0]
 
-  if (!video) return m.reply('❌ Non ho trovato l\'audio per questa canzone, riprova più tardi.')
+  if (!video) return m.reply("❌ Non ho trovato l'audio per questa canzone.")
 
   let clipFile = path.join(TMP_DIR, `ic_clip_${Date.now()}.mp3`)
 
   try {
-    await conn.sendMessage(chat, { text: '⏳ Scarico e preparo l\'audio, attendi...' }, { quoted: m })
+    await conn.sendMessage(chat, {
+      text:
+`╭━━━〔 ⏳ *PREPARAZIONE AUDIO* 〕━━━┈
+┃ Sto scaricando il clip audio...
+┃ Attendi qualche secondo.
+╰━━━━━━━━━━━━━━━━━━┈`
+    }, { quoted: m })
 
     await execPromise(`yt-dlp -x --audio-format mp3 --postprocessor-args "-ss 30 -t 30" -o "${clipFile}" "${video.url}"`)
   } catch (e) {
     try { if (fs.existsSync(clipFile)) fs.unlinkSync(clipFile) } catch {}
-    return m.reply('❌ Errore durante il recupero dell\'audio. Riprova.')
+    return m.reply("❌ Errore durante il recupero dell'audio.")
   }
 
-  let intro = `🎧 *IC - Indovina Canzone*\n\n`
-  intro += `🎤 Artista: *${song.artist}*\n`
-  intro += `🎵 Ascolta 30 secondi e rispondi a questo audio con il titolo esatto.\n`
-  intro += `⏱ Hai 30 secondi.\n`
-  intro += `💰 Premio: *${prize}€* sul portafoglio`
+  let intro =
+`╭━━━〔 🎧 *IC — INDOVINA CANZONE* 〕━━━┈
+┃ 🎤 Artista: *${song.artist}*
+┃ 🎵 Ascolta 30 secondi e rispondi
+┃    con il titolo esatto.
+┃ ⏱ Tempo: *30 secondi*
+┃ 💶 Premio: *${prize}€*
+╰━━━━━━━━━━━━━━━━━━┈`
 
   await conn.sendMessage(chat, { text: intro }, { quoted: m })
 
@@ -145,16 +157,16 @@ let handler = async (m, { conn, command }) => {
 
   if (fs.existsSync(clipFile)) fs.unlinkSync(clipFile)
 
-    global.activeIC[chat] = {
-      answer,
-      title: song.title,
-      artist: song.artist,
-      prize,
-      audioId: sent.key.id,
-      attempts: {},
-      maxAttempts: 3,
-      timeout: setTimeout(() => finishIC(chat, conn), 30 * 1000)
-    }
+  global.activeIC[chat] = {
+    answer,
+    title: song.title,
+    artist: song.artist,
+    prize,
+    audioId: sent.key.id,
+    attempts: {},
+    maxAttempts: 3,
+    timeout: setTimeout(() => finishIC(chat, conn), 30 * 1000)
+  }
 }
 
 handler.before = async function (m, { conn }) {
@@ -170,16 +182,29 @@ handler.before = async function (m, { conn }) {
   game.attempts = game.attempts || {}
   const used = game.attempts[user] || 0
   if (used >= (game.maxAttempts || 3))
-    return m.reply(`❌ Hai esaurito i ${game.maxAttempts || 3} tentativi.`)
+    return m.reply(
+`╭━━━〔 ❌ *TENTATIVI ESAURITI* 〕━━━┈
+┃ Hai usato tutti i tentativi.
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
 
   let guess = normalize(m.text)
   if (guess !== game.answer) {
     game.attempts[user] = used + 1
     const remaining = (game.maxAttempts || 3) - game.attempts[user]
-    if (remaining <= 0) return m.reply(`❌ Risposta errata. Hai esaurito i ${game.maxAttempts || 3} tentativi.`)
-    return m.reply(`❌ Risposta errata. Tentativi rimasti: ${remaining}`)
-  }
+    if (remaining <= 0)
+      return m.reply(
+`╭━━━〔 ❌ *RISPOSTA ERRATA* 〕━━━┈
+┃ Hai esaurito i tentativi.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
 
+    return m.reply(
+`╭━━━〔 ❌ *RISPOSTA ERRATA* 〕━━━┈
+┃ Tentativi rimasti: *${remaining}*
+╰━━━━━━━━━━━━━━━━━━┈`
+    )
+  }
 
   clearTimeout(game.timeout)
   delete global.activeIC[chat]
@@ -188,11 +213,13 @@ handler.before = async function (m, { conn }) {
   if (!global.db.data.users[user]) global.db.data.users[user] = {}
   global.db.data.users[user].money = (global.db.data.users[user].money || 0) + game.prize
 
-  let response = `✅ *RISPOSTA CORRETTA!*\n\n`
-  response += `🎉 Complimenti @${user.split('@')[0]}\n`
-  response += `🎤 Canzone: *${game.title}*\n`
-  response += `🎵 Artista: *${game.artist}*\n`
-  response += `💶 Hai guadagnato *${game.prize}€* nel tuo portafoglio!`
+  let response =
+`╭━━━〔 ✅ *RISPOSTA CORRETTA* 〕━━━┈
+┃ 🎉 Complimenti @${user.split('@')[0]}
+┃ 🎤 Canzone: *${game.title}*
+┃ 🎵 Artista: *${game.artist}*
+┃ 💶 Guadagni: *${game.prize}€*
+╰━━━━━━━━━━━━━━━━━━┈`
 
   return conn.sendMessage(chat, { text: response, mentions: [user] }, { quoted: m })
 }
@@ -203,7 +230,13 @@ function finishIC(chat, conn) {
 
   delete global.activeIC[chat]
   conn.sendMessage(chat, {
-    text: `⏰ *Tempo scaduto!*\n\nLa canzone era:\n🎤 *${game.artist}*\n🎵 *${game.title}*\n\nProva di nuovo con *.ic*`,
+    text:
+`╭━━━〔 ⏰ *TEMPO SCADUTO* 〕━━━┈
+┃ La canzone era:
+┃ 🎤 *${game.artist}*
+┃ 🎵 *${game.title}*
+┃ Prova di nuovo con *.ic*
+╰━━━━━━━━━━━━━━━━━━┈`
   })
 }
 

@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
@@ -49,9 +47,8 @@ function padId(id) {
 let pokemonSaveLock = null
 
 async function loadDB() {
-  // Wait per evitare race conditions
   while (pokemonSaveLock) await new Promise(r => setTimeout(r, 10))
-  
+
   try {
     if (!fsSync.existsSync(DB_PATH)) {
       await fs.mkdir(path.dirname(DB_PATH), { recursive: true })
@@ -118,21 +115,21 @@ function buildCard(poke, dataC = null) {
   const dataRiga = dataC ? `\n┃  📅 Catturato il: ${dataC}` : ""
 
   return `
-  #${padId(poke.id)}  ★ POKÉDEX CARD ★   
-  ${poke.nameIT.padEnd(26)}
- ${tipoStr.padEnd(26)}
-  ${rarita.stars}  ${rarita.label.padEnd(14)}
-
-  📊 STATISTICHE BASE      
-                            
- ❤️  HP   ${statBar(poke.hp)}
- ⚔️  ATK  ${statBar(poke.atk)}
- 🛡️  DEF  ${statBar(poke.def)}
- 💥  SPA  ${statBar(poke.spatk)}
- 💨  VEL  ${statBar(poke.spd)}
-
-  ⚡ MOSSE                  
-${movesStr}${dataRiga}`
+╭━━━〔 🎴 *POKÉDEX CARD 888* 〕━━━┈
+┃ 🆔 #${padId(poke.id)} — *${poke.nameIT}*
+┃ 🔥 Tipo: ${tipoStr}
+┃ ⭐ Rarità: ${rarita.stars} ${rarita.label}
+┃━━━━━━━━━━━━━━━━━━
+┃ 📊 *Statistiche*
+┃ ❤️ HP   ${statBar(poke.hp)}
+┃ ⚔️ ATK  ${statBar(poke.atk)}
+┃ 🛡️ DEF  ${statBar(poke.def)}
+┃ 💥 SPA  ${statBar(poke.spatk)}
+┃ 💨 VEL  ${statBar(poke.spd)}
+┃━━━━━━━━━━━━━━━━━━
+┃ ⚡ *Mosse*
+${movesStr}${dataRiga}
+╰━━━━━━━━━━━━━━━━━━┈`
 }
 
 let handler = async (m, { conn, args, command }) => {
@@ -140,6 +137,9 @@ let handler = async (m, { conn, args, command }) => {
   const db     = await loadDB()
   const utente = getUserDex(db, userId)
 
+  // ───────────────────────────────
+  // 🔥 CATTURA — STILE 888
+  // ───────────────────────────────
   if (command === 'cattura') {
     const ora       = Date.now()
     const cooldown  = 5 * 60 * 1000
@@ -147,7 +147,13 @@ let handler = async (m, { conn, args, command }) => {
 
     if (rimanente > 0) {
       const minuti = Math.ceil(rimanente / 60000)
-      return m.reply(`⏳ Aspetta ancora *${minuti} minuto${minuti > 1 ? 'i' : ''}* prima di catturare un altro Pokémon!`)
+      return m.reply(
+`╭━━━〔 ⏳ *COOLDOWN* 〕━━━┈
+┃ Devi attendere ancora
+┃ *${minuti} minuto${minuti > 1 ? 'i' : ''}*
+┃ prima di catturare un altro Pokémon.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     const randomId = Math.floor(Math.random() * TOTAL_POKEMON) + 1
@@ -179,8 +185,9 @@ let handler = async (m, { conn, args, command }) => {
     const totale  = Object.keys(utente.catturati).length
     const carta   = buildCard(poke, dataC)
     const suffix  = giaHai
-      ? `♻️ Hai già *${poke.nameIT}* nel Pokédex! Dati aggiornati.`
+      ? `♻️ Hai già *${poke.nameIT}* nel Pokédex!`
       : `🎉 Hai catturato *${poke.nameIT}*!`
+
     const caption = `${carta}\n\n${suffix}\n📦 Totale: *${totale}/${TOTAL_POKEMON}*`
 
     try {
@@ -193,11 +200,20 @@ let handler = async (m, { conn, args, command }) => {
     return
   }
 
+  // ───────────────────────────────
+  // 🔥 POKEDEX — STILE 888
+  // ───────────────────────────────
   if (command === 'pokedex') {
     const lista = Object.values(utente.catturati)
 
     if (!lista.length) {
-      return m.reply("📭 Non hai ancora catturato nessun Pokémon!\nUsa *.cattura* per iniziare.")
+      return m.reply(
+`╭━━━〔 📭 *POKÉDEX VUOTO* 〕━━━┈
+┃ Non hai ancora catturato
+┃ nessun Pokémon.
+┃ Usa *.cattura* per iniziare!
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     lista.sort((a, b) => a.id - b.id)
@@ -209,18 +225,27 @@ let handler = async (m, { conn, args, command }) => {
     })
 
     const testo =
-      `\n` +
-      `    📖 IL TUO POKÉDEX     \n` +
-      `  ${lista.length}/${TOTAL_POKEMON} Pokémon         \n` +
-      `\n\n` +
-      righe.join("\n")
+`╭━━━〔 📖 *IL TUO POKÉDEX 888* 〕━━━┈
+┃ Totale: ${lista.length}/${TOTAL_POKEMON}
+┃━━━━━━━━━━━━━━━━━━
+${righe.join("\n")}
+╰━━━━━━━━━━━━━━━━━━┈`
 
     return m.reply(testo)
   }
 
+  // ───────────────────────────────
+  // 🔥 POKEMON — STILE 888
+  // ───────────────────────────────
   if (command === 'pokemon') {
     if (!args[0]) {
-      return m.reply("📖 *Uso:* .pokemon <nome>\n\nPuoi vedere solo i Pokémon catturati con *.cattura*!\nUsa *.pokedex* per vedere la tua collezione.")
+      return m.reply(
+`╭━━━〔 📖 *USO COMANDO* 〕━━━┈
+┃ .pokemon <nome/id>
+┃ Puoi vedere solo Pokémon
+┃ già catturati con *.cattura*
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     const query   = args.join("-").toLowerCase()
@@ -229,7 +254,13 @@ let handler = async (m, { conn, args, command }) => {
     )
 
     if (!trovato) {
-      return m.reply(`❌ Non hai ancora catturato *${query.toUpperCase()}*!\nUsa *.cattura* per trovarlo o *.pokedex* per vedere la tua collezione.`)
+      return m.reply(
+`╭━━━〔 ❌ *NON TROVATO* 〕━━━┈
+┃ Non hai ancora catturato
+┃ *${query.toUpperCase()}*.
+┃ Usa *.cattura* per trovarlo!
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     let poke
@@ -240,14 +271,13 @@ let handler = async (m, { conn, args, command }) => {
     }
 
     const carta   = buildCard(poke, trovato.catturato)
-    const caption = carta
 
     try {
       const imgRes = await fetch(poke.artworkUrl)
       const buffer = Buffer.from(await imgRes.arrayBuffer())
-      await conn.sendMessage(m.chat, { image: buffer, caption, mimetype: "image/png" }, { quoted: m })
+      await conn.sendMessage(m.chat, { image: buffer, caption: carta, mimetype: "image/png" }, { quoted: m })
     } catch {
-      await conn.sendMessage(m.chat, { text: caption }, { quoted: m })
+      await conn.sendMessage(m.chat, { text: carta }, { quoted: m })
     }
     return
   }

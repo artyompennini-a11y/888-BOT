@@ -1,12 +1,22 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 let handler = async (m, { conn }) => {
   const mention = m.mentionedJid ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : null)
   const who = mention
 
-  if (!who) throw "❌ 𝐓𝐚𝐠𝐠𝐚 𝐥𝐚 𝐩𝐞𝐫𝐬𝐨𝐧𝐚 𝐚 𝐜𝐮𝐢 𝐫𝐮𝐛𝐚𝐫𝐞 𝐢 𝐬𝐨𝐥𝐝𝐢!"
+  // ───────────────────────────────
+  // 🔥 ERRORE: NESSUN TAG — 888
+  // ───────────────────────────────
+  if (!who)
+    throw `╭━━━〔 ❌ *NESSUN TARGET* 〕━━━┈
+┃ Tagga la persona da cui rubare!
+╰━━━━━━━━━━━━━━━━━━┈`
 
-  if (who === m.sender) throw "❌ 𝐍𝐨𝐧 𝐩𝐮𝐨𝐢 𝐫𝐮𝐛𝐚𝐫𝐞 𝐚 𝐭𝐞 𝐬𝐭𝐞𝐬𝐬𝐨!"
+  // ───────────────────────────────
+  // 🔥 ERRORE: RUBA A SE STESSO — 888
+  // ───────────────────────────────
+  if (who === m.sender)
+    throw `╭━━━〔 ❌ *AZIONE NON CONSENTITA* 〕━━━┈
+┃ Non puoi rubare a te stesso!
+╰━━━━━━━━━━━━━━━━━━┈`
 
   const users = global.db.data.users
 
@@ -30,8 +40,16 @@ let handler = async (m, { conn }) => {
   uVictim.bank = uVictim.bank || 0
 
   const senderTotalFunds = uSender.bank + uSender.money
+
+  // ───────────────────────────────
+  // 🔥 ERRORE: SOLDI INSUFFICIENTI PER RUBARE — 888
+  // ───────────────────────────────
   if (senderTotalFunds < 1000)
-    throw "🏦 𝐃𝐞𝐯𝐢 𝐚𝐯𝐞𝐫𝐞 𝐚𝐥𝐦𝐞𝐧𝐨 *1000€* 𝐢𝐧 𝐛𝐚𝐧𝐜𝐚 𝐨 𝐧𝐞𝐥 𝐩𝐨𝐫𝐭𝐚𝐟𝐨𝐠𝐥𝐢𝐨 𝐩𝐞𝐫 𝐟𝐚𝐫𝐞 𝐮𝐧𝐚 𝐫𝐚𝐩𝐢𝐧𝐚!"
+    throw `╭━━━〔 🏦 *FONDI INSUFFICIENTI* 〕━━━┈
+┃ Devi avere almeno *1000€*
+┃ tra banca e portafoglio
+┃ per tentare una rapina!
+╰━━━━━━━━━━━━━━━━━━┈`
 
   const payFine = (amount) => {
     let usedBank = Math.min(uSender.bank, amount)
@@ -53,6 +71,9 @@ let handler = async (m, { conn }) => {
     return parts.join(' e ')
   }
 
+  // ───────────────────────────────
+  // 🔥 VITTIMA SENZA SOLDI — 888
+  // ───────────────────────────────
   if (uVictim.money <= 0) {
     let multa = Math.floor(Math.random() * 60) + 40
     const paid = payFine(multa)
@@ -61,26 +82,44 @@ let handler = async (m, { conn }) => {
 
     return conn.reply(
       m.chat,
-      `🚨 @${who.split('@')[0]} 𝐧𝐨𝐧 𝐡𝐚 𝐬𝐨𝐥𝐝𝐢!\n𝐒𝐞𝐢 𝐬𝐭𝐚𝐭𝐨 𝐦𝐮𝐥𝐭𝐚𝐭𝐨 𝐝𝐢 *${multa}€* (${sourceText})`,
+`╭━━━〔 🚨 *RAPINA FALLITA* 〕━━━┈
+┃ @${who.split('@')[0]} non ha soldi!
+┃━━━━━━━━━━━━━━━━━━
+┃ Sei stato multato di:
+┃ ➜ *${multa}€* (${sourceText})
+╰━━━━━━━━━━━━━━━━━━┈`,
       null,
       { mentions: [who] }
     )
   }
 
   let percentuale = Math.floor(Math.random() * 21) + 5
-
   const fallisce = Math.random() * 100 < 40
 
   let testo = ""
 
+  // ───────────────────────────────
+  // 🔥 RAPINA FALLITA — 888
+  // ───────────────────────────────
   if (fallisce) {
     let multa = Math.floor(Math.random() * 50) + 20
     const paid = payFine(multa)
     uSender.warn = (uSender.warn || 0) + 1
     const sourceText = formatFineSource(paid) || '*0€*'
 
-    testo = `🚨 𝐒𝐞𝐢 𝐬𝐭𝐚𝐭𝐨 𝐬𝐜𝐨𝐩𝐞𝐫𝐭𝐨!\n𝐋𝐚 𝐩𝐨𝐥𝐢𝐳𝐢𝐚 𝐭𝐢 𝐡𝐚 𝐦𝐮𝐥𝐭𝐚𝐭𝐨 𝐝𝐢 *${multa}€* (${sourceText})`
-  } else {
+    testo =
+`╭━━━〔 🚨 *SEI STATO SCOPERTO!* 〕━━━┈
+┃ La polizia ti ha fermato!
+┃━━━━━━━━━━━━━━━━━━
+┃ Multa: *${multa}€*
+┃ Pagata con: ${sourceText}
+╰━━━━━━━━━━━━━━━━━━┈`
+  }
+
+  // ───────────────────────────────
+  // 🔥 RAPINA RIUSCITA — 888
+  // ───────────────────────────────
+  else {
     let rubato = Math.floor((uVictim.money * percentuale) / 100)
     rubato = Math.min(rubato, uVictim.money)
 
@@ -97,7 +136,14 @@ let handler = async (m, { conn }) => {
       minute: '2-digit'
     })
 
-    testo = `💰 𝐒𝐔𝐂𝐂𝐄𝐒𝐒𝐎!\n𝐇𝐚𝐢 𝐫𝐮𝐛𝐚𝐭𝐨 *${rubato}€* (${percentuale}%) 𝐚 @${who.split('@')[0]}`
+    testo =
+`╭━━━〔 💰 *RAPINA RIUSCITA* 〕━━━┈
+┃ Hai rubato:
+┃ ➜ *${rubato}€* (${percentuale}%)
+┃ A: @${who.split('@')[0]}
+┃━━━━━━━━━━━━━━━━━━
+┃ Ottimo colpo, soldato 888.
+╰━━━━━━━━━━━━━━━━━━┈`
   }
 
   conn.reply(m.chat, testo, null, { mentions: [who] })

@@ -5,139 +5,172 @@ import '@realvare/baileys';
 import 'fs';
 import 'perf_hooks';
 
-let handler = async (_0x512ed3, { conn: _0x542b94, usedPrefix: _0x3f73c1 }) => {
-  const { welcome: _0x16d809, detect: _0x4c3a9f } = global.db.data.chats[_0x512ed3.chat];
-  let _0x5bfb0b = _0x512ed3.quoted ? _0x512ed3.quoted.sender : _0x512ed3.mentionedJid && _0x512ed3.mentionedJid[0] ? _0x512ed3.mentionedJid[0] : _0x512ed3.fromMe ? _0x542b94.user.jid : _0x512ed3.sender;
-  const _0x197a8a = (await _0x542b94.profilePictureUrl(_0x5bfb0b, "image").catch(_0x2cb040 => null)) || "./src/avatar_contact.png";
+let handler = async (m, { conn, usedPrefix: prefix }) => {
+  const { welcome, detect } = global.db.data.chats[m.chat] || {};
 
-  let _0x53e6f1;
-  if (_0x197a8a !== "./src/avatar_contact.png") {
-    _0x53e6f1 = await (await fetch(_0x197a8a)).buffer();
-  } else {
-    _0x53e6f1 = await (await fetch("https://qu.ax/DQsgr.png")).buffer();
+  // TARGET UTENTE
+  let target = m.quoted
+    ? m.quoted.sender
+    : m.mentionedJid && m.mentionedJid[0]
+    ? m.mentionedJid[0]
+    : m.fromMe
+    ? conn.user.jid
+    : m.sender;
+
+  // FOTO PROFILO + FALLBACK
+  const profilePicUrl =
+    (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
+    "./src/avatar_contact.png";
+
+  let profileBuffer;
+  try {
+    if (profilePicUrl !== "./src/avatar_contact.png") {
+      profileBuffer = await (await fetch(profilePicUrl)).buffer();
+    } else {
+      profileBuffer = await (
+        await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")
+      ).buffer();
+    }
+  } catch {
+    profileBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/default-avatar.png")
+    ).buffer();
   }
 
-  let _0x6bd16e = {
-    'key': {
-      'participants': "0@s.whatsapp.net",
-      'fromMe': false,
-      'id': "Halo"
+  // THUMBNAIL MENU GIOCHI + FALLBACK
+  let thumbBuffer;
+  try {
+    thumbBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/menu-giochi.jpg")
+    ).buffer();
+  } catch {
+    thumbBuffer = await (
+      await fetch("https://i.postimg.cc/3JwB9YkX/menu-giochi.jpg")
+    ).buffer();
+  }
+
+  // FAKE LOCATION
+  let fakeLocation = {
+    key: {
+      participants: "0@s.whatsapp.net",
+      fromMe: false,
+      id: "Halo",
     },
-    'message': {
-      'locationMessage': {
-        'name': "🎮 MENU GIOCHI 888",
-        'jpegThumbnail': await (await fetch("https://qu.ax/JKCXP.jpg")).buffer()
-      }
+    message: {
+      locationMessage: {
+        name: "🎮 MENU GIOCHI 888",
+        jpegThumbnail: thumbBuffer,
+      },
     },
-    'participant': "0@s.whatsapp.net"
+    participant: "0@s.whatsapp.net",
   };
 
-  let _0x2aa101 = 
+  // TESTO MENU
+  let menuText = 
 `╭━━━〔 🎮 *MENU GIOCHI* 〕━━━┈
 ┃ *Bot:* 𝟴𝟴𝟴 𝗕𝗢𝗧
 ┃ *Intrattenimento e Funzioni Community*
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ♟️ *GIOCHI DA TAVOLO:*
-┃  ⮕ ${_0x3f73c1}scacchi
-┃  ⮕ ${_0x3f73c1}startblast
-┃  ⮕ ${_0x3f73c1}trivia
-┃  ⮕ ${_0x3f73c1}indovina
-┃  ⮕ ${_0x3f73c1}indovinamedio
-┃  ⮕ ${_0x3f73c1}indovinadifficile
-┃  ⮕ ${_0x3f73c1}toptrivia
+┃  ⮕ ${prefix}scacchi
+┃  ⮕ ${prefix}startblast
+┃  ⮕ ${prefix}trivia
+┃  ⮕ ${prefix}indovina
+┃  ⮕ ${prefix}indovinamedio
+┃  ⮕ ${prefix}indovinadifficile
+┃  ⮕ ${prefix}toptrivia
 ┃ 🧩 *FUNNY:*
-┃  ⮕ ${_0x3f73c1}impiccato
-┃  ⮕ ${_0x3f73c1}tris
-┃  ⮕ ${_0x3f73c1}uno
-┃  ⮕ ${_0x3f73c1}bandiera
-┃  ⮕ ${_0x3f73c1}mascotte
-┃  ⮕ ${_0x3f73c1}labirinto
-┃  ⮕ ${_0x3f73c1}bomba
-┃  ⮕ ${_0x3f73c1}scf
-┃  ⮕ ${_0x3f73c1}scramble
-┃  ⮕ ${_0x3f73c1}basket
-┃  ⮕ ${_0x3f73c1}rigore
-┃  ⮕ ${_0x3f73c1}screenshot
-┃  ⮕ ${_0x3f73c1}screenshotgp
-┃  ⮕ ${_0x3f73c1}canta
+┃  ⮕ ${prefix}impiccato
+┃  ⮕ ${prefix}tris
+┃  ⮕ ${prefix}uno
+┃  ⮕ ${prefix}bandiera
+┃  ⮕ ${prefix}mascotte
+┃  ⮕ ${prefix}labirinto
+┃  ⮕ ${prefix}bomba
+┃  ⮕ ${prefix}scf
+┃  ⮕ ${prefix}scramble
+┃  ⮕ ${prefix}basket
+┃  ⮕ ${prefix}rigore
+┃  ⮕ ${prefix}screenshot
+┃  ⮕ ${prefix}screenshotgp
+┃  ⮕ ${prefix}canta
 ┃ 
 ┃ 🔞 *HARD (INTERATTIVI):*
-┃  ⮕ ${_0x3f73c1}lesbica
-┃  ⮕ ${_0x3f73c1}frocio
-┃  ⮕ ${_0x3f73c1}gay
-┃  ⮕ ${_0x3f73c1}puttana
-┃  ⮕ ${_0x3f73c1}porca
-┃  ⮕ ${_0x3f73c1}porco
-┃  ⮕ ${_0x3f73c1}alcolizzato
-┃  ⮕ ${_0x3f73c1}negro
-┃  ⮕ ${_0x3f73c1}sbiro
-┃  ⮕ ${_0x3f73c1}figa
-┃  ⮕ ${_0x3f73c1}pene
-┃  ⮕ ${_0x3f73c1}ditalino
-┃  ⮕ ${_0x3f73c1}sega
-┃  ⮕ ${_0x3f73c1}lecca
-┃  ⮕ ${_0x3f73c1}lecco
-┃  ⮕ ${_0x3f73c1}tette
-┃  ⮕ ${_0x3f73c1}bottiglia
-┃  ⮕ ${_0x3f73c1}obbligo
-┃  ⮕ ${_0x3f73c1}verità
-┃  ⮕ ${_0x3f73c1}mordi
-┃  ⮕ ${_0x3f73c1}insulta
+┃  ⮕ ${prefix}lesbica
+┃  ⮕ ${prefix}frocio
+┃  ⮕ ${prefix}gay
+┃  ⮕ ${prefix}puttana
+┃  ⮕ ${prefix}porca
+┃  ⮕ ${prefix}porco
+┃  ⮕ ${prefix}alcolizzato
+┃  ⮕ ${prefix}negro
+┃  ⮕ ${prefix}sbiro
+┃  ⮕ ${prefix}figa
+┃  ⮕ ${prefix}pene
+┃  ⮕ ${prefix}ditalino
+┃  ⮕ ${prefix}sega
+┃  ⮕ ${prefix}lecca
+┃  ⮕ ${prefix}lecco
+┃  ⮕ ${prefix}tette
+┃  ⮕ ${prefix}bottiglia
+┃  ⮕ ${prefix}obbligo
+┃  ⮕ ${prefix}verità
+┃  ⮕ ${prefix}mordi
+┃  ⮕ ${prefix}insulta
 ┃ 
 ┃ ❤️ *LOVE:*
-┃  ⮕ ${_0x3f73c1}adotta
-┃  ⮕ ${_0x3f73c1}famiglia
-┃  ⮕ ${_0x3f73c1}sposa
-┃  ⮕ ${_0x3f73c1}bacia
-┃  ⮕ ${_0x3f73c1}abbraccia
-┃  ⮕ ${_0x3f73c1}crush
-┃  ⮕ ${_0x3f73c1}trovafid
-┃  ⮕ ${_0x3f73c1}odio
-┃  ⮕ ${_0x3f73c1}clan
+┃  ⮕ ${prefix}adotta
+┃  ⮕ ${prefix}famiglia
+┃  ⮕ ${prefix}sposa
+┃  ⮕ ${prefix}bacia
+┃  ⮕ ${prefix}abbraccia
+┃  ⮕ ${prefix}crush
+┃  ⮕ ${prefix}trovafid
+┃  ⮕ ${prefix}odio
+┃  ⮕ ${prefix}clan
 ┃ 
 ┃ 🔧 *STRUMENTI & UTILITY:*
-┃  ⮕ ${_0x3f73c1}removebg
-┃  ⮕ ${_0x3f73c1}calendario
-┃  ⮕ ${_0x3f73c1}screen
-┃  ⮕ ${_0x3f73c1}emojimix
-┃  ⮕ ${_0x3f73c1}setig
-┃  ⮕ ${_0x3f73c1}rimuoviig
-┃  ⮕ ${_0x3f73c1}statsgiornaliere
-┃  ⮕ ${_0x3f73c1}topbestemmie
-┃  ⮕ ${_0x3f73c1}topricchi
-┃  ⮕ ${_0x3f73c1}traduci
-┃  ⮕ ${_0x3f73c1}nota
-┃  ⮕ ${_0x3f73c1}scarica
-┃  ⮕ ${_0x3f73c1}ricetta
-┃  ⮕ ${_0x3f73c1}quiz
-┃  ⮕ ${_0x3f73c1}quizpatente
-┃  ⮕ ${_0x3f73c1}calcioquiz
-┃  ⮕ ${_0x3f73c1}meteo
-┃  ⮕ ${_0x3f73c1}notizie
-┃  ⮕ ${_0x3f73c1}oroscopo
-┃  ⮕ ${_0x3f73c1}urly
-┃  ⮕ ${_0x3f73c1}spotify
-┃  ⮕ ${_0x3f73c1}twitter
-┃  ⮕ ${_0x3f73c1}reddit
-┃  ⮕ ${_0x3f73c1}pinterest
+┃  ⮕ ${prefix}removebg
+┃  ⮕ ${prefix}calendario
+┃  ⮕ ${prefix}screen
+┃  ⮕ ${prefix}emojimix
+┃  ⮕ ${prefix}setig
+┃  ⮕ ${prefix}rimuoviig
+┃  ⮕ ${prefix}statsgiornaliere
+┃  ⮕ ${prefix}topbestemmie
+┃  ⮕ ${prefix}topricchi
+┃  ⮕ ${prefix}traduci
+┃  ⮕ ${prefix}nota
+┃  ⮕ ${prefix}scarica
+┃  ⮕ ${prefix}ricetta
+┃  ⮕ ${prefix}quiz
+┃  ⮕ ${prefix}quizpatente
+┃  ⮕ ${prefix}calcioquiz
+┃  ⮕ ${prefix}meteo
+┃  ⮕ ${prefix}notizie
+┃  ⮕ ${prefix}oroscopo
+┃  ⮕ ${prefix}urly
+┃  ⮕ ${prefix}spotify
+┃  ⮕ ${prefix}twitter
+┃  ⮕ ${prefix}reddit
+┃  ⮕ ${prefix}pinterest
 ┃ 
 ┃ 🎲 *RANDOM:*
-┃  ⮕ ${_0x3f73c1}identita
-┃  ⮕ ${_0x3f73c1}telefono
-┃  ⮕ ${_0x3f73c1}specchio
-┃  ⮕ ${_0x3f73c1}fusione
-┃  ⮕ ${_0x3f73c1}dox
-┃  ⮕ ${_0x3f73c1}zizzania
-┃  ⮕ ${_0x3f73c1}barzelletta
-┃  ⮕ ${_0x3f73c1}saluta
-┃  ⮕ ${_0x3f73c1}segreto
-┃  ⮕ ${_0x3f73c1}bonk
+┃  ⮕ ${prefix}identita
+┃  ⮕ ${prefix}telefono
+┃  ⮕ ${prefix}specchio
+┃  ⮕ ${prefix}fusione
+┃  ⮕ ${prefix}dox
+┃  ⮕ ${prefix}zizzania
+┃  ⮕ ${prefix}barzelletta
+┃  ⮕ ${prefix}saluta
+┃  ⮕ ${prefix}segreto
+┃  ⮕ ${prefix}bonk
 ╰━━━━━━━━━━━━━━━━━━┈
-> ⚠️ In caso di bug o problemi tecnici, 
-> utilizza il comando *${_0x3f73c1}segnala* per 
-> segnalarlo subito allo staff.`.trim();
+> ⚠️ In caso di bug o problemi tecnici,
+> usa *${prefix}segnala*.`.trim();
 
-  _0x542b94.sendMessage(_0x512ed3.chat, { text: _0x2aa101 }, { quoted: _0x6bd16e });
+  conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation });
 };
 
 handler.help = ["menu"];

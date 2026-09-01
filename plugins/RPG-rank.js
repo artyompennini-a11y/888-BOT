@@ -1,59 +1,48 @@
 let handler = async (m, { conn, args }) => {
 
+  // Target: menzione, numero, oppure tu
+  let target =
+    m.mentionedJid?.[0] ||
+    (args[0]?.includes('@') ? args[0].replace('@', '') + '@s.whatsapp.net' : null) ||
+    m.sender
 
-  let target = m.mentionedJid?.[0] 
-            || (args[0]?.includes('@') ? args[0].replace('@', '') + '@s.whatsapp.net' : null)
-            || m.sender
+  let user = global.db.data.users[target]
+  if (!user) {
+    return conn.reply(m.chat, `❌ Utente non trovato nel database.`, m)
+  }
 
-  const user = global.db.data.users[target] || (global.db.data.users[target] = {})
-
- 
-  user.rankData = user.rankData || {}
-
-  
-  user.lvl = Number(
-    user.lvl ??
-    user.level ??
-    user.rankData.level ??
-    0
-  )
-  if (!Number.isFinite(user.lvl)) user.lvl = 0
-
-
-  user.msgCount = Number(
-    user.msgCount ??
-    user.rankData.messages ??
-    0
-  )
-  if (!Number.isFinite(user.msgCount)) user.msgCount = 0
-
-  
+  // Normalizzazione dati
+  user.exp = Number(user.exp || 0)
+  user.level = Number(user.level || 0)
   user.money = Number(user.money || 0)
-  if (!Number.isFinite(user.money)) user.money = 0
+  user.role = user.role || 'Novizio'
 
-  
-  user.level = user.lvl
-  user.rankData.level = user.lvl
-  user.rankData.messages = user.msgCount
+  // XP range per il livello successivo
+  const { min, max } = xpRange(user.level)
+  const nextXP = xpRange(user.level + 1).min
 
-  const LEVEL_STEP = 300
+  // Percentuale barra XP
+  let percent = Math.floor((user.exp / nextXP) * 100)
+  if (percent > 100) percent = 100
+  if (percent < 0 || !Number.isFinite(percent)) percent = 0
 
-  let percent = Math.min(100, Math.floor((user.msgCount / LEVEL_STEP) * 100))
   let bar = "█".repeat(Math.floor(percent / 10)) + "░".repeat(10 - Math.floor(percent / 10))
-  let missing = Math.max(0, LEVEL_STEP - user.msgCount)
+
+  let missing = Math.max(0, nextXP - user.exp)
 
   let text = `
 📊 *RANK SYSTEM*
 
 👤 @${target.split('@')[0]}
 
-🏆 Livello: ${user.lvl}
-💬 Progress: ${user.msgCount}/${LEVEL_STEP}
+🏆 *Livello:* ${user.level}
+💬 *XP:* ${user.exp}/${nextXP}
 
 ${bar} ${percent}%
 
-📈 Mancano: ${missing}
-💰 Soldi: ${user.money}€
+📈 *XP mancanti:* ${missing}
+🏅 *Ruolo:* ${user.role}
+💰 *Soldi:* ${user.money}€
 `
 
   await conn.sendMessage(
@@ -65,3 +54,4 @@ ${bar} ${percent}%
 
 handler.command = ['rank']
 export default handler
+

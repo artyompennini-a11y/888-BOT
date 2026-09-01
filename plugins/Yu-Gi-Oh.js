@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import fs from 'fs/promises'
 import fsSync from 'fs'
 import path from 'path'
@@ -35,12 +33,12 @@ const TIPI_CARTA = {
 }
 
 function getRarita(atk) {
-  if (atk === null || atk === undefined) return { stars: "★★★☆☆", label: "RARA"       }
+  if (atk === null || atk === undefined) return { stars: "★★★☆☆", label: "RARA" }
   if (atk >= 3000) return { stars: "★★★★★", label: "LEGGENDARIA" }
-  if (atk >= 2500) return { stars: "★★★★☆", label: "ULTRA RARA"  }
-  if (atk >= 2000) return { stars: "★★★☆☆", label: "RARA"        }
-  if (atk >= 1500) return { stars: "★★☆☆☆", label: "NON COMUNE"  }
-  return                { stars: "★☆☆☆☆", label: "COMUNE"      }
+  if (atk >= 2500) return { stars: "★★★★☆", label: "ULTRA RARA" }
+  if (atk >= 2000) return { stars: "★★★☆☆", label: "RARA" }
+  if (atk >= 1500) return { stars: "★★☆☆☆", label: "NON COMUNE" }
+  return { stars: "★☆☆☆☆", label: "COMUNE" }
 }
 
 function statBar(val, max = 5000) {
@@ -61,9 +59,8 @@ function trunc(str, len) {
 let yugiohSaveLock = null
 
 async function loadDB() {
-  // Wait per evitare race conditions
   while (yugiohSaveLock) await new Promise(r => setTimeout(r, 10))
-  
+
   try {
     if (!fsSync.existsSync(DB_PATH)) {
       await fs.mkdir(path.dirname(DB_PATH), { recursive: true })
@@ -138,19 +135,23 @@ function buildCard(card, dataPesca = null) {
   }
 
   return `
-  #${padId(card.id)}  ★ YGO CARD ★  
-
-  ${nome.padEnd(26)}
-  ${tipo.padEnd(26)}
-  ${attr.padEnd(26)}
-  ${rarita.stars}  ${rarita.label.padEnd(14)}
+╭━━━〔 🎴 *YUGIOH CARD 888* 〕━━━┈
+┃ ID: #${padId(card.id)}
+┃━━━━━━━━━━━━━━━━━━
+┃ 🃏 Nome: ${nome}
+┃ 📗 Tipo: ${tipo}
+┃ ✨ Attributo: ${attr}
+┃ ⭐ Rarità: ${rarita.stars} ${rarita.label}
 ${livelloBlock}
-  📜 EFFETTO/DESCRIZIONE   
-  ${trunc(descrizione, 26)}
-  ${trunc(descrizione.slice(26), 26)}
-  ${trunc(descrizione.slice(52), 26)}
+┃ 📜 Descrizione:
+┃ ${trunc(descrizione, 26)}
+┃ ${trunc(descrizione.slice(26), 26)}
+┃ ${trunc(descrizione.slice(52), 26)}
+┃━━━━━━━━━━━━━━━━━━
 ${statsBlock}
- 🌐 ygoprodeck.com        ${dataRiga}
+┃ 🌐 ygoprodeck.com
+${dataRiga}
+╰━━━━━━━━━━━━━━━━━━┈
 `
 }
 
@@ -165,14 +166,24 @@ let handler = async (m, { conn, args, command }) => {
 
     if (rimanente > 0) {
       const minuti = Math.ceil(rimanente / 60000)
-      return m.reply(`⏳ Aspetta ancora *${minuti} minuto${minuti > 1 ? 'i' : ''}* prima di pescare un'altra carta!`)
+      return m.reply(
+`╭━━━〔 ⏳ *COOLDOWN PESCA* 〕━━━┈
+┃ Attendi ancora *${minuti} minuto${minuti > 1 ? 'i' : ''}*
+┃ prima di pescare un'altra carta.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     let card
     try {
       card = await fetchRandom()
     } catch {
-      return m.reply("❌ Errore nel pescare una carta. Riprova!")
+      return m.reply(
+`╭━━━〔 ❌ *ERRORE PESCA* 〕━━━┈
+┃ Impossibile pescare la carta.
+┃ Riprova più tardi.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     const giaHai = !!utente.collezione[card.id]
@@ -194,12 +205,12 @@ let handler = async (m, { conn, args, command }) => {
     await saveDB(db)
 
     const totale  = Object.keys(utente.collezione).length
-    const rarita  = getRarita(card.atk ?? null)
     const carta   = buildCard(card, dataP)
     const suffix  = giaHai
-      ? `♻️ Hai già *${card.name}*! Collezione aggiornata.`
+      ? `♻️ Hai già *${card.name}*!`
       : `🎴 Hai pescato *${card.name.toUpperCase()}*!`
-    const caption = `${carta}\n\n${suffix}\n📦 Carte nella tua collezione: *${totale}*`
+
+    const caption = `${carta}\n${suffix}\n📦 Carte nella tua collezione: *${totale}*`
 
     const imgUrl = card.card_images?.[0]?.image_url
     if (imgUrl) {
@@ -210,6 +221,7 @@ let handler = async (m, { conn, args, command }) => {
         return
       } catch {}
     }
+
     await conn.sendMessage(m.chat, { text: caption }, { quoted: m })
     return
   }
@@ -218,7 +230,12 @@ let handler = async (m, { conn, args, command }) => {
     const lista = Object.values(utente.collezione)
 
     if (!lista.length) {
-      return m.reply("📭 Non hai ancora pescato nessuna carta!\nUsa *.pesca* per iniziare.")
+      return m.reply(
+`╭━━━〔 📭 *NESSUNA CARTA* 〕━━━┈
+┃ Non hai ancora pescato nulla.
+┃ Usa *.pesca* per iniziare.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     lista.sort((a, b) => a.name.localeCompare(b.name))
@@ -231,18 +248,26 @@ let handler = async (m, { conn, args, command }) => {
     })
 
     const testo =
-      `\n` +
-      `   🎴 LA TUA COLLEZIONE   \n` +
-      `   ${lista.length} carte totali         \n` +
-      `\n\n` +
-      righe.join("\n")
+`╭━━━〔 🎴 *COLLEZIONE 888* 〕━━━┈
+┃ Carte totali: *${lista.length}*
+┃━━━━━━━━━━━━━━━━━━
+${righe.join("\n")}
+╰━━━━━━━━━━━━━━━━━━┈`
 
     return m.reply(testo)
   }
 
   if (command === 'yugioh') {
     if (!args[0]) {
-      return m.reply("📖 *Uso:* .yugioh <nome carta>\nEsempio: *.yugioh Dark Magician*\n\nPuoi vedere solo le carte che hai pescato con *.pesca*!\nUsa *.collezione* per vedere cosa hai.")
+      return m.reply(
+`╭━━━〔 📖 *USO COMANDO* 〕━━━┈
+┃ .yugioh <nome carta>
+┃ Esempio: .yugioh Dark Magician
+┃━━━━━━━━━━━━━━━━━━
+┃ Puoi vedere solo le carte
+┃ che hai pescato con *.pesca*
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     const query   = args.join(" ").toLowerCase()
@@ -251,14 +276,23 @@ let handler = async (m, { conn, args, command }) => {
     )
 
     if (!trovata) {
-      return m.reply(`❌ Non hai ancora pescato *${query.toUpperCase()}*!\nUsa *.pesca* per trovarla o *.collezione* per vedere le tue carte.`)
+      return m.reply(
+`╭━━━〔 ❌ *CARTA NON TROVATA* 〕━━━┈
+┃ Non hai pescato *${query.toUpperCase()}*.
+┃ Usa *.pesca* per trovarla.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     let card
     try {
       card = await fetchById(trovata.id)
     } catch {
-      return m.reply("❌ Errore nel caricare i dati. Riprova!")
+      return m.reply(
+`╭━━━〔 ❌ *ERRORE DATI* 〕━━━┈
+┃ Impossibile caricare la carta.
+╰━━━━━━━━━━━━━━━━━━┈`
+      )
     }
 
     const carta   = buildCard(card, trovata.pescata)
@@ -273,6 +307,7 @@ let handler = async (m, { conn, args, command }) => {
         return
       } catch {}
     }
+
     await conn.sendMessage(m.chat, { text: caption }, { quoted: m })
     return
   }

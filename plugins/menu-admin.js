@@ -17,30 +17,18 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
     ? conn.user.jid
     : m.sender;
 
-  // FOTO PROFILO + FALLBACK LOCALE
-  const profilePicUrl =
-    (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
-    "./src/avatar_contact.png";
-
+  // FOTO PROFILO — SEMPRE SAFE
   let profileBuffer;
   try {
-    if (profilePicUrl !== "./src/avatar_contact.png") {
-      profileBuffer = await (await fetch(profilePicUrl)).buffer();
-    } else {
-      profileBuffer = fs.readFileSync("./src/avatar_contact.png");
-    }
+    const url = await conn.profilePictureUrl(target, "image");
+    profileBuffer = await (await fetch(url)).buffer();
   } catch {
-    profileBuffer = fs.readFileSync("./src/avatar_contact.png");
+    // fallback sicuro senza file locali
+    profileBuffer = Buffer.from([]);
   }
 
-  // THUMBNAIL MENU ADMIN — SOLO IMMAGINE LOCALE (NO FETCH)
-  let thumbBuffer;
-  try {
-    thumbBuffer = fs.readFileSync("./src/menu-admin.jpg");
-  } catch {
-    // fallback se manca il file
-    thumbBuffer = fs.readFileSync("./src/avatar_contact.png");
-  }
+  // THUMBNAIL — SEMPRE SAFE (NO FILE, NO FETCH)
+  let thumbBuffer = Buffer.from([]);
 
   // FAKE LOCATION
   let fakeLocation = {

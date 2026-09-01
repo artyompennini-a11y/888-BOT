@@ -5,7 +5,7 @@ import webp from 'node-webpmux'
 let inviteCache = {}
 let lastCheck = {}
 
-// Regex "non-global" così possiamo usare .test() senza problemi di lastIndex.
+
 const WHATSAPP_LINK_REGEX = /(?:https?:\/\/)?(?:www\.|chat\.|api\.|business\.)?whatsapp\.com(?:\/channel)?\/[0-9A-Za-z_-]+/
 const WA_ME_REGEX = /(?:https?:\/\/)?(?:www\.)?wa\.me\/[0-9+]+/
 const WHATSAPP_DOMAIN_REGEX = /(?:chat\.|www\.)?whatsapp\.com|wa\.me/i
@@ -71,9 +71,7 @@ async function decodeQrFromWebpBuffer(buffer) {
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
 
-  // ============================
-  //   BYPASS BOT (FIX RICHIESTO)
-  // ============================
+  
   if (m.fromMe) {
     console.log('🤖 Il bot ha inviato un link → bypass totale')
     return true
@@ -84,7 +82,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
-  // Bypass admin/owner
+ 
   if (isAdmin || isOwner || isROwner) {
     console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
     return true
@@ -100,9 +98,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
-  // ============================
-  //        LINK NORMALI
-  // ============================
+ 
   if (isWhatsAppLink) {
 
     lastCheck[m.chat] = Date.now()
@@ -122,7 +118,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
     if (thisGroupCode && text.toLowerCase().includes(thisGroupCode.toLowerCase())) return true
 
-    // --- Cancella messaggio ---
+    
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -159,9 +155,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     return false
   }
 
-  // ============================
-  //        QR CODE
-  // ============================
+  
   async function handleQrMedia(m, buffer, isSticker = false) {
     let qrText = null
 

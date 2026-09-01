@@ -1,5 +1,4 @@
-//Plugin by 333 staff
-
+//Plugin by 888
 let handler = async (m, { conn }) => {
   if (!m.isGroup) return m.reply('❌ Questo comando funziona solo nei gruppi.')
 
@@ -10,26 +9,34 @@ let handler = async (m, { conn }) => {
   const mods = global.db.data.chats[chatId].moderatori
   if (mods.length === 0) return m.reply('📋 Nessun moderatore registrato in questo gruppo.')
 
-  let text = '📋 *Lista Moderatori del Gruppo*\n\n'
+  // ============================
+  //     GRAFICA MIGLIORATA
+  // ============================
+
+  let text = `🛡️ *Pannello Moderatori del Gruppo*\n`
+  text += `━━━━━━━━━━━━━━━━━━━━━━\n\n`
+  text += `👥 *Moderatori Attivi:*\n\n`
+
   const mentions = []
   mods.forEach((jid, index) => {
-    text += `${index + 1}. @${jid.split('@')[0]}\n`
+    text += `*${index + 1}.* @${jid.split('@')[0]}\n`
     mentions.push(jid)
   })
 
-  text += '\n━━━━━━━━━━━━━━━━━━━━━━\n'
-  text += '🛡️ *Comandi Disponibili ai Moderatori*\n\n'
-  text += '• .pin / .unpin - Fissa/defissa messaggi\n'
-  text += '• .setwelcome - Imposta messaggio di benvenuto\n'
-  text += '• .link - Genera link del gruppo\n'
-  text += '• .del - Elimina messaggi\n'
-  text += '• .giuria @user motivo - Avvia processo giuria\n'
-  text += '• .banlist - Mostra lista bannati\n'
-  text += '• .hidetag - Tag nascosto\n'
-  text += '• .invita <numero> - Invita utente\n'
-  text += '• .admins - Sveglia admin\n'
-  text += '• .tagall - Menziona tutti\n'
-  text += '• .muta / .smuta - Muta/smuta utente\n'
+  text += `\n━━━━━━━━━━━━━━━━━━━━━━\n`
+  text += `⚙️ *Strumenti Moderazione*\n\n`
+  text += `• 🔒 *Pin / Unpin:* .pin / .unpin\n`
+  text += `• 👋 *Welcome:* .setwelcome\n`
+  text += `• 🔗 *Link gruppo:* .link\n`
+  text += `• 🗑️ *Elimina messaggi:* .del\n`
+  text += `• ⚖️ *Giuria:* .giuria @user motivo\n`
+  text += `• 🚫 *Bannati:* .banlist\n`
+  text += `• 👻 *Tag nascosto:* .hidetag\n`
+  text += `• 📢 *Sveglia admin:* .admins\n`
+  text += `• 🏷️ *Tag all:* .tagall\n`
+  text += `• 🔇 *Mute / Unmute:* .muta / .smuta\n`
+  text += `\n━━━━━━━━━━━━━━━━━━━━━━\n`
+  text += `🛠️ *Gestione avanzata disponibile solo ai moderatori.*`
 
   await conn.sendMessage(chatId, { text, mentions }, { quoted: m })
 }
@@ -40,3 +47,4 @@ handler.command = ['mods', 'moderatori']
 handler.group = true
 
 export default handler
+

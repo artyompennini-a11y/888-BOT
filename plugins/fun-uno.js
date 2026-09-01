@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 333 staff
-
 import { createCanvas } from 'canvas'
 
 let unoSession = {}
@@ -40,7 +38,7 @@ async function generaGrafica(s) {
     ctx.fillStyle = 'rgba(255,255,255,0.10)'
     ctx.font = 'bold 90px Arial'
     ctx.textAlign = 'center'
-    ctx.fillText('333 BOT', 500, 320)
+    ctx.fillText('888 BOT', 500, 320)
 
     const drawCard = (x, y, label, color, hidden = false, scale = 1) => {
         const w = 80 * scale
@@ -64,7 +62,7 @@ async function generaGrafica(s) {
 
             ctx.fillStyle = '#fff'
             ctx.font = `bold ${16 * scale}px Arial`
-            ctx.fillText('333', x + (w / 2), y + (h / 2) + 6)
+            ctx.fillText('888', x + (w / 2), y + (h / 2) + 6)
         } else {
             ctx.fillStyle = color
             ctx.beginPath()
@@ -164,7 +162,7 @@ function botTurno(s) {
             ? ['Rosso', 'Blu', 'Verde', 'Giallo'][Math.floor(Math.random() * 4)]
             : scelta.split(' ')[0]
 
-        let res = `\n🤖 333 BOT mette: *${scelta}*`
+        let res = `\n🤖 888 BOT mette: *${scelta}*`
 
         if (scelta.includes('+2')) {
             for (let i = 0; i < 2; i++) {
@@ -194,7 +192,7 @@ function botTurno(s) {
 
         s.botHand.push(s.mazzo.shift())
 
-        return `\n🤖 333 BOT pesca.`
+        return `\n🤖 888 BOT pesca.`
     }
 }
 
@@ -225,18 +223,18 @@ let handler = async (m, { conn }) => {
         mimetype: 'image/jpeg',
         fileName: 'uno.jpg',
         caption:
-`🃏 *UNO MATCH - 333 BOT*
-
-🎨 Colore attuale: *${unoSession[chat].currentColor}*`
+`╭━━━〔 🃏 *UNO MATCH - 888 BOT* 〕━━━┈
+┃ 🎨 Colore attuale: *${unoSession[chat].currentColor}*
+╰━━━━━━━━━━━━━━━━━━┈`
     }, { quoted: m })
 
     await conn.sendMessage(chat, {
         text:
-`🎮 *AZIONI DISPONIBILI*
-
-📥 Premi il bottone per pescare
-🛑 Premi il bottone per uscire
-🎴 Oppure scrivi il numero della carta`,
+`╭━━━〔 🎮 *AZIONI DISPONIBILI* 〕━━━┈
+┃ 📥 Premi il bottone per pescare
+┃ 🛑 Premi il bottone per uscire
+┃ 🎴 Oppure scrivi il numero della carta
+╰━━━━━━━━━━━━━━━━━━┈`,
         interactiveButtons: gameButtons()
     }, { quoted: m })
 }
@@ -264,7 +262,11 @@ handler.before = async (m, { conn }) => {
 
     if (msgText === 'enduno') {
         delete unoSession[chat]
-        return m.reply('🛑 Partita terminata.')
+        return m.reply(
+`╭━━━〔 🛑 *PARTITA TERMINATA* 〕━━━┈
+┃ Hai abbandonato la partita.
+╰━━━━━━━━━━━━━━━━━━┈`
+        )
     }
 
     let report = ''
@@ -278,7 +280,7 @@ handler.before = async (m, { conn }) => {
 
         s.playerHand.push(p)
 
-        report = `📥 Hai pescato: ${p}`
+        report = `📥 Hai pescato: *${p}*`
 
         if (!puoGiocare(p, s.tableCard, s.currentColor)) {
             report += `\n❌ Non giocabile.`
@@ -298,7 +300,11 @@ handler.before = async (m, { conn }) => {
         let carta = s.playerHand[idx]
 
         if (!puoGiocare(carta, s.tableCard, s.currentColor)) {
-            return m.reply('❌ Carta non valida.')
+            return m.reply(
+`╭━━━〔 ❌ *CARTA NON VALIDA* 〕━━━┈
+┃ Non puoi giocare questa carta.
+╰━━━━━━━━━━━━━━━━━━┈`
+            )
         }
 
         s.playerHand.splice(idx, 1)
@@ -309,7 +315,7 @@ handler.before = async (m, { conn }) => {
             ? s.currentColor
             : carta.split(' ')[0]
 
-        report = `✅ Hai giocato: ${carta}`
+        report = `✅ Hai giocato: *${carta}*`
 
         if (carta.includes('+2')) {
             for (let i = 0; i < 2; i++) {
@@ -334,12 +340,22 @@ handler.before = async (m, { conn }) => {
 
     if (s.playerHand.length === 0) {
         delete unoSession[chat]
-        return m.reply('🏆 Hai vinto!')
+        return m.reply(
+`╭━━━〔 🏆 *VITTORIA!* 〕━━━┈
+┃ Hai finito le carte.
+┃ Complimenti, hai vinto!
+╰━━━━━━━━━━━━━━━━━━┈`
+        )
     }
 
     if (s.botHand.length === 0) {
         delete unoSession[chat]
-        return m.reply('💀 333 BOT ha vinto!')
+        return m.reply(
+`╭━━━〔 💀 *SCONFITTA* 〕━━━┈
+┃ 888 BOT ha finito le carte.
+┃ Hai perso la partita.
+╰━━━━━━━━━━━━━━━━━━┈`
+        )
     }
 
     let img = await generaGrafica(s)
@@ -349,15 +365,19 @@ handler.before = async (m, { conn }) => {
         mimetype: 'image/jpeg',
         fileName: 'uno_update.jpg',
         caption:
-`🃏 *UNO MATCH*
-
+`╭━━━〔 🃏 *UNO MATCH* 〕━━━┈
 ${report}
 
-🎨 Colore attuale: *${s.currentColor}*`
+🎨 Colore attuale: *${s.currentColor}*
+╰━━━━━━━━━━━━━━━━━━┈`
     }, { quoted: m })
 
     await conn.sendMessage(chat, {
-        text: '🎮 Tocca un bottone oppure scrivi il numero della carta',
+        text:
+`╭━━━〔 🎮 *TOCCA A TE* 〕━━━┈
+┃ Premi un bottone oppure
+┃ scrivi il numero della carta.
+╰━━━━━━━━━━━━━━━━━━┈`,
         interactiveButtons: gameButtons()
     }, { quoted: m })
 }

@@ -38,7 +38,7 @@ global.gab = ['573117824583','393297014539','xxxx']
 global.owner = normalizeOwnerList([
   ['393297014539', 'elixir', true],
   ['393331663641', 'Manu', true],              
-  ['xxxx', 'xxxx', true],
+  ['972552671306', 'manux', true],
   ['573117824583', 'Punisher', true],
   ['573180770909', '888bot', true],
   ['212785655331', 'Ghost', true],

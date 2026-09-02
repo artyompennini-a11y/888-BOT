@@ -231,7 +231,7 @@ let methodCode = process.argv.includes("code");
 let MethodMobile = process.argv.includes("mobile");
 let phoneNumber = global.botNumberCode;
 const hasExistingSession = existsSync(`./${global.authFile}/creds.json`);
-let pairingMode = 'qr';
+let pairingMode = methodCodeQR ? 'qr' : methodCode ? 'code' : null;
 let pairingCodeRequested = false;
 let lastConnectionStateLogged = null;
 let successfulConnectionLogged = false;
@@ -426,9 +426,9 @@ const filterStrings = [
   "RXJyb3I6IEJhZCBNQUM=",
   "RGVjcnlwdGVkIG1lc3NhZ2U="
 ];
-// console.info = () => { };
-// console.debug = () => { };
-// ['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings));
+console.info = () => { };
+console.debug = () => { };
+['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings));
 
 const groupMetadataCache = new NodeCache({ stdTTL: 300, checkperiod: 60, maxKeys: -1 });
 global.groupCache = groupMetadataCache;
@@ -497,21 +497,17 @@ const connectionOptions = {
   },
   decodeJid: (jid) => {
     if (!jid) return jid;
-    // Non alterare JID degli utenti
-    if (jid.includes('@s.whatsapp.net')) return jid;
-
-    // Non alterare JID dei gruppi
-    if (jid.includes('@g.us')) return jid;
-
-    // Non alterare LID -> rimuovo mapping automatico
-    if (jid.endsWith('@lid')) return jid;
-
-    // Normalizzazione sicura
-    try {
-      return jidNormalizedUser(jid);
-    } catch {
-      return jid;
+    const cached = global.jidCache.get(jid);
+    if (cached) return cached;
+    let decoded = jid;
+    if (/:\d+@/gi.test(jid)) decoded = jidNormalizedUser(jid);
+    if (typeof decoded === 'object' && decoded.user && decoded.server) decoded = `${decoded.user}@${decoded.server}`;
+    if (typeof decoded === 'string' && decoded.endsWith('@lid')) {
+      const mapped = global.lidCache.get(decoded);
+      decoded = typeof mapped === 'string' && mapped ? mapped : decoded;
     }
+    global.jidCache.set(jid, decoded);
+    return decoded;
   },
   msgRetryCounterCache,
   retryRequestDelayMs: 500,
@@ -560,8 +556,7 @@ async function connectionUpdate(update) {
     logConnectionState('Connessione a WhatsApp in corso...', 'whiteBright');
   }
 
-   if (qr && pairingMode === 'qr') {
-    global.qrGenerated = false; // sempre most
+   if (qr && pairingMode === 'qr' && !global.qrGenerated) {
     console.log(chalk.bold.hex('#8b5cf6')(`
            𝟴𝟴𝟴 𝗕𝗢𝗧                  
         CONNESSIONE QR            
@@ -655,13 +650,15 @@ global.reloadHandler = async function (restatConn) {
     isInit = true
   }
 
-  conn.ev.removeAllListeners('messages.upsert');
-  conn.ev.removeAllListeners('group-participants.update');
-  conn.ev.removeAllListeners('groups.update');
-  conn.ev.removeAllListeners('message.delete');
-  conn.ev.removeAllListeners('call');
-  conn.ev.removeAllListeners('connection.update');
-  conn.ev.removeAllListeners('creds.update');
+  if (!isInit) {
+    conn.ev.off('messages.upsert', conn.handler)
+    conn.ev.off('group-participants.update', conn.participantsUpdate)
+    conn.ev.off('groups.update', conn.groupsUpdate)
+    conn.ev.off('message.delete', conn.onDelete)
+    conn.ev.off('call', conn.onCall)
+    conn.ev.off('connection.update', conn.connectionUpdate)
+    conn.ev.off('creds.update', conn.credsUpdate)
+  }
 
   conn.welcome = '@user benvenuto/a in @subject'
   conn.bye = '@user ha abbandonato il gruppo'

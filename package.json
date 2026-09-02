@@ -1,6 +1,6 @@
 {
   "name": "888-bot",
-  "version": "1.1",
+  "version": "1.0",
   "description": "Il bot whatsapp più richiesto in Italia.",
   "main": "888.js",
   "type": "module",
@@ -26,17 +26,17 @@
     "based",
     "baileys",
     "whatsapp-bot",
-    "888"
+    "333"
   ],
   "directories": {
     "lib": "lib",
     "plugins": "plugins",
-    "888-sub": "888-sub"
+    "333-sub": "333-sub"
   },
   "scripts": {
     "start": "node index.js",
-    "code": "node 888.js code",
-    "qr": "node 888.js qr"
+    "code": "node 333.js code",
+    "qr": "node 333.js qr"
   },
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",
@@ -90,3 +90,4 @@
     "npm": ">=10.9.2"
   }
 }
+

@@ -7,7 +7,7 @@ const handler = async (m, { conn }) => {
       text: `〖 ⚡ 〗 \`Benvenuto in 888‑BOT!\``,
       cards: [
         {
-          image: { url: './media/888bot.jpeg' }, // FILE CORRETTO
+          image: { url: './media/888.jpeg.jpeg' }, // FILE RICHIESTO
           title: `\`by Elixir / Punisher aka 888\``,
           body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*\n\n˗ˏˋ  𝟴𝟴𝟴 𝗕𝗢𝗧  ˎˊ˗`,
           buttons: [

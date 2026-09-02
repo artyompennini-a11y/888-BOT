@@ -163,7 +163,6 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃  ⮕ ${prefix}barzelletta
 ┃  ⮕ ${prefix}saluta
 ┃  ⮕ ${prefix}segreto
-┃  ⮕ ${prefix}bonk
 ╰━━━━━━━━━━━━━━━━━━┈
 > ⚠️ In caso di bug o problemi tecnici,
 > usa *${prefix}segnala*.`.trim();

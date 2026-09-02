@@ -9,8 +9,8 @@ const handler = async (m, { conn }) => {
       footer: ``,
       cards: [
         {
-          image: { url: 'media/menu/888bot.jpeg' }, // Cambia con il tuo file
-          title: `\`by davide aka 888\``,
+          image: { url: 'media/888bot.jpeg' }, // Cambia con il tuo file
+          title: `\`by Elixir/Punisher aka 888\``,
           body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*`,
           footer: '˗ˏˋ  𝟴𝟴𝟴 𝗕𝗢𝗧  ˎˊ˗',
           buttons: [

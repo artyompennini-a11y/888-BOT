@@ -26,12 +26,12 @@
     "based",
     "baileys",
     "whatsapp-bot",
-    "333"
+    "888"
   ],
   "directories": {
     "lib": "lib",
     "plugins": "plugins",
-    "333-sub": "333-sub"
+    "888-sub": "888-sub"
   },
   "scripts": {
     "start": "node index.js",

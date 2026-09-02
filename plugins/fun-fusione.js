@@ -1,4 +1,4 @@
-import * as Jimp from 'jimp';
+import Jimp from 'jimp-compact';
 
 let handler = async (m, { conn }) => {
 
@@ -14,13 +14,15 @@ let handler = async (m, { conn }) => {
   if (!img1 || !img2)
     return m.reply("❌ Errore immagini");
 
+  // LETTURA IMMAGINI CORRETTA
   let a = await Jimp.read(img1);
   let b = await Jimp.read(img2);
 
   a.resize(256, 256);
   b.resize(256, 256);
 
-  let fused = new Jimp.Jimp(256, 256);
+  // CREAZIONE CANVAS CORRETTA
+  let fused = new Jimp(256, 256);
 
   for (let x = 0; x < 256; x++) {
     let ratio = x / 256;
@@ -54,4 +56,3 @@ handler.command = ['fusione'];
 handler.group = true;
 
 export default handler;
-

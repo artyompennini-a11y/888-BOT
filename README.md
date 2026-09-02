@@ -15,7 +15,7 @@
 
 ## 🔗 Official Links
 
-### 🌐 Sito Ufficiale (Bottone Animato)
+### 🌐 Sito Ufficiale
 
 <a href="https://888bot.netlify.app" target="_blank">
   <img src="https://img.shields.io/badge/888BOT-SITO-000000?style=for-the-badge&logo=firefox&logoColor=white" 

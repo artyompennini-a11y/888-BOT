@@ -1,69 +1,156 @@
 //Plugin by Elixir & 888 staff
 import { Chess } from 'chess.js';
 
+
+ 
+   
 let handler = async (m, { conn, usedPrefix, command, text }) => {
   try {
     conn.game = conn.game || {};
 
-    if (Object.values(conn.game).find(room => room.id && room.id.startsWith('chess') && [room.game?.white, room.game?.black].includes(m.sender))) {
+   
+    let already = Object.values(conn.game).find(room =>
+      room.id.startsWith('chess') &&
+      [room.whitePlayer, room.blackPlayer].includes(m.sender)
+    );
+
+    if (already) {
       return m.reply('⚠️ Stai già giocando una partita di scacchi!');
     }
 
     if (!text) {
-      return m.reply(`Uso: ${usedPrefix + command} <nome_partita>\n\nEsempio: ${usedPrefix + command} sfida1`);
+      return m.reply(`Uso corretto:\n${usedPrefix + command} <nome_partita>\n\nEsempio:\n${usedPrefix + command} sfida1`);
     }
 
-    let room = Object.values(conn.game).find(room => room.state === 'WAITING' && room.name === text);
+  
+    let room = Object.values(conn.game).find(room =>
+      room.state === 'WAITING' && room.name === text
+    );
 
+    
+      
+      
     if (room) {
-      await m.reply('♟️ Un giocatore si è unito! Partita iniziata!');
-      room.black = m.chat;
-      room.game.black = m.sender;
+      room.blackChat = m.chat;
+      room.blackPlayer = m.sender;
       room.state = 'PLAYING';
 
-      let str = [
+      let boardMsg = [
         `♟️ *888 BOT - SCACCHI* ♟️`,
-        `━`.repeat(18),
-        `⚪ Bianco: @${room.game.white.split('@')[0]}`,
-        `⚫ Nero: @${room.game.black.split('@')[0]}`,
-        `━`.repeat(18),
-        `🎯 Mossa: ${room.game.turn() === 'w' ? '⚪ Bianco' : '⚫ Nero'}`,
-        `━`.repeat(18),
-        `📌 ${usedPrefix}mossa [mossa] per giocare`,
-        `🚪 ${usedPrefix}esci per abbandonare`
+        `━━━━━━━━━━━━━━━━━━`,
+        `⚪ Bianco: @${room.whitePlayer.split('@')[0]}`,
+        `⚫ Nero: @${room.blackPlayer.split('@')[0]}`,
+        `━━━━━━━━━━━━━━━━━━`,
+        `🎯 Turno: ${room.game.turn() === 'w' ? '⚪ Bianco' : '⚫ Nero'}`,
+        `━━━━━━━━━━━━━━━━━━`,
+        `📌 Usa: ${usedPrefix}mossa <mossa>`,
+        `🚪 Usa: ${usedPrefix}esci per abbandonare`
       ].join('\n');
 
-      await conn.sendMessage(room.white, { text: str, mentions: conn.parseMention(str) }, { quoted: m });
-      await conn.sendMessage(room.black, { text: str, mentions: conn.parseMention(str) }, { quoted: m });
+      await conn.sendMessage(room.whiteChat, {
+        text: boardMsg,
+        mentions: conn.parseMention(boardMsg)
+      });
 
-    } else {
-      room = {
-        id: 'chess-' + Date.now(),
-        white: m.chat,
-        black: '',
-        game: new Chess(),
-        state: 'WAITING',
-        name: text
-      };
+      await conn.sendMessage(room.blackChat, {
+        text: boardMsg,
+        mentions: conn.parseMention(boardMsg)
+      });
 
-      conn.reply(m.chat, [
-        `♟️ *888 BOT - SCACCHI* ♟️`,
-        `━`.repeat(18),
-        `⌛ In attesa di un avversario...`,
-        `━`.repeat(18),
-        `🎯 ${usedPrefix}entra ${text} per partecipare`,
-        `🚪 ${usedPrefix}esci per abbandonare`
-      ].join('\n'), null, m);
-
-      conn.game[room.id] = room;
+      return;
     }
+
+    
+      
+      
+
+    room = {
+      id: 'chess-' + Date.now(),
+      name: text,
+      state: 'WAITING',
+      game: new Chess(),
+
+      whiteChat: m.chat,
+      blackChat: null,
+
+      whitePlayer: m.sender,
+      blackPlayer: null
+    };
+
+    conn.game[room.id] = room;
+
+    let waitMsg = [
+      `♟️ *888 BOT - SCACCHI* ♟️`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `⌛ In attesa di un avversario...`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `🎯 Per entrare: ${usedPrefix}scacchi ${text}`,
+      `🚪 Per abbandonare: ${usedPrefix}esci`
+    ].join('\n');
+
+    return conn.reply(m.chat, waitMsg, null, m);
+
   } catch (err) {
     console.error(err);
-    await m.reply('⛔ Errore durante la creazione della partita.');
+    return m.reply('⛔ Errore durante la creazione della partita.');
   }
 };
 
 handler.command = /^(scacchi|chess)$/i;
 handler.tags = ['fun'];
 
-export default handler;
+
+
+   
+
+let quitHandler = async (m, { conn, usedPrefix }) => {
+  try {
+    conn.game = conn.game || {};
+
+    let roomId = Object.keys(conn.game).find(id => {
+      let room = conn.game[id];
+      if (!room || !room.id.startsWith('chess')) return false;
+
+      let isPlayer = [room.whitePlayer, room.blackPlayer].includes(m.sender);
+      let isChat = [room.whiteChat, room.blackChat].includes(m.chat);
+
+      return isPlayer && isChat;
+    });
+
+    if (!roomId) {
+      return m.reply('⚠️ Non sei in nessuna partita di scacchi in questa chat.');
+    }
+
+    let room = conn.game[roomId];
+
+    let isWhite = room.whitePlayer === m.sender;
+    let color = isWhite ? '⚪ Bianco' : '⚫ Nero';
+
+    let endMsg = [
+      `♟️ *Partita terminata*`,
+      `👋 Il giocatore ${color} ha abbandonato.`,
+      `━━━━━━━━━━━━━━━━━━`,
+      `Per iniziare una nuova partita:`,
+      `${usedPrefix}scacchi <nome>`
+    ].join('\n');
+
+    
+    if (room.whiteChat) {
+      await conn.sendMessage(room.whiteChat, { text: endMsg });
+    }
+    if (room.blackChat && room.blackChat !== room.whiteChat) {
+      await conn.sendMessage(room.blackChat, { text: endMsg });
+    }
+
+    delete conn.game[roomId];
+
+  } catch (err) {
+    console.error(err);
+    return m.reply('⛔ Errore durante l\'uscita dalla partita.');
+  }
+};
+
+quitHandler.command = /^(esci|quit|abbandona)$/i;
+quitHandler.tags = ['fun'];
+
+export { handler as default, quitHandler };

@@ -158,7 +158,6 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 ┃ 🎲 *RANDOM:*
 ┃  ⮕ ${prefix}identita
 ┃  ⮕ ${prefix}telefono
-┃  ⮕ ${prefix}specchio
 ┃  ⮕ ${prefix}fusione
 ┃  ⮕ ${prefix}dox
 ┃  ⮕ ${prefix}zizzania

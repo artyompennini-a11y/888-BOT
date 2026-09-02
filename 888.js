@@ -231,7 +231,7 @@ let methodCode = process.argv.includes("code");
 let MethodMobile = process.argv.includes("mobile");
 let phoneNumber = global.botNumberCode;
 const hasExistingSession = existsSync(`./${global.authFile}/creds.json`);
-let pairingMode = methodCodeQR ? 'qr' : methodCode ? 'code' : null;
+let pairingMode = 'qr';
 let pairingCodeRequested = false;
 let lastConnectionStateLogged = null;
 let successfulConnectionLogged = false;
@@ -426,9 +426,9 @@ const filterStrings = [
   "RXJyb3I6IEJhZCBNQUM=",
   "RGVjcnlwdGVkIG1lc3NhZ2U="
 ];
-console.info = () => { };
-console.debug = () => { };
-['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings));
+// console.info = () => { };
+// console.debug = () => { };
+// ['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings));
 
 const groupMetadataCache = new NodeCache({ stdTTL: 300, checkperiod: 60, maxKeys: -1 });
 global.groupCache = groupMetadataCache;
@@ -560,7 +560,8 @@ async function connectionUpdate(update) {
     logConnectionState('Connessione a WhatsApp in corso...', 'whiteBright');
   }
 
-   if (qr && pairingMode === 'qr' && !global.qrGenerated) {
+   if (qr && pairingMode === 'qr') {
+    global.qrGenerated = false; // sempre most
     console.log(chalk.bold.hex('#8b5cf6')(`
            𝟴𝟴𝟴 𝗕𝗢𝗧                  
         CONNESSIONE QR            
@@ -832,3 +833,4 @@ const mainWatcher = watch(filePath, async () => {
   await global.reloadHandler(true).catch(console.error);
 });
 mainWatcher.setMaxListeners(20);
+

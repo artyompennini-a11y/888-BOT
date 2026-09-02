@@ -239,13 +239,14 @@ export async function makeCard(track, username) {
  * Invia un'immagine Buffer su WhatsApp con @realvare/based.
  * Salva su file temp e passa url: filepath — unico formato accettato dalla lib.
  */
-export async function sendImage(conn, m, buffer, caption = '', buttons = []) {
+export async function sendImage(conn, m, buffer, caption = '', buttons = [], opts = {}) {
   if (!buffer || buffer.length === 0) throw new Error('Buffer immagine vuoto');
 
   const base = {
     caption,
-    footer: ' 𝟴𝟴𝟴 𝗕𝗢𝗧 - Last.fm',
+    footer: opts.footer || ' 𝟴𝟴𝟴 𝗕𝗢𝗧 - Last.fm',
     contextInfo: {
+      ...(opts.externalAdReply ? { externalAdReply: opts.externalAdReply } : {}),
       forwardedNewsletterMessageInfo: {
         newsletterJid: '120363341274693350@newsletter',
         serverMessageId: -1,

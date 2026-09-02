@@ -111,32 +111,49 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
-    // 🔥 LINK YOUTUBE AUTOMATICO
+    // 🔥 LINK DI ASCOLTO (apre la canzone su YouTube, qui trovi anche Spotify)
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
 
-    // 🔘 BOTTONI LIKE + YOUTUBE
+    // 🖼️ Copertina per la card esterna (stile gp-aperto)
+    const albumArt =
+      track.image?.find(i => i.size === 'extralarge')?.['#text'] ||
+      track.image?.find(i => i.size === 'large')?.['#text'] ||
+      'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png';
+
+    // 🎛️ Card esterna immersiva (spunto da gp-aperto.js)
+    const externalAdReply = {
+      title: `${songTitle}`,
+      body: `${artistName} • 🎧 ${user} • 𝟴𝟴𝟴 𝗕𝗢𝗧`,
+      thumbnailUrl: albumArt,
+      sourceUrl: youtubeUrl,
+      mediaType: 1,
+      renderLargerThumbnail: false
+    };
+
+    // 🔘 BOTTONI: ASCLTA + LIKE
     const buttons = [
+      {
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({
+          display_text: '▶️ Ascolta su YouTube',
+          url: youtubeUrl
+        })
+      },
       {
         buttonId: `.fuoco ${m.sender}`,
         buttonText: { displayText: '🔥 Like / Fuoco' },
         type: 1
-      },
-      {
-        name: 'cta_url',
-        buttonParamsJson: JSON.stringify({
-          display_text: '▶️ Apri su YouTube',
-          url: youtubeUrl
-        })
       }
     ];
 
     const caption =
-      `🎵 *Se vuoi farlo anche tu, registrati su Last.fm, collega Spotify e usa /setuser*\n\n` +
-      `🎵 In ascolto: *${songTitle}*\n` +
-      `👤 Artista: *${artistName}*`;
+      `🎶 *In ascolto:* ${songTitle}\n` +
+      `👤 *Artista:* ${artistName}\n\n` +
+      `💬 *Vuoi la tua card?* Registrati su Last.fm, collega Spotify e usa \`${usedPrefix}setuser <username>\`\n\n` +
+      `🎵 *Piacci la traccia? Spaccati un 🔥 Like / Fuoco* senza pietà!`;
 
     try {
-      await sendImage(conn, m, imageBuffer, caption, buttons);
+      await sendImage(conn, m, imageBuffer, caption, buttons, { externalAdReply });
     } catch (err) {
       await conn.sendMessage(m.chat, {
         image: imageBuffer,

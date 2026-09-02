@@ -1,4 +1,4 @@
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';
 
 let handler = async (m, { conn }) => {
 
@@ -20,8 +20,7 @@ let handler = async (m, { conn }) => {
   a.resize(256, 256);
   b.resize(256, 256);
 
-  // canvas vuoto
-  let fused = new Jimp(256, 256);
+  let fused = new Jimp.Jimp(256, 256);
 
   for (let x = 0; x < 256; x++) {
     let ratio = x / 256;
@@ -44,24 +43,9 @@ let handler = async (m, { conn }) => {
 
   let buffer = await fused.getBufferAsync(Jimp.MIME_PNG);
 
-  let frasi = [
-    "🧬 questo è il vostro figlio… chiedete scusa",
-    "👶 sembra umano ma non garantisco",
-    "💀 genetica: discutibile ma funzionante",
-    "😂 è uscito meglio del previsto… purtroppo",
-    "🧠 il cervello ha provato",
-    "🫠 fusione riuscita, dignità no",
-    "👀 inquietante ma realistico",
-    "📉 downgrade genetico leggero",
-    "🧪 esperimento quasi riuscito",
-    "🤡 sembra un filtro ma è reale"
-  ];
-
-  let frase = frasi[Math.floor(Math.random() * frasi.length)];
-
   await conn.sendMessage(m.chat, {
     image: buffer,
-    caption: `🧬 *FUSIONE REALE*\n\n@${u1.split('@')[0]} + @${u2.split('@')[0]}\n\n${frase}`,
+    caption: `🧬 *FUSIONE REALE*`,
     mentions: [u1, u2]
   });
 };
@@ -70,3 +54,4 @@ handler.command = ['fusione'];
 handler.group = true;
 
 export default handler;
+

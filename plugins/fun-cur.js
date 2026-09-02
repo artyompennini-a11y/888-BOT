@@ -63,6 +63,44 @@ async function getTopArtists(username) {
   }
 }
 
+/**
+ * Dettagli globali del brano (quante volte è stato ascoltato, da chi e da te).
+ */
+async function getTrackInfo(artist, track, username) {
+  try {
+    const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&username=${encodeURIComponent(username || '')}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.track || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Statistiche globali dell'artista (ascoltatori mensili + ascolti totali).
+ */
+async function getArtistInfo(artist) {
+  try {
+    const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artist)}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.artist || null;
+  } catch {
+    return null;
+  }
+}
+
+// Formatta i numeroni in maniera leggibile (1.2M, 340k, 567)
+const formatCount = (n) => {
+  const num = parseInt(n, 10) || 0;
+  if (num >= 1e6) return `${(num / 1e6).toFixed(num >= 1e7 ? 0 : 1)}M`;
+  if (num >= 1e3) return `${(num / 1e3).toFixed(num >= 1e5 ? 0 : 1)}k`;
+  return String(num);
+};
+
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
   // COMANDO: SETUSER
@@ -111,10 +149,23 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
-    // 🔥 LINK DI ASCOLTO (apre la canzone su YouTube, qui trovi anche Spotify)
+    // 🌐 Link di ascolto su YouTube e Spotify
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
+    const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}`;
 
-    // 🖼️ Copertina per la card esterna (stile gp-aperto)
+    // 📊 Statistiche di ascolto (Last.fm)
+    const [trackInfo, artistInfo] = await Promise.all([
+      getTrackInfo(artistName, songTitle, user),
+      getArtistInfo(artistName)
+    ]);
+
+    const playCount      = trackInfo?.playcount      || 0; // quante volte è stata ascoltata la canzone
+    const listeners      = trackInfo?.listeners      || 0; // da quante persone
+    const userPlayCount  = trackInfo?.userplaycount  || 0; // quante volte la ascolti tu
+    const artListeners   = artistInfo?.stats?.listeners  || 0; // ascoltatori mensili dell'artista
+    const artPlaycount   = artistInfo?.stats?.playcount  || 0; // ascolti totali dell'artista
+
+    // 🖼️ Copertina dell'album per la preview esterna
     const albumArt =
       track.image?.find(i => i.size === 'extralarge')?.['#text'] ||
       track.image?.find(i => i.size === 'large')?.['#text'] ||
@@ -122,43 +173,52 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
     // 🎛️ Card esterna immersiva (spunto da gp-aperto.js)
     const externalAdReply = {
-      title: `${songTitle}`,
+      title: songTitle,
       body: `${artistName} • 🎧 ${user} • 𝟴𝟴𝟴 𝗕𝗢𝗧`,
       thumbnailUrl: albumArt,
       sourceUrl: youtubeUrl,
       mediaType: 1,
-      renderLargerThumbnail: false
+      renderLargerThumbnail: true
     };
 
-    // 🔘 BOTTONI: ASCLTA + LIKE
-    const buttons = [
-      {
-        name: 'cta_url',
-        buttonParamsJson: JSON.stringify({
-          display_text: '▶️ Ascolta su YouTube',
-          url: youtubeUrl
-        })
-      },
-      {
-        buttonId: `.fuoco ${m.sender}`,
-        buttonText: { displayText: '🔥 Like / Fuoco' },
-        type: 1
-      }
-    ];
+    const caption = [
+      `🎧 *Now Playing* • ${user}`,
+      '',
+      `🎵 *Brano:* ${songTitle}`,
+      `👤 *Artista:* ${artistName}`,
+      '',
+      `╭─ 📊 *Quanto è ascoltata* ─╮`,
+      `│ 🔥 ${formatCount(playCount)} ascolti totali`,
+      `│ 👥 ${formatCount(listeners)} ascoltatori`,
+      `│ 🎤 ${formatCount(artListeners)} ascoltatori/mese per ${artistName}`,
+      `│ 💿 ${formatCount(artPlaycount)} ascolti in carriera dell'artista`,
+      `│ 💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte`,
+      `╰──────────────────────╯`,
+      '',
+      `💬 Collegala a Last.fm e usa ` + '`' + `${usedPrefix}setuser <username>` + '`' + ` per la tua!`,
+      `🎬 *Premi un pulsante qui sotto per ascoltarla o dargli fuoco 🔥*`
+    ].join('\n');
 
-    const caption =
-      `🎶 *In ascolto:* ${songTitle}\n` +
-      `👤 *Artista:* ${artistName}\n\n` +
-      `💬 *Vuoi la tua card?* Registrati su Last.fm, collega Spotify e usa \`${usedPrefix}setuser <username>\`\n\n` +
-      `🎵 *Piacci la traccia? Spaccati un 🔥 Like / Fuoco* senza pietà!`;
+    // 🔘 Pulsanti native: QUICK_REPLY (Like) + CTA_URL (YouTube/Spotify)
+    const buttons = [['🔥 Like / Fuoco', `.fuoco ${m.sender}`]];
+    const urls = [
+      ['▶️ Ascolta su YouTube', youtubeUrl],
+      ['🎧 Ascolta su Spotify', spotifyUrl]
+    ];
+    const footer = ' 𝟴𝟴𝟴 𝗕𝗢𝗧 - Now Playing';
 
     try {
-      await sendImage(conn, m, imageBuffer, caption, buttons, { externalAdReply });
+      await conn.sendNCarousel(m.chat, caption, footer, imageBuffer, buttons, null, urls, null, m);
     } catch (err) {
-      await conn.sendMessage(m.chat, {
-        image: imageBuffer,
-        caption: caption
-      }, { quoted: m });
+      console.error('[cur] sendNCarousel fallito, mando immagine semplice:', err.message);
+      try {
+        await sendImage(conn, m, imageBuffer, caption, [], { externalAdReply });
+      } catch (err2) {
+        await conn.sendMessage(m.chat, {
+          image: imageBuffer,
+          caption: caption
+        }, { quoted: m });
+      }
     }
     return;
   }

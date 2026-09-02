@@ -1,8 +1,12 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Elixir, Punisher & 888 staff
 
 const travaWarnings = {}
 
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
+
+  // --- Bypass totale se il bot è il mittente ---
+  if (m.fromMe) return true
+
   if (m.isBaileys && m.fromMe) return true
   if (!m.isGroup) return true
 
@@ -65,3 +69,4 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
   return false
 }
+

@@ -35,8 +35,8 @@
   },
   "scripts": {
     "start": "node index.js",
-    "code": "node 333.js code",
-    "qr": "node 333.js qr"
+    "code": "node 888.js code",
+    "qr": "node 888.js qr"
   },
   "dependencies": {
     "@adiwajshing/keyed-db": "^0.2.4",

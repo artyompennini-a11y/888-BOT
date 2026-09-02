@@ -1,6 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
-
-import Jimp from 'jimp';
+import * as Jimp from 'jimp';
 
 let handler = async (m, { args, conn, command }) => {
   const numeroAutorizzato = '393882471151@s.whatsapp.net';
@@ -57,10 +55,10 @@ handler.owner = true;
 export default handler;
 
 async function pepe(media) {
-  const jimp_1 = await Jimp.read(media);
-  const min = jimp_1.getWidth();
-  const max = jimp_1.getHeight();
-  const cropped = jimp_1.crop(0, 0, min, max);
+  const j = await Jimp.read(media);
+  const min = j.getWidth();
+  const max = j.getHeight();
+  const cropped = j.crop(0, 0, min, max);
   return {
     img: await cropped.scaleToFit(720, 720).getBufferAsync(Jimp.MIME_JPEG),
     preview: await cropped.normalize().getBufferAsync(Jimp.MIME_JPEG)

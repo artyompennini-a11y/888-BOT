@@ -8,8 +8,8 @@ const handler = async (m, { conn }) => {
       cards: [
         {
           image: { url: './media/888.jpeg.jpeg' }, // FILE RICHIESTO
-          title: `\`by Elixir / Punisher aka 888\``,
-          body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*\n\n˗ˏˋ  𝟴𝟴𝟴 𝗕𝗢𝗧  ˎˊ˗`,
+          title: `\`by Elixir / Punisher and 888 Staff\``,
+          body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*\n\n˗ˏ 𝟴𝟴𝟴 𝗕𝗢𝗧,
           buttons: [
             {
               name: 'cta_url',

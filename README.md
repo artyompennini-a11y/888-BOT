@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌙 888-BOT  
+# 🌙 888‑BOT  
 ### ⚫ Next Generation WhatsApp Bot  
 #### Minimal • Dark • Ultra Fast
 
@@ -8,30 +8,17 @@
 
 ---
 
-### ⚡ Powered by AI • Built for Speed  
+## ⚡ Powered by AI • Built for Speed  
 **JavaScript • Node.js • Python**
 
 ---
 
-## 🔗 Official Links
+# 🔗 Official Links
 
 ### 🌐 Sito Ufficiale
-
 <a href="https://888bot.netlify.app" target="_blank">
-  <img src="https://img.shields.io/badge/888BOT-SITO-000000?style=for-the-badge&logo=firefox&logoColor=white" 
-       alt="Sito 888BOT"
-       style="
-         border-radius: 10px;
-         animation: glow 1.4s infinite alternate;
-       ">
+  <img src="https://img.shields.io/badge/🌐_Sito_888BOT-000000?style=for-the-badge&logo=firefox&logoColor=white" alt="Sito 888BOT">
 </a>
-
-<style>
-@keyframes glow {
-  from { filter: drop-shadow(0 0 2px #ffffff); }
-  to   { filter: drop-shadow(0 0 10px #ffffff); }
-}
-</style>
 
 ---
 
@@ -41,19 +28,43 @@
 
 ---
 
-### 🖤 Dark Badges
+# 🖤 Dark Badges
 
-![Dark](https://img.shields.io/badge/Theme-Dark-000000?style=for-the-badge)
+![Dark](https://img.shields.io/badge/Theme-Dark-000?style=for-the-badge)
 ![Open Source](https://img.shields.io/badge/Open_Source-❤️-111?style=for-the-badge)
 ![Maintained](https://img.shields.io/badge/Maintained-Yes-222?style=for-the-badge)
 ![Ultra Fast](https://img.shields.io/badge/Speed-Ultra_Fast-000?style=for-the-badge)
 ![AI Powered](https://img.shields.io/badge/AI-Powered-222?style=for-the-badge)
-
-</div>
+![Termux Ready](https://img.shields.io/badge/Termux-Ready-333?style=for-the-badge)
+![Multi Device](https://img.shields.io/badge/WhatsApp-MD-000?style=for-the-badge)
 
 ---
 
-# 🖤 ITALIANO — Installazione Rapida
+# 🛡️ 888‑BOT FEATURES
+
+### 🚀 Performance
+- Avvio immediato  
+- Risposte ultra‑ottimizzate  
+- Zero lag anche con molti utenti  
+
+### 🧠 Intelligenza
+- Sistema AI integrato  
+- Comandi dinamici  
+- Risposte contestuali  
+
+### 🔒 Sicurezza
+- Anti‑crash  
+- Gestione errori avanzata  
+- Compatibile con WhatsApp Multi‑Device  
+
+### 🎨 Grafica Dark Premium
+- Layout minimal  
+- Badge personalizzati  
+- Icone dark mode  
+
+---
+
+# 🖤 Installazione Rapida (ITALIANO)
 
 ## 📋 Prerequisiti
 - Android 7.0+

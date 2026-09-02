@@ -16,7 +16,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     },
     message: {
       locationMessage: {
-        name: '🤖 888 BOT • Sginal Control',
+        name: '🤖 888 BOT • Signal Control',
         jpegThumbnail: imgBuffer.toString('base64'),
         vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;333;;;\nFN:333\nEND:VCARD'
       }

@@ -4,15 +4,12 @@ const handler = async (m, { conn }) => {
   await conn.sendMessage(
     jid,
     {
-      text: `〖 ⚡ 〗 \`Benvenuto in 888-BOT!\``,
-      title: '',
-      footer: ``,
+      text: `〖 ⚡ 〗 \`Benvenuto in 888‑BOT!\``,
       cards: [
         {
-          image: { url: 'media/888bot.jpeg.jfil' }, // Cambia con il tuo file
-          title: `\`by Elixir/Punisher aka 888\``,
-          body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*`,
-          footer: '˗ˏˋ  𝟴𝟴𝟴 𝗕𝗢𝗧  ˎˊ˗',
+          image: { url: './media/888bot.jpeg' }, // FILE CORRETTO
+          title: `\`by Elixir / Punisher aka 888\``,
+          body: `〖 🤖 〗 *Sistema modulare avanzato*\n〖 🚀 〗 *Prestazioni e stabilità al top*\n\n˗ˏˋ  𝟴𝟴𝟴 𝗕𝗢𝗧  ˎˊ˗`,
           buttons: [
             {
               name: 'cta_url',
@@ -46,7 +43,7 @@ const handler = async (m, { conn }) => {
               name: 'cta_url',
               buttonParamsJson: JSON.stringify({
                 display_text: '📧 Email',
-                url: 'elixir888project@outlook.it'
+                url: 'mailto:elixir888project@outlook.it'
               })
             }
           ]

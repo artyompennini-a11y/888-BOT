@@ -8,7 +8,7 @@
 
 ---
 
-## ⚡ Powered by AI • Built for Speed  
+## ⚡ Built for Speed  
 **JavaScript • Node.js • Python**
 
 ---

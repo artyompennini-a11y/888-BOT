@@ -27,7 +27,7 @@ import NodeCache from 'node-cache';
 
 const authFolder = global.authFile || '888BotSession';
 global.authFile = authFolder;
-global.authFileJB = global.authFileJB || '333bot-sub';
+global.authFileJB = global.authFileJB || '888bot-sub';
 global.rcanal = '120363341274693350@newsletter';
 const sessionFolder = path.join(process.cwd(), authFolder);
 const tempDir = join(process.cwd(), 'temp');

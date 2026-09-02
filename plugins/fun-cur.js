@@ -5,14 +5,15 @@ import { makeCard, sendImage } from './lastfm-card.js';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
-// Inizializzazione sicura del database separando utenti e mi piace
-let db = { users: {}, likes: {} };
+// Inizializzazione sicura del database separando utenti, fuoco e preferiti
+let db = { users: {}, likes: {}, favorites: {} };
 if (fs.existsSync(DB_PATH)) {
   try {
     const fileData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     db = {
       users: fileData.users || {},
-      likes: fileData.likes || {}
+      likes: fileData.likes || {},
+      favorites: fileData.favorites || {}
     };
   } catch (e) {
     console.error('Errore nel caricamento del database Last.fm, resetto...', e);
@@ -34,6 +35,20 @@ const addSongLike = (songId, sender) => {
   saveDB();
   return { alreadyLiked: false };
 };
+
+// ❤️ PREFERITI: aggiunge una canzone ai preferiti dell'utente
+const addFavorite = (userId, artist, song) => {
+  if (!db.favorites[userId]) db.favorites[userId] = [];
+  const dup = db.favorites[userId].some(
+    (f) => f.artist.toLowerCase() === artist.toLowerCase() && f.song.toLowerCase() === song.toLowerCase()
+  );
+  if (dup) return { alreadyFav: true };
+  db.favorites[userId].push({ artist, song, at: Date.now() });
+  saveDB();
+  return { alreadyFav: false };
+};
+
+const getFavorites = (userId) => db.favorites[userId] || [];
 
 const getUsernameFromId = (id) => db.users[id] || id;
 
@@ -199,8 +214,11 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       `🎬 *Premi un pulsante qui sotto per ascoltarla o dargli fuoco 🔥*`
     ].join('\n');
 
-    // 🔘 Pulsanti native: QUICK_REPLY (Like) + CTA_URL (YouTube/Spotify)
-    const buttons = [['🔥 Like / Fuoco', `.fuoco ${m.sender}`]];
+    // 🔘 Pulsanti native: QUICK_REPLY (Like ❤️ + Fuoco 🔥) + CTA_URL (YouTube/Spotify)
+    const buttons = [
+      ['❤️ Metti nei preferiti', `.like ${m.sender}`],
+      ['🔥 Fuoco (non mi piace)', `.fuoco ${m.sender}`]
+    ];
     const urls = [
       ['▶️ Ascolta su YouTube', youtubeUrl],
       ['🎧 Ascolta su Spotify', spotifyUrl]
@@ -244,8 +262,55 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-  // COMANDO: FUOCO / LIKE
-  if (command === 'fuoco' || command === 'like') {
+  // COMANDO: LIKE ❤️ — mette la canzone nei TUOI preferiti
+  if (command === 'like') {
+    let targetUserId =
+      m.quoted && !m.quoted.fromMe
+        ? m.quoted.sender
+        : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null);
+
+    if (!targetUserId && args[0]) {
+      const parsedArg = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+      if (db.users[parsedArg]) {
+        targetUserId = parsedArg;
+      }
+    }
+
+    // Di default salvi la canzone che stai ascoltando tu
+    targetUserId = targetUserId || m.sender;
+
+    const targetUsername = db.users[targetUserId];
+    if (!targetUsername) {
+      return conn.sendMessage(m.chat, {
+        text: '❌ Quell\'utente non ha ancora registrato un account Last.fm.'
+      }, { quoted: m });
+    }
+
+    const track = await getRecentTrack(targetUsername);
+    if (!track) {
+      return conn.sendMessage(m.chat, {
+        text: '❌ Impossibile recuperare l\'ultimo brano dell\'utente.'
+      }, { quoted: m });
+    }
+
+    const artist = track.artist?.['#text'] || 'Unknown';
+    const songName = track.name || 'Unknown';
+
+    const result = addFavorite(m.sender, artist, songName);
+
+    if (result.alreadyFav) {
+      return conn.sendMessage(m.chat, {
+        text: `❤️ *${songName}* di *${artist}* è già tra i tuoi preferiti!`
+      }, { quoted: m });
+    }
+
+    return conn.sendMessage(m.chat, {
+      text: `❤️ Aggiunto *${songName}* di *${artist}* ai tuoi preferiti!\n📋 Guardali con ${usedPrefix}curlike`
+    }, { quoted: m });
+  }
+
+  // COMANDO: FUOCO 🔥 — SOLO gli altri possono dare fuoco alla musica (non mi piace)
+  if (command === 'fuoco') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe
         ? m.quoted.sender

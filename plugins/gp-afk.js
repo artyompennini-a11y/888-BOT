@@ -1,4 +1,3 @@
-// AFK con Timer + Anti-Tag — Premium Edition (NO FOTO)
 // by Elixir, Punisher & 888 Staff
 
 import fs from 'fs'
@@ -40,38 +39,54 @@ function formatAFK(ms) {
 }
 
 let handler = m => m
+// Consenti l'uso anche quando 'modoadmin' (Solo admin) è attivo nel gruppo
+handler.modoadminBypass = true
 
 handler.all = async function (m) {
 
-    // 🔥 LETTURA CORRETTA DEI PULSANTI BAILEYS
-    const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
-
-    // 🔥 QUESTA RIGA È LA CHIAVE
-    if (!m.text && !btn) return
     if (m.fromMe) return
     if (!m.isGroup) return
 
     const sender = m.sender
-    const body = (m.text || "").trim().toLowerCase()
+    const rawBody = (m.text || "").trim()
 
-    // 🔹 Se l’utente è AFK e scrive → disattiva AFK
-    if (afkData[sender] && !body.startsWith('.afk') && !btn) {
-        const { since, reason } = afkData[sender]
-        const readable = formatAFK(Date.now() - since)
+    // 🔥 Il pulsante può arrivare come buttonsResponseMessage NATIVO...
+    const nativeBtn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
-        delete afkData[sender]
+    // ...oppure, in questo framework, viene rinviato come messaggio di testo
+    // sintetico in cui m.text = ID del pulsante (es. ".afk_all motivo").
+    const isBtn = !!nativeBtn
+        ? String(nativeBtn).trim().startsWith('.afk')
+        : /^\.afk_(here|all)(\s|$)/i.test(rawBody)
+
+    const btnBody = isBtn
+        ? (nativeBtn ? String(nativeBtn).trim() : rawBody)
+        : ''
+
+    // 1️⃣ Pulsante: AFK solo in questo gruppo / in TUTTI i gruppi
+    if (isBtn && btnBody) {
+        const isGlobal = /^\.afk_all/i.test(btnBody)
+        const reason = btnBody.replace(/^\.afk_(here|all)/i, '').trim() || 'Nessun motivo specificato'
+
+        afkData[sender] = {
+            reason,
+            since: Date.now(),
+            onlyGroup: isGlobal ? null : m.chat
+        }
         saveAfkData()
 
-        await this.sendMessage(m.chat, {
-            text: `👋 *Bentornato!* Hai disattivato l'AFK.\n⏱️ AFK per *${readable}*\n📝 Motivo: ${reason}`
-        }, { quoted: m })
+        const msg = isGlobal
+            ? `🌐 *AFK attivato in TUTTI i gruppi!*\n📝 Motivo: ${reason}`
+            : `📍 *AFK attivato SOLO in questo gruppo!*\n📝 Motivo: ${reason}`
 
+        await this.sendMessage(m.chat, { text: msg }, { quoted: m })
         return
     }
 
-    // 🔹 Comando AFK → mostra i pulsanti
-    if (body.startsWith('.afk')) {
-        let reason = m.text.slice(4).trim()
+    // 2️⃣ Comando .afk → mostra i pulsanti di scelta
+    const isAfkCmd = /^\.afk(\s|$)/i.test(rawBody)
+    if (isAfkCmd) {
+        let reason = rawBody.replace(/^\.afk/i, '').trim()
         if (!reason) reason = 'Nessun motivo specificato'
 
         await this.sendMessage(m.chat, {
@@ -86,43 +101,22 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Pulsante: AFK solo nel gruppo
-    if (btn && btn.startsWith('.afk_here')) {
-        const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
+    // 3️⃣ Se l'utente è AFK e scrive un messaggio normale → disattiva AFK
+    if (afkData[sender] && !rawBody.startsWith('.') && !isBtn) {
+        const { since, reason } = afkData[sender]
+        const readable = formatAFK(Date.now() - since)
 
-        afkData[sender] = {
-            reason,
-            since: Date.now(),
-            onlyGroup: m.chat
-        }
+        delete afkData[sender]
         saveAfkData()
 
         await this.sendMessage(m.chat, {
-            text: `📍 *AFK attivato SOLO in questo gruppo!*\n📝 Motivo: ${reason}`
+            text: `👋 *Bentornato!* Hai disattivato l'AFK.\n⏱️ AFK per *${readable}*\n📝 Motivo: ${reason}`
         }, { quoted: m })
 
         return
     }
 
-    // 🔹 Pulsante: AFK globale
-    if (btn && btn.startsWith('.afk_all')) {
-        const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
-
-        afkData[sender] = {
-            reason,
-            since: Date.now(),
-            onlyGroup: null
-        }
-        saveAfkData()
-
-        await this.sendMessage(m.chat, {
-            text: `🌐 *AFK attivato in TUTTI i gruppi!*\n📝 Motivo: ${reason}`
-        }, { quoted: m })
-
-        return
-    }
-
-    // 🔹 Tag AFK → Timer + Anti-tag (NO FOTO)
+    // 4️⃣ Tag AFK → Timer + Anti-tag (NO FOTO)
     const mentioned = m.mentionedJid || []
     if (mentioned.length > 0) {
         for (const jid of mentioned) {
@@ -148,6 +142,3 @@ handler.all = async function (m) {
 }
 
 export default handler
-
-
-

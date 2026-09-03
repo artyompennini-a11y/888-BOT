@@ -36,12 +36,7 @@ function formatAFK(ms) {
     const sec = Math.floor(ms / 1000)
     const min = Math.floor(sec / 60)
     const hrs = Math.floor(min / 60)
-
-    const s = sec % 60
-    const m = min % 60
-    const h = hrs
-
-    return `${h}h ${m}m ${s}s`
+    return `${hrs}h ${min % 60}m ${sec % 60}s`
 }
 
 let handler = m => m
@@ -51,7 +46,7 @@ handler.all = async function (m) {
     // 🔥 LETTURA CORRETTA DEI PULSANTI BAILEYS
     const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
-    // 🔥 NON bloccare i pulsanti
+    // 🔥 QUESTA RIGA È LA CHIAVE
     if (!m.text && !btn) return
     if (m.fromMe) return
     if (!m.isGroup) return
@@ -62,8 +57,7 @@ handler.all = async function (m) {
     // 🔹 Se l’utente è AFK e scrive → disattiva AFK
     if (afkData[sender] && !body.startsWith('.afk') && !btn) {
         const { since, reason } = afkData[sender]
-        const ms = Date.now() - since
-        const readable = formatAFK(ms)
+        const readable = formatAFK(Date.now() - since)
 
         delete afkData[sender]
         saveAfkData()
@@ -83,8 +77,8 @@ handler.all = async function (m) {
         await this.sendMessage(m.chat, {
             text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}`,
             buttons: [
-                { buttonId: `.qui_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
-                { buttonId: `.ovunque_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
+                { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
+                { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
             ],
             headerType: 1
         }, { quoted: m })
@@ -93,8 +87,8 @@ handler.all = async function (m) {
     }
 
     // 🔹 Pulsante: AFK solo nel gruppo
-    if (btn && btn.startsWith('.qui_here')) {
-        const reason = btn.replace('.qui_here', '').trim() || 'Nessun motivo specificato'
+    if (btn && btn.startsWith('.afk_here')) {
+        const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,
@@ -111,8 +105,8 @@ handler.all = async function (m) {
     }
 
     // 🔹 Pulsante: AFK globale
-    if (btn && btn.startsWith('.ovunque_all')) {
-        const reason = btn.replace('.ovunque_all', '').trim() || 'Nessun motivo specificato'
+    if (btn && btn.startsWith('.afk_all')) {
+        const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,
@@ -134,21 +128,15 @@ handler.all = async function (m) {
         for (const jid of mentioned) {
             if (afkData[jid] && jid !== sender) {
 
-                // AFK solo in un gruppo → ignora se non è questo
                 if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
 
                 const now = Date.now()
 
-                // Anti-tag: evita spam
-                if (antiSpam[jid] && now - antiSpam[jid] < 10000) {
-                    return
-                }
-
+                if (antiSpam[jid] && now - antiSpam[jid] < 10000) return
                 antiSpam[jid] = now
 
                 const { reason, since } = afkData[jid]
-                const ms = now - since
-                const readable = formatAFK(ms)
+                const readable = formatAFK(now - since)
                 const name = await this.getName(jid)
 
                 await this.sendMessage(m.chat, {
@@ -160,5 +148,6 @@ handler.all = async function (m) {
 }
 
 export default handler
+
 
 

@@ -1,4 +1,5 @@
-// by Elixir, Punisher & 888 Staff — AFK System Premium
+// AFK con Timer + Anti-Tag + Scelta tramite Tasti — Premium Edition
+// by Elixir, Punisher & 888 Staff
 
 import fs from 'fs'
 import path from 'path'
@@ -35,21 +36,24 @@ function formatAFK(ms) {
     const sec = Math.floor(ms / 1000)
     const min = Math.floor(sec / 60)
     const hrs = Math.floor(min / 60)
-
     return `${hrs}h ${min % 60}m ${sec % 60}s`
 }
 
 let handler = m => m
 
 handler.all = async function (m) {
-    if (!m.text || m.fromMe) return
+    if (!m.text && !m?.message?.buttonsResponseMessage) return
+    if (m.fromMe) return
     if (!m.isGroup) return
 
     const sender = m.sender
-    const body = m.text.trim().toLowerCase()
+    const body = (m.text || "").trim().toLowerCase()
+
+    // 🔹 Rileva pulsanti Baileys
+    const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
     // 🔹 Se l’utente è AFK e scrive → disattiva AFK
-    if (afkData[sender] && !body.startsWith('.afk')) {
+    if (afkData[sender] && !body.startsWith('.afk') && !btn) {
         const { since, reason } = afkData[sender]
         const readable = formatAFK(Date.now() - since)
 
@@ -63,7 +67,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Comando AFK → scelta gruppo / globale
+    // 🔹 Comando AFK → mostra i pulsanti
     if (body.startsWith('.afk')) {
         const reason = m.text.slice(4).trim() || 'Nessun motivo specificato'
 
@@ -79,9 +83,9 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 AFK solo nel gruppo attuale
-    if (m.text.startsWith('.afk_here')) {
-        const reason = m.text.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
+    // 🔹 Pulsante: AFK solo nel gruppo
+    if (btn && btn.startsWith('.afk_here')) {
+        const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,
@@ -97,9 +101,9 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 AFK globale
-    if (m.text.startsWith('.afk_all')) {
-        const reason = m.text.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
+    // 🔹 Pulsante: AFK globale
+    if (btn && btn.startsWith('.afk_all')) {
+        const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,

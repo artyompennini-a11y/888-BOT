@@ -83,8 +83,8 @@ handler.all = async function (m) {
         await this.sendMessage(m.chat, {
             text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}`,
             buttons: [
-                { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
-                { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
+                { buttonId: `.qui_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
+                { buttonId: `.ovunque_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
             ],
             headerType: 1
         }, { quoted: m })
@@ -93,8 +93,8 @@ handler.all = async function (m) {
     }
 
     // 🔹 Pulsante: AFK solo nel gruppo
-    if (btn && btn.startsWith('.afk_here')) {
-        const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
+    if (btn && btn.startsWith('.qui_here')) {
+        const reason = btn.replace('.qui_here', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,
@@ -111,8 +111,8 @@ handler.all = async function (m) {
     }
 
     // 🔹 Pulsante: AFK globale
-    if (btn && btn.startsWith('.afk_all')) {
-        const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
+    if (btn && btn.startsWith('.ovunque_all')) {
+        const reason = btn.replace('.ovunque_all', '').trim() || 'Nessun motivo specificato'
 
         afkData[sender] = {
             reason,

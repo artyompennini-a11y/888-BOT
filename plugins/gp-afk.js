@@ -1,6 +1,3 @@
-// AFK con Timer + Anti-Tag + Scelta tramite Tasti — Premium Edition
-// by Elixir, Punisher & 888 Staff
-
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -42,15 +39,16 @@ function formatAFK(ms) {
 let handler = m => m
 
 handler.all = async function (m) {
-    if (!m.text && !m?.message?.buttonsResponseMessage) return
+
+    // 🔥 LETTURA CORRETTA DEI PULSANTI
+    const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
+
+    if (!m.text && !btn) return
     if (m.fromMe) return
     if (!m.isGroup) return
 
     const sender = m.sender
     const body = (m.text || "").trim().toLowerCase()
-
-    // 🔹 Rileva pulsanti Baileys
-    const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
     // 🔹 Se l’utente è AFK e scrive → disattiva AFK
     if (afkData[sender] && !body.startsWith('.afk') && !btn) {
@@ -67,7 +65,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Comando AFK → mostra i pulsanti
+    // 🔹 Comando AFK → scelta gruppo / globale
     if (body.startsWith('.afk')) {
         const reason = m.text.slice(4).trim() || 'Nessun motivo specificato'
 
@@ -83,7 +81,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Pulsante: AFK solo nel gruppo
+    // 🔹 AFK solo nel gruppo attuale (FUNZIONANTE)
     if (btn && btn.startsWith('.afk_here')) {
         const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
 
@@ -101,7 +99,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Pulsante: AFK globale
+    // 🔹 AFK globale (FUNZIONANTE)
     if (btn && btn.startsWith('.afk_all')) {
         const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
 
@@ -125,12 +123,10 @@ handler.all = async function (m) {
         for (const jid of mentioned) {
             if (!afkData[jid] || jid === sender) continue
 
-            // AFK solo in un gruppo → ignora se non è questo
             if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
 
             const now = Date.now()
 
-            // Anti‑spam 10s
             if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
             antiSpam[jid] = now
 
@@ -146,3 +142,4 @@ handler.all = async function (m) {
 }
 
 export default handler
+

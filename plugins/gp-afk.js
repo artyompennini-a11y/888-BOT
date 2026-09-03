@@ -1,4 +1,3 @@
-// AFK con Timer + Anti-Tag — Premium Edition (NO FOTO)
 // by Elixir, Punisher & 888 Staff
 
 import fs from 'fs'
@@ -9,9 +8,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
 
 let afkData = {}
-let antiSpam = {}   // Anti-tag cache
+let antiSpam = {}   
 
-// Carica dati AFK
+
 function loadAfkData() {
     try {
         if (fs.existsSync(AFK_FILE)) {
@@ -25,7 +24,7 @@ function loadAfkData() {
     }
 }
 
-// Salva dati AFK
+
 function saveAfkData() {
     try {
         fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2), 'utf8')
@@ -36,7 +35,7 @@ function saveAfkData() {
 
 loadAfkData()
 
-// Timer leggibile
+
 function formatAFK(ms) {
     const sec = Math.floor(ms / 1000)
     const min = Math.floor(sec / 60)
@@ -58,7 +57,7 @@ handler.all = async function (m) {
     const sender = m.sender
     const body = m.text.trim().toLowerCase()
 
-    // Se l'utente è AFK e scrive → rimuovi AFK
+    
     if (afkData[sender] && !body.startsWith('.afk')) {
         const { since, reason } = afkData[sender]
         const ms = Date.now() - since
@@ -74,33 +73,73 @@ handler.all = async function (m) {
         return
     }
 
-    // Attiva AFK
+    
     if (body.startsWith('.afk')) {
         let reason = m.text.slice(4).trim()
         if (!reason) reason = 'Nessun motivo specificato'
 
-        afkData[sender] = {
-            reason,
-            since: Date.now()
-        }
-        saveAfkData()
-
         await this.sendMessage(m.chat, {
-            text: `💤 *Modalità AFK attivata!*\n📝 Motivo: ${reason}`
+            text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}`,
+            buttons: [
+                { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "📍 Su questo gruppo" }, type: 1 },
+                { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "🌐 In tutti i gruppi" }, type: 1 }
+            ],
+            headerType: 1
         }, { quoted: m })
 
         return
     }
 
-    // Tag AFK → Timer + Anti-tag (NO FOTO)
+    
+    if (m.text.startsWith('.afk_here')) {
+        const reason = m.text.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
+
+        afkData[sender] = {
+            reason,
+            since: Date.now(),
+            onlyGroup: m.chat
+        }
+        saveAfkData()
+
+        await this.sendMessage(m.chat, {
+            text: `📍 *AFK attivato solo in questo gruppo!*\n📝 Motivo: ${reason}`
+        }, { quoted: m })
+
+        return
+    }
+
+    
+    if (m.text.startsWith('.afk_all')) {
+        const reason = m.text.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
+
+        afkData[sender] = {
+            reason,
+            since: Date.now(),
+            onlyGroup: null
+        }
+        saveAfkData()
+
+        await this.sendMessage(m.chat, {
+            text: `🌐 *AFK attivato in tutti i gruppi!*\n📝 Motivo: ${reason}`
+        }, { quoted: m })
+
+        return
+    }
+
+    
     const mentioned = m.mentionedJid || []
     if (mentioned.length > 0) {
         for (const jid of mentioned) {
             if (afkData[jid] && jid !== sender) {
 
+                
+                if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) {
+                    continue
+                }
+
                 const now = Date.now()
 
-                // Anti-tag: evita spam
+                
                 if (antiSpam[jid] && now - antiSpam[jid] < 10000) {
                     return
                 }

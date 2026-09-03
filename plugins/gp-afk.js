@@ -1,3 +1,6 @@
+// AFK con Timer + Anti-Tag — Premium Edition (NO FOTO)
+// by Elixir, Punisher & 888 Staff
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -6,19 +9,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
 
 let afkData = {}
-let antiSpam = {}
+let antiSpam = {}   // Anti-tag cache
 
+// Carica dati AFK
 function loadAfkData() {
     try {
         if (fs.existsSync(AFK_FILE)) {
             afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'))
-        } else afkData = {}
+        } else {
+            afkData = {}
+        }
     } catch (e) {
         console.error('[AFK] Errore caricamento dati:', e)
         afkData = {}
     }
 }
 
+// Salva dati AFK
 function saveAfkData() {
     try {
         fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2), 'utf8')
@@ -29,18 +36,24 @@ function saveAfkData() {
 
 loadAfkData()
 
+// Timer leggibile
 function formatAFK(ms) {
     const sec = Math.floor(ms / 1000)
     const min = Math.floor(sec / 60)
     const hrs = Math.floor(min / 60)
-    return `${hrs}h ${min % 60}m ${sec % 60}s`
+
+    const s = sec % 60
+    const m = min % 60
+    const h = hrs
+
+    return `${h}h ${m}m ${s}s`
 }
 
 let handler = m => m
 
 handler.all = async function (m) {
 
-    // 🔥 LETTURA CORRETTA DEI PULSANTI
+    // 🔥 LETTURA CORRETTA DEI PULSANTI BAILEYS
     const btn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
     if (!m.text && !btn) return
@@ -50,10 +63,11 @@ handler.all = async function (m) {
     const sender = m.sender
     const body = (m.text || "").trim().toLowerCase()
 
-    // 🔹 Se l’utente è AFK e scrive → disattiva AFK
+    // Se l'utente è AFK e scrive → rimuovi AFK
     if (afkData[sender] && !body.startsWith('.afk') && !btn) {
         const { since, reason } = afkData[sender]
-        const readable = formatAFK(Date.now() - since)
+        const ms = Date.now() - since
+        const readable = formatAFK(ms)
 
         delete afkData[sender]
         saveAfkData()
@@ -65,9 +79,10 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Comando AFK → scelta gruppo / globale
+    // 🔹 Comando AFK → mostra i pulsanti
     if (body.startsWith('.afk')) {
-        const reason = m.text.slice(4).trim() || 'Nessun motivo specificato'
+        let reason = m.text.slice(4).trim()
+        if (!reason) reason = 'Nessun motivo specificato'
 
         await this.sendMessage(m.chat, {
             text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}`,
@@ -81,7 +96,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 AFK solo nel gruppo attuale (FUNZIONANTE)
+    // 🔹 Pulsante: AFK solo nel gruppo
     if (btn && btn.startsWith('.afk_here')) {
         const reason = btn.replace('.afk_here', '').trim() || 'Nessun motivo specificato'
 
@@ -99,7 +114,7 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 AFK globale (FUNZIONANTE)
+    // 🔹 Pulsante: AFK globale
     if (btn && btn.startsWith('.afk_all')) {
         const reason = btn.replace('.afk_all', '').trim() || 'Nessun motivo specificato'
 
@@ -117,29 +132,35 @@ handler.all = async function (m) {
         return
     }
 
-    // 🔹 Tag AFK → avviso + anti‑spam
+    // 🔹 Tag AFK → Timer + Anti-tag (NO FOTO)
     const mentioned = m.mentionedJid || []
     if (mentioned.length > 0) {
         for (const jid of mentioned) {
-            if (!afkData[jid] || jid === sender) continue
+            if (afkData[jid] && jid !== sender) {
 
-            if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
+                // AFK solo in un gruppo → ignora gli altri
+                if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
 
-            const now = Date.now()
+                const now = Date.now()
 
-            if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
-            antiSpam[jid] = now
+                // Anti-tag: evita spam
+                if (antiSpam[jid] && now - antiSpam[jid] < 10000) {
+                    return
+                }
 
-            const { reason, since } = afkData[jid]
-            const readable = formatAFK(now - since)
-            const name = await this.getName(jid)
+                antiSpam[jid] = now
 
-            await this.sendMessage(m.chat, {
-                text: `💤 *${name}* è AFK da *${readable}*\n📝 Motivo: ${reason}\n🚫 Anti‑tag attivo (10s)`
-            }, { quoted: m })
+                const { reason, since } = afkData[jid]
+                const ms = now - since
+                const readable = formatAFK(ms)
+                const name = await this.getName(jid)
+
+                await this.sendMessage(m.chat, {
+                    text: `💤 *${name}* è AFK da *${readable}*\n📝 Motivo: ${reason}\n🚫 Anti-tag attivo (evita spam)`
+                }, { quoted: m })
+            }
         }
     }
 }
 
 export default handler
-

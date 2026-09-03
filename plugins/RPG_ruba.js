@@ -46,7 +46,7 @@ let handler = async (m, { conn }) => {
   // ───────────────────────────────
   if (senderTotalFunds < 1000)
     throw `╭━━━〔 🏦 *FONDI INSUFFICIENTI* 〕━━━┈
-┃ Devi avere almeno *1000€*
+┃ Devi avere almeno *1000 888COIN*
 ┃ tra banca e portafoglio
 ┃ per tentare una rapina!
 ╰━━━━━━━━━━━━━━━━━━┈`
@@ -66,8 +66,8 @@ let handler = async (m, { conn }) => {
 
   const formatFineSource = ({ usedBank, usedMoney }) => {
     const parts = []
-    if (usedBank > 0) parts.push(`*${usedBank}€* dalla banca`)
-    if (usedMoney > 0) parts.push(`*${usedMoney}€* dal portafoglio`)
+    if (usedBank > 0) parts.push(`*${usedBank} 888COIN* dalla banca`)
+    if (usedMoney > 0) parts.push(`*${usedMoney} 888COIN* dal portafoglio`)
     return parts.join(' e ')
   }
 
@@ -78,7 +78,7 @@ let handler = async (m, { conn }) => {
     let multa = Math.floor(Math.random() * 60) + 40
     const paid = payFine(multa)
     uSender.warn = (uSender.warn || 0) + 1
-    const sourceText = formatFineSource(paid) || '*0€*'
+    const sourceText = formatFineSource(paid) || '*0 888COIN*'
 
     return conn.reply(
       m.chat,
@@ -86,7 +86,7 @@ let handler = async (m, { conn }) => {
 ┃ @${who.split('@')[0]} non ha soldi!
 ┃━━━━━━━━━━━━━━━━━━
 ┃ Sei stato multato di:
-┃ ➜ *${multa}€* (${sourceText})
+┃ ➜ *${multa} 888COIN* (${sourceText})
 ╰━━━━━━━━━━━━━━━━━━┈`,
       null,
       { mentions: [who] }
@@ -105,13 +105,13 @@ let handler = async (m, { conn }) => {
     let multa = Math.floor(Math.random() * 50) + 20
     const paid = payFine(multa)
     uSender.warn = (uSender.warn || 0) + 1
-    const sourceText = formatFineSource(paid) || '*0€*'
+    const sourceText = formatFineSource(paid) || '*0 888COIN*'
 
     testo =
 `╭━━━〔 🚨 *SEI STATO SCOPERTO!* 〕━━━┈
 ┃ La polizia ti ha fermato!
 ┃━━━━━━━━━━━━━━━━━━
-┃ Multa: *${multa}€*
+┃ Multa: *${multa} 888COIN*
 ┃ Pagata con: ${sourceText}
 ╰━━━━━━━━━━━━━━━━━━┈`
   }
@@ -139,7 +139,7 @@ let handler = async (m, { conn }) => {
     testo =
 `╭━━━〔 💰 *RAPINA RIUSCITA* 〕━━━┈
 ┃ Hai rubato:
-┃ ➜ *${rubato}€* (${percentuale}%)
+┃ ➜ *${rubato} 888COIN* (${percentuale}%)
 ┃ A: @${who.split('@')[0]}
 ┃━━━━━━━━━━━━━━━━━━
 ┃ Ottimo colpo, soldato 888.

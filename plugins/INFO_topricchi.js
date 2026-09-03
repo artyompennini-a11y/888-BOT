@@ -74,7 +74,7 @@ const handler = async (m, { conn, groupMetadata }) => {
     const lines = top.map((user, idx) => {
       const rank = medals[idx] || `${idx + 1}.`
       const formattedTotal = Math.floor(user.total).toLocaleString('it-IT')
-      return `${rank} @${user.jid.split('@')[0]} — *${formattedTotal}€*`
+      return `${rank} @${user.jid.split('@')[0]} — *${formattedTotal} 888COIN*`
     }).join('\n')
 
     // 7. Invio del messaggio con Menzioni

@@ -18,16 +18,16 @@ let handler = async (m, { conn, args, command }) => {
     return conn.sendMessage(m.chat, {
       text:
 `╭━━━〔🐎 𝐂𝐀𝐕𝐀𝐋𝐋𝐈 〕━━━┈
-┃ 💰 Portafoglio: *${money}€*
+┃ 💰 Portafoglio: *${money} 888COIN*
 ┃
 ┃ Scegli la puntata
 ╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
-        { buttonId: bet(100), buttonText: { displayText: "100€" }, type: 1 },
-        { buttonId: bet(200), buttonText: { displayText: "200€" }, type: 1 },
-        { buttonId: bet(500), buttonText: { displayText: "500€" }, type: 1 },
-        { buttonId: bet(1000), buttonText: { displayText: "1000€" }, type: 1 },
-        { buttonId: bet(10000), buttonText: { displayText: "10000€" }, type: 1 }
+        { buttonId: bet(100), buttonText: { displayText: "100 888COIN" }, type: 1 },
+        { buttonId: bet(200), buttonText: { displayText: "200 888COIN" }, type: 1 },
+        { buttonId: bet(500), buttonText: { displayText: "500 888COIN" }, type: 1 },
+        { buttonId: bet(1000), buttonText: { displayText: "1000 888COIN" }, type: 1 },
+        { buttonId: bet(10000), buttonText: { displayText: "10000 888COIN" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
@@ -37,8 +37,8 @@ let handler = async (m, { conn, args, command }) => {
 
     let bet = parseInt(args[0])
 
-    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50€")
-    if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet}€`)
+    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50 888COIN")
+    if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet} 888COIN`)
 
     global.cavalli[m.sender] = { bet }
 
@@ -46,7 +46,7 @@ let handler = async (m, { conn, args, command }) => {
       text:
 `╭━━━〔🐎 𝐂𝐀𝐕𝐀𝐋𝐋𝐈 〕━━━┈ 
 ┃ 🎯 Scegli il cavallo
-┃ 💰 Puntata: *${bet}€*
+┃ 💰 Puntata: *${bet} 888COIN*
 ┃
 ┃ 🐎 1 → Jonny
 ┃ 🐎 2 → Dav
@@ -86,18 +86,18 @@ let handler = async (m, { conn, args, command }) => {
       text =
 `╭━━━〔🐎 𝐂𝐀𝐕𝐀𝐋𝐋𝐈 〕━━━┈
 ┃ 🏆 Vincitore: *${nomeVincitore}*
-┃ 💰 Guadagno: +${game.bet * 2}€
+┃ 💰 Guadagno: +${game.bet * 2} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
     } else {
       user.money -= game.bet
       text =
 `╭━━━〔🐎 𝐂𝐀𝐕𝐀𝐋𝐋𝐈 〕━━━┈
 ┃ 🏆 Vincitore: *${nomeVincitore}*
-┃ 💀 Perso: -${game.bet}€
+┃ 💀 Perso: -${game.bet} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
     }
 

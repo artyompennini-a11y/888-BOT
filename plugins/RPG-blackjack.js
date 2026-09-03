@@ -10,8 +10,8 @@ let handler = async (m, { conn, args, command }) => {
 
   if (command === "blackjackplay") {
     let bet = parseInt(args[0])
-    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50€")
-    if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet}€`)
+    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50 888COIN")
+    if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet} 888COIN`)
 
     global.blackjack[m.sender] = {
       player: [pesca(), pesca()],
@@ -50,7 +50,7 @@ let handler = async (m, { conn, args, command }) => {
       delete global.blackjack[m.sender]
 
       return conn.sendMessage(m.chat, {
-        text: `💀 Hai sballato (${sum})\n-${g.bet}€`,
+        text: `💀 Hai sballato (${sum})\n-${g.bet} 888COIN`,
         buttons: [
           { buttonId: ".blackjackplay", buttonText: { displayText: "🔁 Gioca di nuovo" }, type: 1 },
           { buttonId: ".casino", buttonText: { displayText: "🎰 Torna al casinò" }, type: 1 }
@@ -87,15 +87,15 @@ let handler = async (m, { conn, args, command }) => {
 
     if (sumD > 21 || sumP > sumD) {
       user.money += g.bet
-      msg += `┃ 🏆 VITTORIA +${g.bet}€\n`
+      msg += `┃ 🏆 VITTORIA +${g.bet} 888COIN\n`
     } else if (sumP < sumD) {
       user.money -= g.bet
-      msg += `┃ 💀 SCONFITTA -${g.bet}€\n`
+      msg += `┃ 💀 SCONFITTA -${g.bet} 888COIN\n`
     } else {
       msg += `┃ 😐 Pareggio\n`
     }
 
-    msg += `┃ 💼 Saldo: ${user.money}€\n╚══════╝`
+    msg += `┃ 💼 Saldo: ${user.money} 888COIN\n╚══════╝`
 
     delete global.blackjack[m.sender]
 

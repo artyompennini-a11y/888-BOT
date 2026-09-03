@@ -75,7 +75,7 @@ const renderCard = async ({
   )
 
   txt(
-    `€ ${Number(bank).toLocaleString('it-IT')}`,
+    ` 888COIN ${Number(bank).toLocaleString('it-IT')}`,
     x,
     cy + 28,
     '700 30px sans-serif',
@@ -93,7 +93,7 @@ const renderCard = async ({
   )
 
   txt(
-    `€ ${Number(wallet).toLocaleString('it-IT')}`,
+    ` 888COIN ${Number(wallet).toLocaleString('it-IT')}`,
     x,
     cy + 110,
     '700 30px sans-serif',
@@ -111,7 +111,7 @@ const renderCard = async ({
   )
 
   txt(
-    `€ ${Number(stolen).toLocaleString('it-IT')}`,
+    ` 888COIN ${Number(stolen).toLocaleString('it-IT')}`,
     x,
     cy + 188,
     '700 30px sans-serif',
@@ -231,10 +231,10 @@ const handler = async (m, { conn, args }) => {
 `💳 *PORTAFOGLIO*
 
 👤 @${who.split('@')[0]}
-🏦 Banca: ${bank} €
-👛 Tasca: ${money} €
-💰 Totale: ${total.toLocaleString('it-IT')} €
-🥷 Rubato: ${stolen} €
+🏦 Banca: ${bank} 888COIN
+👛 Tasca: ${money} 888COIN
+💰 Totale: ${total.toLocaleString('it-IT')} 888COIN
+🥷 Rubato: ${stolen} 888COIN
 💳 Carta: ${user.card}
 🏦 IBAN: ${iban}`,
       m
@@ -258,7 +258,7 @@ const handler = async (m, { conn, args }) => {
       {
         image: imgBuffer,
         mimetype: 'image/jpeg',
-        caption: `💳 *𝟴𝟴𝟴 𝗕𝗢𝗧* — @${who.split('@')[0]}\n💰 Totale: ${total.toLocaleString('it-IT')} €`,
+        caption: `💳 *𝟴𝟴𝟴 𝗕𝗢𝗧* — @${who.split('@')[0]}\n💰 Totale: ${total.toLocaleString('it-IT')} 888COIN`,
         mentions: [who]
       },
       { quoted: m }

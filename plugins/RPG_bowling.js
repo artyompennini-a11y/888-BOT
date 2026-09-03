@@ -55,7 +55,7 @@ let handler = async (m, { conn, text }) => {
 ┃
 ┃ 🎳 *Lancia la palla!*
 ┃
-┃ 💼 *Tuoi soldi:* ${user.money || 0}€
+┃ 💼 *Tuoi soldi:* ${user.money || 0} 888COIN
 ┃
 ┃ 📊 *Pagamenti:*
 ┃ ⚡ Strike (10)   → x4
@@ -67,17 +67,17 @@ let handler = async (m, { conn, text }) => {
 ╰━━━━━━━━━━━━━━━━━━┈`,
       footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 CASINO",
       buttons: [
-        { buttonId: ".bowling 10",  buttonText: { displayText: "💸 Punta 10€"  }, type: 1 },
-        { buttonId: ".bowling 50",  buttonText: { displayText: "💰 Punta 50€"  }, type: 1 },
-        { buttonId: ".bowling 100", buttonText: { displayText: "🤑 Punta 100€" }, type: 1 },
+        { buttonId: ".bowling 10",  buttonText: { displayText: "💸 Punta 10 888COIN"  }, type: 1 },
+        { buttonId: ".bowling 50",  buttonText: { displayText: "💰 Punta 50 888COIN"  }, type: 1 },
+        { buttonId: ".bowling 100", buttonText: { displayText: "🤑 Punta 100 888COIN" }, type: 1 },
         { buttonId: ".casino",      buttonText: { displayText: "🔙 Torna al Casino" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
   }
 
-  if (puntata < 10) return m.reply('❌ Puntata minima: *10€*')
-  if ((user.money || 0) < puntata) return m.reply(`❌ Non hai abbastanza soldi! Hai *${user.money || 0}€*`)
+  if (puntata < 10) return m.reply('❌ Puntata minima: *10 888COIN*')
+  if ((user.money || 0) < puntata) return m.reply(`❌ Non hai abbastanza soldi! Hai *${user.money || 0} 888COIN*`)
 
   const pin = tiro()
   const pins = pinAbbattuti(pin)
@@ -89,23 +89,23 @@ let handler = async (m, { conn, text }) => {
   if (pin === 10) {
     moneyMod = puntata * 4
     user.money += moneyMod
-    esito = `✅ *Hai vinto ${moneyMod}€!*`
+    esito = `✅ *Hai vinto ${moneyMod} 888COIN!*`
   } else if (pin >= 8) {
     moneyMod = puntata * 2
     user.money += moneyMod
-    esito = `✅ *Hai vinto ${moneyMod}€!*`
+    esito = `✅ *Hai vinto ${moneyMod} 888COIN!*`
   } else if (pin >= 5) {
     moneyMod = puntata
     user.money += moneyMod
-    esito = `✅ *Hai vinto ${moneyMod}€!*`
+    esito = `✅ *Hai vinto ${moneyMod} 888COIN!*`
   } else if (pin >= 1) {
     moneyMod = Math.floor(puntata / 2)
     user.money -= moneyMod
-    esito = `❌ *Hai perso ${moneyMod}€!*`
+    esito = `❌ *Hai perso ${moneyMod} 888COIN!*`
   } else {
     moneyMod = puntata
     user.money -= moneyMod
-    esito = `❌ *Hai perso ${puntata}€!*`
+    esito = `❌ *Hai perso ${puntata} 888COIN!*`
   }
 
   await conn.sendMessage(m.chat, {
@@ -117,10 +117,10 @@ let handler = async (m, { conn, text }) => {
 ┃ ${pins}
 ┃
 ┃ 🏅 *${risultato}*
-┃ 💵 Puntata: ${puntata}€
+┃ 💵 Puntata: ${puntata} 888COIN
 ┃ ${esito}
 ┃
-┃ 💼 Saldo: *${user.money}€*
+┃ 💼 Saldo: *${user.money} 888COIN*
 ┃
 ╰━━━━━━━━━━━━━━━━━━┈`,
     footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",

@@ -38,10 +38,10 @@ let handler = async (m, { conn, command, text }) => {
 
     let testo =
 `╭━━━〔 💸 *PRELIEVO EFFETTUATO* 〕━━━┈
-┃ Hai prelevato: *${amount}€*
+┃ Hai prelevato: *${amount} 888COIN*
 ┃━━━━━━━━━━━━━━━━━━
-┃ 💰 Contanti: *${users[who].money}€*
-┃ 🏦 Banca: *${users[who].bank}€*
+┃ 💰 Contanti: *${users[who].money} 888COIN*
+┃ 🏦 Banca: *${users[who].bank} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`
 
     return conn.reply(m.chat, testo, m)
@@ -97,7 +97,7 @@ let handler = async (m, { conn, command, text }) => {
     {
       text:
 `╭━━━〔 💸 *CONFERMA PRELIEVO* 〕━━━┈
-┃ Vuoi prelevare *${prelievo}€*?
+┃ Vuoi prelevare *${prelievo} 888COIN*?
 ╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
         { buttonId: ".confermaprelievo", buttonText: { displayText: "✅ SI" }, type: 1 },

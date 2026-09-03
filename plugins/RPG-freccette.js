@@ -13,17 +13,17 @@ let handler = async (m, { conn, args, command }) => {
     return conn.sendMessage(m.chat, {
       text:
 `╭━━━〔🎯 𝐅𝐑𝐄𝐂𝐂𝐄𝐓𝐓𝐄 〕━━━┈
-┃ 💰 Portafoglio: *${money}€*
+┃ 💰 Portafoglio: *${money} 888COIN*
 ┃
 ┃ 🎯 Colpisci il bersaglio!
 ┃ Più punti fai, più vinci
 ╰━━━━━━━━━━━━━━━━━━┈`,
       buttons: [
-        { buttonId: bet(100), buttonText: { displayText: "💵 100€" }, type: 1 },
-        { buttonId: bet(200), buttonText: { displayText: "💵 200€" }, type: 1 },
-        { buttonId: bet(500), buttonText: { displayText: "💰 500€" }, type: 1 },
-        { buttonId: bet(1000), buttonText: { displayText: "💰 1000€" }, type: 1 },
-        { buttonId: bet(10000), buttonText: { displayText: "💎 10000€" }, type: 1 }
+        { buttonId: bet(100), buttonText: { displayText: "💵 100 888COIN" }, type: 1 },
+        { buttonId: bet(200), buttonText: { displayText: "💵 200 888COIN" }, type: 1 },
+        { buttonId: bet(500), buttonText: { displayText: "💰 500 888COIN" }, type: 1 },
+        { buttonId: bet(1000), buttonText: { displayText: "💰 1000 888COIN" }, type: 1 },
+        { buttonId: bet(10000), buttonText: { displayText: "💎 10000 888COIN" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
@@ -34,8 +34,8 @@ let handler = async (m, { conn, args, command }) => {
     let bet = parseInt(args[0])
     let money = user.money || 0
 
-    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50€")
-    if (money < bet) return m.reply(`💸 Devi avere almeno ${bet}€`)
+    if (!bet || bet < 50) return m.reply("💸 Puntata minima 50 888COIN")
+    if (money < bet) return m.reply(`💸 Devi avere almeno ${bet} 888COIN`)
 
     user.money -= bet
 
@@ -56,12 +56,12 @@ let handler = async (m, { conn, args, command }) => {
 
     if (score >= 50) {
       win = bet * 2
-      text += `🎯 BULLSEYE!\n💰 Vinci *${win}€*`
+      text += `🎯 BULLSEYE!\n💰 Vinci *${win} 888COIN*`
     } else if (score >= 30) {
       win = Math.floor(bet * 1.5)
-      text += `🙂 Buon tiro\n💰 Vinci *${win}€*`
+      text += `🙂 Buon tiro\n💰 Vinci *${win} 888COIN*`
     } else {
-      text += `💀 Hai fatto schifo\nHai perso *${bet}€*`
+      text += `💀 Hai fatto schifo\nHai perso *${bet} 888COIN*`
     }
 
     user.money += win

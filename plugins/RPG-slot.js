@@ -4,7 +4,7 @@ let handler = async (m, { conn, args }) => {
   let bet = parseInt(args[0])
   let user = global.db.data.users[m.sender]
 
-  if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet}€`)
+  if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet} 888COIN`)
 
   let s = ["🍒","🍋","💎","7️⃣"]
   let r = () => s[Math.floor(Math.random()*s.length)]
@@ -18,18 +18,18 @@ let handler = async (m, { conn, args }) => {
     text =
 `╭━━━〔🎰 𝐒𝐋𝐎𝐓 〕━━━┈
 ┃ ${a} ${b} ${c}
-┃ 💎 JACKPOT +${bet*2}€
+┃ 💎 JACKPOT +${bet*2} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
   } else {
     user.money -= bet
     text =
 `╭━━━〔🎰 𝐒𝐋𝐎𝐓 〕━━━┈
 ┃ ${a} ${b} ${c}
-┃ 💀 Perso -${bet}€
+┃ 💀 Perso -${bet} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
   }
 

@@ -45,7 +45,7 @@ async function handler(m, { conn, command }) {
       return m.reply("⏳ Hai finito gli acquisti disponibili, torna tra poco!")
 
     if (user.money < 5000)
-      return m.reply("❌ Servono almeno 5000€")
+      return m.reply("❌ Servono almeno 5000 888COIN")
 
     user.money -= 5000
 
@@ -61,7 +61,7 @@ async function handler(m, { conn, command }) {
 `📦 Acquisto completato
 
 🧾 ${quantità}x ${item.nome}
-💰 valore unitario: ${valore}€`
+💰 valore unitario: ${valore} 888COIN`
     }, { quoted: m })
   }
 
@@ -163,7 +163,7 @@ handler.before = async function (m, { conn }) {
 `🚨 POLIZIA!
 
 Ti hanno sgamato.
-💸 Multa: ${multa}€
+💸 Multa: ${multa} 888COIN
 📦 Magazzino confiscato`
     }, { quoted: m })
   }
@@ -176,7 +176,7 @@ Ti hanno sgamato.
     text:
 `💰 Vendita completata!
 
-Guadagno totale: ${totale}€`
+Guadagno totale: ${totale} 888COIN`
   }, { quoted: m })
 }
 

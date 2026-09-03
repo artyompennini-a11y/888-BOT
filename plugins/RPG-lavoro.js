@@ -69,17 +69,17 @@ let handler = async (m, { conn }) => {
   if (success) {
     user.money += amount
     text += `
-┃ ✨ Guadagno: *+${amount}€*`
+┃ ✨ Guadagno: *+${amount} 888COIN*`
   } else {
     user.money -= amount
     if (user.money < 0) user.money = 0
     text += `
-┃ 💀 Perdita: *-${amount}€*`
+┃ 💀 Perdita: *-${amount} 888COIN*`
   }
 
   text += `
 ┃━━━━━━━━━━━━━━━━━━
-┃ 💼 Saldo attuale: *${user.money}€*
+┃ 💼 Saldo attuale: *${user.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`
 
   return conn.sendMessage(m.chat, { text }, { quoted: m })

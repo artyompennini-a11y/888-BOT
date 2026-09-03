@@ -60,7 +60,7 @@ ${regInfo}
 ┃ 
 ┃ 📊 *STATISTICHE & ATTIVITÀ:*
 ┃  • _Messaggi inviati:_ ${u.messaggi || 0}
-┃  • _Conto in Banca:_ ${u.bank || 0}€
+┃  • _Conto in Banca:_ ${u.bank || 0} 888COIN
 ┃  • _Infrazioni (Warn):_ [ ${u.warn || 0} / 3 ] ${warnEmoji}
 ┃  • _Segnalazioni:_ ${curse}
 ┃ 

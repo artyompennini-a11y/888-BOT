@@ -50,11 +50,11 @@ let handler = async (m, { isPrems, conn }) => {
 
   let text =
 `╭━━━〔 💸 *PAGHETTA RICEVUTA* 〕━━━┈
-┃ Hai guadagnato *${moneyToAdd}€*
+┃ Hai guadagnato *${moneyToAdd} 888COIN*
 ┃ e sono stati depositati
 ┃ direttamente in banca.
 ┃━━━━━━━━━━━━━━━━━━
-┃ 🏦 Saldo banca: *${user.bank}€*
+┃ 🏦 Saldo banca: *${user.bank} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`;
 
   await conn.reply(m.chat, text, fkontak);

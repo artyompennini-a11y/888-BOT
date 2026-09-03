@@ -19,7 +19,7 @@ let handler = async (m, { conn }) => {
 
   if (user.money < 500) {
     return conn.sendMessage(m.chat, {
-      text: "❌ 𝐓𝐢 𝐬𝐞𝐫𝐯𝐨𝐧𝐨 𝟓𝟎𝟎€ 𝐩𝐞𝐫 𝐜𝐨𝐦𝐩𝐫𝐚𝐫𝐞 𝐮𝐧 𝐠𝐫𝐚𝐭𝐭𝐚 & 𝐯𝐢𝐧𝐜𝐢."
+      text: "❌ 𝐓𝐢 𝐬𝐞𝐫𝐯𝐨𝐧𝐨 𝟓𝟎𝟎 888COIN 𝐩𝐞𝐫 𝐜𝐨𝐦𝐩𝐫𝐚𝐫𝐞 𝐮𝐧 𝐠𝐫𝐚𝐭𝐭𝐚 & 𝐯𝐢𝐧𝐜𝐢."
     }, { quoted: m });
   }
 
@@ -43,18 +43,18 @@ let handler = async (m, { conn }) => {
     griglia[1] = "🩸";
     griglia[2] = "🩸";
     premio = 15000;
-    risultato = "𝐉𝐀𝐂𝐊𝐏𝐎𝐓 𝟴𝟴𝟴!! 𝐇𝐀𝐈 𝐕𝐈𝐍𝐓𝐎 𝟏𝟓𝟎𝟎𝟎€";
+    risultato = "𝐉𝐀𝐂𝐊𝐏𝐎𝐓 𝟴𝟴𝟴!! 𝐇𝐀𝐈 𝐕𝐈𝐍𝐓𝐎 𝟏𝟓𝟎𝟎𝟎 888COIN";
     user.money += premio;
   }
  
     else if (griglia.includes("💣")) {
-    risultato = "💥 𝐁𝐎𝐌𝐁𝐀! 𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨 𝟐𝟎𝟎𝟎€!";
+    risultato = "💥 𝐁𝐎𝐌𝐁𝐀! 𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨 𝟐𝟎𝟎𝟎 888COIN!";
     user.bank = Math.max(0, user.bank - 2000);
   }
 
   else if (griglia[0] === griglia[1] && griglia[1] === griglia[2]) {
     premio = 2000;
-    risultato = "✨ 𝐓𝐫𝐢𝐩𝐥𝐚 𝐜𝐨𝐦𝐛𝐢𝐧𝐚𝐳𝐢𝐨𝐧𝐞! 𝐇𝐚𝐢 𝐯𝐢𝐧𝐭𝐨 𝟐𝟎𝟎𝟎€";
+    risultato = "✨ 𝐓𝐫𝐢𝐩𝐥𝐚 𝐜𝐨𝐦𝐛𝐢𝐧𝐚𝐳𝐢𝐨𝐧𝐞! 𝐇𝐚𝐢 𝐯𝐢𝐧𝐭𝐨 𝟐𝟎𝟎𝟎 888COIN";
     user.money += premio;
   }
 
@@ -67,10 +67,10 @@ let handler = async (m, { conn }) => {
 ┃
 ┃   ${griglia[0]}  │  ${griglia[1]}  │  ${griglia[2]}
 ┃━━━━━━━━━━━━━━
-┃ 🎟️ 𝐂𝐨𝐬𝐭𝐨: 500€
+┃ 🎟️ 𝐂𝐨𝐬𝐭𝐨: 500 888COIN
 ┃ 🧾 𝐑𝐢𝐬𝐮𝐥𝐭𝐚𝐭𝐨: ${risultato}
-┃ 💵 𝐂𝐨𝐧𝐭𝐚𝐧𝐭𝐢: ${user.money}€
-┃ 🏦 𝐁𝐚𝐧𝐜𝐚: ${user.bank}€
+┃ 💵 𝐂𝐨𝐧𝐭𝐚𝐧𝐭𝐢: ${user.money} 888COIN
+┃ 🏦 𝐁𝐚𝐧𝐜𝐚: ${user.bank} 888COIN
 ┃
 ╰━━━━━━━━━━━━━━━━━━┈
 `.trim();

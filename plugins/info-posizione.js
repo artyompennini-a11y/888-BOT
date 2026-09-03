@@ -36,7 +36,7 @@ let handler = async (m, { conn, usedPrefix, command }) => {
 │ ${bar} │
 ━━━━━━━━━━━━━━━━━━
 💬 *Messaggi:* ${messaggi}
-💰 *Soldi totali:* ${money}€
+💰 *Soldi totali:* ${money} 888COIN
 ━━━━━━━━━━━━━━━━━━
 Mancano *${Math.max(0, needed - currentIn)} XP* al prossimo livello!`
 

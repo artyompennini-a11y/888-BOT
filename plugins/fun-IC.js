@@ -144,7 +144,7 @@ let handler = async (m, { conn, command }) => {
 ┃ 🎵 Ascolta 30 secondi e rispondi
 ┃    con il titolo esatto.
 ┃ ⏱ Tempo: *30 secondi*
-┃ 💶 Premio: *${prize}€*
+┃ 💶 Premio: *${prize} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`
 
   await conn.sendMessage(chat, { text: intro }, { quoted: m })
@@ -218,7 +218,7 @@ handler.before = async function (m, { conn }) {
 ┃ 🎉 Complimenti @${user.split('@')[0]}
 ┃ 🎤 Canzone: *${game.title}*
 ┃ 🎵 Artista: *${game.artist}*
-┃ 💶 Guadagni: *${game.prize}€*
+┃ 💶 Guadagni: *${game.prize} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`
 
   return conn.sendMessage(chat, { text: response, mentions: [user] }, { quoted: m })

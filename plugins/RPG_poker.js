@@ -55,8 +55,8 @@ let handler = async (m, { conn, text }) => {
 ┃ 🎴 *Poker a 5 carte*
 ┃ *Vinci in base alla mano!*
 ┃
-┃ 💰 *Puntate minime:* 10€
-┃ 💼 *Tuoi soldi:* ${user.money || 0}€
+┃ 💰 *Puntate minime:* 10 888COIN
+┃ 💼 *Tuoi soldi:* ${user.money || 0} 888COIN
 ┃
 ┃ 📊 *Pagamenti:*
 ┃ 1️⃣ Coppia      → x1
@@ -72,17 +72,17 @@ let handler = async (m, { conn, text }) => {
 ╰━━━━━━━━━━━━━━━━━━┈`,
       footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",
       buttons: [
-        { buttonId: ".poker 10",  buttonText: { displayText: "💸 Punta 10€"  }, type: 1 },
-        { buttonId: ".poker 50",  buttonText: { displayText: "💰 Punta 50€"  }, type: 1 },
-        { buttonId: ".poker 100", buttonText: { displayText: "🤑 Punta 100€" }, type: 1 },
+        { buttonId: ".poker 10",  buttonText: { displayText: "💸 Punta 10 888COIN"  }, type: 1 },
+        { buttonId: ".poker 50",  buttonText: { displayText: "💰 Punta 50 888COIN"  }, type: 1 },
+        { buttonId: ".poker 100", buttonText: { displayText: "🤑 Punta 100 888COIN" }, type: 1 },
         { buttonId: ".casino",    buttonText: { displayText: "🔙 Torna al Casino" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
   }
 
-  if (puntata < 10) return m.reply('❌ Puntata minima: *10€*')
-  if ((user.money || 0) < puntata) return m.reply(`❌ Non hai abbastanza soldi! Hai *${user.money || 0}€*`)
+  if (puntata < 10) return m.reply('❌ Puntata minima: *10 888COIN*')
+  if ((user.money || 0) < puntata) return m.reply(`❌ Non hai abbastanza soldi! Hai *${user.money || 0} 888COIN*`)
 
   const mazzo = mescola(creaMazzo())
   const mano = mazzo.slice(0, 5)
@@ -94,11 +94,11 @@ let handler = async (m, { conn, text }) => {
 
   if (mult === 0) {
     user.money -= puntata
-    esito = `❌ *Hai perso ${puntata}€!*`
+    esito = `❌ *Hai perso ${puntata} 888COIN!*`
   } else {
     vincita = Math.floor(puntata * mult)
     user.money += vincita
-    esito = `✅ *Hai vinto ${vincita}€!*`
+    esito = `✅ *Hai vinto ${vincita} 888COIN!*`
   }
 
   await conn.sendMessage(m.chat, {
@@ -109,10 +109,10 @@ let handler = async (m, { conn, text }) => {
 ┃ ${carteStr}
 ┃
 ┃ 🏅 *${nome}*
-┃ 💵 Puntata: ${puntata}€
+┃ 💵 Puntata: ${puntata} 888COIN
 ┃ ${esito}
 ┃
-┃ 💼 Saldo: *${user.money}€*
+┃ 💼 Saldo: *${user.money} 888COIN*
 ┃
 ╰━━━━━━━━━━━━━━━━━━┈`,
     footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 𝐂𝐀𝐒𝐈𝐍𝐎",

@@ -73,7 +73,7 @@ async function handler(m, { conn }) {
 ┃ 🎯 Obiettivo: ${target.nome}
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 💰 Bottino ottenuto:
-┃ ➜ *${guadagno}€*
+┃ ➜ *${guadagno} 888COIN*
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 🔥 Sei scappato senza lasciare tracce!
 ╰━━━━━━━━━━━━━━━━━━┈`
@@ -119,7 +119,7 @@ async function handler(m, { conn }) {
 ┃ 🎯 Obiettivo: ${target.nome}
 ┃━━━━━━━━━━━━━━━━━━
 ┃ 💸 Multa ricevuta:
-┃ ➜ *${multa}€*
+┃ ➜ *${multa} 888COIN*
 ┃━━━━━━━━━━━━━━━━━━
 ┃ Pianifica meglio la prossima rapina…
 ╰━━━━━━━━━━━━━━━━━━┈`

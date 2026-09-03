@@ -56,8 +56,8 @@ let handler = async (m, { conn }) => {
 ┃
 ┃ 👤 ${userTag}
 ┃ ${ev.testo}
-┃ 💰 Guadagno: +${amount} €
-┃ 💵 Totale: ${user.money} €
+┃ 💰 Guadagno: +${amount} 888COIN
+┃ 💵 Totale: ${user.money} 888COIN
 ┃
 ╰━━━━━━━━━━━━━━━━━━━━━━╯`
 
@@ -71,8 +71,8 @@ let handler = async (m, { conn }) => {
 ┃
 ┃ 👤 ${userTag}
 ┃ ${ev.testo}
-┃ 💸 Perdita: -${amount} €
-┃ 💵 Totale: ${user.money} €
+┃ 💸 Perdita: -${amount} 888COIN
+┃ 💵 Totale: ${user.money} 888COIN
 ┃
 ╰━━━━━━━━━━━━━━━━━━━━━━╯`
     }

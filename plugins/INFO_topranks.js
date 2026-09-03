@@ -66,7 +66,7 @@ const botJid = conn.user && (conn.user.jid || conn.user.id)
     const rank = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][idx]
     const title = titles[idx] || ''
     return `${rank} @${user.jid.split('@')[0]} — ${title}\n` +
-           `• Lv.${user.level} • XP: ${user.exp} • ${user.role} • ${user.money}€\n`
+           `• Lv.${user.level} • XP: ${user.exp} • ${user.role} • ${user.money} 888COIN\n`
   }).join('\n')
 
   await conn.sendMessage(m.chat, {

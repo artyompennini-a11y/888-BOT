@@ -62,7 +62,7 @@ let handler = async (m, { conn, command }) => {
       let reward = Math.floor(Math.random() * 500) + 200
       global.db.data.users[user].money += reward
 
-      return m.reply(`🏆 Sei uscito dal labirinto!\n💰 Guadagni ${reward}€`)
+      return m.reply(`🏆 Sei uscito dal labirinto!\n💰 Guadagni ${reward} 888COIN`)
     }
 
     return conn.sendMessage(m.chat, {

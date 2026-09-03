@@ -45,7 +45,7 @@ let handler = async (m, { conn, participants }) => {
         participant: "0@s.whatsapp.net"
     };
 
-    let text = `🏆 Complimenti @${m.sender.split('@')[0]}!\nHai riscattato il premio di *${premio}€* per essere il primo della classifica del gruppo oggi!`;
+    let text = `🏆 Complimenti @${m.sender.split('@')[0]}!\nHai riscattato il premio di *${premio} 888COIN* per essere il primo della classifica del gruppo oggi!`;
     await conn.reply(m.chat, text, fkontak, { mentions: [m.sender] });
 };
 

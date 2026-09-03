@@ -6,15 +6,15 @@ let handler = async (m, { conn, args }) => {
 
   let user = global.db.data.users[m.sender]
 
-  if (!bet || bet < 50) return m.reply("💸 Puntata minima 50€")
-  if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet}€`)
+  if (!bet || bet < 50) return m.reply("💸 Puntata minima 50 888COIN")
+  if (user.money < bet) return m.reply(`💸 Devi avere almeno ${bet} 888COIN`)
 
   if (!choice) {
     return conn.sendMessage(m.chat, {
       text:
 `🎰 *ROULETTE*
 
-💰 Puntata: ${bet}€
+💰 Puntata: ${bet} 888COIN
 
 Scegli dove puntare:`,
       buttons: [
@@ -38,9 +38,9 @@ Scegli dove puntare:`,
 `╭━━━〔🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 〕━━━┈
 ┃ 🎯 Risultato: *${result.toUpperCase()}*
 ┃ 🟢 Hai vinto!
-┃ 💰 Guadagno: +${bet}€
+┃ 💰 Guadagno: +${bet} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
   } else {
     user.money -= bet
@@ -50,9 +50,9 @@ Scegli dove puntare:`,
 `╭━━━〔🎰 𝐑𝐎𝐔𝐋𝐄𝐓𝐓𝐄 〕━━━┈
 ┃ 🎯 Risultato: *${result.toUpperCase()}*
 ┃ 🔴 Hai perso!
-┃ 💸 Perso: -${bet}€
+┃ 💸 Perso: -${bet} 888COIN
 ┃
-┃ 💼 Saldo: ${user.money}€
+┃ 💼 Saldo: ${user.money} 888COIN
 ╰━━━━━━━━━━━━━━━━━━┈`
   }
 

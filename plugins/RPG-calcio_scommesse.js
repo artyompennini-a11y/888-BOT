@@ -41,7 +41,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
     return await conn.reply(
       m.chat,
       `❌ *Non hai abbastanza denaro!*\n` +
-      `Ti mancano *${bet - users.money} €*.`,
+      `Ti mancano *${bet - users.money} 888COIN*.`,
       m
     );
   }
@@ -58,13 +58,13 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
     let winAmount = bet * 2;
     users.money += winAmount;
     resultMessage += `🎉 *Hai vinto!* La tua squadra *${team1}* ha trionfato! 🎊\n` +
-                     `💰 Guadagni *${winAmount} €*!\n` +
-                     `💳 Saldo attuale: *${users.money} €*`;
+                     `💰 Guadagni *${winAmount} 888COIN*!\n` +
+                     `💳 Saldo attuale: *${users.money} 888COIN*`;
   } else {
     users.money -= bet;
     resultMessage += `😢 *Hai perso...* La tua squadra *${team1}* ha subito la sconfitta. 💔\n` +
-                     `💸 Perdi *${bet} €*.\n` +
-                     `💳 Saldo attuale: *${users.money} €*`;
+                     `💸 Perdi *${bet} 888COIN*.\n` +
+                     `💳 Saldo attuale: *${users.money} 888COIN*`;
   }
 
   return m.reply(resultMessage);

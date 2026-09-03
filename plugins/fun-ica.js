@@ -230,7 +230,7 @@ const startGame = async (m, conn, chat, artist = null) => {
 `╭━━━〔 🖼️ *INDOVINA L’ALBUM* 〕━━━┈
 ┃ ✎ Artista: *${album.artist}*
 ┃ ✎ Difficoltà: ${difficoltaEmoji} *${album.difficolta}*
-┃ ✎ Premio: *${album.premio}€*
+┃ ✎ Premio: *${album.premio} 888COIN*
 ┃━━━━━━━━━━━━━━━━━━
 ┃ Rispondi a questo messaggio!
 ╰━━━━━━━━━━━━━━━━━━┈`;
@@ -315,7 +315,7 @@ handler.before = async (m, { conn }) => {
         const user = global.db.data.users[m.sender];
         if (user) {
             user.money = (user.money || 0) + game.album.premio;
-            user.euro = (user.euro || 0) + game.album.premio;
+            user['888coin'] = (user['888coin'] || 0) + game.album.premio;
         }
 
         let buttons = [{ buttonId: '.ica generale', buttonText: { displayText: '🎮 Nuova partita' }, type: 1 }];
@@ -330,7 +330,7 @@ handler.before = async (m, { conn }) => {
 ┃━━━━━━━━━━━━━━━━━━
 ┃ ✎ Album: *${game.album.title}*
 ┃ ✎ Artista: *${game.album.artist}*
-┃ ✎ Vincita: *${game.album.premio}€*
+┃ ✎ Vincita: *${game.album.premio} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`,
             mentions: [m.sender],
             buttons,

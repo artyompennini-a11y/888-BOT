@@ -56,7 +56,7 @@ let handler = async (m, { conn }) => {
 
     await conn.reply(
         m.chat,
-        `💥 *TARGET NEUTRALIZZATO*\n\n🏆 @${m.sender.split('@')[0]} ha completato l’operazione e ottenuto *${reward}€*!\n\nMissione conclusa.`,
+        `💥 *TARGET NEUTRALIZZATO*\n\n🏆 @${m.sender.split('@')[0]} ha completato l’operazione e ottenuto *${reward} 888COIN*!\n\nMissione conclusa.`,
         m,
         { mentions: [m.sender] }
     )

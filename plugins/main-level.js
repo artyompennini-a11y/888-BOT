@@ -56,7 +56,7 @@ export async function all(m) {
         `👤 *${m.pushName || 'Utente'}*\n` +
         `📈 *Livello:* ${currentLevel} → ${newLevel}\n` +
         `🏅 *Ruolo:* ${user.role}\n` +
-        `💰 *Bonus:* +${reward}€\n` +
+        `💰 *Bonus:* +${reward} 888COIN\n` +
         `━━━━━━━━━━━━━━━━━━\n` +
         `Continua così! 🔥`
 

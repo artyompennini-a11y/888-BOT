@@ -36,7 +36,7 @@ handler.before = async function (m) {
         text: `🎯 *OPERAZIONE TAGLIA ATTIVATA*
 ━━━━━━━━━━━━━━━━━━━━
 👤 *Bersaglio:* @${target.split('@')[0]}
-💰 *Valore della taglia:* ${reward}€
+💰 *Valore della taglia:* ${reward} 888COIN
 🕒 *Tempo disponibile:* 30 secondi
 ━━━━━━━━━━━━━━━━━━━━
 💥 Scrivi *fire* per ingaggiare il bersaglio!

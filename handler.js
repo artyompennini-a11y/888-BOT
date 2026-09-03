@@ -510,7 +510,7 @@ export async function handler(chatUpdate) {
         if (!global.db.data) await global.loadDatabase();
 
         m.exp = 0;
-        m.euro = false;
+        m['888coin'] = false;
         m.isCommand = false;
 
         const normalizedSender = this.decodeJid(m.sender);
@@ -532,7 +532,7 @@ export async function handler(chatUpdate) {
 
         global.db.data.users[normalizedSender] ??= {
             exp: 0,
-            euro: 10,
+            '888coin': 10,
             muto: false,
             registered: false,
             name: m.pushName ?? '?',
@@ -580,6 +580,12 @@ export async function handler(chatUpdate) {
             role: 'Novizio',
             level: 0
         })) user[k] ??= v;
+
+        // 🪙 Migrazione: vecchio campo euro → 888coin
+        if (user['888coin'] == null && typeof user.euro === 'number') {
+            user['888coin'] = user.euro;
+        }
+        if (user.euro !== undefined) delete user.euro;
 
         if (user.banned) {
             if (!user.notifiedBan) {
@@ -1077,7 +1083,7 @@ export async function handler(chatUpdate) {
                     continue;
                 }
 
-                if (!isPrems && plugin.euro && user.euro < plugin.euro) {
+                if (!isPrems && plugin['888coin'] && user['888coin'] < plugin['888coin']) {
                     await this.reply(m.chat, `Niente più soldini, stupido poraccio`, m, null, global.rcanal).catch(() => {});
                     continue;
                 }
@@ -1115,7 +1121,7 @@ export async function handler(chatUpdate) {
 
                 try {
                     await plugin.call(this, m, extra);
-                    if (!isPrems) m.euro = plugin.euro || false;
+                    if (!isPrems) m['888coin'] = plugin['888coin'] || false;
                 } catch (e) {
                     m.error = e;
                     console.error(`[ERRORE] Plugin ${m.plugin}:`, e);
@@ -1130,8 +1136,8 @@ export async function handler(chatUpdate) {
                             await plugin.after.call(this, m, extra);
                         } catch {}
                     }
-                    if (m.euro)
-                        await this.reply(m.chat, `Hai utilizzato *${+m.euro}*`, m, null, global.rcanal).catch(() => {});
+                    if (m['888coin'])
+                        await this.reply(m.chat, `Hai utilizzato *${+m['888coin']}*`, m, null, global.rcanal).catch(() => {});
                 }
                 break;
             }
@@ -1146,7 +1152,7 @@ export async function handler(chatUpdate) {
 
             if (user) {
                 user.exp = (user.exp || 0) + (m.exp || 0);
-                user.euro = (user.euro || 0) - (m.euro || 0);
+                user['888coin'] = (user['888coin'] || 0) - (m['888coin'] || 0);
                 user.messaggi = (user.messaggi || 0) + 1;
                 user.messages = (user.messages || 0) + 1;
 

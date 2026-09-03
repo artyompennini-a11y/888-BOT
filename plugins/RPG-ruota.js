@@ -39,7 +39,7 @@ let handler = async (m, { conn, command }) => {
       `╭─────────╮
 ┃ 🎡 𝐑𝐔𝐎𝐓𝐀 𝐃𝐄𝐋𝐋𝐀 𝐅𝐎𝐑𝐓𝐔𝐍𝐀! 
 ┃━━━━━━━━━━━━━━
-┃ 𝐋𝐚 𝐫𝐮𝐨𝐭𝐚 𝐡𝐚 𝟏𝟖 𝐬𝐩𝐢𝐜𝐜𝐡𝐢:\n┃ 𝟏𝟎 𝐯𝐢𝐧𝐜𝐞𝐧𝐭𝐢\n┃ (𝐦𝐚𝐱: 𝟏𝟎𝟎.𝟎𝟎𝟎€)\n┃ 𝟖 𝐩𝐞𝐫𝐝𝐞𝐧𝐭𝐢 \n┃ (𝐦𝐚𝐱: 𝐩𝐞𝐫𝐝𝐢𝐭𝐚 𝐭𝐨𝐭𝐚𝐥𝐞)
+┃ 𝐋𝐚 𝐫𝐮𝐨𝐭𝐚 𝐡𝐚 𝟏𝟖 𝐬𝐩𝐢𝐜𝐜𝐡𝐢:\n┃ 𝟏𝟎 𝐯𝐢𝐧𝐜𝐞𝐧𝐭𝐢\n┃ (𝐦𝐚𝐱: 𝟏𝟎𝟎.𝟎𝟎𝟎 888COIN)\n┃ 𝟖 𝐩𝐞𝐫𝐝𝐞𝐧𝐭𝐢 \n┃ (𝐦𝐚𝐱: 𝐩𝐞𝐫𝐝𝐢𝐭𝐚 𝐭𝐨𝐭𝐚𝐥𝐞)
 ┃ 𝐕𝐮𝐨𝐢 𝐭𝐞𝐧𝐭𝐚𝐫𝐞 𝐥𝐚 𝐟𝐨𝐫𝐭𝐮𝐧𝐚? 
 ┃━━━━━━━━━━━━━━
 ┃ 𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢:
@@ -65,27 +65,27 @@ let handler = async (m, { conn, command }) => {
     user.ruotaCount += 1
 
     const premi = [
-      { name: '*100€*', amount: 100, weight: 20 },
-      { name: '*200€*', amount: 200, weight: 15 },
-      { name: '*300€*', amount: 300, weight: 10 },
-      { name: '*400€*', amount: 400, weight: 8 },
-      { name: '*500€*', amount: 500, weight: 5 },
-      { name: '*1000€*', amount: 1000, weight: 4 },
+      { name: '*100 888COIN*', amount: 100, weight: 20 },
+      { name: '*200 888COIN*', amount: 200, weight: 15 },
+      { name: '*300 888COIN*', amount: 300, weight: 10 },
+      { name: '*400 888COIN*', amount: 400, weight: 8 },
+      { name: '*500 888COIN*', amount: 500, weight: 5 },
+      { name: '*1000 888COIN*', amount: 1000, weight: 4 },
       { name: '*Raddoppia*', amount: 'double', weight: 3 },
-      { name: '*5000€*', amount: 5000, weight: 2 },
-      { name: '*10.000€*', amount: 10000, weight: 1 },
-      { name: '*100.000€*', amount: 100000, weight: 0.5 }
+      { name: '*5000 888COIN*', amount: 5000, weight: 2 },
+      { name: '*10.000 888COIN*', amount: 10000, weight: 1 },
+      { name: '*100.000 888COIN*', amount: 100000, weight: 0.5 }
     ]
 
     const perdite = [
-      { name: '*-100€*', amount: -100, weight: 20 },
-      { name: '*-200€*', amount: -200, weight: 15 },
-      { name: '*-300€*', amount: -300, weight: 10 },
-      { name: '*-400€*', amount: -400, weight: 8 },
-      { name: '*-500€*', amount: -500, weight: 5 },
-      { name: '*-1000€*', amount: -1000, weight: 4 },
-      { name: '*-10.000€*', amount: -10000, weight: 2 },
-      { name: '*PERDI TUTTO€*', amount: 'all', weight: 1 }
+      { name: '*-100 888COIN*', amount: -100, weight: 20 },
+      { name: '*-200 888COIN*', amount: -200, weight: 15 },
+      { name: '*-300 888COIN*', amount: -300, weight: 10 },
+      { name: '*-400 888COIN*', amount: -400, weight: 8 },
+      { name: '*-500 888COIN*', amount: -500, weight: 5 },
+      { name: '*-1000 888COIN*', amount: -1000, weight: 4 },
+      { name: '*-10.000 888COIN*', amount: -10000, weight: 2 },
+      { name: '*PERDI TUTTO 888COIN*', amount: 'all', weight: 1 }
     ]
 
     function pick(lista) {
@@ -120,8 +120,8 @@ let handler = async (m, { conn, command }) => {
     if (user.bank < 0) user.bank = 0
 
     let finalText = (risultato.amount > 0 || risultato.amount === 'double') ?
-      `🏆 𝐕𝐈𝐓𝐓𝐎𝐑𝐈𝐀!\n𝐇𝐚𝐢 𝐯𝐢𝐧𝐭𝐨: ${risultato.name}\n💰 𝐒𝐚𝐥𝐝𝐨 𝐛𝐚𝐧𝐜𝐚𝐫𝐢𝐨 𝐚𝐭𝐭𝐮𝐚𝐥𝐞: *${user.bank}€*\n𝐅𝐨𝐫𝐭𝐮𝐧𝐚𝐭𝐨!` :
-      `💀 𝐒𝐂𝐎𝐍𝐅𝐈𝐓𝐓𝐀!\n𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨: ${risultato.name}\n💰 𝐒𝐚𝐥𝐝𝐨 𝐛𝐚𝐧𝐜𝐚𝐫𝐢𝐨 𝐚𝐭𝐭𝐮𝐚𝐥𝐞: *${user.bank}€*\n𝐑𝐢𝐭𝐞𝐧𝐭𝐚, 𝐬𝐚𝐫𝐚𝐢 𝐩𝐢𝐮̀ 𝐟𝐨𝐫𝐭𝐮𝐧𝐚𝐭𝐨!`
+      `🏆 𝐕𝐈𝐓𝐓𝐎𝐑𝐈𝐀!\n𝐇𝐚𝐢 𝐯𝐢𝐧𝐭𝐨: ${risultato.name}\n💰 𝐒𝐚𝐥𝐝𝐨 𝐛𝐚𝐧𝐜𝐚𝐫𝐢𝐨 𝐚𝐭𝐭𝐮𝐚𝐥𝐞: *${user.bank} 888COIN*\n𝐅𝐨𝐫𝐭𝐮𝐧𝐚𝐭𝐨!` :
+      `💀 𝐒𝐂𝐎𝐍𝐅𝐈𝐓𝐓𝐀!\n𝐇𝐚𝐢 𝐩𝐞𝐫𝐬𝐨: ${risultato.name}\n💰 𝐒𝐚𝐥𝐝𝐨 𝐛𝐚𝐧𝐜𝐚𝐫𝐢𝐨 𝐚𝐭𝐭𝐮𝐚𝐥𝐞: *${user.bank} 888COIN*\n𝐑𝐢𝐭𝐞𝐧𝐭𝐚, 𝐬𝐚𝐫𝐚𝐢 𝐩𝐢𝐮̀ 𝐟𝐨𝐫𝐭𝐮𝐧𝐚𝐭𝐨!`
 
     await conn.reply(m.chat, finalText, m)
   }

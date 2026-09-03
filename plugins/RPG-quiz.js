@@ -11,9 +11,9 @@ let handler = async (m, { conn, command }) => {
       m.chat,
 `╭━━━〔 💸 *SALDO INSUFFICIENTE* 〕━━━┈
 ┃ Per giocare al quiz devi avere
-┃ almeno *100€*.
+┃ almeno *100 888COIN*.
 ┃━━━━━━━━━━━━━━━━━━
-┃ Saldo attuale: *${user.money}€*
+┃ Saldo attuale: *${user.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`,
       m
     );
@@ -140,9 +140,9 @@ handler.before = async (m, { conn }) => {
     return conn.reply(
       m.chat,
 `╭━━━〔 ✅ *RISPOSTA CORRETTA* 〕━━━┈
-┃ Guadagni: +${session.amount}€
+┃ Guadagni: +${session.amount} 888COIN
 ┃━━━━━━━━━━━━━━━━━━
-┃ Saldo attuale: *${user.money}€*
+┃ Saldo attuale: *${user.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`,
       m
     );
@@ -157,9 +157,9 @@ handler.before = async (m, { conn }) => {
   return conn.reply(
     m.chat,
 `╭━━━〔 ❌ *RISPOSTA SBAGLIATA* 〕━━━┈
-┃ Perdi: -${session.amount}€
+┃ Perdi: -${session.amount} 888COIN
 ┃━━━━━━━━━━━━━━━━━━
-┃ Saldo attuale: *${user.money}€*
+┃ Saldo attuale: *${user.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`,
     m
   );

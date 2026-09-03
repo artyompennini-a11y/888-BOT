@@ -21,7 +21,7 @@ const handler = async (m, { conn, args }) => {
 
   let bet = parseInt(args[0])
   if (!bet || bet < 50)
-    return m.reply("💸 Puntata minima: 50€\n> Uso: .duello (soldi) @user")
+    return m.reply("💸 Puntata minima: 50 888COIN\n> Uso: .duello (soldi) @user")
 
   if (user1.money < bet) return m.reply("💸 Non hai abbastanza soldi")
   if (user2.money < bet) return m.reply("💸 L'altro utente non ha abbastanza soldi")
@@ -36,7 +36,7 @@ const handler = async (m, { conn, args }) => {
 ┃      ⚔️ *VS* ⚔️
 ┃ 🎯 @${target.split('@')[0]}
 ┃
-┃ 💰 Puntata: *${bet}€*
+┃ 💰 Puntata: *${bet} 888COIN*
 ┃
 ┃ ⚡ Scrivi *accetto*
 ┃ per combattere
@@ -130,7 +130,7 @@ const handler = async (m, { conn, args }) => {
 ┃ ➤ @${loser.split('@')[0]}
 ┃
 ┃ 💰 Guadagno:
-┃ +${bet}€
+┃ +${bet} 888COIN
 ┃
 ┃ 🔥 Che fight
 ┃

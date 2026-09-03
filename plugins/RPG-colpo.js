@@ -28,7 +28,7 @@ let handler = async (m, { command, conn }) => {
     await conn.sendMessage(chat, {
       text: `💰 COLPO IN PREPARAZIONE!
 
-💸 Ingresso: ${ENTRY_FEE}€
+💸 Ingresso: ${ENTRY_FEE} 888COIN
 👥 Max: ${MAX_PLAYERS} persone
 
 Scrivi *.partecipa* per partecipare
@@ -59,12 +59,12 @@ Scrivi *.partecipa* per partecipare
         if (rand < 0.4) {
           let win = Math.floor(Math.random() * 800) + 200
           user.money = (user.money || 0) + win
-          outcome = `💰 @${p.split('@')[0]} scappa con ${win}€`
+          outcome = `💰 @${p.split('@')[0]} scappa con ${win} 888COIN`
         } 
         else if (rand < 0.75) {
           let lose = Math.floor(Math.random() * 400) + 100
           user.money = Math.max(0, (user.money || 0) - lose)
-          outcome = `💸 @${p.split('@')[0]} perde ${lose}€`
+          outcome = `💸 @${p.split('@')[0]} perde ${lose} 888COIN`
         } 
         else {
           user.heistJail = Date.now() + (10 * 60 * 1000)
@@ -103,7 +103,7 @@ Scrivi *.partecipa* per partecipare
       return m.reply("🚔 Sei in prigione, aspetta")
 
     if ((user.money || 0) < ENTRY_FEE)
-      return m.reply(`💸 Ti servono almeno ${ENTRY_FEE}€ per partecipare`)
+      return m.reply(`💸 Ti servono almeno ${ENTRY_FEE} 888COIN per partecipare`)
 
     user.money -= ENTRY_FEE
 

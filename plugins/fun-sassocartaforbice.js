@@ -41,7 +41,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   // ───────────────────────────────
   if (scommessa > users.money) {
     throw `╭━━━〔 ❌ *FONDI INSUFFICIENTI* 〕━━━┈
-┃ Ti mancano *${scommessa - users.money}€*
+┃ Ti mancano *${scommessa - users.money} 888COIN*
 ┃ per effettuare questa scommessa.
 ╰━━━━━━━━━━━━━━━━━━┈`;
   }
@@ -78,8 +78,8 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 `╭━━━〔 🎉 *HAI VINTO!* 〕━━━┈
 ┃ Scelta del bot: *${sceltaBot}*
 ┃━━━━━━━━━━━━━━━━━━
-┃ 💰 Vincita: *${vincita}€*
-┃ 💼 Saldo attuale: *${users.money}€*
+┃ 💰 Vincita: *${vincita} 888COIN*
+┃ 💼 Saldo attuale: *${users.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`;
   }
 
@@ -93,8 +93,8 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 `╭━━━〔 ❌ *HAI PERSO* 〕━━━┈
 ┃ Scelta del bot: *${sceltaBot}*
 ┃━━━━━━━━━━━━━━━━━━
-┃ 💸 Perdita: *${scommessa}€*
-┃ 💼 Saldo attuale: *${users.money}€*
+┃ 💸 Perdita: *${scommessa} 888COIN*
+┃ 💼 Saldo attuale: *${users.money} 888COIN*
 ╰━━━━━━━━━━━━━━━━━━┈`;
   }
 

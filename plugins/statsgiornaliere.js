@@ -137,7 +137,7 @@ let handler = async (m, { conn, participants, groupMetadata, isAdmin }) => {
       let prizesTextLocal = ''
       const cs = global.dailyStats.chats[chat] || { total: 0, users: {} }
       if (cs.awardedDate === todayDate()) {
-        prizesText = '\nAncora nessuno, aggiudicati la top per avere 1000€!'
+        prizesText = '\nAncora nessuno, aggiudicati la top per avere 1000 888COIN!'
       } else {
         for (const row of top3) {
           const jid = row?.[0]
@@ -145,8 +145,8 @@ let handler = async (m, { conn, participants, groupMetadata, isAdmin }) => {
           try {
             if (!usersDb[jid]) usersDb[jid] = {}
             usersDb[jid].money = (usersDb[jid].money || 0) + 1000
-            usersDb[jid].euro = (usersDb[jid].euro || 0) + 1000
-            prizesTextLocal += `\n- *@${jid.split('@')[0]}* — +1000€`
+            usersDb[jid]['888coin'] = (usersDb[jid]['888coin'] || 0) + 1000
+            prizesTextLocal += `\n- *@${jid.split('@')[0]}* — +1000 888COIN`
           } catch (e) {
             console.error('Errore assegnazione premio a', jid, e)
           }

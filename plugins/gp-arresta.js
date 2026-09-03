@@ -21,7 +21,7 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
 
     if (!adminUser || (adminUser.money || 0) < CAUZIONE) {
       delete global.scarceri[adminJid]
-      return m.reply(`❌ Servono almeno ${CAUZIONE} euro per scarcerare`)
+      return m.reply(`❌ Servono almeno ${CAUZIONE} 888COIN per scarcerare`)
     }
 
     adminUser.money -= CAUZIONE
@@ -34,7 +34,7 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
     delete global.scarceri[adminJid]
 
     await conn.sendMessage(m.chat, {
-      text: `✅ @${targetJid.split('@')[0]} *è stato scarcerato!* 💰 Hai pagato ${CAUZIONE}€ di cauzione.\n\nPuoi tornare a scrivere e usare comandi.`,
+      text: `✅ @${targetJid.split('@')[0]} *è stato scarcerato!* 💰 Hai pagato ${CAUZIONE} 888COIN di cauzione.\n\nPuoi tornare a scrivere e usare comandi.`,
       mentions: [targetJid]
     }, { quoted: m })
     return
@@ -69,7 +69,7 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
   if (isOwner(jailTarget)) return await conn.reply(m.chat, 'Impossibile usare questo comando su un owner.', m)
 
   let user = global.db.data.users[jailTarget]
-  if (!user) user = global.db.data.users[jailTarget] = { exp: 0, euro: 0, muto: false, registered: false, arrestoExpire: null }
+  if (!user) user = global.db.data.users[jailTarget] = { exp: 0, '888coin': 0, muto: false, registered: false, arrestoExpire: null }
   if (user.muto && user.arrestoExpire && Date.now() >= user.arrestoExpire) {
     user.muto = false
     user.arrestoExpire = null
@@ -116,12 +116,12 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
 
     let adminUser = global.db.data.users[m.sender]
     if (!adminUser) {
-      adminUser = global.db.data.users[m.sender] = { exp: 0, euro: 0, muto: false, registered: false, money: 0 }
+      adminUser = global.db.data.users[m.sender] = { exp: 0, '888coin': 0, muto: false, registered: false, money: 0 }
     }
 
     if ((adminUser.money || 0) < CAUZIONE) {
       return await conn.sendMessage(m.chat, {
-        text: `❌ Non hai abbastanza soldi per scarcerare @${jailTarget.split('@')[0]}\n\n💰 Cauzione: ${CAUZIONE}€\n💵 Tuoi soldi: ${adminUser.money || 0}€`
+        text: `❌ Non hai abbastanza soldi per scarcerare @${jailTarget.split('@')[0]}\n\n💰 Cauzione: ${CAUZIONE} 888COIN\n💵 Tuoi soldi: ${adminUser.money || 0} 888COIN`
       }, { quoted: m, mentions: [jailTarget] })
     }
 
@@ -129,7 +129,7 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
     global.scarceri[adminJid] = { target: jailTarget }
 
     await conn.sendMessage(m.chat, {
-      text: `❓ Sei sicuro di voler scarcerare @${jailTarget.split('@')[0]}?\n\n💰 Cauzione: ${CAUZIONE}€\n\nI tuoi soldi: ${adminUser.money || 0}€`,
+      text: `❓ Sei sicuro di voler scarcerare @${jailTarget.split('@')[0]}?\n\n💰 Cauzione: ${CAUZIONE} 888COIN\n\nI tuoi soldi: ${adminUser.money || 0} 888COIN`,
       buttons: [
         { buttonId: '.confermascarcero', buttonText: { displayText: '✅ SI' }, type: 1 },
         { buttonId: '.annullascarcero', buttonText: { displayText: '❌ NO' }, type: 1 }

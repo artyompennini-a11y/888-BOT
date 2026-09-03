@@ -114,7 +114,7 @@ async function esplosione(chatId, conn) {
 💥 ☠️ *BOOM! ESPLOSIONE!* ☠️ 💥
 ══════════════════════════
 💀 *La bomba è scoppiata nelle mani di:* ${vTag}
-💸 *Penalità subita:* -${penale}€
+💸 *Penalità subita:* -${penale} 888COIN
 ══════════════════════════\n`.trim();
 
     if (b.passaggi.length > 0) {
@@ -127,7 +127,7 @@ async function esplosione(chatId, conn) {
             if (!global.db.data.users[jid]) global.db.data.users[jid] = { money: 0 };
             global.db.data.users[jid].money = (global.db.data.users[jid].money || 0) + premio;
 
-            finale += `• @${jid.split('@')[0]} 💰 +${premio}€\n`;
+            finale += `• @${jid.split('@')[0]} 💰 +${premio} 888COIN\n`;
         }
     }
 

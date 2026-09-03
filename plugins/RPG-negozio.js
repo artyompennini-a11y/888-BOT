@@ -20,7 +20,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
 
   if (!text || subCommand === 'lista' || subCommand === 'list') {
     const items = Object.entries(shopItems).map(([key, item]) => {
-      return `┃ ${item.name}\n┃   💰 ${item.price}€ — ${item.desc}\n┃   *${usedPrefix}negozio compra ${key}*`
+      return `┃ ${item.name}\n┃   💰 ${item.price} 888COIN — ${item.desc}\n┃   *${usedPrefix}negozio compra ${key}*`
     }).join('\n┃━━━━━━━━━━━━━━━━━━\n')
 
     const money = (Number(user.money) || 0) + (Number(user.bank) || 0)
@@ -29,7 +29,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
       `🛒 *NEGOZIO RPG*\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
       `👤 *${m.pushName}*\n` +
-      `💰 *Soldi disponibili:* ${money}€\n` +
+      `💰 *Soldi disponibili:* ${money} 888COIN\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
       `${items}\n` +
       `━━━━━━━━━━━━━━━━━━\n` +
@@ -45,7 +45,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
     const money = (Number(user.money) || 0) + (Number(user.bank) || 0)
     if (money < item.price) {
       const missing = item.price - money
-      return m.reply(`❌ *Soldi insufficienti!*\n\nTi mancano *${missing}€* per comprare ${item.name}.`)
+      return m.reply(`❌ *Soldi insufficienti!*\n\nTi mancano *${missing} 888COIN* per comprare ${item.name}.`)
     }
 
     let wallet = Number(user.money) || 0
@@ -69,13 +69,13 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
     if (item.type === 'ruolo' && args[2]) {
       const customRole = args.slice(2).join(' ')
       user.customRole = customRole
-      return m.reply(`✅ *Acquisto riuscito!*\n\n${item.name}\n💰 -${item.price}€\n\nIl tuo nuovo ruolo è: *${customRole}*`)
+      return m.reply(`✅ *Acquisto riuscito!*\n\n${item.name}\n💰 -${item.price} 888COIN\n\nIl tuo nuovo ruolo è: *${customRole}*`)
     }
 
     return m.reply(
       `✅ *ACQUISTO RIUSCITO!*\n\n` +
       `📦 *Oggetto:* ${item.name}\n` +
-      `💰 *Prezzo:* -${item.price}€\n` +
+      `💰 *Prezzo:* -${item.price} 888COIN\n` +
       `📝 *Descrizione:* ${item.desc}\n\n` +
       `Inventario aggiornato! Usa ${usedPrefix}negozio inventario per vederlo.`
     )
@@ -123,7 +123,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args }) => {
     return m.reply(
       `💰 *VENDITA RIUSCITA!*\n\n` +
       `📦 *Oggetto:* ${item.name}\n` +
-      `💵 *Ricavato:* +${sellPrice}€`
+      `💵 *Ricavato:* +${sellPrice} 888COIN`
     )
   }
 

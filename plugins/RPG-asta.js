@@ -20,7 +20,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
 
   if (!text || subCommand === 'lista' || subCommand === 'list') {
     const items = Object.entries(auctionItems).map(([key, item]) => {
-      return `┃ ${item.name}\n┃   💰 Base: ${item.price}€ — ${item.desc}\n┃   *${usedPrefix}asta inizia ${key}*`
+      return `┃ ${item.name}\n┃   💰 Base: ${item.price} 888COIN — ${item.desc}\n┃   *${usedPrefix}asta inizia ${key}*`
     }).join('\n┃━━━━━━━━━━━━━━━━━━\n')
 
     return m.reply(
@@ -56,7 +56,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
     await m.reply(
       `🔨 *ASTA INIZIATA!*\n\n` +
       `📦 *Oggetto:* ${item.name}\n` +
-      `💰 *Base d'asta:* ${item.price}€\n` +
+      `💰 *Base d'asta:* ${item.price} 888COIN\n` +
       `📝 *Descrizione:* ${item.desc}\n\n` +
       `⏱️ *Tempo: 60 secondi*\n\n` +
       `Fai la tua offerta con:\n${usedPrefix}asta offerta [importo]`
@@ -93,7 +93,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
             text: `🔨 *ASTA CONCLUSSA!*\n\n` +
               `👑 *Vincitore:* ${winnerName}\n` +
               `📦 *Oggetto:* ${astaData.item.name}\n` +
-              `💰 *Offerta finale:* ${astaData.offertaCorrente}€\n\n` +
+              `💰 *Offerta finale:* ${astaData.offertaCorrente} 888COIN\n\n` +
               `Complimenti! L'oggetto è nel tuo inventario! 🎉`
           })
         }
@@ -116,7 +116,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
     if (offerta > totalMoney) return m.reply('❌ *Non hai abbastanza soldi per questa offerta!*')
 
     if (offerta <= asta.offertaCorrente) {
-      return m.reply(`❌ *L'offerta deve superare ${asta.offertaCorrente}€!*`)
+      return m.reply(`❌ *L'offerta deve superare ${asta.offertaCorrente} 888COIN!*`)
     }
 
     if (asta.migliorOffertente && asta.migliorOffertente !== m.sender) {
@@ -133,9 +133,9 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
     await m.reply(
       `✅ *OFFERTA REGISTRATA!*\n\n` +
       `👤 *${m.pushName}*\n` +
-      `💰 *Offerta:* ${offerta}€\n` +
+      `💰 *Offerta:* ${offerta} 888COIN\n` +
       `📦 *Oggetto:* ${asta.item.name}\n\n` +
-      `Nuova offerta da battere: *${offerta}€* 🔨`
+      `Nuova offerta da battere: *${offerta} 888COIN* 🔨`
     )
 
     return
@@ -151,7 +151,7 @@ let handler = async (m, { conn, text, usedPrefix, command, args, isAdmin }) => {
     return m.reply(
       `🔨 *STATO ASTA*\n\n` +
       `📦 *Oggetto:* ${asta.item.name}\n` +
-      `💰 *Offerta corrente:* ${asta.offertaCorrente}€\n` +
+      `💰 *Offerta corrente:* ${asta.offertaCorrente} 888COIN\n` +
       `👑 *Miglior offerente:* ${migliorNome}\n` +
       `⏱️ *Tempo rimanente:* ${remaining}s`
     )

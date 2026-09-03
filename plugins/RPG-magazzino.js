@@ -29,7 +29,7 @@ async function handler(m, { conn }) {
   user.magazzino.forEach((item, index) => {
     testo += `
 ┃ ${index + 1}. *${item.nome}* ×${item.quantità}
-┃ 💰 Valore unitario: *${item.valore}€*
+┃ 💰 Valore unitario: *${item.valore} 888COIN*
 ┃━━━━━━━━━━━━━━━━━━`
   })
 

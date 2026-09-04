@@ -80,22 +80,44 @@ async function scanNumber(conn, jid, richiedente) {
   };
   
   try {
-
+    // Check local store for WhatsApp existence (no API call)
     try {
-      let [onWa] = await conn.onWhatsApp(jid);
-      if (onWa) {
+      let chat = conn.chats?.[jid];
+      if (chat) {
         risultato.esisteWhatsApp = true;
-        risultato.attivo = onWa.exists;
-        if (onWa?.jid) risultato.jid = onWa.jid;
+        risultato.attivo = chat.isChats !== false;
+      } else {
+        // Check if user exists in any group participants
+        let foundInGroup = false;
+        for (const [groupId, groupChat] of Object.entries(conn.chats || {})) {
+          if (groupId.endsWith('@g.us') && groupChat.metadata?.participants) {
+            if (groupChat.metadata.participants.some(p => 
+              conn.decodeJid(p.id) === conn.decodeJid(jid)
+            )) {
+              foundInGroup = true;
+              risultato.gruppiComuni++;
+            }
+          }
+        }
+        if (foundInGroup) {
+          risultato.esisteWhatsApp = true;
+          risultato.attivo = true;
+        }
+      }
+      
+      // Check DB for user data
+      if (!risultato.esisteWhatsApp && global.db?.data?.users?.[jid]) {
+        risultato.esisteWhatsApp = true;
+        risultato.attivo = true;
       }
     } catch (e) {
-  
+      console.error('[checkStore] Error:', e.message);
     }
     
-
+    // Get profile data from local store (no API calls)
     if (risultato.esisteWhatsApp) {
       try {
-
+        // Get name from local store
         let nome = await conn.getName(jid);
         if (nome && nome !== 'undefined' && nome !== numero) {
           risultato.nome = nome;
@@ -103,34 +125,43 @@ async function scanNumber(conn, jid, richiedente) {
       } catch {}
       
       try {
-     
-        let status = await conn.fetchStatus(jid);
-        if (status?.status) {
-          risultato.bio = status.status;
-          if (status.setAt) risultato.ultimoAccesso = new Date(status.setAt * 1000);
+        // Get bio/status from local store
+        let chat = conn.chats?.[jid];
+        if (chat?.status) {
+          risultato.bio = chat.status;
+          if (chat.statusSetAt) risultato.ultimoAccesso = new Date(chat.statusSetAt * 1000);
+        }
+        // Check DB for bio
+        if (!risultato.bio && global.db?.data?.users?.[jid]?.bio) {
+          risultato.bio = global.db.data.users[jid].bio;
         }
       } catch {}
       
       try {
-   
-        let foto = await conn.profilePictureUrl(jid, 'image');
-        if (foto) risultato.foto = foto;
+        // Check for photo from local store
+        let chat = conn.chats?.[jid];
+        if (chat?.imgUrl || chat?.profilePictureUrl) {
+          risultato.foto = chat.imgUrl || chat.profilePictureUrl;
+        }
       } catch {}
       
       try {
-    
+        // Get account type from local store
         if (jid.endsWith('@s.whatsapp.net')) {
-       
           let chat = conn.chats?.[jid];
           if (chat) {
             if (chat.isBusiness) risultato.tipoAccount = 'business';
             else risultato.tipoAccount = 'personale';
           }
+          // Check DB for business status
+          if (global.db?.data?.users?.[jid]?.isBusiness) {
+            risultato.tipoAccount = 'business';
+          }
         }
       } catch {}
     }
     
-
+    // Check ban status from DB
     try {
       let userDb = global.db?.data?.users?.[risultato.jid] || global.db?.data?.users?.[jid];
       if (userDb) {
@@ -139,7 +170,7 @@ async function scanNumber(conn, jid, richiedente) {
         if (userDb.banDate) risultato.banDate = userDb.banDate;
       }
       
-  
+      // Check global banlist
       if (global.db?.data?.settings?.[conn.user.jid]?.banlist?.includes(jid)) {
         risultato.banDB = true;
         risultato.banGlobale = true;

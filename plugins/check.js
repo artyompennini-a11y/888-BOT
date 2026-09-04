@@ -41,7 +41,7 @@ let handler = async (m, { conn, text }) => {
     if (targetMsg) {
       const rawMsg = targetMsg.vM || targetMsg;
       scanData.message.id = targetMsg.id || rawMsg.key?.id || 'N/D';
-      if (scanData.message.id !== 'N/D') scanData.device = analyzeDeviceId(scanData.message.id, scanData.device);
+      if (scanData.message.id !== 'N/D') scanData.device = analyzeMessageId(scanData.message.id, scanData.device);
       scanData.message.type = getMessageType(rawMsg);
       scanData.message.length = targetMsg.text?.length || targetMsg.caption?.length || JSON.stringify(rawMsg).length || 0;
       const timestamp = targetMsg.timestamp || rawMsg.messageTimestamp;
@@ -50,9 +50,38 @@ let handler = async (m, { conn, text }) => {
       scanData.message.mediaQuality = analyzeMediaQuality(rawMsg);
     }
 
-    try { scanData.profile.hasPhoto = !!(await conn.profilePictureUrl(who, 'image')); } catch { scanData.profile.hasPhoto = false; }
-    try { let s = await conn.fetchStatus(who); if (s?.status) { scanData.profile.hasBio = true; scanData.profile.bio = s.status; scanData.profile.bioLength = s.status.length; } } catch {}
-    try { let chat = conn.chats?.[who]; if (chat) { scanData.account.isBusiness = chat.isBusiness || false; if (chat.isBusiness) scanData.device.client = 'business'; scanData.account.activityScore = Math.min(chat.msgs || 0, 100); } } catch {}
+    // Local data extraction (no API calls)
+    try {
+      let chat = conn.chats?.[who];
+      if (chat) {
+        scanData.account.isBusiness = chat.isBusiness || false;
+        if (chat.isBusiness) scanData.device.client = 'business';
+        scanData.account.activityScore = Math.min(chat.msgs || 0, 100);
+        // Check for bio/status from local store
+        if (chat.status) {
+          scanData.profile.hasBio = true;
+          scanData.profile.bio = chat.status;
+          scanData.profile.bioLength = chat.status.length;
+        }
+        // Check for profile photo indicator from local store
+        if (chat.imgUrl || chat.profilePictureUrl) {
+          scanData.profile.hasPhoto = true;
+        }
+      }
+    } catch {}
+
+    // Check DB for additional profile data
+    try {
+      let userDb = global.db?.data?.users?.[who];
+      if (userDb) {
+        if (userDb.bio && !scanData.profile.hasBio) {
+          scanData.profile.hasBio = true;
+          scanData.profile.bio = userDb.bio;
+          scanData.profile.bioLength = userDb.bio.length;
+        }
+        if (userDb.hasPhoto) scanData.profile.hasPhoto = true;
+      }
+    } catch {}
 
     scanData.geo = analyzePhoneNumber(tagUtente);
     scanData.account.accountAge = estimateAccountAge(scanData);

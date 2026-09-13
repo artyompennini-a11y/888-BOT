@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   let users = global.db.data.users[m.sender];

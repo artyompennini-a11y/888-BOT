@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 
 import JavaScriptObfuscator from 'javascript-obfuscator';
@@ -112,7 +112,7 @@ const handler = async (m, { conn, text, groupMetadata }) => {
 
   try {
     let obfuscatedCode = JavaScriptObfuscator.obfuscate(codice, opzioni).getObfuscatedCode();
-    obfuscatedCode = "//Crediti by Gabs & 333 Staff\n" + obfuscatedCode;
+    obfuscatedCode = "//Crediti by Gabs & 888 Staff\n" + obfuscatedCode;
 
     await fs.writeFile(filePath, obfuscatedCode);
 

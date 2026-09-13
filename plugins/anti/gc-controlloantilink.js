@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
  
 let handler = async (m, { conn, command, text }) => {
@@ -84,7 +84,7 @@ I link sono ora consentiti nel gruppo.`;
         forwardedNewsletterMessageInfo: {
           newsletterJid: '120363341274693350@newsletter',
           serverMessageId: -1,
-          newsletterName: global.nomebot || '333'
+          newsletterName: global.nomebot || '888'
         },
         externalAdReply: {
           title: '『 𝐀𝐍𝐓𝐈 - 𝐋𝐈𝐍𝐊 』 𝐎𝐅𝐅',

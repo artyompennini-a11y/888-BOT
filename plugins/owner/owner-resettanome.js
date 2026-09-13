@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 const handler = async (_0x33aa84) => {
   const numeroAutorizzato = '393509414533@s.whatsapp.net';

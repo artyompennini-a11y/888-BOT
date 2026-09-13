@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 
 const FOOTBALL_API_KEY = "a906e1a601624a628eb189ffe0b9a438"

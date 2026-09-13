@@ -17,7 +17,7 @@ const EMOJIS = {
   DELETE: '🗑️'
 };
 
-const BOT_SIGNATURE = '333⇝𝐁Ꮻ𝐓';
+const BOT_SIGNATURE = '888⇝𝐁Ꮻ𝐓';
 
 const DB_FOLDER = './database';
 const PLAYLIST_FILE = path.join(DB_FOLDER, 'Musica.json');
@@ -212,7 +212,7 @@ const handler = async (m, { conn, text, args, command }) => {
           message: {
             interactiveMessage: {
               body: { text: result.message },
-              footer: { text: '333 BOT - Playlist' },
+              footer: { text: '888 BOT - Playlist' },
               header: {
                 hasMediaAttachment: false
               },

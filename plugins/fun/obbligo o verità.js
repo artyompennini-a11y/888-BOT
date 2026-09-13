@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 let user = a => '@' + a.split('@')[0]
   let handler = async (m, { conn, command, text, groupMetadata, usedPrefix, args}) => {

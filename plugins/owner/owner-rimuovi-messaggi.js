@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 const handler = async (message) => {
   const userId = (message.mentionedJid && message.mentionedJid[0]) || message.sender;

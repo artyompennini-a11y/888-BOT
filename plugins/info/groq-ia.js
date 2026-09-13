@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const GROQ_KEY = global.APIKeys?.groq && global.APIKeys.groq !== '333' ? global.APIKeys.groq : 'AQ.Ab8RN6IZFlErNXaaHoNHtNOrMwbcyga-Ept5SzzEs2qfKgNF9w'
+const GROQ_KEY = global.APIKeys?.groq && global.APIKeys.groq !== '888' ? global.APIKeys.groq : 'AQ.Ab8RN6IZFlErNXaaHoNHtNOrMwbcyga-Ept5SzzEs2qfKgNF9w'
 
 let ON = false
 

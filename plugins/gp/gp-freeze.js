@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 let handler = async (m, { conn, isAdmin, isBotAdmin, usedPrefix }) => {
   if (!m.isGroup) return m.reply("❌ 𝐂𝐨𝐦𝐚𝐧𝐝𝐨 𝐮𝐭𝐢𝐥𝐢𝐳𝐳𝐚𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐬𝐮𝐢 𝐠𝐫𝐮𝐩𝐩𝐢.")

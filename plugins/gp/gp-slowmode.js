@@ -1,4 +1,4 @@
-// Plugin slowmode by 333 Lucifero
+// Plugin slowmode by 888 Lucifero
 
 export async function before(m, { conn, isAdmin, isOwner, isROwner }) {
   if (!m.message) return false

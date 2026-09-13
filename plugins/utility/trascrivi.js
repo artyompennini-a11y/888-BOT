@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 import fs from "fs"
 import path from "path"
@@ -125,7 +125,7 @@ let handler = async (m, { conn }) => {
     let text = ""
     let source = ""
 
-    if (OPENAI_API_KEY && OPENAI_API_KEY !== "333") {
+    if (OPENAI_API_KEY && OPENAI_API_KEY !== "888") {
         try {
             text = await transcribeWithOpenAI(wavPath)
             source = "OpenAI"

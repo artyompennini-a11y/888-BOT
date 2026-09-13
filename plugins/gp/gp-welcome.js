@@ -54,7 +54,7 @@ export async function before(m, { conn, participants }) {
         key: {
           participants: '0@s.whatsapp.net',
           fromMe: false,
-          id: '333Welcome'
+          id: '888Welcome'
         },
         message: {
           locationMessage: {

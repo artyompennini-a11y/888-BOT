@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
   const isMine = conn.user && (conn.user.jid || conn.user.id) &&

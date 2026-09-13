@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

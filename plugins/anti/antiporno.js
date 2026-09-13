@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
   if (m.isBaileys && m.fromMe) return true;

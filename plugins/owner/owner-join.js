@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 let handler = async (m, { conn, text, usedPrefix, command, participants, isOwner, groupMetadata  }) => {
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));

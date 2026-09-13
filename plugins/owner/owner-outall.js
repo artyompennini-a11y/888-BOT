@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 333 staff
+//Plugin by Gab, Lucifero & 888 staff
 
 let handler = async (m, { conn, args, command }) => {
     const groupToExclude = '120363368641021092@g.us'; // Inserisci l'ID del gruppo da non lasciare

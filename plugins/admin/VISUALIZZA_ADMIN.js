@@ -22,7 +22,7 @@ handler.all = async function (m) {
       key: {
         participants: '0@s.whatsapp.net',
         fromMe: false,
-        id: '333Promozione'
+        id: '888Promozione'
       },
       message: {
         locationMessage: {

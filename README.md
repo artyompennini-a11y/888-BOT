@@ -9,10 +9,10 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Theme-Dark_0a0a0a-0a0a0a?style=flat-square&logo=visualstudiocode&logoColor=3da5ff&logoWidth=16"/>
   <img src="https://img.shields.io/badge/Open_Source-%E2%9D%A4%EF%B8%8F-111?style=flat-square&logo=opensourceinitiative&logoColor=ff6b9d"/>
-  <img src="https://img.shields.io/badge/Maintained-Yes_222-222?style=flat-square&logo=statuspage&logoColor=3da5ff"/>
+  <img src="https://img.shields.io/badge/Maintained-Yes_888-888?style=flat-square&logo=statuspage&logoColor=3da5ff"/>
   <img src="https://img.shields.io/badge/Speed-Ultra_Fast_000-000?style=flat-square&logo=speedtest&logoColor=b04dff"/>
-  <img src="https://img.shields.io/badge/AI-Powered_222-222?style=flat-square&logo=openai&logoColor=3da5ff"/>
-  <img src="https://img.shields.io/badge/Termux-Ready_333-333?style=flat-square&logo=android&logoColor=3ddc84"/>
+  <img src="https://img.shields.io/badge/AI-Powered_888-888?style=flat-square&logo=openai&logoColor=3da5ff"/>
+  <img src="https://img.shields.io/badge/Termux-Ready_888-888?style=flat-square&logo=android&logoColor=3ddc84"/>
   <img src="https://img.shields.io/badge/WhatsApp-MD_000-000?style=flat-square&logo=whatsapp&logoColor=25d366"/>
 </p>
 

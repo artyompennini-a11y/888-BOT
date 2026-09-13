@@ -39,8 +39,11 @@
   <a href="https://whatsapp.com/channel/0029Vb8Y0igGufJ0xMYJmU40" target="_blank">
     <img src="https://img.shields.io/badge/%F0%9F%93%A3_Canale_WhatsApp-25d366?style=for-the-badge&logo=whatsapp&logoColor=white&logoWidth=20" height="32"/>
   </a>
+  <a href="https://instagram.com/elixir._regna" target="_blank">
+    <img src="https://img.shields.io/badge/%F0%9F%93%B8_Instagram%20Elixir-e4405f?style=for-the-badge&logo=instagram&logoColor=white&logoWidth=20" height="32"/>
+  </a>
   <a href="https://instagram.com/arty.340" target="_blank">
-    <img src="https://img.shields.io/badge/%F0%9F%93%B8_Instagram-e4405f?style=for-the-badge&logo=instagram&logoColor=white&logoWidth=20" height="32"/>
+    <img src="https://img.shields.io/badge/%F0%9F%93%B8_Instagram%20Punisher-833ab4?style=for-the-badge&logo=instagram&logoColor=white&logoWidth=20" height="32"/>
   </a>
 </p>
 
@@ -250,50 +253,7 @@ UTILITY████████████████████ 52          
 
 
 <h2>
-  <img src="https://img.shields.io/badge/05-%F0%9F%93%9E_BOT_NUMBERS-3da5ff?style=flat-square" height="22"/>
-</h2>
-
-<table>
-<tr>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/2-0a0a0a?style=for-the-badge&logo=sim-card&logoColor=3da5ff" height="28"/><br/><sub><b>Numeri totali</b></sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/1-25d366?style=for-the-badge&logo=check-circle&logoColor=white" height="28"/><br/><sub><b>Attivi</b></sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/1-736f82?style=for-the-badge&logo=x-circle&logoColor=white" height="28"/><br/><sub><b>Spenti</b></sub>
-</td>
-<td align="center" width="25%">
-  <img src="https://img.shields.io/badge/0-e5484d?style=for-the-badge&logo=ban&logoColor=white" height="28"/><br/><sub><b>Ban</b></sub>
-</td>
-</tr>
-</table>
-
-<table>
-<tr>
-<td width="50%">
-
-### 🟢 Online · sessione collegata
-📞 **+39 378 440 9415**<br/>
-<sub>Italia · in ascolto, risponde ai comandi</sub><br/>
-<a href="https://wa.me/393784409415"><img src="https://img.shields.io/badge/%F0%9F%93%A3_WhatsApp-25d366?style=flat-square&logo=whatsapp&logoColor=white" height="20"/></a>
-
-</td>
-<td width="50%">
-
-### ⚫ Offline · in standby
-📞 **+57 318 00770909**<br/>
-<sub>Colombia · sessione spenta, torna online appena serve</sub><br/>
-</td>
-</tr>
-</table>
-
-<img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
-
-
-<h2>
-  <img src="https://img.shields.io/badge/06-%F0%9F%9B%A0%EF%B8%8F_INSTALLATION-b04dff?style=flat-square" height="22"/>
+  <img src="https://img.shields.io/badge/05-%F0%9F%9B%A0%EF%B8%8F_INSTALLATION-b04dff?style=flat-square" height="22"/>
 </h2>
 
 <p>Da zero al bot funzionante in quattro comandi, direttamente dal telefono.</p>

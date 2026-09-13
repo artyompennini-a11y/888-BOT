@@ -1,0 +1,47 @@
+[
+  {
+    "nome": "Elixir",
+    "ruolo": "Owner / Developer",
+    "emoji": "👑",
+    "telefono": "393297014539",
+    "instagram": "elixir._regna",
+    "telegram": "Elixir888Project",
+    "bio": "Creatore e sviluppatore principale del bot"
+  },
+  {
+    "nome": "Punisher",
+    "ruolo": "Co-Owner",
+    "emoji": "🔱",
+    "telefono": "573117824583",
+    "instagram": "arty.340",
+    "telegram": "punishth",
+    "bio": "Co-fondatore e supporto del bot"
+  },
+  {
+    "nome": "Ghost",
+    "ruolo": "Manager",
+    "emoji": "🛡️",
+    "telefono": "212785655331",
+    "instagram": null,
+    "telegram": null,
+    "bio": "Gestione giorno-per-giorno del bot"
+  },
+  {
+    "nome": "Manu",
+    "ruolo": "Developer&tester",
+    "emoji": "🛡️",
+    "telefono": "393331663641",
+    "instagram": null,
+    "telegram": "manuxxxo",
+    "bio": "Staff del bot"
+  },
+   {
+    "nome": "Dado",
+    "ruolo": "Developer test&tester",
+    "emoji": "🛡️",
+    "telefono": "447785114563",
+    "instagram": "insta.dados00",
+    "telegram": null,
+    "bio": "Staff del bot"
+  }
+]

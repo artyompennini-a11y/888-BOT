@@ -1,12 +1,5 @@
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  888 BOT — README.md                                            -->
-<!--  Next Generation WhatsApp Bot | Node.js | Modular | Dark       -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-
-<!-- ── progress bar ── -->
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:3da5ff,50:7a7bff,100:b04dff&height=120&section=header&text=&fontColor=3da5ff&fontSize=0&animation=&fontAlignY=35" width="100%"/>
 
-<!-- ── animated title ── -->
 <h1 align="center">
   <a href="https://git.io/typing-svg">
     <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=700&size=32&duration=3000&pause=800&color=3DA5FF&center=true&vCenter=true&repeat=false&width=520&height=52&lines=%E2%9A%A1+888+%3CBOT%3E+%E2%9A%A1;Next+Gen+WhatsApp+Bot;Node.js+%E2%80%A2+Modular+%E2%80%A2+Dark" alt="888BOT Typing SVG"/>
@@ -23,7 +16,6 @@
   <img src="https://img.shields.io/badge/WhatsApp-MD_000-000?style=flat-square&logo=whatsapp&logoColor=25d366"/>
 </p>
 
-<!-- ── hero banner ── -->
 <p align="center">
   <img src="https://qu.ax/Um17w" width="140" style="border-radius:14px;border:1px solid #2a2a3c"/>
 </p>
@@ -33,7 +25,6 @@
   <sub>408 plugin · 13 moduli anti · 9 categorie · uptime 99.98%</sub>
 </p>
 
-<!-- ── official links ── -->
 <h2 align="center">
   <img src="https://img.shields.io/badge/%F0%9F%94%97_OFFICIAL_LINKS-3da5ff?style=for-the-badge&logoColor=white" height="22"/>
 </h2>
@@ -53,12 +44,8 @@
   </a>
 </p>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  SYSTEM OVERVIEW                                               -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/01-%F0%9F%9A%80_SYSTEM_OVERVIEW-3da5ff?style=flat-square" height="22"/>
@@ -66,7 +53,6 @@
 
 <p>Sei sottosistemi che collaborano: se uno cade, gli altri non se ne accorgono. È questa la scelta che tiene il bot in piedi da più tempo di qualunque funzione singola.</p>
 
-<!-- ── core stats ── -->
 <table>
 <tr>
 <td align="center" width="140">
@@ -90,7 +76,6 @@
 </tr>
 </table>
 
-<!-- ── subsystems ── -->
 <table>
 <tr>
 <td width="50%">
@@ -119,18 +104,13 @@ Risposte contestuali, riassunti delle chat, moderazione semantica — con rate-l
 </td>
 </table>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  PLUGIN CATEGORIES                                             -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/02-%F0%9F%A7%A9_PLUGIN_CATEGORIES-b04dff?style=flat-square" height="22"/>
 </h2>
 
-<!-- ── distribution bar ── -->
 ```
 ADMIN  ████████████████████ 48 plugin    │  .add  .kick  .promote  .warn
 FUN    ████████████████████████████ 76   │  .meme  .ship  .dado
@@ -143,7 +123,6 @@ Anti-  █████ 13                         │  anti-link  anti-spam  ant
 UTILITY████████████████████ 52           │  .sticker  .tts  .qr  .ocr
 ```
 
-<!-- ── plugin table ── -->
 <table>
 <tr>
 <th align="left">Categoria</th>
@@ -162,12 +141,8 @@ UTILITY████████████████████ 52          
 <tr><td><code><b>UTILITY</b></code></td><td>Strumenti quotidiani: sticker, conversioni, tts, QR, OCR</td><td align="center"><b>52</b></td><td><code>.sticker</code> <code>.tts</code> <code>.qr</code> <code>.ocr</code></td></tr>
 </table>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  ANTI MODULES                                                  -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/03-%F0%9F%9B%A1%EF%B8%8F_ANTI_MODULES-3da5ff?style=flat-square" height="22"/>
@@ -175,7 +150,6 @@ UTILITY████████████████████ 52          
 
 <p>Tredici moduli di difesa a strati — ognuno copre una ferita vera.</p>
 
-<!-- ── anti modules grid ── -->
 <table>
 <tr>
 <td width="50%">
@@ -206,12 +180,8 @@ UTILITY████████████████████ 52          
 </tr>
 </table>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  STAFF                                                         -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/04-%F0%9F%91%A4_STAFF-b04dff?style=flat-square" height="22"/>
@@ -219,7 +189,6 @@ UTILITY████████████████████ 52          
 
 <p>Cinque persone, contatti veri. Per supporto, segnalazioni o collaborazioni scrivi direttamente.</p>
 
-<!-- ── founders ── -->
 <h3>👑 Fondatori</h3>
 
 <table>
@@ -241,7 +210,6 @@ UTILITY████████████████████ 52          
 </tr>
 </table>
 
-<!-- ── management ── -->
 <h3>🛡️ Management</h3>
 
 <table>
@@ -256,7 +224,6 @@ UTILITY████████████████████ 52          
 </tr>
 </table>
 
-<!-- ── dev & test ── -->
 <h3>💻 Sviluppo e Test</h3>
 
 <table>
@@ -279,12 +246,8 @@ UTILITY████████████████████ 52          
 </tr>
 </table>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  BOT NUMBERS                                                   -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/05-%F0%9F%93%9E_BOT_NUMBERS-3da5ff?style=flat-square" height="22"/>
@@ -326,12 +289,8 @@ UTILITY████████████████████ 52          
 </tr>
 </table>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  INSTALLATION                                                  -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2>
   <img src="https://img.shields.io/badge/06-%F0%9F%9B%A0%EF%B8%8F_INSTALLATION-b04dff?style=flat-square" height="22"/>
@@ -339,7 +298,6 @@ UTILITY████████████████████ 52          
 
 <p>Da zero al bot funzionante in quattro comandi, direttamente dal telefono.</p>
 
-<!-- ── prerequisites ── -->
 <h3>📋 Prerequisiti</h3>
 
 | Requisito | Dettaglio |
@@ -349,7 +307,6 @@ UTILITY████████████████████ 52          
 | 📶 **Connessione stabile** | Per l'abbinamento WhatsApp e gli aggiornamenti |
 | 📱 **QR Code** | Da scansionare al primo avvio |
 
-<!-- ── install steps ── -->
 <h3>💻 Installazione su Termux</h3>
 
 ```bash
@@ -372,12 +329,8 @@ yarn start
 
 > 💡 **Trucco:** dopo l'avvio esegui `termux-wake-lock` così Android non addormenta il bot.
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  WHATSAPP CHANNEL CTA                                         -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <h2 align="center">
   <img src="https://img.shields.io/badge/%F0%9F%93%A3_CANALE_UFFICIALE-25d366?style=for-the-badge&logo=whatsapp&logoColor=white" height="28"/>
@@ -394,12 +347,8 @@ yarn start
   </a>
 </p>
 
-<!-- ── divider ── -->
 <img src="https://capsule-render.vercel.app/api?type=rect&color=1e1e29&height=2&section=header&text=&fontSize=0" width="100%"/>
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!--  FOOTER                                                        -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
 
 <br/>
 

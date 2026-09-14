@@ -1,22 +1,20 @@
 //Plugin by Punisher, elixir & 888 staff
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'fs'
+import path from 'path'
 
-let handler = async (message, { text, usedPrefix, command }) => {
-  if (!text) throw '𝐈𝐧𝐬𝐞𝐫𝐢𝐬𝐜𝐢 𝐢𝐥 𝐩𝐚𝐭𝐡 𝐝𝐞𝐥 𝐟𝐢𝐥𝐞 𝐝𝐚 𝐞𝐝𝐢𝐭𝐚𝐫𝐞';
-  if (!message.quoted || !message.quoted.text) throw '𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚𝐥 𝐦𝐞𝐬𝐬𝐚𝐠𝐢𝐨 𝐜𝐡𝐞 𝐜𝐨𝐧𝐭𝐢𝐞𝐧𝐞 𝐢𝐥 𝐧𝐮𝐨𝐯𝐨 𝐜𝐨𝐧𝐭𝐞𝐧𝐮𝐭𝐨 𝐝𝐞𝐥 𝐟𝐢𝐥𝐞';
-  
-  let filePath = text;
-  const normalized = path.normalize(filePath).replace(/\\/g, '/');
+let handler = async (m, { text, __dirname }) => {
+  if (!text) throw 'Inserisci il path del file da editare'
+  if (!m.quoted?.text) throw 'Rispondi al messaggio che contiene il nuovo contenuto del file'
+
+  let filePath = path.resolve(__dirname, text)
+  const normalized = path.normalize(filePath).replace(/\\/g, '/')
   if (normalized.includes('/plugins/crediti.js') || normalized.includes('.protected_plugins'))
-    throw 'Questo file è protetto e non può essere modificato.';
-  
+    throw 'Questo file è protetto e non può essere modificato.'
 
-  if (!fs.existsSync(filePath)) throw '𝐈𝐥 𝐟𝐢𝐥𝐞 𝐧𝐨𝐧 𝐞𝐬𝐢𝐬𝐭𝐞';
-  
+  if (!fs.existsSync(filePath)) throw 'Il file non esiste'
 
-  fs.writeFileSync(filePath, message.quoted.text);
+  fs.writeFileSync(filePath, m.quoted.text)
 
   let responseMessage = {
     key: {
@@ -32,14 +30,14 @@ let handler = async (message, { text, usedPrefix, command }) => {
       }
     },
     participant: '0@s.whatsapp.net'
-  };
-  
-  conn.reply(message.chat, `𝐈𝐥 𝐟𝐢𝐥𝐞 "${text}" 𝐞̀ 𝐬𝐭𝐚𝐭𝐨 𝐞𝐝𝐢𝐭𝐚𝐭𝐨 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨`, responseMessage);
-};
+  }
 
-handler.tags = ['owner'];
-handler.help = ['𝐞𝐝𝐢𝐭𝐟𝐢𝐥𝐞'];
-handler.command = /^editfile$/i;
-handler.rowner = true;
+  conn.reply(m.chat, `Il file "${text}" è stato editato con successo`, responseMessage)
+}
 
-export default handler;
+handler.tags = ['owner']
+handler.help = ['editfile']
+handler.command = /^editfile$/i
+handler.rowner = true
+
+export default handler

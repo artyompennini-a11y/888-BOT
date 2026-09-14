@@ -1,30 +1,35 @@
 //Plugin by punisher, elixir & 888 staff
 
-import { join } from 'path';
-import { unlinkSync, existsSync } from 'fs';
+import { join } from 'path'
+import { unlinkSync, existsSync, readdirSync } from 'fs'
 
-const protectedPluginNames = new Set(['crediti', 'crediti.js']);
+const PROTECTED_PLUGIN_NAMES = new Set(['crediti', 'crediti.js'])
 
 const handler = async (m, { conn, args, text, __dirname }) => {
-  if (!text) throw '📌 *_Esempio uso:_*\n*#deleteplugin Menu-official*';
-  const pluginName = args && args[0] ? args[0].replace(/\.js$/i, '') : text.replace(/\.js$/i, '');
+  const input = (args?.[0] || text || '').trim()
+  if (!input) throw '📌 *_Esempio uso:_*\n*#deleteplugin Menu-official*'
 
-  if (protectedPluginNames.has(pluginName.toLowerCase())) {
-    throw 'Questo plugin è protetto e non può essere eliminato.';
+  const pluginName = input.replace(/\.js$/i, '')
+
+  if (PROTECTED_PLUGIN_NAMES.has(pluginName.toLowerCase())) {
+    throw 'Questo plugin è protetto e non può essere eliminato.'
   }
 
-  const pluginPath = join(__dirname, '../plugins', `${pluginName}.js`);
+  const pluginPath = join(__dirname, `${pluginName}.js`)
   if (!existsSync(pluginPath)) {
-    throw '*🗃️ non esiste questo plugin!*\n\nUsa il nome del file plugin senza estensione, ad esempio: #deleteplugin Menu-official';
+    // Mostra lista plugin disponibili
+    const files = readdirSync(__dirname).filter(f => f.endsWith('.js'))
+    const list = files.map((f, i) => `${i + 1}. ${f.replace('.js', '')}`).join('\n')
+    throw `*🗃️ Plugin non trovato!*\n\n📋 Plugin disponibili:\n${list}`
   }
 
-  unlinkSync(pluginPath);
-  return conn.reply(m.chat, `✅ Il plugin "${pluginName}.js" è stato eliminato.`, m);
-};
+  unlinkSync(pluginPath)
+  return conn.reply(m.chat, `✅ Il plugin "${pluginName}.js" è stato eliminato con successo.`, m)
+}
 
-handler.tags = ['owner'];
-handler.help = ['deleteplugin <nombre>'];
-handler.command = /^(deleteplugin|dp|deleteplu)$/i;
-handler.rowner = true;
+handler.tags = ['owner']
+handler.help = ['deleteplugin <nome>']
+handler.command = /^(deleteplugin|dp|deleteplu)$/i
+handler.rowner = true
 
-export default handler;
+export default handler

@@ -1,12 +1,8 @@
-//Plugin by The punisher, elixir & 888 staff
-// Se un owner del bot chiede di entrare in un gruppo con approve mode dove il bot
-// è già presente ed è admin, la richiesta viene accettata e l'owner viene promosso
-// ad admin in automatico. Le richieste degli altri utenti NON vengono toccate.
+// Plugin by Elixir
 
-const BATCH_MS = 5000; // finestra per raggruppare più richieste owner in un unico messaggio
-const DEDUP_TTL_MS = 60000; // ignora eventi duplicati (stesso richiedente+gruppo)
+const BATCH_MS = 5000;
+const DEDUP_TTL_MS = 60000;
 
-// Stub inviato da WhatsApp per le richieste di ingresso (GROUP_MEMBERSHIP_JOIN_APPROVAL_REQUEST_*)
 const JOIN_REQUEST_STUB = 172;
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -16,7 +12,6 @@ const numeriOwner = () => {
   return raw.map((v) => String(Array.isArray(v) ? v[0] : v?.jid || v?.numero || v?.number || v).replace(/\D/g, ''));
 };
 
-// Prefisso dispositivo (es. "1234:56@...") rimosso, numero puro per il confronto
 const jidNum = (jid) => String(jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
 const isOwner = (jid) => {
@@ -42,8 +37,6 @@ const antiSpamVisto = (chiave) => {
   return global.accettaownerDedup.has(chiave);
 };
 
-// Se il richiedente arriva come @lid (niente numero nel JID), lo si risolve tramite
-// la lista delle richieste in sospeso del gruppo.
 const risolviOwner = async (conn, chatId, partecipante) => {
   if (!String(partecipante || '').endsWith('@lid')) {
     return isOwner(partecipante) ? partecipante : null;
@@ -117,7 +110,7 @@ const gestisciRichiesta = async (conn, chatId, partecipante) => {
     if (!chatId || !String(chatId).endsWith('@g.us')) return;
     if (!partecipante) return;
     const baseChiave = `${chatId}:${jidNum(partecipante)}`;
-    if (bloccaSubito(baseChiave)) return; // marca in modo sincrono: chiude la race tra evento + stub
+    if (bloccaSubito(baseChiave)) return;
     const who = await risolviOwner(conn, chatId, partecipante);
     if (!who) return;
     const chiave = `${chatId}:${jidNum(who)}`;

@@ -616,6 +616,8 @@ export async function handler(chatUpdate) {
             slowmode: false,
             reaction: false,
             antispam: false,
+            tagCount: 0,
+            tagLastReset: 0,
             expired: 0,
             users: {},
             topUsers: {},

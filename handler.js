@@ -963,6 +963,7 @@ export async function handler(chatUpdate) {
                 }
 
                 if (m.isGroup) {
+                    const isAntispamOwner = isROwner || isOwner || isGab;
                     const gSpam = global.groupSpam[m.chat] ??= {
                         count: 0,
                         firstCommandTimestamp: 0,
@@ -972,8 +973,11 @@ export async function handler(chatUpdate) {
                     const now = Date.now();
 
                     if (gSpam.isSuspended) {
-                        if (now - gSpam.suspendedAt < 180_000) {
-                            break;
+                        if (now - gSpam.suspendedAt < 20_000) {
+                            // Gli owner sono esclusi: possono usare i comandi anche durante la sospensione
+                            if (!isAntispamOwner) {
+                                break;
+                            }
                         } else {
                             gSpam.isSuspended = false;
                             gSpam.count = 0;
@@ -984,34 +988,37 @@ export async function handler(chatUpdate) {
 
                             await this.sendMessage(m.chat, {
                                 text: mentions.length > 0
-                                    ? `✅ Antispam finito, il bot può essere riutilizzato, fate i bravi.\n\n${mentions.map(o => '@' + o.split('@')[0]).join(', ')}`
-                                    : `✅ Antispam finito, il bot può essere riutilizzato, fate i bravi.`,
+                                    ? `✅ *Antispam comandi terminato!* Il bot è di nuovo attivo.\n\n${mentions.map(o => '@' + o.split('@')[0]).join(', ')}`
+                                    : `✅ *Antispam comandi terminato!* Il bot è di nuovo attivo.`,
                                 mentions
                             }).catch(() => {});
                         }
                     }
 
-                    if (now - gSpam.firstCommandTimestamp > 20_000) {
-                        gSpam.count = 1;
-                        gSpam.firstCommandTimestamp = now;
-                    } else {
-                        gSpam.count++;
-                    }
+                    // Gli owner non contano verso l'antispam e non vengono contati se il gruppo è sospeso
+                    if (!gSpam.isSuspended && !isAntispamOwner) {
+                        if (now - gSpam.firstCommandTimestamp > 10_000) {
+                            gSpam.count = 1;
+                            gSpam.firstCommandTimestamp = now;
+                        } else {
+                            gSpam.count++;
+                        }
 
-                    if (gSpam.count > 10) {
-                        gSpam.isSuspended = true;
-                        gSpam.suspendedAt = now;
+                        if (gSpam.count > 5) {
+                            gSpam.isSuspended = true;
+                            gSpam.suspendedAt = now;
 
-                        const ownerMentions = global.owner?.map(([num]) => normalizeNumber(num)) ?? [];
-                        const mentions = ownerMentions.length > 0 ? ownerMentions : [];
+                            const ownerMentions = global.owner?.map(([num]) => normalizeNumber(num)) ?? [];
+                            const mentions = ownerMentions.length > 0 ? ownerMentions : [];
 
-                        await this.sendMessage(m.chat, {
-                            text: mentions.length > 0
-                                ? `🚫 *Antispam attivato!*\n\nPer 3 minuti il bot non potrà essere utilizzabile.\n\n${mentions.map(o => '@' + o.split('@')[0]).join(', ')}`
-                                : `🚫 *Antispam attivato!*\n\nPer 3 minuti il bot non potrà essere utilizzabile.`,
-                            mentions
-                        }).catch(() => {});
-                        break;
+                            await this.sendMessage(m.chat, {
+                                text: mentions.length > 0
+                                    ? `🚫 *Antispam comandi attivo!* Per 20 secondi il bot non risponderà.\n\n${mentions.map(o => '@' + o.split('@')[0]).join(', ')}`
+                                    : `🚫 *Antispam comandi attivo!* Per 20 secondi il bot non risponderà.`,
+                                mentions
+                            }).catch(() => {});
+                            break;
+                        }
                     }
                 }
 

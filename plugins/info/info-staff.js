@@ -14,12 +14,24 @@ const loadStaff = () => {
   }
 };
 
+const normalizeHandle = (value) => {
+  if (!value) return '';
+  return String(value)
+    .replace(/^@/, '')
+    .replace(/^https?:\/\/.*instagram\.com\//i, '')
+    .replace(/^https?:\/\/.*t\.me\//i, '')
+    .replace(/^www\./i, '')
+    .trim();
+};
+
 const formattaMembro = (membro) => {
   const emoji = membro.emoji || '👤';
   const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
+
   if (membro.bio) righe.push(`\n${membro.bio}`);
-  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${String(membro.instagram).replace(/^@/, '').replace(/^https?:\/\/.*instagram\.com\//i, '').replace(/^www\./i, '')}`);
-  if (membro.telegram) righe.push(`\n📞 https://t.me/${String(membro.telegram).replace(/^@/, '')}`);
+  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${normalizeHandle(membro.instagram)}`);
+  if (membro.telegram) righe.push(`\n📞 https://t.me/${normalizeHandle(membro.telegram)}`);
+
   return righe.join('\n');
 };
 
@@ -28,7 +40,8 @@ const inviaTelegram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
   }
-  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${String(m.telegram).replace(/^@/, '')}`).join('\n\n')}`;
+
+  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${normalizeHandle(m.telegram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
@@ -37,7 +50,8 @@ const inviaInstagram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
   }
-  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${String(m.instagram).replace(/^@/, '').replace(/^https?:\/\/.*instagram\.com\//i, '').replace(/^www\./i, '')}`).join('\n\n')}`;
+
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${normalizeHandle(m.instagram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
@@ -45,15 +59,16 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
   }
+
   const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
+
 let handler = async (m, { conn, usedPrefix, args, text }) => {
   const staffData = loadStaff();
-  
-  // Invia contenuto se il comando Ã¨ giÃ  stato attivato (da pulsante o da testo)
+
   const lowerText = String(text || '').toLowerCase();
-  
+
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
     return inviaTelegram(conn, m.chat, staffData, m);
   }
@@ -64,7 +79,6 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
     return inviaStaff(conn, m.chat, staffData, m);
   }
 
-  // Mostra la tendina
   let imageBuffer;
   try {
     imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg');
@@ -72,8 +86,8 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
   }
 
-  const botName = global.db?.data?.nomedelbot || global.nomebot || "🤖 888 BOT";
-  const botVersion = global.versione || global.db?.data?.version || "1.1";
+  const botName = global.db?.data?.nomedelbot || global.nomebot || '🤖 888 BOT';
+  const botVersion = global.versione || global.db?.data?.version || '1.2';
 
   const fake = {
     key: {
@@ -83,11 +97,11 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
     },
     message: {
       contactMessage: {
-        displayName: `Staff`,
+        displayName: 'Staff',
         vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
       }
     },
-    participant: "0@s.whatsapp.net"
+    participant: '0@s.whatsapp.net'
   };
 
   const menuText = `
@@ -97,19 +111,19 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
 📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
 `.trim();
 
-  const contattiTelegram = staffData.filter(m => m.telegram).length;
-  const contattiInstagram = staffData.filter(m => m.instagram).length;
+  const contattiTelegram = staffData.filter(m => m.telegram && String(m.telegram).trim()).length;
+  const contattiInstagram = staffData.filter(m => m.instagram && String(m.instagram).trim()).length;
 
   const buttonParamsJson = JSON.stringify({
-    title: "Staff 888",
+    title: 'Staff 888',
     sections: [
       {
-        title: "📁 Contatti Staff",
-        highlight_label: "888",
+        title: '📁 Contatti Staff',
+        highlight_label: '888',
         rows: [
-          { id: `${usedPrefix}staff tg`, title: "📞 Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : "Nessun contatto disponibile" },
-          { id: `${usedPrefix}staff ig`, title: "📷 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : "Nessun profilo disponibile" },
-          { id: `${usedPrefix}staff lista`, title: "👥 Tutto lo staff", description: staffData.length > 0 ? `${staffData.length} membri del team` : "Nessun membro trovato" }
+          { id: `${usedPrefix}staff tg`, title: '📞 Telegram', description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : 'Nessun contatto disponibile' },
+          { id: `${usedPrefix}staff ig`, title: '📷 Instagram', description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : 'Nessun profilo disponibile' },
+          { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff', description: staffData.length > 0 ? `${staffData.length} membri del team` : 'Nessun membro trovato' }
         ]
       }
     ]
@@ -118,21 +132,21 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
   await conn.sendMessage(m.chat, {
     image: imageBuffer,
     caption: menuText,
-    footer: "",
+    footer: '',
     headerType: 4,
     interactiveButtons: [
       {
-        name: "single_select",
+        name: 'single_select',
         buttonParamsJson
       }
     ]
   }, { quoted: fake });
 
   m.react('📌');
-}
+};
 
 handler.help = ['staff', 'team'];
 handler.tags = ['main'];
 handler.command = ['staff', 'team'];
 
-export default handler
+export default handler;

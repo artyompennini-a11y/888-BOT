@@ -1,8 +1,11 @@
+// Codice di info/info-ping.js
+
 import speed from 'performance-now'
 import os from 'os'
 import dns from 'dns'
 import fetch from 'node-fetch'
 import fs from 'fs'
+import process from 'process'
 import { fetchLatestBaileysVersion } from '@chatunity/baileys'
 
 const uptimeFmt = ms => {
@@ -12,23 +15,18 @@ const uptimeFmt = ms => {
   return `${d}g ${h}o ${m}m`
 }
 
-const formatMem = (bytes) => {
-  const gb = bytes / (1024 * 1024 * 1024)
-  if (gb >= 1) return `${gb.toFixed(2)} GB`
-  const mb = bytes / (1024 * 1024)
-  return `${mb.toFixed(1)} MB`
-}
-
-const getSystemRAM = () => {
-  const total = os.totalmem()
-  const free = os.freemem()
-  const used = total - free
-  return { total, used, free }
+const formatBytes = (bytes) => {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let size = bytes
+  let unitIndex = 0
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+  return `${size.toFixed(2)} ${units[unitIndex]}`
 }
 
 let handler = async (m, { conn, usedPrefix }) => {
-
-  // Immagine stile 888
   let imageBuffer
   try {
     imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg')
@@ -36,15 +34,12 @@ let handler = async (m, { conn, usedPrefix }) => {
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
   }
 
-  // Ping reale: misura il round-trip time del messaggio
   const start = speed()
   try { await conn.readMessages([m.key]) } catch {}
   const latency = (speed() - start).toFixed(2)
 
-  // Uptime
   const uptime = uptimeFmt(process.uptime() * 1000)
 
-  // Connessione
   const state = conn?.ev?.connectionState
   const status =
     state === 'open' ? '🟢 Connesso' :
@@ -52,18 +47,15 @@ let handler = async (m, { conn, usedPrefix }) => {
     state === 'close' ? '🔴 Disconnesso' :
     `⚪ ${state || 'N/D'}`
 
-  // RAM di sistema reale
-  const sysRam = getSystemRAM()
-  const ramTotal = sysRam.total
-  const ramUsed = sysRam.used
-  const ramFree = sysRam.free
+  const ramtot = os.totalmem()
+  const ramusata = ramtot - os.freemem()
+  const ramBot = process.memoryUsage().rss
+  const perc = ((ramusata / ramtot) * 100).toFixed(1)
 
-  // CPU
   const cpu = os.cpus()?.[0]
   const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
   const cpuCount = os.cpus()?.length || 'N/D'
 
-  // DNS
   let dnsPing = 'N/D'
   try {
     const t = speed()
@@ -74,26 +66,27 @@ let handler = async (m, { conn, usedPrefix }) => {
     dnsPing = (speed() - t).toFixed(2)
   } catch {}
 
-  // Baileys
   let baileys = 'N/D'
   try {
     baileys = (await fetchLatestBaileysVersion()).version.join('.')
   } catch {}
 
-  // Caption stile 888 con dati reali
   const caption = `
 ⚡ *PING 888*
 📡 Ping: *${latency}ms*
 🌐 DNS: *${dnsPing}ms*
 ⏳ Uptime: *${uptime}*
 🔧 Baileys: *v${baileys}*
-💾 RAM: *${formatMem(ramUsed)} / ${formatMem(ramTotal)}* (Lib: ${formatMem(ramFree)})
+
+💾 *RAM Totale:* ${formatBytes(ramtot)}
+📊 *RAM Usata:* ${formatBytes(ramusata)} (${perc}%)
+🤖 *RAM Bot:* ${formatBytes(ramBot)}
+
 🖥️ CPU: *${cpuInfo}* (${cpuCount} core${cpuCount !== 'N/D' ? 's' : ''})
 
 📂 Apri il pannello dal pulsante sotto.
 `.trim()
 
-  // Pulsante single_select stile menu 888
   const buttonParamsJson = JSON.stringify({
     title: "Pannello Ping 888",
     sections: [

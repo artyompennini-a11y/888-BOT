@@ -5,7 +5,7 @@ import { makeCard, sendImage } from '../info/lastfm-card.js';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
-// Inizializzazione sicura del database separando utenti, fuoco e preferiti
+
 let db = { users: {}, likes: {}, favorites: {} };
 if (fs.existsSync(DB_PATH)) {
   try {
@@ -36,7 +36,7 @@ const addSongLike = (songId, sender) => {
   return { alreadyLiked: false };
 };
 
-// ❤️ PREFERITI: aggiunge una canzone ai preferiti dell'utente
+
 const addFavorite = (userId, artist, song) => {
   if (!db.favorites[userId]) db.favorites[userId] = [];
   const dup = db.favorites[userId].some(
@@ -78,9 +78,9 @@ async function getTopArtists(username) {
   }
 }
 
-/**
- * Dettagli globali del brano (quante volte è stato ascoltato, da chi e da te).
- */
+
+
+
 async function getTrackInfo(artist, track, username) {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&username=${encodeURIComponent(username || '')}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
@@ -93,9 +93,9 @@ async function getTrackInfo(artist, track, username) {
   }
 }
 
-/**
- * Statistiche globali dell'artista (ascoltatori mensili + ascolti totali).
- */
+
+
+
 async function getArtistInfo(artist) {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artist)}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
@@ -108,10 +108,7 @@ async function getArtistInfo(artist) {
   }
 }
 
-const pulisci = (t) => String(t ?? '').replace(/[\u0300-\u036F\u200B-\u200F\uFEFF]/g, '').trim();
-const numeroId = (jid) => String(jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
 
-// Formatta i numeroni in maniera leggibile (1.2M, 340k, 567)
 const formatCount = (n) => {
   const num = parseInt(n, 10) || 0;
   if (num >= 1e6) return `${(num / 1e6).toFixed(num >= 1e7 ? 0 : 1)}M`;
@@ -121,7 +118,7 @@ const formatCount = (n) => {
 
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
-  // COMANDO: SETUSER
+
   if (command === 'setuser') {
     const username = text.trim();
     if (!username) {
@@ -136,7 +133,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-  // Controllo sessione utente registrato
+
   const user = db.users[m.sender];
   if (!user) {
     return conn.sendMessage(m.chat, {
@@ -144,7 +141,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-  // COMANDO: PROFILO / CUR
+
   if (command === 'profilo' || command === 'cur') {
     const track = await getRecentTrack(user);
     if (!track) {
@@ -163,33 +160,33 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       }, { quoted: m });
     }
 
-    const songTitle = pulisci(track.name) || 'Traccia sconosciuta';
-    const artistName = pulisci(track.artist?.['#text']) || 'Artista sconosciuto';
+    const songTitle = track.name || 'Traccia sconosciuta';
+    const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
-    // 🌐 Link di ascolto su YouTube e Spotify
+
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
     const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}`;
 
-    // 📊 Statistiche di ascolto (Last.fm)
+
     const [trackInfo, artistInfo] = await Promise.all([
       getTrackInfo(artistName, songTitle, user),
       getArtistInfo(artistName)
     ]);
 
-    const playCount      = trackInfo?.playcount      || 0; // quante volte è stata ascoltata la canzone
-    const listeners      = trackInfo?.listeners      || 0; // da quante persone
-    const userPlayCount  = trackInfo?.userplaycount  || 0; // quante volte la ascolti tu
-    const artListeners   = artistInfo?.stats?.listeners  || 0; // ascoltatori mensili dell'artista
-    const artPlaycount   = artistInfo?.stats?.playcount  || 0; // ascolti totali dell'artista
+    const playCount      = trackInfo?.playcount      || 0; 
+    const listeners      = trackInfo?.listeners      || 0; 
+    const userPlayCount  = trackInfo?.userplaycount  || 0; 
+    const artListeners   = artistInfo?.stats?.listeners  || 0; 
+    const artPlaycount   = artistInfo?.stats?.playcount  || 0; 
 
-    // 🖼️ Copertina dell'album per la preview esterna
+
     const albumArt =
       track.image?.find(i => i.size === 'extralarge')?.['#text'] ||
       track.image?.find(i => i.size === 'large')?.['#text'] ||
       'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png';
 
-    // 🎛️ Card esterna immersiva (spunto da gp-aperto.js)
+
     const externalAdReply = {
       title: songTitle,
       body: `${artistName} • 🎧 ${user} • 𝟴𝟴𝟴 𝗕𝗢𝗧`,
@@ -217,10 +214,10 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       `🎬 *Premi un pulsante qui sotto per ascoltarla o dargli fuoco 🔥*`
     ].join('\n');
 
-    // 🔘 Pulsanti native: QUICK_REPLY (Like ❤️ + Fuoco 🔥) + CTA_URL (YouTube/Spotify)
+
     const buttons = [
-      [String('❤️ Metti nei preferiti').slice(0, 25), `.like ${numeroId(m.sender)}`],
-      [String('🔥 Fuoco (non mi piace)').slice(0, 25), `.fuoco ${numeroId(m.sender)}`]
+      ['❤️ Metti nei preferiti', `.like ${m.sender}`],
+      ['🔥 Fuoco (non mi piace)', `.fuoco ${m.sender}`]
     ];
     const urls = [
       ['▶️ Ascolta su YouTube', youtubeUrl],
@@ -244,7 +241,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     return;
   }
 
-  // COMANDO: TOP / STATS
+
   if (command === 'top' || command === 'stats') {
     const artists = await getTopArtists(user);
     if (!artists || !artists.length) {
@@ -265,7 +262,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-  // COMANDO: LIKE ❤️ — mette la canzone nei TUOI preferiti
+
   if (command === 'like') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe
@@ -279,7 +276,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       }
     }
 
-    // Di default salvi la canzone che stai ascoltando tu
+
     targetUserId = targetUserId || m.sender;
 
     const targetUsername = db.users[targetUserId];
@@ -312,7 +309,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-  // COMANDO: FUOCO 🔥 — SOLO gli altri possono dare fuoco alla musica (non mi piace)
+
   if (command === 'fuoco') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe

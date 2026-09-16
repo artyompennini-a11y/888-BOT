@@ -18,14 +18,13 @@ const formattaMembro = (membro) => {
   const emoji = membro.emoji || '👤';
   const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
   if (membro.bio) righe.push(`\n${membro.bio}`);
-  if (membro.telefono) righe.push(`\n📞 wa.me/${membro.telefono}`);
-  if (membro.instagram) righe.push(`\n📷 IG: ${membro.instagram}`);
-  if (membro.telegram) righe.push(`\n📞 TG: ${membro.telegram}`);
+  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${String(membro.instagram).replace(/^@/, '').replace(/^https?:\/\/.*instagram\.com\//i, '').replace(/^www\./i, '')}`);
+  if (membro.telegram) righe.push(`\n📞 https://t.me/${String(membro.telegram).replace(/^@/, '')}`);
   return righe.join('\n');
 };
 
 const inviaTelegram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => m.telegram);
+  const membri = staffData.filter(m => m.telegram && String(m.telegram).trim());
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
   }
@@ -34,11 +33,11 @@ const inviaTelegram = async (conn, chat, staffData, quoted) => {
 };
 
 const inviaInstagram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => m.instagram);
+  const membri = staffData.filter(m => m.instagram && String(m.instagram).trim());
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
   }
-  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${String(m.instagram).replace(/^@/, '')}`).join('\n\n')}`;
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${String(m.instagram).replace(/^@/, '').replace(/^https?:\/\/.*instagram\.com\//i, '').replace(/^www\./i, '')}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
@@ -47,10 +46,6 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
   }
   const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
-  const conTelefono = staffData.filter(m => m.telefono);
-  if (conTelefono.length > 0) {
-    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} • ${m.ruolo}`]), quoted);
-  }
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 let handler = async (m, { conn, usedPrefix, args, text }) => {

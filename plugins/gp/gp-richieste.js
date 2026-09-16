@@ -1,6 +1,5 @@
 //Plugin by Punisher, Elixir & 888 staff
 
-
 const ACTIONS = {
   accetta: 'approve',
   approva: 'approve',
@@ -15,9 +14,7 @@ const ACTIONS = {
 const normalizeRequestJid = (request, conn) => {
   let jid = request.user || request.requester || request.id || request.jid || request.participant || request.lid || ''
   if (!jid) return ''
-  if (conn && typeof conn.decodeJid === 'function') {
-    jid = conn.decodeJid(jid)
-  }
+  if (conn && typeof conn.decodeJid === 'function') jid = conn.decodeJid(jid)
   return jid
 }
 
@@ -27,10 +24,16 @@ const formatRequestDisplay = (request) => {
   return `@${jid.replace(/@.*$/, '')}`
 }
 
-let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
+let handler = async (m, { conn, isAdmin, isBotAdmin, groupMetadata }) => {
   if (!m.isGroup) return m.reply('❌ Questo comando si usa solo nei gruppi.')
   if (!isBotAdmin) return m.reply('❌ Devo essere admin per controllare le richieste.')
-  if (!isAdmin) return m.reply('❌ Solo gli admin del gruppo possono usare questo comando.')
+
+  const ownerGroup = groupMetadata?.owner
+  const sender = m.sender
+  const ownerGlobal = Array.isArray(global.owner) ? global.owner : []
+
+  if (!isAdmin && sender !== ownerGroup && !ownerGlobal.includes(sender))
+    return m.reply('❌ Solo admin, owner del gruppo o owner del bot possono usare questo comando.')
 
   try {
     const groupId = m.chat
@@ -67,8 +70,7 @@ let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
     if (!action) {
       const listText = requests.slice(0, 20).map(req => `*${req.index}.* ${req.display}`).join('\n\n')
       const extra = totalRequests > 20 ? `\n...e altre ${totalRequests - 20} richieste` : ''
-      const message = `📊 Ci sono *${totalRequests}* richieste di partecipazione in sospeso.\n\n${listText}${extra}\n\n` +
-        `Usa i pulsanti qui sotto per approvare o rifiutare tutte le richieste.`
+      const message = `📊 Ci sono *${totalRequests}* richieste di partecipazione in sospeso.\n\n${listText}${extra}\n\nUsa i pulsanti qui sotto per approvare o rifiutare tutte le richieste.`
 
       const buttons = [
         ['✅ Accetta tutte', '.richieste accetta'],
@@ -92,24 +94,20 @@ let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
       targets = requests
     } else {
       const idx = parseInt(indexArg, 10)
-      if (Number.isNaN(idx) || idx < 1 || idx > requests.length) {
-        return m.reply(`❌ Indice non valido. Usa un numero tra 1 e ${requests.length} oppure usa ".richieste ${actionArg}" per tutte le richieste.`)
-      }
+      if (Number.isNaN(idx) || idx < 1 || idx > requests.length)
+        return m.reply(`❌ Indice non valido. Usa un numero tra 1 e ${requests.length} oppure ".richieste ${actionArg}" per tutte.`)
       targets = [requests[idx - 1]]
     }
 
-
     const targetJids = targets.map(req => req.jid).filter(Boolean)
-    if (!targetJids.length) {
-      return m.reply('❌ Impossibile trovare gli ID utente delle richieste selezionate.')
-    }
+    if (!targetJids.length) return m.reply('❌ Impossibile trovare gli ID utente delle richieste selezionate.')
 
     const result = await conn.groupRequestParticipantsUpdate(groupId, targetJids, action)
     const successful = result.filter(r => r.status === '200' || r.status === '201' || r.status === 'success')
     const failed = result.filter(r => r.status !== '200' && r.status !== '201' && r.status !== 'success')
 
     const successText = successful.length
-      ? `✅ ${action === 'approve' ? 'Approvo' : 'Rifiuto'} con successo ${successful.length} richiesta${successful.length > 1 ? 'e' : ''}.`
+      ? `✅ ${action === 'approve' ? 'Approvo' : 'Rifiuto'} ${successful.length} richiesta${successful.length > 1 ? 'e' : ''}.`
       : `⚠️ Nessuna richiesta ${action === 'approve' ? 'approvata' : 'rifiutata'}.`
 
     const failureText = failed.length
@@ -118,6 +116,7 @@ let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
 
     const targetList = targets.map(req => `• ${req.display}`).join('\n')
     const replyText = `${successText}\n\n${action === 'approve' ? 'Richieste approvate:' : 'Richieste rifiutate:'}\n${targetList}${failureText}`
+
     await conn.sendMessage(m.chat, { text: replyText, contextInfo: { mentionedJid: targetJids }, mentions: targetJids }, { quoted: m })
     return
   } catch (err) {

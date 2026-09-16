@@ -5,7 +5,6 @@ import { makeCard, sendImage } from '../info/lastfm-card.js';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
-
 let db = { users: {}, likes: {}, favorites: {} };
 if (fs.existsSync(DB_PATH)) {
   try {
@@ -24,7 +23,7 @@ function saveDB() {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
 }
 
-const invalidateRecentCache = (username) => {}; 
+const invalidateRecentCache = (username) => {};
 const generateSongId = (username, artist, song) =>
   `${username}_${artist}_${song}`.toLowerCase().replace(/\s+/g, '');
 
@@ -35,7 +34,6 @@ const addSongLike = (songId, sender) => {
   saveDB();
   return { alreadyLiked: false };
 };
-
 
 const addFavorite = (userId, artist, song) => {
   if (!db.favorites[userId]) db.favorites[userId] = [];
@@ -49,7 +47,6 @@ const addFavorite = (userId, artist, song) => {
 };
 
 const getFavorites = (userId) => db.favorites[userId] || [];
-
 const getUsernameFromId = (id) => db.users[id] || id;
 
 const LASTFM_API_KEY = '36f859a1fc4121e7f0e931806507d5f9';
@@ -78,9 +75,6 @@ async function getTopArtists(username) {
   }
 }
 
-
-
-
 async function getTrackInfo(artist, track, username) {
   try {
     const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&username=${encodeURIComponent(username || '')}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
@@ -92,9 +86,6 @@ async function getTrackInfo(artist, track, username) {
     return null;
   }
 }
-
-
-
 
 async function getArtistInfo(artist) {
   try {
@@ -108,7 +99,6 @@ async function getArtistInfo(artist) {
   }
 }
 
-
 const formatCount = (n) => {
   const num = parseInt(n, 10) || 0;
   if (num >= 1e6) return `${(num / 1e6).toFixed(num >= 1e7 ? 0 : 1)}M`;
@@ -117,8 +107,6 @@ const formatCount = (n) => {
 };
 
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
-
-
   if (command === 'setuser') {
     const username = text.trim();
     if (!username) {
@@ -133,14 +121,12 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-
   const user = db.users[m.sender];
   if (!user) {
     return conn.sendMessage(m.chat, {
       text: `⚠️ Usa prima \`${usedPrefix}setuser <username>\` per collegare il tuo account Last.fm.`
     }, { quoted: m });
   }
-
 
   if (command === 'profilo' || command === 'cur') {
     const track = await getRecentTrack(user);
@@ -164,28 +150,24 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
-
     const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
     const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}`;
-
 
     const [trackInfo, artistInfo] = await Promise.all([
       getTrackInfo(artistName, songTitle, user),
       getArtistInfo(artistName)
     ]);
 
-    const playCount      = trackInfo?.playcount      || 0; 
-    const listeners      = trackInfo?.listeners      || 0; 
-    const userPlayCount  = trackInfo?.userplaycount  || 0; 
-    const artListeners   = artistInfo?.stats?.listeners  || 0; 
-    const artPlaycount   = artistInfo?.stats?.playcount  || 0; 
-
+    const playCount      = trackInfo?.playcount      || 0;
+    const listeners      = trackInfo?.listeners      || 0;
+    const userPlayCount  = trackInfo?.userplaycount  || 0;
+    const artListeners   = artistInfo?.stats?.listeners  || 0;
+    const artPlaycount   = artistInfo?.stats?.playcount  || 0;
 
     const albumArt =
       track.image?.find(i => i.size === 'extralarge')?.['#text'] ||
       track.image?.find(i => i.size === 'large')?.['#text'] ||
       'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png';
-
 
     const externalAdReply = {
       title: songTitle,
@@ -214,7 +196,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       `🎬 *Premi un pulsante qui sotto per ascoltarla o dargli fuoco 🔥*`
     ].join('\n');
 
-
     const buttons = [
       ['❤️ Metti nei preferiti', `.like ${m.sender}`],
       ['🔥 Fuoco (non mi piace)', `.fuoco ${m.sender}`]
@@ -241,7 +222,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     return;
   }
 
-
   if (command === 'top' || command === 'stats') {
     const artists = await getTopArtists(user);
     if (!artists || !artists.length) {
@@ -262,7 +242,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
-
   if (command === 'like') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe
@@ -275,7 +254,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
         targetUserId = parsedArg;
       }
     }
-
 
     targetUserId = targetUserId || m.sender;
 
@@ -308,7 +286,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       text: `❤️ Aggiunto *${songName}* di *${artist}* ai tuoi preferiti!\n📋 Guardali con ${usedPrefix}curlike`
     }, { quoted: m });
   }
-
 
   if (command === 'fuoco') {
     let targetUserId =

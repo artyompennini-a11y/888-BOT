@@ -43,6 +43,7 @@ global.owner = normalizeOwnerList([
   ['573180770909', '888bot', true],
   ['212785655331', 'Ghost', true],
   ['447785114563', 'Dado', true],
+  ['393784409415', 'Bot', true],
 ])
 
 global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'

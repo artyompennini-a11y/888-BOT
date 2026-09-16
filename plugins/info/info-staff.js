@@ -49,7 +49,7 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
   const conTelefono = staffData.filter(m => m.telefono);
   if (conTelefono.length > 0) {
-    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} â€¢ ${m.ruolo}`]), quoted);
+    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} • ${m.ruolo}`]), quoted);
   }
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
@@ -77,7 +77,7 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
   }
 
-  const botName = global.db?.data?.nomedelbot || global.nomebot || "ðŸ´ðŸ´ðŸ´ ð—•ð—¢ð—§";
+  const botName = global.db?.data?.nomedelbot || global.nomebot || "🤖 888 BOT";
   const botVersion = global.versione || global.db?.data?.version || "1.1";
 
   const fake = {

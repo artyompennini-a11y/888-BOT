@@ -1,47 +1,58 @@
 [
   {
     "nome": "Elixir",
-    "ruolo": "Owner / Developer",
+    "ruolo": "Founder & Lead Developer",
     "emoji": "👑",
-    "telefono": "393297014539",
-    "instagram": "elixir._regna",
-    "telegram": "Elixir888Project",
-    "bio": "Creatore e sviluppatore principale del bot"
+    "bio": "JS Core Architecture & Bot Creator.",
+    "telegram": "username_tg"
   },
   {
     "nome": "Punisher",
-    "ruolo": "Co-Owner",
-    "emoji": "🔱",
-    "telefono": "573117824583",
-    "instagram": "arty.340",
-    "telegram": "punishth",
-    "bio": "Co-fondatore e supporto del bot"
+    "ruolo": "Co-Founder & DevOps Engineer",
+    "emoji": "⚔️",
+    "bio": "Localhost Management & Deployment.",
+    "telegram": "username_tg"
+  },
+  {
+    "nome": "Axtral",
+    "ruolo": "Senior Plugin Developer",
+    "emoji": "💻",
+    "bio": "Writing handlers and command optimization.",
+    "telegram": "username_tg"
   },
   {
     "nome": "Ghost",
-    "ruolo": "Manager",
-    "emoji": "🛡️",
-    "telefono": "212785655331",
-    "instagram": null,
-    "telegram": null,
-    "bio": "Gestione giorno-per-giorno del bot"
+    "ruolo": "Full-Stack Developer",
+    "emoji": "🥷",
+    "bio": "Database integration and logic fixes.",
+    "telegram": "username_tg"
   },
   {
     "nome": "Manu",
-    "ruolo": "Developer&tester",
-    "emoji": "🛡️",
-    "telefono": "393331663641",
-    "instagram": null,
-    "telegram": "manuxxxo",
-    "bio": "Staff del bot"
+    "ruolo": "Junior Developer",
+    "emoji": "👨‍💻",
+    "bio": "UI elements and basic JS script testing.",
+    "telegram": "username_tg"
   },
-   {
+  {
+    "nome": "Fuma",
+    "ruolo": "External Project Support",
+    "emoji": "🌐",
+    "bio": "External collaborations and strategic support.",
+    "telegram": "username_tg"
+  },
+  {
     "nome": "Dado",
-    "ruolo": "Developer test&tester",
-    "emoji": "🛡️",
-    "telefono": "447785114563",
-    "instagram": "insta.dados00",
-    "telegram": null,
-    "bio": "Staff del bot"
+    "ruolo": "QA & Beta Tester",
+    "emoji": "🧪",
+    "bio": "Bug hunting & interactive components test.",
+    "telegram": "username_tg"
+  },
+  {
+    "nome": "Mattia",
+    "ruolo": "Community Support",
+    "emoji": "🎧",
+    "bio": "User assistance and database management.",
+    "telegram": "username_tg"
   }
 ]

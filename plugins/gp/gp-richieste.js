@@ -31,7 +31,12 @@ let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
   const sender = m.sender
   const ownerGlobal = Array.isArray(global.owner) ? global.owner : []
 
-  if (!isAdmin && !ownerGlobal.includes(sender))
+  const isOwnerBot = ownerGlobal.some(v => {
+    if (Array.isArray(v)) return sender.includes(v[0])
+    return sender.includes(v)
+  })
+
+  if (!isAdmin && !isOwnerBot)
     return m.reply('❌ Solo admin del gruppo o owner del bot possono usare questo comando.')
 
   try {

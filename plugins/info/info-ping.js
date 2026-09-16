@@ -12,6 +12,20 @@ const uptimeFmt = ms => {
   return `${d}g ${h}o ${m}m`
 }
 
+const formatMem = (bytes) => {
+  const gb = bytes / (1024 * 1024 * 1024)
+  if (gb >= 1) return `${gb.toFixed(2)} GB`
+  const mb = bytes / (1024 * 1024)
+  return `${mb.toFixed(1)} MB`
+}
+
+const getSystemRAM = () => {
+  const total = os.totalmem()
+  const free = os.freemem()
+  const used = total - free
+  return { total, used, free }
+}
+
 let handler = async (m, { conn, usedPrefix }) => {
 
   // Immagine stile 888
@@ -22,7 +36,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
   }
 
-  // Ping
+  // Ping reale: misura il round-trip time del messaggio
   const start = speed()
   try { await conn.readMessages([m.key]) } catch {}
   const latency = (speed() - start).toFixed(2)
@@ -38,14 +52,16 @@ let handler = async (m, { conn, usedPrefix }) => {
     state === 'close' ? '🔴 Disconnesso' :
     `⚪ ${state || 'N/D'}`
 
-  // RAM
-  const mem = process.memoryUsage()
-  const ramUsed = (mem.heapUsed / 1024 / 1024).toFixed(1)
-  const ramTotal = (mem.heapTotal / 1024 / 1024).toFixed(1)
+  // RAM di sistema reale
+  const sysRam = getSystemRAM()
+  const ramTotal = sysRam.total
+  const ramUsed = sysRam.used
+  const ramFree = sysRam.free
 
   // CPU
   const cpu = os.cpus()?.[0]
   const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
+  const cpuCount = os.cpus()?.length || 'N/D'
 
   // DNS
   let dnsPing = 'N/D'
@@ -64,15 +80,15 @@ let handler = async (m, { conn, usedPrefix }) => {
     baileys = (await fetchLatestBaileysVersion()).version.join('.')
   } catch {}
 
-  // Caption stile 888
+  // Caption stile 888 con dati reali
   const caption = `
 ⚡ *PING 888*
 📡 Ping: *${latency}ms*
 🌐 DNS: *${dnsPing}ms*
 ⏳ Uptime: *${uptime}*
 🔧 Baileys: *v${baileys}*
-💾 RAM: *${ramUsed}/${ramTotal}MB*
-🖥️ CPU: *${cpuInfo}*
+💾 RAM: *${formatMem(ramUsed)} / ${formatMem(ramTotal)}* (Lib: ${formatMem(ramFree)})
+🖥️ CPU: *${cpuInfo}* (${cpuCount} core${cpuCount !== 'N/D' ? 's' : ''})
 
 📂 Apri il pannello dal pulsante sotto.
 `.trim()

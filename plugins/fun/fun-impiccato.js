@@ -43,9 +43,8 @@ const handler = async (m, { conn }) => {
     const oldGame = global.gameImpiccato[chatId]
     if (Date.now() > oldGame.endTime) delete global.gameImpiccato[chatId]
     else throw (
-`╭━━━〔 ⚠️ *PARTITA IN CORSO* 〕━━━┈
-┃ Devi prima terminare quella attuale.
-╰━━━━━━━━━━━━━━━━━━┈`
+`⚠️ *Partita in corso*
+Devi prima terminare quella attuale.`
     )
   }
 
@@ -64,16 +63,14 @@ const handler = async (m, { conn }) => {
 
   await conn.sendMessage(chatId, {
     text:
-`╭━━━〔 🎮 *IMPICCATO 888* 〕━━━┈
-┃ Gioco avviato!
-┃━━━━━━━━━━━━━━━━━━
+`🎮 *Impiccato 888*
+━━━━━━━━━━━━━━━━━━
 ${ascii(0)}
-┃ Parola da indovinare:
-┃ *${parolaFormattata}*
-┃━━━━━━━━━━━━━━━━━━
-┃ ⏳ Tempo: *3 minuti*
-┃ Scrivi una lettera per tentare.
-╰━━━━━━━━━━━━━━━━━━┈`
+Parola da indovinare:
+*${parolaFormattata}*
+━━━━━━━━━━━━━━━━━━
+⏳ Tempo: *3 minuti*
+Scrivi una lettera per tentare.`
   })
 
   setTimeout(() => {
@@ -92,13 +89,13 @@ ${ascii(0)}
 
       conn.sendMessage(chatId, {
         text:
-`╭━━━〔 ⏳ *TEMPO SCADUTO* 〕━━━┈
-┃ La parola era: *${game.parola}*
-┃ Hai perso *5 punti*.
-┃━━━━━━━━━━━━━━━━━━
-┃ 📊 Classifica gruppo:
-${scoreArr}
-╰━━━━━━━━━━━━━━━━━━┈`,
+`⏳ *Tempo scaduto*
+━━━━━━━━━━━━━━━━━━
+La parola era: *${game.parola}*
+Hai perso *5 punti*.
+━━━━━━━━━━━━━━━━━━
+📊 Classifica gruppo:
+${scoreArr}`,
         mentions: Object.keys(global.gameImpiccatoScore[chatId])
       })
 
@@ -132,9 +129,7 @@ handler.before = async (m, { conn }) => {
   const secondi = tempoRestante % 60
   const tempoDisplay = `${minuti}:${secondi.toString().padStart(2,"0")}`
 
-  // ───────────────────────────────
-  // 🔥 VITTORIA — 888
-  // ───────────────────────────────
+  // VITTORIA — 888
   if (!parolaFormattata.includes("_")) {
     if (!global.gameImpiccatoScore[m.chat][m.sender])
       global.gameImpiccatoScore[m.chat][m.sender] = 0
@@ -148,13 +143,13 @@ handler.before = async (m, { conn }) => {
 
     await conn.sendMessage(m.chat, {
       text:
-`╭━━━〔 🏆 *VITTORIA!* 〕━━━┈
-┃ Parola: *${game.parola}*
-┃ Hai guadagnato *10 punti*!
-┃━━━━━━━━━━━━━━━━━━
-┃ 📊 Classifica gruppo:
-${scoreArr}
-╰━━━━━━━━━━━━━━━━━━┈`,
+`🏆 *Vittoria!*
+━━━━━━━━━━━━━━━━━━
+Parola: *${game.parola}*
+Hai guadagnato *10 punti*!
+━━━━━━━━━━━━━━━━━━
+📊 Classifica gruppo:
+${scoreArr}`,
       mentions: Object.keys(global.gameImpiccatoScore[m.chat])
     })
 
@@ -162,9 +157,7 @@ ${scoreArr}
     return
   }
 
-  // ───────────────────────────────
-  // 🔥 SCONFITTA — 888
-  // ───────────────────────────────
+  // SCONFITTA — 888
   if (game.errori >= 6) {
     if (!global.gameImpiccatoScore[m.chat][m.sender])
       global.gameImpiccatoScore[m.chat][m.sender] = 0
@@ -178,13 +171,13 @@ ${scoreArr}
 
     await conn.sendMessage(m.chat, {
       text:
-`╭━━━〔 💀 *SEI STATO IMPICCATO!* 〕━━━┈
-┃ Parola: *${game.parola}*
-┃ Hai perso *5 punti*.
-┃━━━━━━━━━━━━━━━━━━
-┃ 📊 Classifica gruppo:
-${scoreArr}
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💀 *Sei stato impiccato!*
+━━━━━━━━━━━━━━━━━━
+Parola: *${game.parola}*
+Hai perso *5 punti*.
+━━━━━━━━━━━━━━━━━━
+📊 Classifica gruppo:
+${scoreArr}`,
       mentions: Object.keys(global.gameImpiccatoScore[m.chat])
     })
 
@@ -192,23 +185,21 @@ ${scoreArr}
     return
   }
 
-  // ───────────────────────────────
-  // 🔥 AGGIORNAMENTO PARTITA — 888
-  // ───────────────────────────────
+  // AGGIORNAMENTO PARTITA — 888
   await conn.sendMessage(m.chat, {
     text:
-`╭━━━〔 🎮 *IMPICCATO 888* 〕━━━┈
+`🎮 *Impiccato 888*
+━━━━━━━━━━━━━━━━━━
 ${ascii(game.errori)}
-┃ Parola: *${parolaFormattata}*
-┃━━━━━━━━━━━━━━━━━━
-┃ ✅ Lettere indovinate:
-┃ ${indovinate.length ? indovinate.join(" ") : "Nessuna"}
-┃━━━━━━━━━━━━━━━━━━
-┃ ❌ Lettere sbagliate:
-┃ ${sbagliate.length ? sbagliate.join(" ") : "Nessuna"}
-┃━━━━━━━━━━━━━━━━━━
-┃ ⏳ Tempo rimanente: *${tempoDisplay}*
-╰━━━━━━━━━━━━━━━━━━┈`
+Parola: *${parolaFormattata}*
+━━━━━━━━━━━━━━━━━━
+✅ Lettere indovinate:
+${indovinate.length ? indovinate.join(" ") : "Nessuna"}
+━━━━━━━━━━━━━━━━━━
+❌ Lettere sbagliate:
+${sbagliate.length ? sbagliate.join(" ") : "Nessuna"}
+━━━━━━━━━━━━━━━━━━
+⏳ Tempo rimanente: *${tempoDisplay}*`
   })
 }
 

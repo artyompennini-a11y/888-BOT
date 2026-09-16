@@ -1,5 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff
-
+//Plugin by 888 staff
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -45,5 +44,6 @@ let handler = async (m, { conn }) => {
 handler.command = ["sega"];
 handler.help = ['sega @tag'];
 handler.tags = ["fun"];
+handler.botAdmin = true
 
 export default handler;

@@ -6,22 +6,18 @@ let handler = async (m, { conn, command }) => {
   if (!users[sender]) users[sender] = {}
   const user = users[sender]
 
-  // ───────────────────────────────
-  // 🔥 SPOSA — 888
-  // ───────────────────────────────
+  // SPOSA — 888 Minimal
   if (command === 'sposa') {
     if (!target)
       return m.reply(
-`╭━━━〔 ❌ *NESSUN UTENTE TAGGATO* 〕━━━┈
-┃ Tagga la persona che vuoi sposare.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Nessun utente taggato*
+Tagga la persona che vuoi sposare.`
       )
 
     if (target === sender)
       return m.reply(
-`╭━━━〔 ❌ *AZIONE NON CONSENTITA* 〕━━━┈
-┃ Non puoi sposare te stesso.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Azione non consentita*
+Non puoi sposare te stesso.`
       )
 
     if (!users[target]) users[target] = {}
@@ -30,34 +26,30 @@ let handler = async (m, { conn, command }) => {
     if (user.sposato && user.coniuge) {
       return conn.sendMessage(m.chat, {
         text:
-`╭━━━〔 💀 *SEI GIÀ SPOSATO* 〕━━━┈
-┃ Hai tradito @${user.coniuge.split('@')[0]}!
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💀 *Sei già sposato*
+Hai tradito @${user.coniuge.split('@')[0]}!`,
         mentions: [user.coniuge]
       }, { quoted: m })
     }
 
     if (partner.sposato) {
       return m.reply(
-`╭━━━〔 ❌ *NON DISPONIBILE* 〕━━━┈
-┃ Questa persona è già sposata.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Non disponibile*
+Questa persona è già sposata.`
       )
     }
 
-    // ───────────────────────────────
-    // 🔥 RICHIESTA MATRIMONIO — 888
-    // ───────────────────────────────
+    // Richiesta matrimonio — 888 Minimal
     const msg = await conn.sendMessage(m.chat, {
       text:
-`╭━━━〔 💍 *RICHIESTA DI MATRIMONIO* 〕━━━┈
-┃ @${target.split('@')[0]}
-┃ Hai ricevuto una proposta da:
-┃ ➜ @${sender.split('@')[0]}
-┃━━━━━━━━━━━━━━━━━━
-┃ 💌 Accetti la proposta?
-┃ ⏳ Tempo: *60 secondi*
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💍 *Richiesta di matrimonio*
+━━━━━━━━━━━━━━━━━━
+@${target.split('@')[0]}
+Hai ricevuto una proposta da:
+➜ @${sender.split('@')[0]}
+
+💌 Accetti la proposta?
+⏳ Tempo: *60 secondi*`,
       mentions: [sender, target],
       buttons: [
         { buttonId: `accetta_${sender}`, buttonText: { displayText: '💖 Accetta' }, type: 1 },
@@ -66,9 +58,7 @@ let handler = async (m, { conn, command }) => {
       headerType: 1
     }, { quoted: m })
 
-    // ───────────────────────────────
-    // 🔥 ATTESA RISPOSTA — 888
-    // ───────────────────────────────
+    // Attesa risposta
     const collected = await new Promise(resolve => {
       const listener = async ({ messages }) => {
         const msg = messages[0]
@@ -97,17 +87,14 @@ let handler = async (m, { conn, command }) => {
     if (!collected) {
       return conn.sendMessage(m.chat, {
         text:
-`╭━━━〔 ⏳ *TEMPO SCADUTO* 〕━━━┈
-┃ @${target.split('@')[0]} non ha risposto.
-┃ Proposta annullata.
-╰━━━━━━━━━━━━━━━━━━┈`,
+`⏳ *Tempo scaduto*
+@${target.split('@')[0]} non ha risposto.
+Proposta annullata.`,
         mentions: [target]
       })
     }
 
-    // ───────────────────────────────
-    // 🔥 MATRIMONIO ACCETTATO — 888
-    // ───────────────────────────────
+    // Matrimonio accettato
     if (collected.startsWith('accetta')) {
 
       user.sposato = true
@@ -120,40 +107,33 @@ let handler = async (m, { conn, command }) => {
 
       await conn.sendMessage(m.chat, {
         text:
-`╭━━━〔 💖 *MATRIMONIO CELEBRATO* 〕━━━┈
-┃ @${sender.split('@')[0]}
-┃     🤍
-┃ @${target.split('@')[0]}
-┃━━━━━━━━━━━━━━━━━━
-┃ ✨ *SI SONO SPOSATI!* ✨
-┃ 💣 Il matrimonio durerà 5 minuti.
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💖 *Matrimonio celebrato*
+@${sender.split('@')[0]}
+     🤍
+@${target.split('@')[0]}
+━━━━━━━━━━━━━━━━━━
+✨ *Si sono sposati!* ✨
+💣 Il matrimonio durerà 5 minuti.`,
         mentions: [sender, target]
       })
 
     } else {
-      // ───────────────────────────────
-      // 🔥 MATRIMONIO RIFIUTATO — 888
-      // ───────────────────────────────
+      // Matrimonio rifiutato
       await conn.sendMessage(m.chat, {
         text:
-`╭━━━〔 💔 *RIFIUTO MATRIMONIO* 〕━━━┈
-┃ @${target.split('@')[0]} ha rifiutato.
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💔 *Rifiuto matrimonio*
+@${target.split('@')[0]} ha rifiutato.`,
         mentions: [target]
       })
     }
   }
 
-  // ───────────────────────────────
-  // 🔥 DIVORZIO — 888
-  // ───────────────────────────────
+  // DIVORZIA — 888 Minimal
   if (command === 'divorzia') {
     if (!user.sposato || !user.coniuge)
       return m.reply(
-`╭━━━〔 ❌ *NON SEI SPOSATO* 〕━━━┈
-┃ Non puoi divorziare se non sei sposato.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Non sei sposato*
+Non puoi divorziare se non sei sposato.`
       )
 
     const ex = user.coniuge
@@ -174,13 +154,12 @@ let handler = async (m, { conn, command }) => {
 
     await conn.sendMessage(m.chat, {
       text:
-`╭━━━〔 💔 *DIVORZIO UFFICIALE* 〕━━━┈
-┃ @${sender.split('@')[0]}
-┃      💔
-┃ @${ex.split('@')[0]}
-┃━━━━━━━━━━━━━━━━━━
-┃ *La relazione è terminata.*
-╰━━━━━━━━━━━━━━━━━━┈`,
+`💔 *Divorzio ufficiale*
+@${sender.split('@')[0]}
+      💔
+@${ex.split('@')[0]}
+━━━━━━━━━━━━━━━━━━
+*La relazione è terminata.*`,
       mentions: [sender, ex]
     })
   }

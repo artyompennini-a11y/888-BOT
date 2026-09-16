@@ -42,7 +42,7 @@
     "@adiwajshing/keyed-db": "^0.2.4",
     "@cacheable/node-cache": "^1.4.0",
     "@distube/ytdl-core": "^4.16.12",
-    "@888-BOT/888baileys": "npm:@888-BOT/888baileys",
+    "@888-BOT/888baileys": "npm:@chatunity/baileys",
     "@hapi/boom": "^10.0.1",
     "@napi-rs/canvas": "^0.1.94",
     "async-mutex": "^0.5.0",

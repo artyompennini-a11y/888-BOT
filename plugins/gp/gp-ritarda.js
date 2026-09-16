@@ -1,3 +1,4 @@
+// Plugin by 888 — Grafica Moderatori 888 Minimal
 const sessions = new Map()
 const scheduledTasks = new Map()
 let restored = false
@@ -40,7 +41,7 @@ const removeScheduled = (id) => {
   global.db.data.scheduledRitarda = list.filter(i => i.id !== id)
 }
 
-const buildFooter = (sender) => {
+const buildFooter = () => {
   return `\n\n🕒 *Messaggio posticipato*`
 }
 
@@ -50,7 +51,7 @@ const scheduleTask = (task, conn) => {
     try {
       const mentionJids = [conn.decodeJid(task.sender)]
       await conn.sendMessage(task.chat, {
-        text: `${task.message}${buildFooter(task.sender)}`,
+        text: `${task.message}${buildFooter()}`,
         mentions: mentionJids
       })
     } catch (e) {
@@ -131,36 +132,30 @@ const parseTimeInput = (timeInput) => {
   return result
 }
 
-const handler = async (m, { conn, args, isBotAdmin }) => {
+let handler = async (m, { conn, args, isBotAdmin }) => {
   restorePendingSchedules(conn)
 
   if (!m.isGroup) {
     return conn.reply(m.chat,
-`╭━━━〔 ❌ *ERRORE* 〕━━━┈
-┃ Questo comando funziona
-┃ solo nei gruppi.
-╰━━━━━━━━━━━━━━━━━━┈`, m)
+`❌ *Questo comando funziona solo nei gruppi.*`, m)
   }
 
   if (!isBotAdmin) {
     return conn.reply(m.chat,
-`╭━━━〔 ⚠️ *PERMESSO NEGATO* 〕━━━┈
-┃ Devo essere *admin* per
-┃ inviare messaggi con hidetag.
-╰━━━━━━━━━━━━━━━━━━┈`, m)
+`⚠️ *Devo essere admin per inviare messaggi con hidetag.*`, m)
   }
 
   const text = args.join(' ').trim()
   if (!text) {
     return conn.reply(m.chat,
-`╭━━━〔 ⏳ *RITARDATAG 888* 〕━━━┈
-┃ Uso: .ritardatag <messaggio>
-┃ Esempio: .ritardatag Buongiorno a tutti
-┃━━━━━━━━━━━━━━━━━━
-┃ Dopo aver scritto il messaggio,
-┃ indica l’orario: *18:30*
-┃ oppure un ritardo: *10m*
-╰━━━━━━━━━━━━━━━━━━┈`, m)
+`⏳ *Ritardatag 888*\n
+Uso: .ritardatag <messaggio>\n
+Esempio: .ritardatag Buongiorno a tutti\n
+━━━━━━━━━━━━━━━━━━━━━━\n
+Dopo aver scritto il messaggio,\n
+indica l’orario: *18:30*\n
+oppure un ritardo: *10m*`
+    , m)
   }
 
   const key = `${m.chat}|${m.sender}`
@@ -173,11 +168,10 @@ const handler = async (m, { conn, args, isBotAdmin }) => {
 
   return conn.sendMessage(m.chat, {
     text:
-`╭━━━〔 ⏳ *MESSAGGIO SALVATO* 〕━━━┈
-┃ Ora indica quando inviarlo.
-┃ Scrivi un orario: *18:30*
-┃ Oppure un ritardo: *10m*
-╰━━━━━━━━━━━━━━━━━━┈`
+`⏳ *Messaggio salvato*\n
+Scrivi ora quando inviarlo.\n
+• Orario: *18:30*\n
+• Ritardo: *10m*`
   }, { quoted: m })
 }
 
@@ -202,11 +196,10 @@ handler.before = async (m, { conn }) => {
   if (!time) {
     await conn.sendMessage(m.chat, {
       text:
-`╭━━━〔 ❌ *ORARIO NON VALIDO* 〕━━━┈
-┃ Usa un formato valido:
-┃ • 18:30
-┃ • 10m / 30s / 2h
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Orario non valido*\n
+Usa un formato corretto:\n
+• 18:30\n
+• 10m / 30s / 2h`
     }, { quoted: m })
     return true
   }
@@ -231,12 +224,11 @@ handler.before = async (m, { conn }) => {
 
   await conn.sendMessage(m.chat, {
     text:
-`╭━━━〔 ✅ *MESSAGGIO PROGRAMMATO* 〕━━━┈
-┃ Verrà inviato:
-┃ ➜ *${time.when}*
-┃ Orario esatto:
-┃ ➜ ${formattedAt}
-╰━━━━━━━━━━━━━━━━━━┈`
+`✅ *Messaggio programmato*\n
+Verrà inviato:\n
+➜ *${time.when}*\n
+Orario esatto:\n
+➜ ${formattedAt}`
   }, { quoted: m })
 
   return true

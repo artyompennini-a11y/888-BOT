@@ -55,19 +55,19 @@ const handler = async (m, { conn }) => {
   }
 
   const testo =
-`╭━━━〔 👨‍👩‍👧 *FAMIGLIA 888* 〕━━━┈
-┃ 👤 *Utente:* ${tag}
-┃━━━━━━━━━━━━━━━━━━
-┃ 💍 *Sposato:* ${user.sposato ? 'Sì' : 'No'}
-┃ ❤️ *Coniuge:* ${user.coniuge ? '@' + user.coniuge.split('@')[0] : 'Nessuno'}
-┃━━━━━━━━━━━━━━━━━━
-┃ 💔 *Ex Coniugi:* ${exList.length ? exList.join(', ') : 'Nessuno'}
-┃━━━━━━━━━━━━━━━━━━
-┃ 👪 *Adottato da:* ${adottatoDa ? '@' + adottatoDa.split('@')[0] : 'Nessuno'}
-┃ 👶 *Figli adottati:* ${adopList.length ? adopList.join(', ') : 'Nessuno'}
-┃━━━━━━━━━━━━━━━━━━
-┃ ⭐ *Migliore amico:* ${user.miglioreamico ? '@' + user.miglioreamico.split('@')[0] : 'Nessuno'}
-╰━━━━━━━━━━━━━━━━━━┈`
+`👨‍👩‍👧 *Famiglia 888*
+━━━━━━━━━━━━━━━━━━
+👤 *Utente:* ${tag}
+
+💍 *Sposato:* ${user.sposato ? 'Sì' : 'No'}
+❤️ *Coniuge:* ${user.coniuge ? '@' + user.coniuge.split('@')[0] : 'Nessuno'}
+━━━━━━━━━━━━━━━━━━
+💔 *Ex Coniugi:* ${exList.length ? exList.join(', ') : 'Nessuno'}
+━━━━━━━━━━━━━━━━━━
+👪 *Adottato da:* ${adottatoDa ? '@' + adottatoDa.split('@')[0] : 'Nessuno'}
+👶 *Figli adottati:* ${adopList.length ? adopList.join(', ') : 'Nessuno'}
+━━━━━━━━━━━━━━━━━━
+⭐ *Migliore amico:* ${user.miglioreamico ? '@' + user.miglioreamico.split('@')[0] : 'Nessuno'}`
 
   await conn.sendMessage(
     m.chat,

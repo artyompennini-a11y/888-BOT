@@ -21,9 +21,9 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
     const thumbnailText = "𝐒𝐓𝐔𝐏𝐑𝐀"; // Testo miniatura compatibile
 
     let abrazo = await conn.sendMessage(m.chat, {
-        text: `══════•⊰✰⊱•══════
-@${who.split('@')[0]} 𝙨𝙚𝙞 𝙨𝙩𝙖𝙩𝙖 𝙨𝙩𝙪𝙥𝙧𝙖𝙩𝙖 𝙖 𝟵𝟬 𝐝𝐚 @${m.sender.split('@')[0]} 𝙚 𝙩𝙞 𝙝𝙖 𝙩𝙧𝙖𝙩𝙩𝙖𝙩𝙤 𝙘𝙤𝙢𝙚 𝙪𝙣𝙖 𝙥𝙪𝙩𝙩𝙖𝙣𝙖 𝙙𝙞 𝙢𝙚𝙧𝙙𝙖 " 𝐀𝐡𝐡𝐡.., 𝐀𝐚𝐚𝐚𝐡𝐡, 𝐬𝐢 𝐜𝐨𝐧𝐭𝐢𝐧𝐮𝐚, 𝐧𝐨𝐧 𝐟𝐞𝐫𝐦𝐚𝐫𝐭𝐢, 𝐧𝐨𝐧 𝐟𝐞𝐫𝐦𝐚𝐫𝐭𝐢 " 𝙚 𝙩𝙞 𝙝𝙖 𝙡𝙖𝙨𝙘𝙞𝙖𝙩𝙤 𝙘𝙤𝙨𝙞̀ 𝙜𝙤𝙣𝙛𝙞𝙖 𝙘𝙝𝙚 𝙣𝙤𝙣 𝙧𝙞𝙚𝙨𝙘𝙞 𝙣𝙚𝙢𝙢𝙚𝙣𝙤 𝙖 𝙧𝙚𝙜𝙜𝙚𝙧𝙩𝙞 𝙞𝙣 𝙥𝙞𝙚𝙙𝙞 𝙨𝙩𝙪𝙥𝙞𝙙𝙖 𝙩𝙧𝙤𝙞𝙖 𝙙𝙞 𝙢𝙚𝙧𝙙𝙖.
-══════•⊰✰⊱•══════`,
+        text: `━━━━━━━━━━━━━
+@${who.split('@')[0]} *sei stata stuprata come una troia di merda da* @${m.sender.split('@')[0]} *e ti ha fatto urlare che ne volevi di più* " 𝐀𝐡𝐡𝐡.., 𝐀𝐚𝐚𝐚𝐡𝐡, 𝐬𝐢 𝐜𝐨𝐧𝐭𝐢𝐧𝐮𝐚, 𝐧𝐨𝐧 𝐟𝐞𝐫𝐦𝐚𝐫𝐭𝐢, 𝐧𝐨𝐧 𝐟𝐞𝐫𝐦𝐚𝐫𝐭𝐢 " *ti ha lasciata così piena di sborra che manco ti reggi in piedi puttana di merda*.
+━━━━━━━━━━━━━`,
         mentions: [who, m.sender],
     }, {
         quoted: {

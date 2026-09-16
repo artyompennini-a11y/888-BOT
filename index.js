@@ -69,7 +69,7 @@ const typeWriterBig = async (text, delay = 100) => {
 };
 
 const loading = async (text, duration = 1000) => {
-  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  const frames = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
   const startTime = Date.now();
   let i = 0;
 
@@ -96,16 +96,8 @@ const typeWriter = async (text, delay = 25, color = '\x1b[36m') => {
   console.log();
 };
 
-const showNeonBorder = async (label, color = '\x1b[36m') => {
-  const reset = '\x1b[0m';
-  const border = '═'.repeat(40);
-  process.stdout.write(`\n${color}╔${border}╗${reset}\n`);
-  process.stdout.write(`${color}║${reset}  ${color}${'✦'.repeat(3)} ${label} ${'✦'.repeat(3)}${reset}  ${color}║${reset}\n`);
-  process.stdout.write(`${color}╚${border}╝${reset}\n`);
-};
-
 const sparkleLine = async () => {
-  const sparkles = ['✦', '✧', '★', '☆', '•'];
+  const sparkles = ['✦','✧','★','☆','•'];
   let line = '';
   for (let i = 0; i < 40; i++) {
     line += sparkles[Math.floor(Math.random() * sparkles.length)] + ' ';
@@ -131,7 +123,7 @@ const progressBar = async (label, duration = 1200) => {
 };
 
 const showDigitalRain = async (lines = 5) => {
-  const colors = ['\x1b[35m', '\x1b[36m'];
+  const colors = ['\x1b[35m','\x1b[36m'];
   const chars = '01アイウエオカキクケコサシスセソタチツテト';
   for (let i = 0; i < lines; i++) {
     let line = '';
@@ -144,13 +136,10 @@ const showDigitalRain = async (lines = 5) => {
   }
 };
 
-//
-// 🔥 NUOVA ANIMAZIONE VERSIONE 1.2
-//
 async function epicStartup() {
   console.clear();
 
-  const introColors = ['\x1b[35m', '\x1b[36m'];
+  const introColors = ['\x1b[35m','\x1b[36m'];
 
   for (let i = 0; i < 6; i++) {
     const c = introColors[i % introColors.length];
@@ -179,7 +168,8 @@ async function epicStartup() {
 
   await typeWriter('▸ Versione: 1.2-STABLE', 25, '\x1b[35m');
   await typeWriter('▸ Developer: Ghost & Punisher', 25, '\x1b[36m');
-  await typeWriter('▸ Rete: WhatsApp Web OK', 25, '\x1b[35m');
+  await typeWriter('▸ Fondatore: Elixir 👑', 25, '\x1b[35m');
+  await typeWriter('▸ Rete: WhatsApp Web OK', 25, '\x1b[36m');
 
   console.log('\n');
 
@@ -189,12 +179,9 @@ async function epicStartup() {
     await sleep(120);
   }
 
-  console.log('\n\n\x1b[90m' + '━'.repeat(60) + '\x1b[0m\n');
+  console.log('\n\x1b[35mAutorizzato dal Fondatore: Elixir 👑\x1b[0m\n');
+  console.log('\n\x1b[90m' + '━'.repeat(60) + '\x1b[0m\n');
 }
-
-//
-// RESTO DEL TUO INDEX ORIGINALE
-//
 
 let isRunning = false;
 

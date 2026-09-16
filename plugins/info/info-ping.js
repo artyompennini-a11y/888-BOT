@@ -3,7 +3,7 @@ import os from 'os'
 import dns from 'dns'
 import fetch from 'node-fetch'
 import fs from 'fs'
-import { fetchLatestBaileysVersion } from '@realvare/baileys'
+import { fetchLatestBaileysVersion } from '@chatunity/baileys'
 
 const uptimeFmt = ms => {
   const d = Math.floor(ms / 86400000)

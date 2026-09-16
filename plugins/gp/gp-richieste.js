@@ -24,16 +24,15 @@ const formatRequestDisplay = (request) => {
   return `@${jid.replace(/@.*$/, '')}`
 }
 
-let handler = async (m, { conn, isAdmin, isBotAdmin, groupMetadata }) => {
+let handler = async (m, { conn, isAdmin, isBotAdmin }) => {
   if (!m.isGroup) return m.reply('❌ Questo comando si usa solo nei gruppi.')
   if (!isBotAdmin) return m.reply('❌ Devo essere admin per controllare le richieste.')
 
-  const ownerGroup = groupMetadata?.owner
   const sender = m.sender
   const ownerGlobal = Array.isArray(global.owner) ? global.owner : []
 
-  if (!isAdmin && sender !== ownerGroup && !ownerGlobal.includes(sender))
-    return m.reply('❌ Solo admin, owner del gruppo o owner del bot possono usare questo comando.')
+  if (!isAdmin && !ownerGlobal.includes(sender))
+    return m.reply('❌ Solo admin del gruppo o owner del bot possono usare questo comando.')
 
   try {
     const groupId = m.chat

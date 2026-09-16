@@ -6,8 +6,66 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let handler = async (m, { conn, usedPrefix }) => {
-  const staffData = JSON.parse(fs.readFileSync(join(__dirname, '../../data/staff.json'), 'utf8'));
+const loadStaff = () => {
+  try {
+    return JSON.parse(fs.readFileSync(join(__dirname, '../../data/staff.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+};
+
+const formattaMembro = (membro) => {
+  const emoji = membro.emoji || '👤';
+  const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
+  if (membro.bio) righe.push(`\n${membro.bio}`);
+  if (membro.telefono) righe.push(`\n📱 wa.me/${membro.telefono}`);
+  if (membro.instagram) righe.push(`📸 IG: ${membro.instagram}`);
+  if (membro.telegram) righe.push(`✈️ TG: ${membro.telegram}`);
+  return righe.join('\n');
+};
+
+const inviaTelegram = async (conn, chat, staffData, quoted) => {
+  const membri = staffData.filter(m => m.telegram);
+  if (membri.length === 0) {
+    return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
+  }
+  const testo = `✈️ *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n✈️ https://t.me/${String(m.telegram).replace(/^@/, '')}`).join('\n\n')}`;
+  return conn.sendMessage(chat, { text: testo }, { quoted });
+};
+
+const inviaInstagram = async (conn, chat, staffData, quoted) => {
+  const membri = staffData.filter(m => m.instagram);
+  if (membri.length === 0) {
+    return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
+  }
+  const testo = `📸 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📸 https://instagram.com/${String(m.instagram).replace(/^@/, '')}`).join('\n\n')}`;
+  return conn.sendMessage(chat, { text: testo }, { quoted });
+};
+
+const inviaStaff = async (conn, chat, staffData, quoted) => {
+  if (!staffData || staffData.length === 0) {
+    return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
+  }
+  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━\n\n')}`;
+  const conTelefono = staffData.filter(m => m.telefono);
+  if (conTelefono.length > 0) {
+    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} • ${m.ruolo}`]), quoted);
+  }
+  return conn.sendMessage(chat, { text: testo }, { quoted });
+};
+let handler = async (m, { conn, usedPrefix, args }) => {
+  const staffData = loadStaff();
+  const scelta = String(args?.[0] || '').trim().toLowerCase();
+
+  if (scelta === 'tg' || scelta === 'telegram') {
+    return inviaTelegram(conn, m.chat, staffData, m);
+  }
+  if (scelta === 'ig' || scelta === 'instagram') {
+    return inviaInstagram(conn, m.chat, staffData, m);
+  }
+  if (scelta === 'lista' || scelta === 'team') {
+    return inviaStaff(conn, m.chat, staffData, m);
+  }
 
   let imageBuffer;
   try {
@@ -38,86 +96,25 @@ let handler = async (m, { conn, usedPrefix }) => {
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
 
-📂 *Seleziona un membro dello staff dal menu.*
+📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
 `.trim();
 
-  // Costruisce le sezioni del menu a tendina
-  const sections = [];
-
-  // OWNER
-  const owners = staffData.filter(m =>
-    m.ruolo && m.ruolo.toLowerCase().includes('owner')
-  );
-
-  if (owners.length > 0) {
-    sections.push({
-      title: "👑 Owner",
-      highlight_label: "Owner",
-      rows: owners.map(o => ({
-        id: o.telefono ? `${o.telefono}` : `staff-${o.nome}`,
-        title: `👑 ${o.nome}`,
-        description: `${o.ruolo}${o.telefono ? ' • Tocca per contattare' : ''}`
-      }))
-    });
-  }
-
-  // CO-OWNER
-  const coOwners = staffData.filter(m =>
-    m.ruolo && m.ruolo.toLowerCase().includes('co-owner')
-  );
-
-  if (coOwners.length > 0) {
-    sections.push({
-      title: "🔱 Co-Owner",
-      highlight_label: "Co-Owner",
-      rows: coOwners.map(co => ({
-        id: co.telefono ? `${co.telefono}` : `staff-${co.nome}`,
-        title: `🔱 ${co.nome}`,
-        description: `${co.ruolo}${co.telefono ? ' • Tocca per contattare' : ''}`
-      }))
-    });
-  }
-
-  // MANAGER
-  const managers = staffData.filter(m =>
-    m.ruolo && m.ruolo.toLowerCase().includes('manager')
-  );
-
-  if (managers.length > 0) {
-    sections.push({
-      title: "🛡️ Manager",
-      highlight_label: "Manager",
-      rows: managers.map(mgr => ({
-        id: mgr.telefono ? `${mgr.telefono}` : `staff-${mgr.nome}`,
-        title: `🛡️ ${mgr.nome}`,
-        description: `${mgr.ruolo}${mgr.telefono ? ' • Tocca per contattare' : ''}`
-      }))
-    });
-  }
-
-  // ALTRI MEMBRI DELLO STAFF
-  const altri = staffData.filter(m =>
-    m.ruolo &&
-    !m.ruolo.toLowerCase().includes('owner') &&
-    !m.ruolo.toLowerCase().includes('co-owner') &&
-    !m.ruolo.toLowerCase().includes('manager')
-  );
-
-  if (altri.length > 0) {
-    sections.push({
-      title: "🌟 Membri Staff",
-      highlight_label: "Staff",
-      rows: altri.map(a => ({
-        id: a.telefono ? `${a.telefono}` : `staff-${a.nome}`,
-        title: `🌟 ${a.nome}`,
-        description: `${a.ruolo}${a.telefono ? ' • Tocca per contattare' : ''}`
-      }))
-    });
-  }
+  const contattiTelegram = staffData.filter(m => m.telegram).length;
+  const contattiInstagram = staffData.filter(m => m.instagram).length;
 
   const buttonParamsJson = JSON.stringify({
     title: "Staff 888",
-    sections: sections
+    sections: [
+      {
+        title: "📁 Contatti Staff",
+        highlight_label: "888",
+        rows: [
+          { id: `${usedPrefix}staff tg`, title: "✈️ Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : "Nessun contatto disponibile" },
+          { id: `${usedPrefix}staff ig`, title: "📸 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : "Nessun profilo disponibile" },
+          { id: `${usedPrefix}staff lista`, title: "👥 Tutto lo staff", description: staffData.length > 0 ? `${staffData.length} membri del team` : "Nessun membro trovato" }
+        ]
+      }
+    ]
   });
 
   await conn.sendMessage(m.chat, {
@@ -141,4 +138,3 @@ handler.tags = ['main'];
 handler.command = ['staff', 'team'];
 
 export default handler
-

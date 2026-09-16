@@ -19,7 +19,7 @@ function normalizeOwnerList(list) {
   return list
     .filter(entry => {
       const num = entry[0];
-      
+
       return /^\+?\d{6,15}$/.test(num);
     })
     .map(entry => [
@@ -35,7 +35,7 @@ function normalizeOwnerList(list) {
 
 global.gab = ['972559226174','393297014539','xxxx']
 
-global.owner = normalizeOwnerList([
+let ownerData = [
   ['393297014539', 'elixir', true],
   ['393331663641', 'Manu', true],              
   ['972552671306', 'manux', true],
@@ -45,7 +45,20 @@ global.owner = normalizeOwnerList([
   ['447785114563', 'Dado', true],
   ['17577575541', 'Axtral', true],
   ['393784409415', 'Bot', true],
-])
+];
+
+if (fs.existsSync('./owner.json')) {
+  try {
+    ownerData = JSON.parse(fs.readFileSync('./owner.json', 'utf-8'));
+  } catch (e) {
+    console.error("Errore nella lettura di owner.json:", e);
+  }
+} else {
+  fs.writeFileSync('./owner.json', JSON.stringify(ownerData, null, 2));
+}
+
+global.owner = normalizeOwnerList(ownerData)
+
 
 global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.nomebot = '𝟴𝟴𝟴 𝗕𝗢𝗧'

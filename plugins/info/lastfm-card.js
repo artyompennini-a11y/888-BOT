@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff
+﻿//Plugin by Gab, Lucifero & 888 staff
 
 /**
  * lastfm-card.js
@@ -11,6 +11,8 @@
  */
 
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 
 
@@ -86,58 +88,49 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
   overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
 .divider { width:40px; height:2px; background:${statusColor}; border-radius:2px; margin-bottom:24px; }
-.user-tag { display:flex; align-items:center; gap:8px; color:#555; font-size:13px; margin-top:auto; }
-.user-tag span { color:#777; font-weight:500; }
-.lastfm-logo {
-  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
-  letter-spacing:.1em; color:#e00; text-transform:uppercase;
-  position:absolute; bottom:16px; right:20px; z-index:2; opacity:.7;
-}
+.user-tag { display:flex; align-items:center; gap:8px; margin-top:auto; }
+.user-tag span { font-size:12px; color:#666; }
+.user-tag b { font-weight:600; color:#aaa; }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="bg-blur"></div>
-  <img class="cover" src="${albumArt}" onerror="this.style.background='#222';this.removeAttribute('src')" />
+  <img class="cover" src="${albumArt}" alt="Cover">
   <div class="info">
-    <div class="status"><div class="dot"></div>${statusText}</div>
+    <div class="status"><span class="dot"></span> ${statusText}</div>
     <div class="song-title">${songName}</div>
     <div class="artist">${artistName}</div>
     <div class="album">${albumName}</div>
     <div class="divider"></div>
-    <div class="user-tag">🎧 <span>${username}</span></div>
+    <div class="user-tag"><span>🎧 Ultimo ascoltato da</span><b>@${username}</b></div>
   </div>
-  <div class="lastfm-logo">Last.fm</div>
 </div>
 </body>
 </html>`;
 }
 
-
-
 async function renderWithPuppeteer(html) {
-  const puppeteer = await import('puppeteer').then(m => m.default || m);
+  const puppeteer = await import('puppeteer');
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-    headless: 'new'
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
   try {
     const page = await browser.newPage();
-    await page.setViewport({ width: 800, height: 400, deviceScaleFactor: 1 });
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
-    await page.evaluate(() => Promise.all(
-      [...document.images].map(img =>
-        img.complete ? Promise.resolve()
-          : new Promise(r => { img.onload = r; img.onerror = r; })
-      )
-    ));
-    return await page.screenshot({ type: 'png' });
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+    const buf = await page.screenshot({ type: 'png' });
+    return Buffer.from(buf);
   } finally {
     await browser.close();
   }
 }
 
 
+async function loadImage(url) {
+  const { createCanvas, loadImage: loadImg } = await import('canvas');
+  return loadImg(url);
+}
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -154,10 +147,9 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 async function renderWithCanvas(track, username) {
-  const { createCanvas, loadImage } = await import('canvas').then(m => m.default || m);
-
+  const { createCanvas, loadImage: loadImg } = await import('canvas');
   const canvas = createCanvas(800, 400);
-  const ctx    = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
 
   const albumArt =
     track.image?.find(i => i.size === 'extralarge')?.[`#text`] ||
@@ -173,7 +165,7 @@ async function renderWithCanvas(track, username) {
   ctx.fillRect(0, 0, 800, 400);
 
   try {
-    const cover = await loadImage(albumArt);
+    const cover = await loadImg(albumArt);
     ctx.save();
     roundRect(ctx, 30, 30, 340, 340, 12);
     ctx.clip();
@@ -209,7 +201,6 @@ async function renderWithCanvas(track, username) {
 
   return canvas.toBuffer('image/png');
 }
-
 
 
 /**
@@ -259,13 +250,21 @@ export async function sendImage(conn, m, buffer, caption = '', buttons = [], opt
     base.buttons = buttons;
   }
 
-
-
-  const tmp = `/tmp/lastfm_${Date.now()}.png`;
+  const tmp = `C:/Users/admin/Documents/888-BOT/temp/lastfm_${Date.now()}.png`;
+  
+  // Assicurati che la directory temp esista
+  const tempDir = path.dirname(tmp);
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+  
   fs.writeFileSync(tmp, buffer);
 
   try {
-    await conn.sendMessage(m.chat, { image: { url: tmp }, ...base }, { quoted: m });
+    await conn.sendMessage(m.chat, { image: { url: tmp }, ...base }, {
+      quoted: m,
+      upload: conn.waUploadToServer
+    });
   } finally {
     try { fs.unlinkSync(tmp); } catch {}
   }

@@ -1,106 +1,114 @@
-import speed from 'performance-now';
-import os from 'os';
-import dns from 'dns';
-import { fetchLatestBaileysVersion } from '@chatunity/baileys';
+import speed from 'performance-now'
+import os from 'os'
+import dns from 'dns'
+import fetch from 'node-fetch'
+import fs from 'fs'
+import { fetchLatestBaileysVersion } from '@realvare/baileys'
 
-const toMathematicalAlphanumericSymbols = number => {
-  const map = {
-    '0': '0', '1': '1', '2': '2', '3': '3', '4': '4',
-    '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '.': '.'
-  };
-  return number.toString().split('').map(d => map[d] || d).join('');
-};
-
-const clockString = ms => {
-  const days = Math.floor(ms / 86400000);
-  const hours = Math.floor((ms % 86400000) / 3600000);
-  const minutes = Math.floor((ms % 3600000) / 60000);
-  return `${days.toString().padStart(2, '0')}g ${hours.toString().padStart(2, '0')}o ${minutes.toString().padStart(2, '0')}m`;
-};
+const uptimeFmt = ms => {
+  const d = Math.floor(ms / 86400000)
+  const h = Math.floor(ms % 86400000 / 3600000)
+  const m = Math.floor(ms % 3600000 / 60000)
+  return `${d}g ${h}o ${m}m`
+}
 
 let handler = async (m, { conn, usedPrefix }) => {
 
-  const start = speed();
-  try { await conn.readMessages([m.key]); } catch {}
-  const end = speed();
-  const latency = (end - start).toFixed(2);
-  const speedWithFont = toMathematicalAlphanumericSymbols(latency);
-
-  const uptime = clockString(process.uptime() * 1000);
-
-  let connectionStatus = 'N/D';
+  // Immagine stile 888
+  let imageBuffer
   try {
-    const state = conn?.ev?.connectionState;
-    if (state === 'open') connectionStatus = '🟢 Connesso';
-    else if (state === 'connecting') connectionStatus = '🟡 Connessione…';
-    else if (state === 'close') connectionStatus = '🔴 Disconnesso';
-    else connectionStatus = `⚪ Stato: ${state || 'sconosciuto'}`;
+    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg')
   } catch {
-    connectionStatus = 'N/D';
+    imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
   }
 
-  const memory = process.memoryUsage();
-  const ramUsed = (memory.heapUsed / 1024 / 1024).toFixed(1);
-  const ramTotal = (memory.heapTotal / 1024 / 1024).toFixed(1);
+  // Ping
+  const start = speed()
+  try { await conn.readMessages([m.key]) } catch {}
+  const latency = (speed() - start).toFixed(2)
 
-  let cpuInfo = 'N/D';
-  try {
-    const cpus = os.cpus();
-    if (Array.isArray(cpus) && cpus.length > 0) {
-      const model = cpus[0]?.model?.trim();
-      const speedCpu = cpus[0]?.speed;
-      cpuInfo = model || (speedCpu ? `CPU @ ${speedCpu}MHz` : 'CPU rilevata ma senza modello');
-    }
-  } catch {
-    cpuInfo = 'N/D';
-  }
+  // Uptime
+  const uptime = uptimeFmt(process.uptime() * 1000)
 
-  let dnsPing = 'N/D';
+  // Connessione
+  const state = conn?.ev?.connectionState
+  const status =
+    state === 'open' ? '🟢 Connesso' :
+    state === 'connecting' ? '🟡 Connessione…' :
+    state === 'close' ? '🔴 Disconnesso' :
+    `⚪ ${state || 'N/D'}`
+
+  // RAM
+  const mem = process.memoryUsage()
+  const ramUsed = (mem.heapUsed / 1024 / 1024).toFixed(1)
+  const ramTotal = (mem.heapTotal / 1024 / 1024).toFixed(1)
+
+  // CPU
+  const cpu = os.cpus()?.[0]
+  const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
+
+  // DNS
+  let dnsPing = 'N/D'
   try {
-    const dnsStart = speed();
+    const t = speed()
     await Promise.race([
-      new Promise(resolve => dns.lookup('google.com', () => resolve())),
-      new Promise(resolve => setTimeout(resolve, 500))
-    ]);
-    dnsPing = (speed() - dnsStart).toFixed(2);
+      new Promise(r => dns.lookup('google.com', () => r())),
+      new Promise(r => setTimeout(r, 500))
+    ])
+    dnsPing = (speed() - t).toFixed(2)
   } catch {}
 
-  let baileysVersion = 'N/D';
+  // Baileys
+  let baileys = 'N/D'
   try {
-    const { version } = await fetchLatestBaileysVersion();
-    baileysVersion = version.join('.');
+    baileys = (await fetchLatestBaileysVersion()).version.join('.')
   } catch {}
 
-  const info = `
-🏓 *PING 888*
-Stato connessione: ${connectionStatus}
-
-🚀 Risposta: *${speedWithFont} ms*
-🌐 DNS Ping: *${dnsPing} ms*
+  // Caption stile 888
+  const caption = `
+⚡ *PING 888*
+📡 Ping: *${latency}ms*
+🌐 DNS: *${dnsPing}ms*
 ⏳ Uptime: *${uptime}*
-🔧 Baileys: *v${baileysVersion}*
-💾 RAM: *${ramUsed}MB / ${ramTotal}MB*
+🔧 Baileys: *v${baileys}*
+💾 RAM: *${ramUsed}/${ramTotal}MB*
 🖥️ CPU: *${cpuInfo}*
 
-━━━━━━━━━━━━━━━━━━━━━━
-💡 Tocca un pulsante per continuare.
-`.trim();
+📂 Apri il pannello dal pulsante sotto.
+`.trim()
 
-  const buttons = [
-    { buttonId: `${usedPrefix}ping`, buttonText: { displayText: '📡 Ricalcola Ping' }, type: 1 },
-    { buttonId: `${usedPrefix}menu`, buttonText: { displayText: '📋 Menu' }, type: 1 },
-    { buttonId: `${usedPrefix}status`, buttonText: { displayText: '⚙️ Stato Sistema' }, type: 1 }
-  ];
+  // Pulsante single_select stile menu 888
+  const buttonParamsJson = JSON.stringify({
+    title: "Pannello Ping 888",
+    sections: [
+      {
+        title: "📡 Diagnostica",
+        highlight_label: "888",
+        rows: [
+          { id: `${usedPrefix}ping`, title: "🔄 Ricalcola Ping", description: "Esegui un nuovo test" },
+          { id: `${usedPrefix}status`, title: "⚙️ Stato Sistema", description: "Info hardware & runtime" },
+          { id: `${usedPrefix}menu`, title: "📋 Menu Principale", description: "Torna al menu 888" }
+        ]
+      }
+    ]
+  })
 
   await conn.sendMessage(m.chat, {
-    text: info,
-    buttons,
-    headerType: 1
-  }, { quoted: m });
-};
+    image: imageBuffer,
+    caption,
+    footer: "",
+    headerType: 4,
+    interactiveButtons: [
+      {
+        name: "single_select",
+        buttonParamsJson
+      }
+    ]
+  }, { quoted: m })
+}
 
-handler.help = ['ping'];
-handler.tags = ['info'];
-handler.command = /^(ping)$/i;
+handler.help = ['ping']
+handler.tags = ['info']
+handler.command = /^(ping)$/i
 
-export default handler;
+export default handler

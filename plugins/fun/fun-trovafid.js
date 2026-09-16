@@ -7,11 +7,8 @@ let handler = async (m, { conn, command, groupMetadata }) => {
 
         if (ps.length < 2) {
             return m.reply(
-`╭━━━〔 ❌ *IMPOSSIBILE* 〕━━━┈
-┃ Non ci sono abbastanza
-┃ partecipanti nel gruppo
-┃ per creare una coppia.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Impossibile*
+Non ci sono abbastanza partecipanti nel gruppo per creare una coppia.`
             );
         }
 
@@ -23,12 +20,12 @@ let handler = async (m, { conn, command, groupMetadata }) => {
         } while (b === a);
 
         m.reply(
-`╭━━━〔 ❤️ *COPPIA TROVATA 888* 〕━━━┈
-┃ ${toM(a)} e ${toM(b)}
-┃ ora risultano *fidanzati*.
-┃━━━━━━━━━━━━━━━━━━
-┃ 💘 Che l’amore abbia inizio.
-╰━━━━━━━━━━━━━━━━━━┈`,
+`❤️ *Coppia trovata 888*
+━━━━━━━━━━━━━━━━━━━━━━
+${toM(a)} e ${toM(b)}
+ora risultano *fidanzati*.
+
+💘 Che l’amore abbia inizio.`,
             null,
             {
                 mentions: [a, b],
@@ -40,7 +37,7 @@ let handler = async (m, { conn, command, groupMetadata }) => {
     }
 };
 
-handler.help = ['𝐭𝐫𝐨𝐯𝐚𝐟𝐢𝐝'];
+handler.help = ['trovafid'];
 handler.tags = ['fun'];
 handler.command = /^(trovafid)$/i;
 handler.group = true;

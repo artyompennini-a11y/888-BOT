@@ -1,4 +1,5 @@
-﻿// Plugin by Elixir & 888 staff
+// Plugin by Elixir & 888 staff
+import fetch from 'node-fetch';
 import fs from 'fs';
 import path, { join } from 'path';
 import { fileURLToPath } from 'url';
@@ -13,12 +14,22 @@ const loadStaff = () => {
   }
 };
 
+const formattaMembro = (membro) => {
+  const emoji = membro.emoji || '👤';
+  const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
+  if (membro.bio) righe.push(`\n${membro.bio}`);
+  if (membro.telefono) righe.push(`\n📞 wa.me/${membro.telefono}`);
+  if (membro.instagram) righe.push(`\n📷 IG: ${membro.instagram}`);
+  if (membro.telegram) righe.push(`\n📞 TG: ${membro.telegram}`);
+  return righe.join('\n');
+};
+
 const inviaTelegram = async (conn, chat, staffData, quoted) => {
   const membri = staffData.filter(m => m.telegram);
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
   }
-  const testo = `✈️ *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n✈️ https://t.me/${String(m.telegram).replace(/^@/, '')}`).join('\n\n')}`;
+  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${String(m.telegram).replace(/^@/, '')}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
@@ -27,31 +38,25 @@ const inviaInstagram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
   }
-  const testo = `📸 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📸 https://instagram.com/${String(m.instagram).replace(/^@/, '')}`).join('\n\n')}`;
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${String(m.instagram).replace(/^@/, '')}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
-const inviaListaContatti = async (conn, chat, staffData, quoted) => {
+const inviaStaff = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
   }
-  const contatti = staffData.filter(m => m.telefono).map(m => [
-    String(m.telefono).replace(/\D/g, ''),
-    `${m.nome} • ${m.ruolo}`
-  ]);
-  if (contatti.length === 0) {
-    return conn.sendMessage(chat, { text: '❌ Nessun contatto WhatsApp disponibile.' }, { quoted });
+  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
+  const conTelefono = staffData.filter(m => m.telefono);
+  if (conTelefono.length > 0) {
+    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} â€¢ ${m.ruolo}`]), quoted);
   }
-  await conn.sendContact(chat, contatti, quoted);
+  return conn.sendMessage(chat, { text: testo }, { quoted });
 };
-
-let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
-  if (m.isGroup && !isOwner && !isAdmin) {
-    return m.reply('❌ Questo comando può essere usato solo da un amministratore del gruppo.');
-  }
-
+let handler = async (m, { conn, usedPrefix, args, text }) => {
   const staffData = loadStaff();
   
+  // Invia contenuto se il comando Ã¨ giÃ  stato attivato (da pulsante o da testo)
   const lowerText = String(text || '').toLowerCase();
   
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
@@ -61,18 +66,18 @@ let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
     return inviaInstagram(conn, m.chat, staffData, m);
   }
   if (lowerText.includes('lista') || lowerText.includes('team') || lowerText === 'staff') {
-    return inviaListaContatti(conn, m.chat, staffData, m);
+    return inviaStaff(conn, m.chat, staffData, m);
   }
 
+  // Mostra la tendina
   let imageBuffer;
   try {
     imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg');
   } catch {
-    const fetch = (await import('node-fetch')).default;
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
   }
 
-  const botName = global.db?.data?.nomedelbot || global.nomebot || "𝟴𝟴𝟴 𝗕𝗢𝗧";
+  const botName = global.db?.data?.nomedelbot || global.nomebot || "ðŸ´ðŸ´ðŸ´ ð—•ð—¢ð—§";
   const botVersion = global.versione || global.db?.data?.version || "1.1";
 
   const fake = {
@@ -94,7 +99,8 @@ let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
 
-📂 *Usa i pulsanti sotto per vedere i contatti dello staff.*\n`.trim();
+📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
+`.trim();
 
   const contattiTelegram = staffData.filter(m => m.telegram).length;
   const contattiInstagram = staffData.filter(m => m.instagram).length;
@@ -106,9 +112,9 @@ let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
         title: "📁 Contatti Staff",
         highlight_label: "888",
         rows: [
-          { id: `${usedPrefix}staff tg`, title: "✈️ Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti` : "Nessuno" },
-          { id: `${usedPrefix}staff ig`, title: "📸 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili` : "Nessuno" },
-          { id: `${usedPrefix}staff lista`, title: "👥 WhatsApp", description: staffData.length > 0 ? `${staffData.filter(m => m.telefono).length} contatti` : "Nessuno" }
+          { id: `${usedPrefix}staff tg`, title: "📞 Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : "Nessun contatto disponibile" },
+          { id: `${usedPrefix}staff ig`, title: "📷 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : "Nessun profilo disponibile" },
+          { id: `${usedPrefix}staff lista`, title: "👥 Tutto lo staff", description: staffData.length > 0 ? `${staffData.length} membri del team` : "Nessun membro trovato" }
         ]
       }
     ]
@@ -127,7 +133,7 @@ let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
     ]
   }, { quoted: fake });
 
-  m.react('👑');
+  m.react('📌');
 }
 
 handler.help = ['staff', 'team'];

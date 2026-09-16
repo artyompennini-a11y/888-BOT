@@ -1,5 +1,4 @@
-// Plugin by Elixir & 888 staff
-import fetch from 'node-fetch';
+﻿// Plugin by Elixir & 888 staff
 import fs from 'fs';
 import path, { join } from 'path';
 import { fileURLToPath } from 'url';
@@ -12,16 +11,6 @@ const loadStaff = () => {
   } catch {
     return [];
   }
-};
-
-const formattaMembro = (membro) => {
-  const emoji = membro.emoji || '👤';
-  const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
-  if (membro.bio) righe.push(`\n${membro.bio}`);
-  if (membro.telefono) righe.push(`\n📱 wa.me/${membro.telefono}`);
-  if (membro.instagram) righe.push(`📸 IG: ${membro.instagram}`);
-  if (membro.telegram) righe.push(`✈️ TG: ${membro.telegram}`);
-  return righe.join('\n');
 };
 
 const inviaTelegram = async (conn, chat, staffData, quoted) => {
@@ -42,21 +31,27 @@ const inviaInstagram = async (conn, chat, staffData, quoted) => {
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
-const inviaStaff = async (conn, chat, staffData, quoted) => {
+const inviaListaContatti = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
   }
-  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━\n\n')}`;
-  const conTelefono = staffData.filter(m => m.telefono);
-  if (conTelefono.length > 0) {
-    await conn.sendContact(chat, conTelefono.map(m => [String(m.telefono).replace(/\D/g, ''), `${m.nome} • ${m.ruolo}`]), quoted);
+  const contatti = staffData.filter(m => m.telefono).map(m => [
+    String(m.telefono).replace(/\D/g, ''),
+    `${m.nome} • ${m.ruolo}`
+  ]);
+  if (contatti.length === 0) {
+    return conn.sendMessage(chat, { text: '❌ Nessun contatto WhatsApp disponibile.' }, { quoted });
   }
-  return conn.sendMessage(chat, { text: testo }, { quoted });
+  await conn.sendContact(chat, contatti, quoted);
 };
-let handler = async (m, { conn, usedPrefix, args, text }) => {
+
+let handler = async (m, { conn, usedPrefix, text, isOwner, isAdmin }) => {
+  if (m.isGroup && !isOwner && !isAdmin) {
+    return m.reply('❌ Questo comando può essere usato solo da un amministratore del gruppo.');
+  }
+
   const staffData = loadStaff();
   
-  // Invia contenuto se il comando è già stato attivato (da pulsante o da testo)
   const lowerText = String(text || '').toLowerCase();
   
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
@@ -66,14 +61,14 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
     return inviaInstagram(conn, m.chat, staffData, m);
   }
   if (lowerText.includes('lista') || lowerText.includes('team') || lowerText === 'staff') {
-    return inviaStaff(conn, m.chat, staffData, m);
+    return inviaListaContatti(conn, m.chat, staffData, m);
   }
 
-  // Mostra la tendina
   let imageBuffer;
   try {
     imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg');
   } catch {
+    const fetch = (await import('node-fetch')).default;
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
   }
 
@@ -99,8 +94,7 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
 
-📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
-`.trim();
+📂 *Usa i pulsanti sotto per vedere i contatti dello staff.*\n`.trim();
 
   const contattiTelegram = staffData.filter(m => m.telegram).length;
   const contattiInstagram = staffData.filter(m => m.instagram).length;
@@ -112,9 +106,9 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
         title: "📁 Contatti Staff",
         highlight_label: "888",
         rows: [
-          { id: `${usedPrefix}staff tg`, title: "✈️ Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : "Nessun contatto disponibile" },
-          { id: `${usedPrefix}staff ig`, title: "📸 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : "Nessun profilo disponibile" },
-          { id: `${usedPrefix}staff lista`, title: "👥 Tutto lo staff", description: staffData.length > 0 ? `${staffData.length} membri del team` : "Nessun membro trovato" }
+          { id: `${usedPrefix}staff tg`, title: "✈️ Telegram", description: contattiTelegram > 0 ? `${contattiTelegram} contatti` : "Nessuno" },
+          { id: `${usedPrefix}staff ig`, title: "📸 Instagram", description: contattiInstagram > 0 ? `${contattiInstagram} profili` : "Nessuno" },
+          { id: `${usedPrefix}staff lista`, title: "👥 WhatsApp", description: staffData.length > 0 ? `${staffData.filter(m => m.telefono).length} contatti` : "Nessuno" }
         ]
       }
     ]

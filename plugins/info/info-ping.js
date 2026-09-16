@@ -6,7 +6,7 @@ import dns from 'dns'
 import fetch from 'node-fetch'
 import fs from 'fs'
 import process from 'process'
-import { fetchLatestBaileysVersion } from '@chatunity/baileys'
+import { fetchLatestBaileysVersion } from '@888-BOT/888baileys'
 
 const uptimeFmt = ms => {
   const d = Math.floor(ms / 86400000)

@@ -1,6 +1,6 @@
 //Plugin by punisher, elixir & 888 staff
 
-import * as baileys from '@chatunity/baileys';
+import * as baileys from '@888-BOT/888baileys';
 
 let handler = async (m, { conn, text }) => {
 

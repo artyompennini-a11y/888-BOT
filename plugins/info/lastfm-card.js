@@ -236,7 +236,7 @@ export async function makeCard(track, username) {
 }
 
 /**
- * Invia un'immagine Buffer su WhatsApp con @chatunity/baileys.
+ * Invia un'immagine Buffer su WhatsApp con @888-BOT/888baileys.
  * Salva su file temp e passa url: filepath — unico formato accettato dalla lib.
  */
 export async function sendImage(conn, m, buffer, caption = '', buttons = [], opts = {}) {

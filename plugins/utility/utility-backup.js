@@ -34,7 +34,7 @@ const handler = async (m, { conn, text, usedPrefix, command, isGroup, isAdmin })
         antispam: chatData.antispam,
         antiporno: chatData.antiporno,
         antivoip: chatData.antivoip,
-        antibusiness: chatData.antibusiness,
+
         slowmode: chatData.slowmode,
         modoadmin: chatData.modoadmin,
         autolevelup: chatData.autolevelup,

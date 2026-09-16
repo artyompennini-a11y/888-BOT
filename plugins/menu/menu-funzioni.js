@@ -12,7 +12,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     rileva, jadibotmd, welcome, goodbye, modoadmin, antiporno,
     antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktiktok,
     antilinktg, antimedia, antispam, antitoxic, antiBot, antioneview,
-    antigore, antibusiness, reaction, bestemmiometro, ai, vocali, logrichieste,
+    antigore, reaction, bestemmiometro, ai, vocali, logrichieste,
     slowmode, antinuke
   } = chat
 
@@ -90,7 +90,6 @@ Stato pannello: Moduli di Sicurezza
 • [${s(antispam)}] ${p}antispam
 • [${s(antitrava)}] ${p}antitrava
 • [${s(antiBot)}] ${p}antibot
-• [${s(antibusiness)}] ${p}antibusiness
 • [${s(antivoip)}] ${p}antivoip
 • [${s(antimedia)}] ${p}antimedia
 • [${s(antiLink)}] ${p}antilink

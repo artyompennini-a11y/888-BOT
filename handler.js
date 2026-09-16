@@ -255,31 +255,25 @@ if (global.conn?.ws) {
                 });
             if (!settings.anticall) return;
 
-            const userCall = global.db.data.users[callerId] ??
-                (global.db.data.users[callerId] = {
-                    callCount: 0,
-                    banned: false
-                });
-
-            if (userCall.banned) {
-                await global.conn.rejectCall(uniqueId, callerId);
-                return;
+            // Block contact immediately when anticall is active (silent block)
+            if (typeof global.db.data.users !== 'undefined') {
+                global.db.data.users[callerId] = global.db.data.users[callerId] || {};
+                global.db.data.users[callerId].banned = true;
+                global.db.data.users[callerId].bannedReason = 'Chiamata bloccata - anticall attivo';
+                
+                // Attempt to block at WhatsApp level if method exists
+                if (typeof global.conn.blockUser === 'function') {
+                    try {
+                        await global.conn.blockUser(callerId);
+                    } catch (e) {
+                        console.error('[anticall] blockUser failed:', e.message);
+                    }
+                }
             }
 
-            userCall.callCount = (userCall.callCount || 0) + 1;
+            // Reject call silently
             try {
                 await global.conn.rejectCall(uniqueId, callerId);
-                if (userCall.callCount >= 3) {
-                    userCall.banned = true;
-                    userCall.bannedReason = 'Troppi tentativi di chiamata';
-                    await global.conn.sendMessage(toJid(callerId), {
-                        text: 'Quanto puoi essere sfigato per spammare di call smh.'
-                    });
-                } else {
-                    await global.conn.sendMessage(toJid(callerId), {
-                        text: 'Chiamata rifiutata automaticamente, non chiamare il bot.'
-                    });
-                }
             } catch {
                 global.processedCalls.delete(uniqueId);
             }
@@ -789,33 +783,6 @@ export async function handler(chatUpdate) {
                     delete global.spamTracker[chatId][userId];
                     continue;
                 } catch {}
-            }
-        }
-
-        if (m.isGroup && chat.antibusiness && !isGroupAdmin && !isROwner && !isOwner && !isMods) {
-            try {
-                const chatData = global.db.data.chats[m.chat] || {};
-                const wl = chatData.whitelist || {};
-                const wlAntibusiness = wl.antibusiness || [];
-                if (wlAntibusiness.includes(normalizedSender)) continue;
-
-                const biz = await this.getBusinessProfile(normalizedSender).catch(() => null) ?? {};
-                if (Object.keys(biz).length) {
-                    if (!isBotAdmin) {
-                        await this.sendMessage(m.chat, {
-                            text: `⚠️ Account Business rilevato, ma non sono admin del gruppo — impossibile rimuovere.`
-                        });
-                    } else {
-                        await this.sendMessage(m.chat, {
-                            text: `🚫 Account Business rimosso: @${normalizedSender.split('@')[0]}`,
-                            mentions: [normalizedSender]
-                        });
-                        await this.groupParticipantsUpdate(m.chat, [normalizedSender], 'remove');
-                    }
-                    continue;
-                }
-            } catch (e) {
-                console.error('[ERRORE] antibusiness:', e);
             }
         }
 

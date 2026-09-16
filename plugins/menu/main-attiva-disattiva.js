@@ -34,10 +34,10 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   let bot = global.db.data.settings[conn.user.jid] || {};
 
   const catalogs = {
-    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antiBot','antivoip','antioneview','antitrava','antibusiness','slowmode','antinuke'],
-    protezione: ['antispam','antitoxic','antiBot','antivoip','antioneview','antitrava','antibusiness'],
+    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antiBot','antivoip','antioneview','antitrava','slowmode','antinuke'],
+    protezione: ['antispam','antitoxic','antiBot','antivoip','antioneview','antitrava'],
     media: ['antimedia','antiporno','antigore'],
-    full: ['antilink','antiporno','antigore','antispam','antitoxic','antiBot','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','antibusiness','slowmode','antinuke']
+    full: ['antilink','antiporno','antigore','antispam','antitoxic','antiBot','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
   };
 
   const adminFeatures = [
@@ -46,7 +46,6 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     { key: 'antimedia', name: 'AntiMedia', desc: 'Blocca media a rischio' },
     { key: 'goodbye', name: 'Addio', desc: 'Messaggio di addio' },
     { key: 'antispam', name: 'Antispam', desc: 'Blocca spam' },
-    { key: 'antibusiness', name: 'AntiBusiness', desc: 'Blocca account business' },
     { key: 'antitrava', name: 'AntiTrava', desc: 'Blocca messaggi trava' },
     { key: 'antitoxic', name: 'Antitossici', desc: 'Rileva insulti' },
     { key: 'antiBot', name: 'Antibot', desc: 'Blocca bot indesiderati' },
@@ -187,11 +186,6 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
       case 'antispam':
         if (adminCheck) return adminGuard();
         setChat('antispam'); break;
-
-      case 'antibusiness':
-        if (!m.isGroup && !isOwner) return groupGuard();
-        if (adminCheck) return adminGuard();
-        setChat('antibusiness'); break;
 
       case 'antitrava':
         if (!m.isGroup && !isOwner) return groupGuard();

@@ -7,7 +7,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
   if (!m.isGroup) return false
 
   const chat = global.db.data.chats[m.chat]
-  if (!chat?.antiSpam || chat?.isBanned) return true
+  if (!chat?.antispam || chat?.isBanned) return true
 
   if (!isBotAdmin) return true
   if (isAdmin) return true

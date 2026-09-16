@@ -108,6 +108,9 @@ async function getArtistInfo(artist) {
   }
 }
 
+const pulisci = (t) => String(t ?? '').replace(/[\u0300-\u036F\u200B-\u200F\uFEFF]/g, '').trim();
+const numeroId = (jid) => String(jid || '').split('@')[0].split(':')[0].replace(/\D/g, '');
+
 // Formatta i numeroni in maniera leggibile (1.2M, 340k, 567)
 const formatCount = (n) => {
   const num = parseInt(n, 10) || 0;
@@ -160,8 +163,8 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       }, { quoted: m });
     }
 
-    const songTitle = track.name || 'Traccia sconosciuta';
-    const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
+    const songTitle = pulisci(track.name) || 'Traccia sconosciuta';
+    const artistName = pulisci(track.artist?.['#text']) || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
     // 🌐 Link di ascolto su YouTube e Spotify
@@ -216,8 +219,8 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
     // 🔘 Pulsanti native: QUICK_REPLY (Like ❤️ + Fuoco 🔥) + CTA_URL (YouTube/Spotify)
     const buttons = [
-      ['❤️ Metti nei preferiti', `.like ${m.sender}`],
-      ['🔥 Fuoco (non mi piace)', `.fuoco ${m.sender}`]
+      [String('❤️ Metti nei preferiti').slice(0, 25), `.like ${numeroId(m.sender)}`],
+      [String('🔥 Fuoco (non mi piace)').slice(0, 25), `.fuoco ${numeroId(m.sender)}`]
     ];
     const urls = [
       ['▶️ Ascolta su YouTube', youtubeUrl],

@@ -4,55 +4,63 @@
     "ruolo": "Founder & Lead Developer",
     "emoji": "👑",
     "bio": "JS Core Architecture & Bot Creator.",
-    "telegram": "username_tg"
+    "instagram": "elixir._888",
+    "telegram": "Elixir888Project"
   },
   {
     "nome": "Punisher",
     "ruolo": "Co-Founder & DevOps Engineer",
     "emoji": "⚔️",
     "bio": "Localhost Management & Deployment.",
-    "telegram": "username_tg"
+    "instagram": "arty.340",
+    "telegram": "punishth"
   },
   {
     "nome": "Axtral",
     "ruolo": "Senior Plugin Developer",
     "emoji": "💻",
     "bio": "Writing handlers and command optimization.",
-    "telegram": "username_tg"
+    "instagram": "axtral_wizard",
+    "telegram": ""
   },
   {
     "nome": "Ghost",
     "ruolo": "Full-Stack Developer",
     "emoji": "🥷",
     "bio": "Database integration and logic fixes.",
-    "telegram": "username_tg"
+    "instagram": "",
+    "telegram": ""
   },
   {
     "nome": "Manu",
     "ruolo": "Junior Developer",
     "emoji": "👨‍💻",
     "bio": "UI elements and basic JS script testing.",
-    "telegram": "username_tg"
+    "instagram": "",
+    "telegram": ""
   },
   {
     "nome": "Fuma",
     "ruolo": "External Project Support",
     "emoji": "🌐",
     "bio": "External collaborations and strategic support.",
-    "telegram": "username_tg"
+    "instagram": "_.56._fvuma",
+    "telegram": ""
   },
   {
     "nome": "Dado",
     "ruolo": "QA & Beta Tester",
     "emoji": "🧪",
     "bio": "Bug hunting & interactive components test.",
-    "telegram": "username_tg"
+    "instagram": "insta.dados00",
+    "telegram": ""
   },
   {
     "nome": "Mattia",
     "ruolo": "Community Support",
     "emoji": "🎧",
     "bio": "User assistance and database management.",
-    "telegram": "username_tg"
+    "instagram": "",
+    "telegram": ""
   }
 ]

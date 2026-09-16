@@ -4,7 +4,7 @@ const {
   proto,
   generateWAMessage,
   areJidsSameUser,
-} = (await import('@realvare/baileys')).default;
+} = (await import('@chatunity/baileys')).default;
 export async function all(m, chatUpdate) {
   try {
     if (!isValidMessage(m)) return;

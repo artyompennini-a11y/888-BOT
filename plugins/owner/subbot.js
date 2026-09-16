@@ -3,7 +3,7 @@ import {
   DisconnectReason,
   makeCacheableSignalKeyStore,
   fetchLatestBaileysVersion
-} from '@realvare/baileys';
+} from '@chatunity/baileys';
 import QRCode from 'qrcode';
 import NodeCache from 'node-cache';
 import fs from 'fs';

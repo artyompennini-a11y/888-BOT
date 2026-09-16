@@ -1,7 +1,7 @@
 import speed from 'performance-now';
 import os from 'os';
 import dns from 'dns';
-import { fetchLatestBaileysVersion } from '@realvare/baileys';
+import { fetchLatestBaileysVersion } from '@chatunity/baileys';
 
 const toMathematicalAlphanumericSymbols = number => {
   const map = {

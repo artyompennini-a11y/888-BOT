@@ -9,7 +9,7 @@ const manually = `𝐆𝐑𝐔𝐏𝐏𝐈 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
 │ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟮
 │ https://chat.whatsapp.com/DjDBrPXWZLOCAoHMA1oNND
 ╰───⭓`
-import { generateWAMessageFromContent } from '@realvare/baileys'
+import { generateWAMessageFromContent } from '@chatunity/baileys'
 const handler = async (m, { args, text }) => {
 if (parseInt(args[1])) return m.reply(`Inserisci prima la quantità di messaggi da inviare e poi il testo`)
 if (!parseInt(args[0])) return m.reply(`Inserisci nel comando la quantità di messaggi da inviare`)

@@ -9,9 +9,9 @@ import { unwatchFile, watchFile } from 'fs';
 import fs from 'fs';
 import chalk from 'chalk';
 import NodeCache from 'node-cache';
-import { getAggregateVotesInPollMessage, toJid } from '@realvare/baileys';
+import { getAggregateVotesInPollMessage, toJid } from '@chatunity/baileys';
 
-const { proto } = await import('@realvare/baileys');
+const { proto } = await import('@chatunity/baileys');
 
 let _printModule = null;
 const _getPrintModule = async () => {

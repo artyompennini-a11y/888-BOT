@@ -3,7 +3,7 @@
 import yts from 'yt-search';
 import fs from 'fs';
 import path from 'path';
-import { generateWAMessageFromContent } from '@realvare/baileys';
+import { generateWAMessageFromContent } from '@chatunity/baileys';
 
 const EMOJIS = {
   ERROR: '⚠️',

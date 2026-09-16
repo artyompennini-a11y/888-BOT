@@ -2,7 +2,7 @@ import axios from 'axios'
 import FormData from 'form-data'
 
 const handler = async (m, { conn, usedPrefix, command }) => {
-    const { downloadContentFromMessage } = await import('@realvare/baileys')
+    const { downloadContentFromMessage } = await import('@chatunity/baileys')
 
     // Verifica se c'è un messaggio quotato o se il messaggio corrente è un'immagine
     const isQuoted = m.quoted && m.quoted.message

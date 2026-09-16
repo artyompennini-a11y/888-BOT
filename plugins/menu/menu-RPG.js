@@ -60,7 +60,6 @@ Categoria: Minigiochi & Economia
 ⚔️ *Azioni & Crimini*
 • ${usedPrefix}ruba
 • ${usedPrefix}rapina
-• ${usedPrefix}spara
 • ${usedPrefix}duello
 • ${usedPrefix}colpo
 

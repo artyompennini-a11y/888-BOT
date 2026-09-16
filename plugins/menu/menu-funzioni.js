@@ -79,9 +79,6 @@ Stato pannello: Moduli di Sicurezza
 • [${s(bestemmiometro)}] ${p}bestemmiometro
 • [${s(logrichieste)}] ${p}logrichieste
 
-🤖 *AI Avanzate*
-• ${p}groq
-• ${p}mistral
 
 🚫 *Moduli di Protezione (ANTI)*
 • [${s(antinuke)}] ${p}antinuke

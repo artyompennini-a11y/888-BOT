@@ -286,22 +286,25 @@ setInterval(() => {
 }, 180_000);
 
 function matchIds(conn, u, target) {
+    const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid);
     return [
-        conn.decodeJid(u.id),
-        u.jid ? conn.decodeJid(u.jid) : null,
-        u.lid ? conn.decodeJid(u.lid) : null,
+        decoded(u.id),
+        u.jid ? decoded(u.jid) : null,
+        u.lid ? decoded(u.lid) : null,
     ].filter(Boolean).includes(target);
 }
 
 function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, normalizedBot) {
+    const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid);
+
     // Normalizza owner e ownerLid
     const rawOwner = groupMetadata.owner || groupMetadata.ownerLid || null;
-    const nOwner = rawOwner ? normalizeNumber(conn.decodeJid(rawOwner)) : null;
+    const nOwner = rawOwner ? normalizeNumber(decoded(rawOwner)) : null;
 
     // Normalizza tutti i partecipanti
     const normalizedParticipants = participants.map(u => {
         const base = u.id || u.jid || u.lid || '';
-        const clean = normalizeNumber(conn.decodeJid(base));
+        const clean = normalizeNumber(decoded(base));
         return {
             ...u,
             id: clean,
@@ -318,13 +321,16 @@ function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, nor
             (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true)
         );
 
-    // Controllo bot admin
+    // Controllo bot admin più robusto
     const isBotAdmin =
         normalizedBot === nOwner ||
-        normalizedParticipants.some(u =>
-            u.id === normalizedBot &&
-            (u.admin === 'admin' || u.admin === 'superadmin')
-        );
+        normalizedParticipants.some(u => {
+            const match =
+                u.id === normalizedBot ||
+                (typeof u.jid === 'string' && (u.jid === normalizedBot || u.jid.includes(normalizedBot))) ||
+                (typeof u.lid === 'string' && (u.lid === normalizedBot || u.lid.includes(normalizedBot)));
+            return match && (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true);
+        });
 
     // Controllo owner reale
     const isRAdmin = normalizedSender === nOwner;
@@ -879,17 +885,37 @@ export async function handler(chatUpdate) {
                         global.groupCache.set(m.chat, freshMeta);
                         groupMetadata = freshMeta;
                         participants = freshMeta.participants;
+
+                        const connDecode = (typeof this?.decodeJid === 'function' ? this.decodeJid : (typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid)));
+                        const botRaw = (typeof conn?.user?.jid === 'string' ? conn.user.jid : (typeof conn?.user?.id === 'string' ? conn.user.id : ''));
+                        const normalizedBot = connDecode(botRaw || '');
+
                         normalizedParticipants = participants.map(u => {
-                            const nId = this.decodeJid(u.id);
+                            const base = u.id || u.jid || u.lid || '';
+                            const nId = connDecode(base || '');
                             return {
                                 ...u,
                                 id: nId,
-                                jid: u.jid ?? nId
+                                jid: u.jid ?? nId,
+                                lid: u.lid ?? nId
                             };
                         });
+
+                        // Controllo bot admin diretto
+                        const botParticipant = normalizedParticipants.find(u =>
+                            u.id === normalizedBot ||
+                            (typeof u.jid === 'string' && u.jid === normalizedBot) ||
+                            (typeof u.lid === 'string' && u.lid === normalizedBot)
+                        );
+                        const directBotAdmin = !!(botParticipant && (
+                            botParticipant.admin === 'admin' ||
+                            botParticipant.admin === 'superadmin' ||
+                            botParticipant.admin === true
+                        ));
+
                         const flags = calcAdminFlags(this, participants, freshMeta, normalizedSender, normalizedBot);
                         isAdmin = flags.isAdmin;
-                        isBotAdmin = flags.isBotAdmin;
+                        isBotAdmin = !!(directBotAdmin || flags.isBotAdmin);
                         isRAdmin = flags.isRAdmin;
                     }
                 }
@@ -1054,7 +1080,7 @@ export async function handler(chatUpdate) {
                 const xp = 'exp' in plugin ? parseInt(plugin.exp) : 17;
                 m.exp += xp <= 200 ? xp : 0;
 
-                if (m.isGroup && !isBotAdmin && !isOwner && !isROwner) {
+                if (m.isGroup && !isBotAdmin && !isOwner && !isROwner && !isAdmin && !isMods) {
                     await this.reply(m.chat, `🚫 Devo essere amministratore per poter essere utilizzato!`, m).catch(() => {});
                     continue;
                 }
@@ -1287,7 +1313,3 @@ watchFile(file, async () => {
     console.log(chalk.bgHex('#3b0d95')(chalk.white.bold("File: 'handler.js' Aggiornato")));
     if (global.reloadHandler) console.log(await global.reloadHandler());
 });
-
-
-
-

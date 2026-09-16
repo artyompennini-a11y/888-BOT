@@ -53,20 +53,23 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   }
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
-let handler = async (m, { conn, usedPrefix, args }) => {
+let handler = async (m, { conn, usedPrefix, args, text }) => {
   const staffData = loadStaff();
-  const scelta = String(args?.[0] || '').trim().toLowerCase();
-
-  if (scelta === 'tg' || scelta === 'telegram') {
+  
+  // Invia contenuto se il comando è già stato attivato (da pulsante o da testo)
+  const lowerText = String(text || '').toLowerCase();
+  
+  if (lowerText.includes('tg') || lowerText.includes('telegram')) {
     return inviaTelegram(conn, m.chat, staffData, m);
   }
-  if (scelta === 'ig' || scelta === 'instagram') {
+  if (lowerText.includes('ig') || lowerText.includes('instagram')) {
     return inviaInstagram(conn, m.chat, staffData, m);
   }
-  if (scelta === 'lista' || scelta === 'team') {
+  if (lowerText.includes('lista') || lowerText.includes('team') || lowerText === 'staff') {
     return inviaStaff(conn, m.chat, staffData, m);
   }
 
+  // Mostra la tendina
   let imageBuffer;
   try {
     imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg');

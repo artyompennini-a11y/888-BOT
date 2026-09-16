@@ -24,8 +24,8 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     participant: '0@s.whatsapp.net'
   };
 
-  let isEnable = /true|enable|attiva|(turn)?on|1/i.test(command);
-  if (/disable|disattiva|off|0/i.test(command)) isEnable = false;
+  let isEnable = /true|enable|attiva|(turn)?on|1/.test(command);
+  if (/disable|disattiva|off|0/.test(command)) isEnable = false;
 
   global.db.data.chats[m.chat] = global.db.data.chats[m.chat] || {};
   global.db.data.users[m.sender] = global.db.data.users[m.sender] || {};
@@ -34,10 +34,10 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   let bot = global.db.data.settings[conn.user.jid] || {};
 
   const catalogs = {
-    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antiBot','antivoip','antioneview','antitrava','slowmode','antinuke'],
-    protezione: ['antispam','antitoxic','antiBot','antivoip','antioneview','antitrava'],
+    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antibot','antivoip','antioneview','antitrava','slowmode','antinuke'],
+    protezione: ['antispam','antitoxic','antibot','antivoip','antioneview','antitrava'],
     media: ['antimedia','antiporno','antigore'],
-    full: ['antilink','antiporno','antigore','antispam','antitoxic','antiBot','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
+    full: ['antilink','antiporno','antigore','antispam','antitoxic','antibot','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
   };
 
   const adminFeatures = [
@@ -48,7 +48,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     { key: 'antispam', name: 'Antispam', desc: 'Blocca spam' },
     { key: 'antitrava', name: 'AntiTrava', desc: 'Blocca messaggi trava' },
     { key: 'antitoxic', name: 'Antitossici', desc: 'Rileva insulti' },
-    { key: 'antiBot', name: 'Antibot', desc: 'Blocca bot indesiderati' },
+    { key: 'antibot', name: 'Antibot', desc: 'Blocca bot indesiderati' },
     { key: 'antioneview', name: 'Antiviewonce', desc: 'Blocca view-once' },
     { key: 'rileva', name: 'Rileva', desc: 'Rileva eventi gruppo' },
     { key: 'antiporno', name: 'Antiporno', desc: 'Blocca contenuti NSFW' },
@@ -81,166 +81,203 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 
     const adminCheck = m.isGroup && !(isAdmin || isOwner || isROwner);
     const ownerOnly = !isOwner && !isROwner;
-
+    const groupGuard = () => { result.status = 'Questo comando è disponibile solo nei gruppi.'; };
     const adminGuard = () => { result.status = 'Azione consentita solo agli amministratori.'; };
     const ownerGuard = () => { result.status = 'Azione riservata al proprietario.'; };
-    const groupGuard = () => { result.status = 'Questo comando è disponibile solo nei gruppi.'; };
 
-    const setChat = (key) => {
-      if (chat[key] === isEnable) {
+    const lowerKey = type ? type.toLowerCase() : null;
+    const key = (() => {
+      const catalogKey = catalogs[lowerKey];
+      return catalogKey ? catalogKey : [lowerKey].filter(Boolean);
+    })();
+
+    const setChatField = (k) => {
+      const field = k.toLowerCase();
+      if (chat[field] === isEnable) {
         result.status = isEnable ? 'già attivo.' : 'già disattivato.';
         return;
       }
-      chat[key] = isEnable;
+      chat[field] = isEnable;
       result.status = isEnable ? 'ATTIVATO' : 'DISATTIVATO';
       result.success = true;
     };
 
-    const setBot = (key) => {
-      if (bot[key] === isEnable) {
+    const setBotField = (k) => {
+      const field = k.toLowerCase();
+      if (bot[field] === isEnable) {
         result.status = isEnable ? 'già attivo.' : 'già disattivato.';
         return;
       }
-      bot[key] = isEnable;
+      bot[field] = isEnable;
       result.status = isEnable ? 'ATTIVATO' : 'DISATTIVATO';
       result.success = true;
     };
 
-    switch (type) {
-      case 'welcome': case 'benvenuto':
+    const guardChecks = {
+      welcome: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('welcome'); break;
-
-      case 'goodbye': case 'addio':
+      },
+      goodbye: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('goodbye'); break;
-
-      case 'antinuke':
+      },
+      antinuke: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('antinuke'); break;
-
-      case 'antiprivato':
+      },
+      antiprivato: () => {
         if (ownerOnly) return ownerGuard();
-        setBot('antiprivato'); break;
-
-      case 'antilinkig':
+      },
+      antilinkig: () => {
         if (adminCheck) return adminGuard();
-        setChat('antilinkig'); break;
-
-      case 'antilinktg':
+      },
+      antilinktg: () => {
         if (adminCheck) return adminGuard();
-        setChat('antilinktg'); break;
-
-      case 'antilinktiktok':
+      },
+      antilinktiktok: () => {
         if (adminCheck) return adminGuard();
-        setChat('antilinktiktok'); break;
-
-      case 'read':
+      },
+      read: () => {
         if (ownerOnly) return ownerGuard();
-        setBot('read'); break;
-
-      case 'anticall':
+      },
+      anticall: () => {
         if (ownerOnly) return ownerGuard();
-        setBot('anticall'); break;
-
-      case 'soloCreatore':
+      },
+      soloCreatore: () => {
         if (ownerOnly) return ownerGuard();
-        setBot('soloCreatore'); break;
-
-      case 'modoadmin':
+      },
+      modoadmin: () => {
         if (adminCheck) return adminGuard();
-        setChat('modoadmin'); break;
-
-      case 'antimedia':
+      },
+      antimedia: () => {
         if (!m.isGroup) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('antimedia'); break;
-
-      case 'antiBot':
+      },
+      antibot: () => {
         if (adminCheck) return adminGuard();
-        setChat('antiBot'); break;
-
-      case 'antivoip':
+      },
+      antivoip: () => {
         if (adminCheck) return adminGuard();
-        setChat('antivoip'); break;
-
-      case 'antitoxic':
+      },
+      antitoxic: () => {
         if (adminCheck) return adminGuard();
-        setChat('antitoxic'); break;
-
-      case 'antioneview':
+      },
+      antioneview: () => {
         if (adminCheck) return adminGuard();
-        setChat('antioneview'); break;
-
-      case 'reaction':
+      },
+      reaction: () => {
         if (adminCheck) return adminGuard();
-        setChat('reaction'); break;
-
-      case 'bestemmiometro':
+      },
+      bestemmiometro: () => {
         if (adminCheck) return adminGuard();
-        setChat('bestemmiometro'); break;
-
-      case 'antispam':
+      },
+      antispam: () => {
         if (adminCheck) return adminGuard();
-        setChat('antispam'); break;
-
-      case 'antitrava':
+      },
+      antitrava: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('antitrava'); break;
-
-      case 'antiporno':
+      },
+      antiporno: () => {
         if (adminCheck) return adminGuard();
-        setChat('antiporno'); break;
-
-      case 'antigore':
+      },
+      antigore: () => {
         if (adminCheck) return adminGuard();
-        setChat('antigore'); break;
-
-      case 'slowmode':
+      },
+      slowmode: () => {
         if (adminCheck) return adminGuard();
-        setChat('slowmode'); break;
-
-      case 'logrichieste':
+      },
+      logrichieste: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('logrichieste'); break;
-
-      case 'ai':
+      },
+      ai: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('ai'); break;
-
-      case 'vocali':
+      },
+      vocali: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('vocali'); break;
-
-      case 'subbots':
+      },
+      subbots: () => {
         if (ownerOnly) return ownerGuard();
-        setBot('jadibotmd'); break;
-
-      case 'rileva':
+      },
+      jadibotmd: () => {
+        if (ownerOnly) return ownerGuard();
+      },
+      rileva: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
-        setChat('rileva'); break;
-
-      case 'antilink':
+      },
+      antilink: () => {
         if (adminCheck) return adminGuard();
-        setChat('antiLink'); break;
-
-      case 'antifake':
+      },
+      antifake: () => {
         if (adminCheck) return adminGuard();
-        setChat('antifake'); break;
+      }
+    };
 
-      default:
-        result.status = `Modulo non riconosciuto. Usa ${usedPrefix}funzioni per la lista completa.`;
-        break;
+    const handlerMap = {
+      welcome: () => setChatField('welcome'),
+      benvenuto: () => setChatField('welcome'),
+      goodbye: () => setChatField('goodbye'),
+      addio: () => setChatField('goodbye'),
+      antinuke: () => setChatField('antinuke'),
+      antiprivato: () => setBotField('antiprivato'),
+      antilinkig: () => setChatField('antilinkig'),
+      antilinktg: () => setChatField('antilinktg'),
+      antilinktiktok: () => setChatField('antilinktiktok'),
+      read: () => setBotField('read'),
+      anticall: () => setBotField('anticall'),
+      soloCreatore: () => setBotField('soloCreatore'),
+      modoadmin: () => setChatField('modoadmin'),
+      antimedia: () => setChatField('antimedia'),
+      antibot: () => setChatField('antibot'),
+      antiBot: () => setChatField('antibot'),
+      antivoip: () => setChatField('antivoip'),
+      antitoxic: () => setChatField('antitoxic'),
+      antioneview: () => setChatField('antioneview'),
+      reaction: () => setChatField('reaction'),
+      bestemmiometro: () => setChatField('bestemmiometro'),
+      antispam: () => setChatField('antispam'),
+      antitrava: () => setChatField('antitrava'),
+      antiporno: () => setChatField('antiporno'),
+      antigore: () => setChatField('antigore'),
+      slowmode: () => setChatField('slowmode'),
+      logrichieste: () => setChatField('logrichieste'),
+      ai: () => setChatField('ai'),
+      vocali: () => setChatField('vocali'),
+      subbots: () => setBotField('jadibotmd'),
+      jadibotmd: () => setBotField('jadibotmd'),
+      jadibotmd: () => setBotField('jadibotmd'),
+      rileva: () => setChatField('rileva'),
+      antilink: () => setChatField('antilink'),
+      antiLink: () => setChatField('antilink'),
+      antifake: () => setChatField('antifake')
+    };
+
+    const lowerType = type ? type.toLowerCase() : null;
+    const normalizedKey = lowerType || null;
+
+    if (!normalizedKey) {
+      result.status = `Modulo non riconosciuto. Usa ${usedPrefix}funzioni per la lista completa.`;
+      return result;
     }
 
+    const guard = guardChecks[normalizedKey];
+    if (guard) {
+      const guardResult = guard();
+      if (guardResult) return result;
+    }
+
+    const handler = handlerMap[normalizedKey] || handlerMap[type];
+    if (!handler) {
+      result.status = `Modulo non riconosciuto. Usa ${usedPrefix}funzioni per la lista completa.`;
+      return result;
+    }
+
+    handler();
     return result;
   };
 
@@ -345,5 +382,6 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
 handler.help = ['attiva', 'disattiva'];
 handler.tags = ['main'];
 handler.command = ['enable', 'disable', 'attiva', 'disattiva', 'on', 'off'];
+handler.lowercaseOnly = true;
 
 export default handler;

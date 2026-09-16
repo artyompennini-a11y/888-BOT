@@ -38,12 +38,16 @@ const handler = {
   owner: true,
   
   async handler(m, { conn, text }) {
+    if (text && text !== text.toLowerCase()) {
+      return m.reply('❌ Per attivare o disattivare una funzione devi scrivere il comando tutto in minuscolo.', m);
+    }
+
     if (!text) {
       const current = global.db.data.settings[conn.user.jid]?.antiprivato || false;
       return m.reply(`*Antiprivato attuale:* ${current ? '✅ ATTIVATO' : '❌ DISATTIVATO'}`, m);
     }
     
-    const isOn = /on|true|attiva/i.test(text);
+    const isOn = /on|true|attiva/.test(text);
     if (isOn) {
       global.db.data.settings[conn.user.jid] = global.db.data.settings[conn.user.jid] || {};
       global.db.data.settings[conn.user.jid].antiprivato = true;
@@ -55,5 +59,7 @@ const handler = {
     }
   }
 };
+
+handler.lowercaseOnly = true;
 
 export default handler;

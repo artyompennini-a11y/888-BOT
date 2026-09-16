@@ -12,12 +12,12 @@ let handler = async (m, { conn, command, text }) => {
     chat.antiLink = false;
   }
 
-  if (!text || (text.toLowerCase() !== 'on' && text.toLowerCase() !== 'off')) {
+  if (!text || (text !== 'on' && text !== 'off')) {
     const status = chat.antiLink ? 'attivo ✅' : 'disattivo ❌';
     return conn.reply(m.chat, `『 ℹ️ 』 *AntiLink è attualmente:* ${status}\n\n*Uso:*\n.antilink on\n.antilink off`, m);
   }
 
-  const action = text.toLowerCase();
+  const action = text;
 
   if (action === 'on') {
     if (chat.antiLink) {
@@ -104,6 +104,7 @@ I link sono ora consentiti nel gruppo.`;
 handler.help = ['antilink'];
 handler.tags = ['gruppo'];
 handler.command = ['antilink'];
+handler.lowercaseOnly = true;
 handler.group = true;
 handler.admin = true;
 

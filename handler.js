@@ -871,8 +871,17 @@ export async function handler(chatUpdate) {
                 args = args ?? [];
                 const _args = noPrefix.trim().split` `.slice(1);
                 const text = _args.join` `;
+                const rawCommand = command;
                 command = command?.toLowerCase() ?? '';
                 const fail = plugin.fail ?? global.dfail;
+
+                if (plugin.lowercaseOnly && (
+                    (rawCommand && rawCommand !== rawCommand.toLowerCase()) ||
+                    args.some(arg => arg !== arg.toLowerCase())
+                )) {
+                    await m.reply('❌ Per attivare o disattivare una funzione devi scrivere il comando tutto in minuscolo.');
+                    continue;
+                }
 
                 const isAccept = plugin.command instanceof RegExp ? plugin.command.test(command) :
                     Array.isArray(plugin.command) ? plugin.command.some(c => c instanceof RegExp ? c.test(command) : c === command) :

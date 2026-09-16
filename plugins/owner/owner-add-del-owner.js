@@ -2,7 +2,7 @@ import fs from 'fs'
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
     let who
-    if (m.isGroup) who = m.mentionedJid ? m.mentionedJid : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
+    if (m.isGroup) who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : null
     else who = m.quoted ? m.quoted.sender : text ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net' : m.chat
 
     if (!who) return m.reply(`⚠️ Specifica un utente taggandolo, rispondendo al suo messaggio o inserendo il numero.\n\n*Esempi:* \n📌 ${usedPrefix + command} @user\n📌 ${usedPrefix + command} 39333xxxxxxx`)
@@ -13,7 +13,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     }
     
     let data = JSON.parse(fs.readFileSync(path, 'utf-8'))
-    let label = who.split('@')
+    let label = who.split('@')[0]
 
     if (command === 'addowner' || command === 'addproprietario') {
         if (data.includes(who)) return m.reply(`💡 *@${label}* è già nella lista dei proprietari.`, null, { mentions: [who] })

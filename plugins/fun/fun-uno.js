@@ -162,7 +162,7 @@ function botTurno(s) {
             ? ['Rosso', 'Blu', 'Verde', 'Giallo'][Math.floor(Math.random() * 4)]
             : scelta.split(' ')[0]
 
-        let res = `\n🤖 888 BOT mette: *${scelta}*`
+        let res = `🤖 888 BOT mette: *${scelta}*`
 
         if (scelta.includes('+2')) {
             for (let i = 0; i < 2; i++) {
@@ -192,7 +192,7 @@ function botTurno(s) {
 
         s.botHand.push(s.mazzo.shift())
 
-        return `\n🤖 888 BOT pesca.`
+        return `🤖 888 BOT pesca.`
     }
 }
 
@@ -223,18 +223,17 @@ let handler = async (m, { conn }) => {
         mimetype: 'image/jpeg',
         fileName: 'uno.jpg',
         caption:
-`╭━━━〔 🃏 *UNO MATCH - 888 BOT* 〕━━━┈
-┃ 🎨 Colore attuale: *${unoSession[chat].currentColor}*
-╰━━━━━━━━━━━━━━━━━━┈`
+`🃏 *UNO MATCH - 888 BOT*
+🎨 Colore attuale: *${unoSession[chat].currentColor}*`
     }, { quoted: m })
 
     await conn.sendMessage(chat, {
         text:
-`╭━━━〔 🎮 *AZIONI DISPONIBILI* 〕━━━┈
-┃ 📥 Premi il bottone per pescare
-┃ 🛑 Premi il bottone per uscire
-┃ 🎴 Oppure scrivi il numero della carta
-╰━━━━━━━━━━━━━━━━━━┈`,
+`🎮 *Azioni disponibili*
+━━━━━━━━━━━━━━━━━━━━━━
+📥 Premi il bottone per pescare
+🛑 Premi il bottone per uscire
+🎴 Oppure scrivi il numero della carta`,
         interactiveButtons: gameButtons()
     }, { quoted: m })
 }
@@ -263,9 +262,8 @@ handler.before = async (m, { conn }) => {
     if (msgText === 'enduno') {
         delete unoSession[chat]
         return m.reply(
-`╭━━━〔 🛑 *PARTITA TERMINATA* 〕━━━┈
-┃ Hai abbandonato la partita.
-╰━━━━━━━━━━━━━━━━━━┈`
+`🛑 *Partita terminata*
+Hai abbandonato la partita.`
         )
     }
 
@@ -284,7 +282,7 @@ handler.before = async (m, { conn }) => {
 
         if (!puoGiocare(p, s.tableCard, s.currentColor)) {
             report += `\n❌ Non giocabile.`
-            report += botTurno(s)
+            report += `\n${botTurno(s)}`
         }
     }
 
@@ -301,9 +299,8 @@ handler.before = async (m, { conn }) => {
 
         if (!puoGiocare(carta, s.tableCard, s.currentColor)) {
             return m.reply(
-`╭━━━〔 ❌ *CARTA NON VALIDA* 〕━━━┈
-┃ Non puoi giocare questa carta.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *Carta non valida*
+Non puoi giocare questa carta.`
             )
         }
 
@@ -334,27 +331,23 @@ handler.before = async (m, { conn }) => {
         }
 
         else {
-            report += botTurno(s)
+            report += `\n${botTurno(s)}`
         }
     }
 
     if (s.playerHand.length === 0) {
         delete unoSession[chat]
         return m.reply(
-`╭━━━〔 🏆 *VITTORIA!* 〕━━━┈
-┃ Hai finito le carte.
-┃ Complimenti, hai vinto!
-╰━━━━━━━━━━━━━━━━━━┈`
+`🏆 *Vittoria!*
+Hai finito le carte, complimenti!`
         )
     }
 
     if (s.botHand.length === 0) {
         delete unoSession[chat]
         return m.reply(
-`╭━━━〔 💀 *SCONFITTA* 〕━━━┈
-┃ 888 BOT ha finito le carte.
-┃ Hai perso la partita.
-╰━━━━━━━━━━━━━━━━━━┈`
+`💀 *Sconfitta*
+888 BOT ha finito le carte.`
         )
     }
 
@@ -365,19 +358,18 @@ handler.before = async (m, { conn }) => {
         mimetype: 'image/jpeg',
         fileName: 'uno_update.jpg',
         caption:
-`╭━━━〔 🃏 *UNO MATCH* 〕━━━┈
+`🃏 *UNO MATCH*
 ${report}
 
-🎨 Colore attuale: *${s.currentColor}*
-╰━━━━━━━━━━━━━━━━━━┈`
+🎨 Colore attuale: *${s.currentColor}*`
     }, { quoted: m })
 
     await conn.sendMessage(chat, {
         text:
-`╭━━━〔 🎮 *TOCCA A TE* 〕━━━┈
-┃ Premi un bottone oppure
-┃ scrivi il numero della carta.
-╰━━━━━━━━━━━━━━━━━━┈`,
+`🎮 *Tocca a te*
+━━━━━━━━━━━━━━━━━━━━━━
+Premi un bottone oppure
+scrivi il numero della carta.`,
         interactiveButtons: gameButtons()
     }, { quoted: m })
 }

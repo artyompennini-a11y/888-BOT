@@ -262,7 +262,7 @@ async function epicStartup() {
   }
 
   console.log('\n');
-  await typeWriter('                     BOT PIU VELOCE DELL\'ITALIA • READY', 18, '\x1b[33m');
+  await typeWriter('                     BOT PIU VELOCE D\'ITALIA • READY', 18, '\x1b[33m');
   await sleep(100);
 
   console.log('\n');

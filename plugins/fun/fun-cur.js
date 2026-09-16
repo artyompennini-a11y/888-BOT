@@ -107,6 +107,7 @@ const formatCount = (n) => {
 };
 
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
+
   if (command === 'setuser') {
     const username = text.trim();
     if (!username) {
@@ -164,61 +165,53 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artListeners   = artistInfo?.stats?.listeners  || 0;
     const artPlaycount   = artistInfo?.stats?.playcount  || 0;
 
-    const albumArt =
-      track.image?.find(i => i.size === 'extralarge')?.['#text'] ||
-      track.image?.find(i => i.size === 'large')?.['#text'] ||
-      'https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png';
+    const caption = `
+🎧 *Now Playing* • ${user}
 
-    const externalAdReply = {
-      title: songTitle,
-      body: `${artistName} • 🎧 ${user} • 𝟴𝟴𝟴 𝗕𝗢𝗧`,
-      thumbnailUrl: albumArt,
-      sourceUrl: youtubeUrl,
-      mediaType: 1,
-      renderLargerThumbnail: true
-    };
+🎵 *Brano:* ${songTitle}
+👤 *Artista:* ${artistName}
 
-    const caption = [
-      `🎧 *Now Playing* • ${user}`,
-      '',
-      `🎵 *Brano:* ${songTitle}`,
-      `👤 *Artista:* ${artistName}`,
-      '',
-      `╭─ 📊 *Quanto è ascoltata* ─╮`,
-      `│ 🔥 ${formatCount(playCount)} ascolti totali`,
-      `│ 👥 ${formatCount(listeners)} ascoltatori`,
-      `│ 🎤 ${formatCount(artListeners)} ascoltatori/mese per ${artistName}`,
-      `│ 💿 ${formatCount(artPlaycount)} ascolti in carriera dell'artista`,
-      `│ 💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte`,
-      `╰──────────────────────╯`,
-      '',
-      `💬 Collegala a Last.fm e usa ` + '`' + `${usedPrefix}setuser <username>` + '`' + ` per la tua!`,
-      `🎬 *Premi un pulsante qui sotto per ascoltarla o dargli fuoco 🔥*`
-    ].join('\n');
+📊 *Statistiche*
+🔥 ${formatCount(playCount)} ascolti totali
+👥 ${formatCount(listeners)} ascoltatori
+🎤 ${formatCount(artListeners)} ascoltatori/mese dell'artista
+💿 ${formatCount(artPlaycount)} ascolti in carriera
+💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte
 
-    const buttons = [
-      ['❤️ Metti nei preferiti', `.like ${m.sender}`],
-      ['🔥 Fuoco (non mi piace)', `.fuoco ${m.sender}`]
-    ];
-    const urls = [
-      ['▶️ Ascolta su YouTube', youtubeUrl],
-      ['🎧 Ascolta su Spotify', spotifyUrl]
-    ];
-    const footer = ' 𝟴𝟴𝟴 𝗕𝗢𝗧 - Now Playing';
+🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
+`.trim();
 
-    try {
-      await conn.sendNCarousel(m.chat, caption, footer, imageBuffer, buttons, null, urls, null, m);
-    } catch (err) {
-      console.error('[cur] sendNCarousel fallito, mando immagine semplice:', err.message);
-      try {
-        await sendImage(conn, m, imageBuffer, caption, [], { externalAdReply });
-      } catch (err2) {
-        await conn.sendMessage(m.chat, {
-          image: imageBuffer,
-          caption: caption
-        }, { quoted: m });
-      }
-    }
+    const buttonParamsJson = JSON.stringify({
+      title: "🎧 Azioni brano",
+      sections: [
+        {
+          title: "🎵 Scegli un'azione",
+          highlight_label: "888",
+          rows: [
+            { id: `.like ${m.sender}`, title: "❤️ Preferito", description: "Aggiungi ai preferiti" },
+            { id: `.fuoco ${m.sender}`, title: "🔥 Fuoco", description: "Non mi piace" },
+            { id: youtubeUrl, title: "▶️ YouTube", description: "Ascolta ora" },
+            { id: spotifyUrl, title: "🎧 Spotify", description: "Apri su Spotify" }
+          ]
+        }
+      ]
+    });
+
+    await conn.sendMessage(
+      m.chat,
+      {
+        image: imageBuffer,
+        caption,
+        interactiveButtons: [
+          {
+            name: "single_select",
+            buttonParamsJson
+          }
+        ]
+      },
+      { quoted: m }
+    );
+
     return;
   }
 

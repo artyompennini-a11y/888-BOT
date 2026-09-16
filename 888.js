@@ -218,7 +218,7 @@ async function flushDatabase({ force = false } = {}) {
   }
 }
 
-const { useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@888-BOT/888baileys');
+const { useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@chatunity/baileys');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -386,7 +386,7 @@ if (!pairingMode && !hasExistingSession) {
   const menu = `
 ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
 ${chalk.bgBlue.white('┃     888 BOT 2026      ┃')}
-${chalk.bgBlue.white('┃          V10          ┃')}
+${chalk.bgBlue.white('┃         V1.2          ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
 ${chalk.yellow('Seleziona come collegarti:')}
 
@@ -860,4 +860,3 @@ const mainWatcher = watch(filePath, async () => {
   await global.reloadHandler(true).catch(console.error);
 });
 mainWatcher.setMaxListeners(20);
-

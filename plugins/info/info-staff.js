@@ -14,14 +14,12 @@ const loadStaff = () => {
   }
 };
 
-const normalizeHandle = (value) => {
+const cleanValue = (value) => {
   if (!value) return '';
-  return String(value)
-    .replace(/^@/, '')
-    .replace(/^https?:\/\/.*instagram\.com\//i, '')
-    .replace(/^https?:\/\/.*t\.me\//i, '')
-    .replace(/^www\./i, '')
-    .trim();
+  let text = String(value).trim();
+  if (text.startsWith('@')) text = text.slice(1);
+  text = text.replace(/^https?:\/\/(www\.)?(instagram\.com|t\.me)\//i, '');
+  return text;
 };
 
 const formattaMembro = (membro) => {
@@ -29,29 +27,29 @@ const formattaMembro = (membro) => {
   const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
 
   if (membro.bio) righe.push(`\n${membro.bio}`);
-  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${normalizeHandle(membro.instagram)}`);
-  if (membro.telegram) righe.push(`\n📞 https://t.me/${normalizeHandle(membro.telegram)}`);
+  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(membro.instagram)}`);
+  if (membro.telegram) righe.push(`\n📞 https://t.me/${cleanValue(membro.telegram)}`);
 
   return righe.join('\n');
 };
 
 const inviaTelegram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => m.telegram && String(m.telegram).trim());
+  const membri = staffData.filter(m => cleanValue(m.telegram));
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
   }
 
-  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${normalizeHandle(m.telegram)}`).join('\n\n')}`;
+  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
 const inviaInstagram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => m.instagram && String(m.instagram).trim());
+  const membri = staffData.filter(m => cleanValue(m.instagram));
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
   }
 
-  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${normalizeHandle(m.instagram)}`).join('\n\n')}`;
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
@@ -64,9 +62,8 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
 
-let handler = async (m, { conn, usedPrefix, args, text }) => {
+const handler = async (m, { conn, usedPrefix, text }) => {
   const staffData = loadStaff();
-
   const lowerText = String(text || '').toLowerCase();
 
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
@@ -89,21 +86,6 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
   const botName = global.db?.data?.nomedelbot || global.nomebot || '🤖 888 BOT';
   const botVersion = global.versione || global.db?.data?.version || '1.2';
 
-  const fake = {
-    key: {
-      participants: '0@s.whatsapp.net',
-      fromMe: false,
-      id: 'STAFF'
-    },
-    message: {
-      contactMessage: {
-        displayName: 'Staff',
-        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-      }
-    },
-    participant: '0@s.whatsapp.net'
-  };
-
   const menuText = `
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
@@ -111,8 +93,8 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
 📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
 `.trim();
 
-  const contattiTelegram = staffData.filter(m => m.telegram && String(m.telegram).trim()).length;
-  const contattiInstagram = staffData.filter(m => m.instagram && String(m.instagram).trim()).length;
+  const contattiTelegram = staffData.filter(m => cleanValue(m.telegram)).length;
+  const contattiInstagram = staffData.filter(m => cleanValue(m.instagram)).length;
 
   const buttonParamsJson = JSON.stringify({
     title: 'Staff 888',
@@ -140,7 +122,7 @@ let handler = async (m, { conn, usedPrefix, args, text }) => {
         buttonParamsJson
       }
     ]
-  }, { quoted: fake });
+  }, { quoted: { key: { participants: '0@s.whatsapp.net', fromMe: false, id: 'STAFF' }, message: { contactMessage: { displayName: 'Staff', vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD` } }, participant: '0@s.whatsapp.net' } });
 
   m.react('📌');
 };

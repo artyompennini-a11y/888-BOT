@@ -218,7 +218,7 @@ async function flushDatabase({ force = false } = {}) {
   }
 }
 
-const { useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@chatunity/baileys');
+const { useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@888-BOT/888baileys');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -622,19 +622,19 @@ process.on('uncaughtException', (err) => {
 process.on('unhandledRejection', (reason, promise) => {
   // Ignora errori IPC
   if (reason?.code === 'ERR_IPC_CHANNEL_CLOSED') return;
-  
+
   // Gestisci timeout di Baileys senza crashare
   if (reason?.output?.statusCode === 408 || reason?.message?.includes('Timed Out')) {
     console.log(chalk.yellow('[⚠] Timeout WhatsApp rilevato, riconnessione automatica in corso...'));
     return;
   }
-  
+
   // Gestisci errori di connessione Baileys
   if (reason?.isBoom || reason?.message?.includes('connection')) {
     console.log(chalk.yellow('[⚠] Errore di connessione rilevato, il bot continua a funzionare.'));
     return;
   }
-  
+
   // Logga altri errori non gestiti senza crashare
   const errorMsg = reason instanceof Error ? reason.message : reason;
   console.log(chalk.yellow('[⚠] Promise rejection gestita:'), errorMsg);
@@ -653,18 +653,18 @@ global.reloadHandler = async function (restatConn) {
       console.error('❌ ERRORE IMPORT HANDLER.JS:', e || 'Unknown error')
       return null
     })
-    
+
     const Handler = loaded?.default || loaded
     if (!Handler) {
       console.error('❌ Handler è null, import fallito')
       return false
     }
-    
+
     if (typeof Handler.handler !== 'function') {
       console.error('❌ Handler.handler è undefined o non è una funzione! Keys disponibili:', Object.keys(Handler))
       return false
     }
-    
+
     handler = Handler
   } catch (e) { 
     console.error('❌ ERRORE in reloadHandler:', e || 'Unknown error')

@@ -875,14 +875,6 @@ export async function handler(chatUpdate) {
                 command = command?.toLowerCase() ?? '';
                 const fail = plugin.fail ?? global.dfail;
 
-                if (plugin.lowercaseOnly && (
-                    (rawCommand && rawCommand !== rawCommand.toLowerCase()) ||
-                    args.some(arg => arg !== arg.toLowerCase())
-                )) {
-                    await m.reply('❌ Per attivare o disattivare una funzione devi scrivere il comando tutto in minuscolo.');
-                    continue;
-                }
-
                 const isAccept = plugin.command instanceof RegExp ? plugin.command.test(command) :
                     Array.isArray(plugin.command) ? plugin.command.some(c => c instanceof RegExp ? c.test(command) : c === command) :
                     typeof plugin.command === 'string' ? plugin.command === command : false;
@@ -1089,10 +1081,6 @@ export async function handler(chatUpdate) {
                 const xp = 'exp' in plugin ? parseInt(plugin.exp) : 17;
                 m.exp += xp <= 200 ? xp : 0;
 
-                if (m.isGroup && !isBotAdmin && !isOwner && !isROwner && !isAdmin && !isMods) {
-                    await this.reply(m.chat, `🚫 Devo essere amministratore per poter essere utilizzato!`, m).catch(() => {});
-                    continue;
-                }
 
                 if (!isPrems && plugin['888coin'] && user['888coin'] < plugin['888coin']) {
                     await this.reply(m.chat, `Niente più soldini, stupido poraccio`, m, null, global.rcanal).catch(() => {});

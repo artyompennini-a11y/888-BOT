@@ -61,10 +61,9 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     const outputPath = path.join(tmpDir, `${fileName}.${isAudio ? 'mp3' : 'mp4'}`);
 
     await new Promise((resolve, reject) => {
-
       let cmd = isAudio
-        ? `yt-dlp -x --audio-format mp3 -o "${outputPath}" "${url}"`
-        : `yt-dlp -f mp4 -o "${outputPath}" "${url}"`;
+        ? `/usr/local/bin/yt-dlp --ffmpeg-location /usr/bin/ffmpeg -x --audio-format mp3 -o "${outputPath}" "${url}"`
+        : `/usr/local/bin/yt-dlp -f mp4 -o "${outputPath}" "${url}"`;
 
       exec(cmd, (err) => {
         if (err) reject(err);
@@ -79,7 +78,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
       await new Promise((resolve, reject) => {
         exec(
-          `ffmpeg -hide_banner -loglevel error -y -i "${outputPath}" -map_metadata -1 -vn -ar 48000 -ac 1 -c:a libopus -b:a 64k -application voip -f ogg "${voicePath}"`,
+          `/usr/bin/ffmpeg -hide_banner -loglevel error -y -i "${outputPath}" -map_metadata -1 -vn -ar 48000 -ac 1 -c:a libopus -b:a 64k -application voip -f ogg "${voicePath}"`,
           (err) => {
             if (err) reject(err);
             else resolve();

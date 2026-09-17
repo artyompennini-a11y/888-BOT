@@ -4,7 +4,20 @@ import fs from 'fs'
 let handler = async (m, { conn, args, usedPrefix }) => {
   if (!args[0]) {
     return conn.sendMessage(m.chat, {
-      text: `╭━━━〔 🔧 *CHANGE PREFIX* 〕━━━┈\n┃\n┃ 📌 *Prefisso attuale:* ${usedPrefix}\n┃\n┃ 💡 *Uso corretto:*\n┃ ${usedPrefix}newprefix <nuovo_prefisso>\n┃\n┃ 📝 *Esempi:*\n┃ ${usedPrefix}newprefix ?\n┃ ${usedPrefix}newprefix !\n┃ ${usedPrefix}newprefix #\n┃\n┃ ⚠️ *Nota:* Usa solo un carattere\n┃\n╰━━━━━━━━━━━━━━━━━━┈`
+      text:
+`🔧 *CHANGE PREFIX*
+
+📌 Prefisso attuale: ${usedPrefix}
+
+💡 Uso corretto:
+${usedPrefix}newprefix <nuovo_prefisso>
+
+📝 Esempi:
+${usedPrefix}newprefix ?
+${usedPrefix}newprefix !
+${usedPrefix}newprefix #
+
+⚠️ Nota: Usa solo un carattere`
     }, { quoted: m })
   }
 
@@ -12,24 +25,34 @@ let handler = async (m, { conn, args, usedPrefix }) => {
 
   if (newPrefix.length > 1) {
     return conn.sendMessage(m.chat, {
-      text: `❌ *Errore:* Il prefisso deve essere un singolo carattere!\n\n📌 *Esempio:* ${usedPrefix}newprefix ?`
+      text:
+`❌ *Errore:* Il prefisso deve essere un singolo carattere!
+
+📌 Esempio:
+${usedPrefix}newprefix ?`
     }, { quoted: m })
   }
 
   if (/^[a-zA-Z0-9]$/.test(newPrefix)) {
     return conn.sendMessage(m.chat, {
-      text: `❌ *Errore:* Il prefisso non può essere una lettera o un numero!\n\n📌 *Caratteri consigliati:* ? ! # $ % & * - + = ~ ^`
+      text:
+`❌ *Errore:* Il prefisso non può essere una lettera o un numero!
+
+📌 Caratteri consigliati:
+? ! # $ % & * - + = ~ ^`
     }, { quoted: m })
   }
 
   if (newPrefix === usedPrefix) {
     return conn.sendMessage(m.chat, {
-      text: `⚠️ *Errore:* Il prefisso "${newPrefix}" è già in uso!\n\n📌 *Prefisso attuale:* ${usedPrefix}`
+      text:
+`⚠️ *Errore:* Il prefisso "${newPrefix}" è già in uso!
+
+📌 Prefisso attuale: ${usedPrefix}`
     }, { quoted: m })
   }
 
   const escapedPrefix = newPrefix.replace(/[|\\{}()\[\]^$+*.\-^]/g, '\\$&')
-
   const oldPrefix = usedPrefix
 
   global.prefix = new RegExp('^[' + escapedPrefix + ']')
@@ -49,14 +72,22 @@ let handler = async (m, { conn, args, usedPrefix }) => {
   }
 
   await conn.sendMessage(m.chat, {
-    text: `╭━━━〔 ✅ *PREFIX CAMBIATO* 〕━━━┈\n┃\n┃ 🔧 *Nuovo prefisso:* ${newPrefix}\n┃ 📌 *Prefisso precedente:* ${oldPrefix}\n┃\n┃ 💡 *Ora puoi usare:*\n┃ ${newPrefix}ping, ${newPrefix}menu, ${newPrefix}play, ecc.\n┃\n┃ 🔄 *Per tornare indietro:*\n┃ ${newPrefix}newprefix ${oldPrefix}\n┃\n╰━━━━━━━━━━━━━━━━━━┈`
+    text:
+`✅ *PREFIX CAMBIATO*
+
+🔧 Nuovo prefisso: ${newPrefix}
+📌 Prefisso precedente: ${oldPrefix}
+
+💡 Ora puoi usare:
+${newPrefix}ping, ${newPrefix}menu, ${newPrefix}play, ecc.
+
+🔄 Per tornare indietro:
+${newPrefix}newprefix ${oldPrefix}`
   }, { quoted: m })
 }
 
 handler.customPrefix = /^(.)/
-
 handler.command = /^newprefix$/i
-
 handler.help = ['newprefix']
 handler.tags = ['utility']
 

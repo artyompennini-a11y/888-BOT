@@ -1,6 +1,9 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
+import { exec } from 'child_process';
+import yts from 'yt-search';
 import { makeCard, sendImage } from '../info/lastfm-card.js';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
@@ -67,6 +70,41 @@ const formatFavoriteList = (userId, label) => {
 };
 
 const LASTFM_API_KEY = '36f859a1fc4121e7f0e931806507d5f9';
+
+const execPromise = (cmd) => new Promise((resolve, reject) => {
+  exec(cmd, (error, stdout, stderr) => {
+    if (error) return reject(error);
+    resolve({ stdout, stderr });
+  });
+});
+
+async function downloadAudioFromQuery(query) {
+  try {
+    const search = await yts(query);
+    const vid = search?.videos?.[0];
+    if (!vid) return null;
+
+    const tmpDir = os.tmpdir();
+    const fileName = `cur_audio_${Date.now()}`;
+    const outputPath = path.join(tmpDir, `${fileName}.mp3`);
+
+    await execPromise(`yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`);
+
+    if (!fs.existsSync(outputPath)) return null;
+
+    const buffer = fs.readFileSync(outputPath);
+    fs.unlinkSync(outputPath);
+
+    return {
+      buffer,
+      title: vid.title,
+      url: vid.url
+    };
+  } catch (e) {
+    console.error('[cur-download] errore:', e.message);
+    return null;
+  }
+}
 
 async function getRecentTrack(username) {
   try {
@@ -150,6 +188,29 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m });
   }
 
+  if (command === 'scarica' || command === 'download' || command === 'downloadaudio') {
+    const query = (text || '').trim() || (m.quoted?.text ? m.quoted.text : '');
+    if (!query) {
+      return conn.sendMessage(m.chat, {
+        text: `❌ Usa: ${usedPrefix}${command} <titolo brano>`
+      }, { quoted: m });
+    }
+
+    const result = await downloadAudioFromQuery(query);
+    if (!result) {
+      return conn.sendMessage(m.chat, {
+        text: '❌ Nessun risultato trovato per il download audio.'
+      }, { quoted: m });
+    }
+
+    return conn.sendMessage(m.chat, {
+      audio: result.buffer,
+      mimetype: 'audio/mpeg',
+      fileName: `${(result.title || 'audio').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`,
+      caption: `🎵 *Download audio*\n${result.title}`
+    }, { quoted: m });
+  }
+
   const user = db.users[m.sender];
   if (!user) {
     return conn.sendMessage(m.chat, {
@@ -179,9 +240,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
     const searchQuery = `${songTitle} ${artistName}`;
 
-    const youtubeUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
-    const spotifyUrl = `https://open.spotify.com/search/${encodeURIComponent(searchQuery)}`;
-
     const [trackInfo, artistInfo] = await Promise.all([
       getTrackInfo(artistName, songTitle, user),
       getArtistInfo(artistName)
@@ -193,21 +251,9 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artListeners   = artistInfo?.stats?.listeners  || 0;
     const artPlaycount   = artistInfo?.stats?.playcount  || 0;
 
-    const caption = `
-🎧 *Now Playing* • ${user}
-
-🎵 *Brano:* ${songTitle}
-👤 *Artista:* ${artistName}
-
-📊 *Statistiche*
-🔥 ${formatCount(playCount)} ascolti totali
-👥 ${formatCount(listeners)} ascoltatori
-🎤 ${formatCount(artListeners)} ascoltatori/mese dell'artista
-💿 ${formatCount(artPlaycount)} ascolti in carriera
-💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte
-
-🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
-`.trim();
+    const caption = `🎧 *Now Playing*
+${songTitle}
+${artistName}`.trim();
 
     await conn.sendMessage(
       m.chat,
@@ -218,7 +264,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
           {
             name: 'quick_reply',
             buttonParamsJson: JSON.stringify({
-              display_text: '❤️ Preferito',
+              display_text: '💜 Mi piace',
               id: `.like ${m.sender}`
             })
           },
@@ -230,17 +276,10 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
             })
           },
           {
-            name: 'cta_url',
+            name: 'quick_reply',
             buttonParamsJson: JSON.stringify({
-              display_text: '▶️ YouTube',
-              url: youtubeUrl
-            })
-          },
-          {
-            name: 'cta_url',
-            buttonParamsJson: JSON.stringify({
-              display_text: '🎧 Spotify',
-              url: spotifyUrl
+              display_text: '🎵 Scarica audio',
+              id: `.scarica ${searchQuery}`
             })
           }
         ]
@@ -375,7 +414,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
   }
 };
 
-handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre'];
+handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre', 'scarica', 'download', 'downloadaudio'];
 handler.tags = ['fun'];
 handler.group = true;
 

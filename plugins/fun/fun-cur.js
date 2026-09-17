@@ -49,6 +49,23 @@ const addFavorite = (userId, artist, song) => {
 const getFavorites = (userId) => db.favorites[userId] || [];
 const getUsernameFromId = (id) => db.users[id] || id;
 
+const formatFavoriteList = (userId, label) => {
+  const favorites = getFavorites(userId);
+  if (!favorites.length) {
+    return `❤️ *Nessun brano nei preferiti*${label ? ` di ${label}` : ''}.\n\n👉 Aggiungine uno premendo il bottone *❤️ Preferito* sotto una card.`;
+  }
+
+  const list = favorites
+    .slice()
+    .reverse()
+    .slice(0, 8)
+    .map((item, index) => `${index + 1}. *${item.song}* — *${item.artist}*`)
+    .join('\n');
+
+  const extra = favorites.length > 8 ? `\n\n… e altri ${favorites.length - 8} brani` : '';
+  return `❤️ *Preferiti${label ? ` di ${label}` : ''}*\n\n${list}${extra}`;
+};
+
 const LASTFM_API_KEY = '36f859a1fc4121e7f0e931806507d5f9';
 
 async function getRecentTrack(username) {
@@ -109,7 +126,7 @@ const formatCount = (n) => {
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
   if (command === 'setuser') {
-    const username = text.trim();
+    const username = (text || '').trim();
     if (!username) {
       return conn.sendMessage(m.chat, {
         text: `❌ Usa il comando così: ${usedPrefix + command} <username>`
@@ -119,6 +136,17 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     saveDB();
     return conn.sendMessage(m.chat, {
       text: `✅ Username Last.fm impostato su *${username}*`
+    }, { quoted: m });
+  }
+
+  if (command === 'curlike' || command === 'preferiti' || command === 'mypre') {
+    const targetId = m.quoted && !m.quoted.fromMe
+      ? m.quoted.sender
+      : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
+
+    const targetUsername = db.users[targetId];
+    return conn.sendMessage(m.chat, {
+      text: formatFavoriteList(targetId, targetId === m.sender ? '' : (targetUsername || targetId.split('@')[0]))
     }, { quoted: m });
   }
 
@@ -347,7 +375,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
   }
 };
 
-handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like'];
+handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre'];
 handler.tags = ['fun'];
 handler.group = true;
 

@@ -41,90 +41,81 @@ function buildHTML(track, username) {
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 * { margin:0; padding:0; box-sizing:border-box; }
-body {
-  width:800px; height:400px; overflow:hidden;
-  font-family:'DM Sans',sans-serif; background:#0d0d0f;
-}
-.card {
-  position:relative; width:800px; height:400px; display:flex;
-  align-items:center; overflow:hidden;
-  background:linear-gradient(135deg, rgba(15,15,18,1), rgba(10,10,12,1));
-}
-.card::before {
-  content:''; position:absolute; inset:0;
-  background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
-  z-index:0;
-}
+body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-serif; background:#0d0d0d; }
+.card { position:relative; width:800px; height:400px; display:flex; overflow:hidden; background:linear-gradient(135deg,#121212,#0d0d0d); }
 .bg-blur {
   position:absolute; inset:0;
   background-image:url('${albumArt}');
   background-size:cover; background-position:center;
-  filter:blur(26px) brightness(0.38) saturate(1.15);
-  transform:scale(1.12); z-index:0;
+  filter:blur(38px) brightness(0.28) saturate(1.4);
+  transform:scale(1.18); z-index:0;
 }
 .cover-wrap {
   position:relative; z-index:1;
-  width:290px; height:290px;
-  margin:55px 0 55px 46px;
-  border-radius:18px;
+  width:320px; height:320px;
+  margin:40px 0 40px 40px;
+  border-radius:12px; object-fit:cover; position:relative; z-index:1;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
   overflow:hidden;
-  background:#09090b;
+  background:#0a0a0a;
   border:1px solid rgba(255,255,255,0.08);
-  box-shadow:0 18px 42px rgba(0,0,0,0.72);
 }
 .cover {
-  width:100%; height:100%; display:block;
-  object-fit:cover; object-position:center; background:#111;
+  width:100%; height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
+  background:#111;
 }
 .info {
   position:relative; z-index:1; display:flex; flex-direction:column;
-  justify-content:center; padding:34px 34px 30px 28px; flex:1; overflow:hidden;
+  justify-content:center; padding:30px 30px 30px 0; flex:1; overflow:hidden;
 }
 .status {
-  display:inline-flex; align-items:center; gap:8px;
-  padding:6px 12px; border-radius:999px; font-size:10px; font-weight:700;
-  letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:4px 12px; border-radius:999px; font-size:12px; font-weight:500;
+  letter-spacing:.05em; text-transform:uppercase; margin-bottom:14px;
   width:fit-content;
-  background:${isPlaying ? 'rgba(29,185,84,0.12)' : 'rgba(255,255,255,0.05)'};
+  background:${isPlaying ? 'rgba(29,185,84,0.2)' : 'rgba(255,255,255,0.08)'};
   color:${statusColor};
-  border:1px solid ${isPlaying ? 'rgba(29,185,84,0.38)' : 'rgba(255,255,255,0.08)'};
+  border:1px solid ${isPlaying ? 'rgba(29,185,84,0.4)' : 'rgba(255,255,255,0.1)'};
 }
 .dot {
-  width:7px; height:7px; border-radius:50%; background:${statusColor};
-  box-shadow:0 0 12px ${statusColor};
+  width:7px; height:7px; border-radius:50%;
+  background:${statusColor};
 }
 .song-title {
-  font-family:'Syne',sans-serif; font-weight:800; color:#f6f6f6;
-  line-height:1.02; margin-bottom:10px;
+  font-family:'Syne',sans-serif; font-weight:800; color:#fff;
+  line-height:1.1; margin-bottom:10px;
   font-size:${titleSize}px;
   overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical;
-  -webkit-line-clamp:2; word-break:break-word; letter-spacing:-0.05em;
+  -webkit-line-clamp:2; word-break:break-word;
 }
 .artist {
-  font-size:${artistSize}px; font-weight:500; color:#d7d7d7;
-  margin-bottom:16px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
-  letter-spacing:0.02em;
+  font-size:${artistSize}px; font-weight:500; color:#ccc; margin-bottom:6px;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
-.meta {
-  display:flex; align-items:center; gap:8px; color:#8d8d8d; font-size:12px;
-  margin-top:auto;
+.album {
+  font-size:${albumSize}px; color:#666; margin-bottom:24px;
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
-.meta strong {
-  color:#ececec; font-weight:700;
-}
+.divider { width:40px; height:2px; background:${statusColor}; border-radius:2px; margin-bottom:24px; }
+.user-tag { display:flex; align-items:center; gap:8px; margin-top:auto; }
+.user-tag span { font-size:12px; color:#666; }
+.user-tag b { font-weight:600; color:#aaa; }
 </style>
 </head>
 <body>
 <div class="card">
   <div class="bg-blur"></div>
-  <div class="cover-wrap">
-    <img class="cover" src="${albumArt}" alt="Cover">
-  </div>
+  <img class="cover" src="${albumArt}" alt="Cover">
   <div class="info">
     <div class="status"><span class="dot"></span> ${statusText}</div>
     <div class="song-title">${songName}</div>
     <div class="artist">${artistName}</div>
-    <div class="meta"><span>🎧 ascoltato da</span><strong>@${username}</strong></div>
+    <div class="album">${albumName}</div>
+    <div class="divider"></div>
+    <div class="user-tag"><span>🎧 Ultimo ascoltato da</span><b>@${username}</b></div>
   </div>
 </div>
 </body>
@@ -206,41 +197,43 @@ async function renderWithCanvas(track, username) {
     ctx.fillRect(30, 30, 340, 340);
   }
 
-  const x = 400;
-  const titleSize  = Math.max(16, 32 - Math.max(0, songName.length   - 18) * 0.45);
-  const artistSize = Math.max(12, 19 - Math.max(0, artistName.length - 22) * 0.25);
-
-  ctx.fillStyle = '#0d0d0f';
+  ctx.fillStyle = '#111111';
   ctx.fillRect(0, 0, 800, 400);
 
   try {
     const cover = await loadImg(albumArt);
     ctx.save();
-    roundRect(ctx, 46, 55, 290, 290, 18);
+    roundRect(ctx, 30, 30, 340, 340, 12);
     ctx.clip();
-    ctx.drawImage(cover, 46, 55, 290, 290);
+    ctx.drawImage(cover, 30, 30, 340, 340);
     ctx.restore();
   } catch {
-    ctx.fillStyle = '#222';
-    roundRect(ctx, 46, 55, 290, 290, 18);
-    ctx.fill();
+    ctx.fillStyle = '#333';
+    ctx.fillRect(30, 30, 340, 340);
   }
 
-  ctx.fillStyle = '#8d8d8d';
-  ctx.font = 'bold 10px Arial';
-  ctx.fillText((isPlaying ? 'IN RIPRODUZIONE' : 'ULTIMO BRANO').toUpperCase(), x, 120);
+  const x = 400;
+  const titleSize  = Math.max(16, 34 - Math.max(0, songName.length   - 20) * 0.5);
+  const artistSize = Math.max(13, 22 - Math.max(0, artistName.length - 25) * 0.3);
 
-  ctx.fillStyle = '#f6f6f6';
+  ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${titleSize}px Arial`;
-  ctx.fillText(songName.length > 24 ? songName.slice(0, 24) + '…' : songName, x, 175);
+  ctx.fillText(songName.length > 28 ? songName.slice(0, 28) + '…' : songName, x, 130);
 
-  ctx.fillStyle = '#d7d7d7';
+  ctx.fillStyle = '#cccccc';
   ctx.font = `${artistSize}px Arial`;
-  ctx.fillText(artistName.length > 28 ? artistName.slice(0, 28) + '…' : artistName, x, 214);
+  ctx.fillText(artistName.length > 35 ? artistName.slice(0, 35) + '…' : artistName, x, 165);
 
-  ctx.fillStyle = '#8d8d8d';
-  ctx.font = '12px Arial';
-  ctx.fillText(`🎧 ascoltato da @${username}`, x, 330);
+  ctx.fillStyle = '#666666';
+  ctx.font = '15px Arial';
+  ctx.fillText(albumName.length > 40 ? albumName.slice(0, 40) + '…' : albumName, x, 195);
+
+  ctx.fillStyle = isPlaying ? '#1DB954' : '#333';
+  ctx.fillRect(x, 215, 40, 2);
+
+  ctx.fillStyle = '#777777';
+  ctx.font = '14px Arial';
+  ctx.fillText(`🎧 ${username}`, x, 350);
 
   return canvas.toBuffer('image/png');
 }

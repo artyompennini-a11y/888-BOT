@@ -92,7 +92,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     })();
 
     const setChatField = (k) => {
-      const field = k.toLowerCase();
+      const field = k.toLowerCase() === 'antilink' ? 'antiLink' : k.toLowerCase();
       if (chat[field] === isEnable) {
         result.status = isEnable ? 'già attivo.' : 'già disattivato.';
         return;

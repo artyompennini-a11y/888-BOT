@@ -301,34 +301,25 @@ function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, nor
     const rawOwner = groupMetadata.owner || groupMetadata.ownerLid || null;
     const nOwner = rawOwner ? normalizeNumber(decoded(rawOwner)) : null;
 
-    // Normalizza tutti i partecipanti
-    const normalizedParticipants = participants.map(u => {
-        const base = u.id || u.jid || u.lid || '';
-        const clean = normalizeNumber(decoded(base));
-        return {
-            ...u,
-            id: clean,
-            jid: clean,
-            lid: clean
-        };
-    });
-
-    // Controllo admin
     const isAdmin =
         normalizedSender === nOwner ||
-        normalizedParticipants.some(u =>
-            u.id === normalizedSender &&
-            (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true)
-        );
+        participants.some(u => {
+            const ids = [u.id, u.jid, u.lid].filter(Boolean);
+            const matchesSender = ids.some(id => {
+                const decodedId = decoded(id);
+                return decodedId === normalizedSender || normalizeNumber(decodedId) === normalizedSender;
+            });
+            return matchesSender && (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true);
+        });
 
     // Controllo bot admin più robusto
     const isBotAdmin =
         normalizedBot === nOwner ||
-        normalizedParticipants.some(u => {
-            const match =
-                u.id === normalizedBot ||
-                (typeof u.jid === 'string' && (u.jid === normalizedBot || u.jid.includes(normalizedBot))) ||
-                (typeof u.lid === 'string' && (u.lid === normalizedBot || u.lid.includes(normalizedBot)));
+        participants.some(u => {
+            const match = [u.id, u.jid, u.lid].filter(Boolean).some(id => {
+                const decodedId = decoded(id);
+                return decodedId === normalizedBot || normalizeNumber(decodedId) === normalizedBot;
+            });
             return match && (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true);
         });
 
@@ -340,6 +331,11 @@ function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, nor
         isBotAdmin,
         isRAdmin
     };
+}
+
+function canUseModoadmin(chat, isGroup, isAdmin, isOwner, isROwner) {
+    if (!isGroup || !chat.modoadmin) return true;
+    return isAdmin || isOwner || isROwner;
 }
 
 export async function handler(chatUpdate) {
@@ -792,19 +788,6 @@ export async function handler(chatUpdate) {
             }
         }
 
-        if (m.isGroup && chat.modoadmin && !isAdmin && !isROwner && !isOwner) {
-            const prefix = global.prefix ?? global.opts?.prefix ?? '.';
-            const text = (m.text || '').toString();
-            const isCommand = prefix instanceof RegExp
-                ? prefix.test(text)
-                : typeof prefix === 'string'
-                    ? text.startsWith(prefix)
-                    : Array.isArray(prefix) && prefix.some(value =>
-                        value instanceof RegExp ? value.test(text) : text.startsWith(value));
-
-            if (isCommand) continue;
-        }
-
         if (chat.isBanned && !isOwner) continue;
 
         const activePlugins = Object.entries(global.plugins).filter(([, p]) => p && !p.disabled);
@@ -1031,8 +1014,7 @@ export async function handler(chatUpdate) {
                     }
                 }
 
-                const bypassModoadmin = !!plugin.modoadminBypass;
-                if (m.isGroup && chat.modoadmin && !isAdmin && !isMods && !bypassModoadmin) break;
+                if (!canUseModoadmin(chat, m.isGroup, isAdmin, isOwner, isROwner)) break;
                 if (m.isGroup && chat.antiporno && plugin.tags?.includes('nsfw') && !isAdmin && !isOwner && !isROwner) {
                     fail('restrict', m, this);
                     continue;

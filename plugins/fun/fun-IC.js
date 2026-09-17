@@ -223,4 +223,4 @@ handler.tags = ['giochi']
 handler.group = true
 handler.register = false
 
-export default handler
+export default handler;

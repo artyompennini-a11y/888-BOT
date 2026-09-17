@@ -43,34 +43,34 @@ function buildHTML(track, username) {
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   width:800px; height:400px; overflow:hidden;
-  font-family:'DM Sans',sans-serif; background:#0b0b0d;
+  font-family:'DM Sans',sans-serif; background:#0d0d0f;
 }
 .card {
   position:relative; width:800px; height:400px; display:flex;
   align-items:center; overflow:hidden;
-  background:linear-gradient(135deg,#141414 0%, #0b0b0d 100%);
+  background:linear-gradient(135deg, rgba(15,15,18,1), rgba(10,10,12,1));
 }
 .card::before {
   content:''; position:absolute; inset:0;
-  background:linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+  background:linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
   z-index:0;
 }
 .bg-blur {
   position:absolute; inset:0;
   background-image:url('${albumArt}');
   background-size:cover; background-position:center;
-  filter:blur(28px) brightness(0.35) saturate(1.15);
+  filter:blur(26px) brightness(0.38) saturate(1.15);
   transform:scale(1.12); z-index:0;
 }
 .cover-wrap {
   position:relative; z-index:1;
-  width:280px; height:280px;
-  margin:60px 0 60px 52px;
+  width:290px; height:290px;
+  margin:55px 0 55px 46px;
   border-radius:18px;
   overflow:hidden;
-  background:#0d0d0d;
+  background:#09090b;
   border:1px solid rgba(255,255,255,0.08);
-  box-shadow:0 16px 40px rgba(0,0,0,0.65);
+  box-shadow:0 18px 42px rgba(0,0,0,0.72);
 }
 .cover {
   width:100%; height:100%; display:block;
@@ -78,47 +78,39 @@ body {
 }
 .info {
   position:relative; z-index:1; display:flex; flex-direction:column;
-  justify-content:center; padding:32px 32px 28px 28px; flex:1; overflow:hidden;
+  justify-content:center; padding:34px 34px 30px 28px; flex:1; overflow:hidden;
 }
 .status {
   display:inline-flex; align-items:center; gap:8px;
-  padding:6px 12px; border-radius:999px; font-size:11px; font-weight:700;
-  letter-spacing:.12em; text-transform:uppercase; margin-bottom:18px;
+  padding:6px 12px; border-radius:999px; font-size:10px; font-weight:700;
+  letter-spacing:.14em; text-transform:uppercase; margin-bottom:18px;
   width:fit-content;
-  background:${isPlaying ? 'rgba(29,185,84,0.12)' : 'rgba(255,255,255,0.06)'};
+  background:${isPlaying ? 'rgba(29,185,84,0.12)' : 'rgba(255,255,255,0.05)'};
   color:${statusColor};
-  border:1px solid ${isPlaying ? 'rgba(29,185,84,0.36)' : 'rgba(255,255,255,0.08)'};
+  border:1px solid ${isPlaying ? 'rgba(29,185,84,0.38)' : 'rgba(255,255,255,0.08)'};
 }
 .dot {
   width:7px; height:7px; border-radius:50%; background:${statusColor};
   box-shadow:0 0 12px ${statusColor};
 }
 .song-title {
-  font-family:'Syne',sans-serif; font-weight:800; color:#f5f5f5;
-  line-height:1.02; margin-bottom:8px;
+  font-family:'Syne',sans-serif; font-weight:800; color:#f6f6f6;
+  line-height:1.02; margin-bottom:10px;
   font-size:${titleSize}px;
   overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical;
-  -webkit-line-clamp:2; word-break:break-word; letter-spacing:-0.04em;
+  -webkit-line-clamp:2; word-break:break-word; letter-spacing:-0.05em;
 }
 .artist {
-  font-size:${artistSize}px; font-weight:500; color:#d8d8d8;
-  margin-bottom:10px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  font-size:${artistSize}px; font-weight:500; color:#d7d7d7;
+  margin-bottom:16px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   letter-spacing:0.02em;
 }
-.album {
-  font-size:${albumSize}px; color:#8a8a8a; margin-bottom:18px;
-  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+.meta {
+  display:flex; align-items:center; gap:8px; color:#8d8d8d; font-size:12px;
+  margin-top:auto;
 }
-.divider {
-  width:52px; height:2px; background:linear-gradient(90deg, ${statusColor}, rgba(255,255,255,0.15));
-  border-radius:999px; margin-bottom:18px;
-}
-.user-tag {
-  display:flex; align-items:center; gap:8px; margin-top:auto;
-  padding-top:2px; font-size:12px; color:#8a8a8a;
-}
-.user-tag b {
-  font-weight:700; color:#d9d9d9; letter-spacing:0.02em;
+.meta strong {
+  color:#ececec; font-weight:700;
 }
 </style>
 </head>
@@ -132,9 +124,7 @@ body {
     <div class="status"><span class="dot"></span> ${statusText}</div>
     <div class="song-title">${songName}</div>
     <div class="artist">${artistName}</div>
-    <div class="album">${albumName}</div>
-    <div class="divider"></div>
-    <div class="user-tag"><span>🎧 ascoltato da</span><b>@${username}</b></div>
+    <div class="meta"><span>🎧 ascoltato da</span><strong>@${username}</strong></div>
   </div>
 </div>
 </body>
@@ -220,30 +210,37 @@ async function renderWithCanvas(track, username) {
   const titleSize  = Math.max(16, 32 - Math.max(0, songName.length   - 18) * 0.45);
   const artistSize = Math.max(12, 19 - Math.max(0, artistName.length - 22) * 0.25);
 
-  ctx.fillStyle = '#111111';
+  ctx.fillStyle = '#0d0d0f';
   ctx.fillRect(0, 0, 800, 400);
 
-  ctx.fillStyle = '#1b1b1d';
-  ctx.fillRect(0, 0, 800, 400);
+  try {
+    const cover = await loadImg(albumArt);
+    ctx.save();
+    roundRect(ctx, 46, 55, 290, 290, 18);
+    ctx.clip();
+    ctx.drawImage(cover, 46, 55, 290, 290);
+    ctx.restore();
+  } catch {
+    ctx.fillStyle = '#222';
+    roundRect(ctx, 46, 55, 290, 290, 18);
+    ctx.fill();
+  }
 
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#8d8d8d';
+  ctx.font = 'bold 10px Arial';
+  ctx.fillText((isPlaying ? 'IN RIPRODUZIONE' : 'ULTIMO BRANO').toUpperCase(), x, 120);
+
+  ctx.fillStyle = '#f6f6f6';
   ctx.font = `bold ${titleSize}px Arial`;
-  ctx.fillText(songName.length > 26 ? songName.slice(0, 26) + '…' : songName, x, 135);
+  ctx.fillText(songName.length > 24 ? songName.slice(0, 24) + '…' : songName, x, 175);
 
-  ctx.fillStyle = '#d0d0d0';
+  ctx.fillStyle = '#d7d7d7';
   ctx.font = `${artistSize}px Arial`;
-  ctx.fillText(artistName.length > 30 ? artistName.slice(0, 30) + '…' : artistName, x, 170);
+  ctx.fillText(artistName.length > 28 ? artistName.slice(0, 28) + '…' : artistName, x, 214);
 
-  ctx.fillStyle = '#8a8a8a';
-  ctx.font = '15px Arial';
-  ctx.fillText(albumName.length > 36 ? albumName.slice(0, 36) + '…' : albumName, x, 201);
-
-  ctx.fillStyle = isPlaying ? '#1DB954' : '#5c5c5c';
-  ctx.fillRect(x, 220, 52, 2);
-
-  ctx.fillStyle = '#7a7a7a';
-  ctx.font = '14px Arial';
-  ctx.fillText(`ascoltato da @${username}`, x, 345);
+  ctx.fillStyle = '#8d8d8d';
+  ctx.font = '12px Arial';
+  ctx.fillText(`🎧 ascoltato da @${username}`, x, 330);
 
   return canvas.toBuffer('image/png');
 }

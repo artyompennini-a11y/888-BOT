@@ -1,31 +1,89 @@
-const { default: makeWASocket } = require("888-BOT/baileys");
+module.exports = {
+    name: "dino",
+    alias: ["dinorunner"],
+    category: "giochi",
+    desc: "Gioca al minigioco Dino Runner",
+    async exec(m, { conn, args }) {
+        const from = m.chat;
+        const sender = m.sender;
 
-// Mappa per salvare le sessioni di gioco attive e i record degli utenti
-const sessions = new Map();
-const highScores = new Map();
+        // Inizializzazione delle strutture dati globali
+        if (!global.dinoSessions) global.dinoSessions = new Map();
+        if (!global.dinoScores) global.dinoScores = new Map();
 
-// Ostacoli casuali per rendere il gioco dinamico
-const OBSTACLES = ["🌵 Cactus", "🌵🌵 Doppio Cactus", "🦅 Pterodattilo", "🪨 Roccia"];
+        const OBSTACLES = ["🌵 Cactus", "🌵🌵 Doppio Cactus", "🦅 Pterodattilo", "🪨 Roccia"];
+        const getNextObstacle = () => OBSTACLES[Math.floor(Math.random() * OBSTACLES.length)];
 
-function getNextObstacle() {
-    return OBSTACLES[Math.floor(Math.random() * OBSTACLES.length)];
-}
+        const action = args[0]?.toLowerCase();
 
-async function dinoPlugin(sock, msg) {
-    const from = msg.key.remoteJid;
-    const sender = msg.key.participant || msg.key.remoteJid;
-    const body = msg.message?.conversation || msg.message?.extendedTextMessage?.text || "";
-    const input = body.toLowerCase().trim();
+        // 1. Gestione dei comandi durante una partita attiva (.dino salta / .dino stop)
+        if (global.dinoSessions.has(from)) {
+            const game = global.dinoSessions.get(from);
 
-    // 1. Avvio del gioco
-    if (input === ".giochi" || input === ".dino") {
-        if (sessions.has(from)) {
-            await sock.sendMessage(from, { text: "⚠️ Hai già una partita in corso! Scrivi *salta* o *stop*." }, { quoted: msg });
-            return;
+            // Risponde solo al giocatore che ha avviato la sessione
+            if (game.user !== sender) return;
+
+            if (action === "salta") {
+                const crashed = Math.random() < 0.20; // 20% probabilità di Game Over
+
+                if (crashed) {
+                    const finalScore = game.score;
+                    const userBest = global.dinoScores.get(sender) || 0;
+                    let recordText = "";
+
+                    if (finalScore > userBest) {
+                        global.dinoScores.set(sender, finalScore);
+                        recordText = "\n🎉 *Nuovo Record Personale!*";
+                    }
+
+                    await conn.sendMessage(from, { 
+                        text: `💥 *GAME OVER!* Hai urtato contro: ${game.currentObstacle}\n\n` +
+                              `📊 Punteggio finale: *${finalScore}*${recordText}\n\n` +
+                              `Ricomincia quando vuoi con *.dino*` 
+                    }, { quoted: m });
+
+                    global.dinoSessions.delete(from);
+                } else {
+                    game.score += 10;
+                    game.currentObstacle = getNextObstacle();
+
+                    await conn.sendMessage(from, { 
+                        text: `🟩 *Salto riuscito!* (+10 pt)\n\n` +
+                              `⚠️ *Prossimo ostacolo:* ${game.currentObstacle}\n` +
+                              `📊 Punteggio attuale: *${game.score}*\n\n` +
+                              `👉 Scrivi *.dino salta* o *.dino stop*` 
+                    }, { quoted: m });
+                }
+                return;
+
+            } else if (action === "stop") {
+                const finalScore = game.score;
+                const userBest = global.dinoScores.get(sender) || 0;
+
+                if (finalScore > userBest) {
+                    global.dinoScores.set(sender, finalScore);
+                }
+
+                await conn.sendMessage(from, { 
+                    text: `🛑 *Partita terminata!*\n\n` +
+                          `📊 Punteggio finale: *${finalScore}*\n` +
+                          `🏆 Tuo Record: *${global.dinoScores.get(sender)}*` 
+                }, { quoted: m });
+
+                global.dinoSessions.delete(from);
+                return;
+            }
+        }
+
+        // 2. Avvio di una nuova partita (digitando solo .dino)
+        if (global.dinoSessions.has(from)) {
+            return conn.sendMessage(from, { 
+                text: "⚠️ Hai già una partita in corso!\nUsa *.dino salta* per saltare o *.dino stop* per uscire." 
+            }, { quoted: m });
         }
 
         const firstObstacle = getNextObstacle();
-        sessions.set(from, { 
+        global.dinoSessions.set(from, { 
             score: 0, 
             currentObstacle: firstObstacle,
             user: sender 
@@ -34,69 +92,9 @@ async function dinoPlugin(sock, msg) {
         const startText = `🦖 *DINO RUNNER* 🦖\n\n` +
                           `La corsa è iniziata!\n` +
                           `⚠️ *Ostacolo in arrivo:* ${firstObstacle}\n\n` +
-                          `👉 Invia *salta* per schivarlo\n` +
-                          `👉 Invia *stop* per terminare e salvare il punteggio`;
+                          `👉 Scrivi *.dino salta* per schivare\n` +
+                          `👉 Scrivi *.dino stop* per terminare`;
 
-        await sock.sendMessage(from, { text: startText }, { quoted: msg });
-        return;
+        await conn.sendMessage(from, { text: startText }, { quoted: m });
     }
-
-    // 2. Logica di gioco durante una sessione attiva
-    if (sessions.has(from)) {
-        const game = sessions.get(from);
-
-        // Controllo se il messaggio proviene dal giocatore che ha avviato la partita
-        if (game.user !== sender) return;
-
-        if (input === "salta") {
-            // Calcolo probabilità di impatto (20% di possibilità di Game Over a ogni salto)
-            const crashed = Math.random() < 0.20;
-
-            if (crashed) {
-                const finalScore = game.score;
-                const userBest = highScores.get(sender) || 0;
-                let recordText = "";
-
-                if (finalScore > userBest) {
-                    highScores.set(sender, finalScore);
-                    recordText = "\n🎉 *Nuovo Record Personale!*";
-                }
-
-                await sock.sendMessage(from, { 
-                    text: `💥 *GAME OVER!* Hai urtato contro: ${game.currentObstacle}\n\n` +
-                          `📊 Punteggio finale: *${finalScore}*${recordText}\n` +
-                          `Ricomincia quando vuoi con *.dino*!` 
-                }, { quoted: msg });
-
-                sessions.delete(from);
-            } else {
-                game.score += 10;
-                game.currentObstacle = getNextObstacle();
-
-                await sock.sendMessage(from, { 
-                    text: `🟩 Salto riuscito! (+10 pt)\n\n` +
-                          `⚠️ *Prossimo ostacolo:* ${game.currentObstacle}\n` +
-                          `📊 Punteggio attuale: *${game.score}*` 
-                }, { quoted: msg });
-            }
-
-        } else if (input === "stop") {
-            const finalScore = game.score;
-            const userBest = highScores.get(sender) || 0;
-
-            if (finalScore > userBest) {
-                highScores.set(sender, finalScore);
-            }
-
-            await sock.sendMessage(from, { 
-                text: `🛑 *Partita terminata!*\n\n` +
-                      `📊 Punteggio finale: *${finalScore}*\n` +
-                      `🏆 Tuo Record: *${highScores.get(sender)}*` 
-            }, { quoted: msg });
-
-            sessions.delete(from);
-        }
-    }
-}
-
-module.exports = { dinoPlugin };
+};

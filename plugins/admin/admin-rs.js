@@ -33,7 +33,7 @@ const handler = async (message, { conn }) => {
       deletedCount++;
     }
 
-    const botName = global.db?.data?.nomedelbot || '888 𝗕𝗢𝗧';
+    const botName = global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧';
 
     console.log(`[SESSION CLEANUP] Cartella: ${sessionFolder}`);
     console.log(`[SESSION CLEANUP] File rimossi: ${deletedCount}`);

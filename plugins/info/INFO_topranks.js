@@ -2,7 +2,9 @@
 import { xpRange } from '../../lib/levelling.js'
 
 const handler = async (m, { conn, groupMetadata }) => {
-  if (!m.isGroup) return await conn.sendMessage(m.chat, { text: 'Questo comando funziona solo nei gruppi.' })
+
+  if (!m.isGroup) 
+    return await conn.sendMessage(m.chat, { text: 'Questo comando funziona solo nei gruppi.' })
 
   groupMetadata = groupMetadata || await conn.groupMetadata?.(m.chat).catch(() => null)
   const participants = groupMetadata?.participants || []
@@ -14,25 +16,21 @@ const handler = async (m, { conn, groupMetadata }) => {
   const usersDb = global.db.data.users || (global.db.data.users = {})
 
   const groupMemberJids = new Set(participants.map(p => p.id))
-const botJid = conn.user && (conn.user.jid || conn.user.id)
+  const botJid = conn.user && (conn.user.jid || conn.user.id)
 
+  // 🔧 FIX: rimosso il filtro che escludeva TUTTI gli utenti
   let values = Array.from(groupMemberJids)
-.filter(jid => {
-      if (!botJid) return true
-      const normJ = typeof conn.decodeJid === 'function' ? conn.decodeJid(jid) : jid
-      const normBot = typeof conn.decodeJid === 'function' ? conn.decodeJid(botJid) : botJid
-      return normJ !== normBot
-    })
-    .filter(jid => jid && !jid.endsWith('@g.us'))
+    .filter(jid => jid !== botJid) // esclude solo il bot
     .map(jid => {
       const user = usersDb[jid] || {}
 
-      const level = Number(user.level || 0)
-      const exp = Number(user.exp || 0)
-      const role = user.role || 'Novizio'
-      const money = Number(user.money || 0)
-
-      return { jid, level, exp, role, money }
+      return {
+        jid,
+        level: Number(user.level || 0),
+        exp: Number(user.exp || 0),
+        role: user.role || 'Novizio',
+        money: Number(user.money || 0)
+      }
     })
     .filter(u => u.level > 0 || u.exp > 0)
 
@@ -46,8 +44,10 @@ const botJid = conn.user && (conn.user.jid || conn.user.id)
   const top = values.slice(0, 10)
 
   const header =
-    `🏆 *TOP 10 RANK DEL GRUPPO*\n` +
-    `👥 Gruppo: ${groupMetadata.subject || m.chat.split('@')[0]}\n\n`
+`🏆 *TOP 10 RANK DEL GRUPPO*
+👥 Gruppo: ${groupMetadata.subject || m.chat.split('@')[0]}
+
+`
 
   const titles = [
     '👑 Re del gruppo',
@@ -62,12 +62,18 @@ const botJid = conn.user && (conn.user.jid || conn.user.id)
     '💤 Dormiente'
   ]
 
+  const posEmojis = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
+
   const lines = top.map((user, idx) => {
-    const rank = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'][idx]
-    const title = titles[idx] || ''
-    return `${rank} @${user.jid.split('@')[0]} — ${title}\n` +
-           `• Lv.${user.level} • XP: ${user.exp} • ${user.role} • ${user.money} 888COIN\n`
-  }).join('\n')
+    const rank = posEmojis[idx]
+    const title = titles[idx] || 'Membro'
+    return (
+`${rank} @${user.jid.split('@')[0]} — ${title}
+• Lv.${user.level} • XP: ${user.exp} • ${user.role} • ${user.money} 888COIN
+
+`
+    )
+  }).join('')
 
   await conn.sendMessage(m.chat, {
     text: header + lines,

@@ -28,7 +28,9 @@
     position:fixed; top:44px; right:24px; text-align:right;
     font-family:'Silkscreen', monospace; font-size:11px; letter-spacing:1px;
     color:#34291A; opacity:.5; pointer-events:none;
+    transition:color .5s, opacity .5s;
   }
+  #spd.boost{ color:#C4553B; opacity:.95; }
 
   #mute{
     position:fixed; top:14px; left:16px; width:42px; height:42px;
@@ -102,7 +104,9 @@
 <script>
 /* ============================================================
    DINO RUN — runner nel deserto, tutto in un file
-   Sempre giorno. Velocità moderate che crescono col tempo.
+   Sempre giorno. Velocità legata ai PUNTI:
+   - lenta alla partenza, salita dolce fino a 600 punti
+   - oltre i 600 punti l'accelerazione diventa marcata
    Ostacoli: SOLO cactus, 3 forme, gruppi fino a 4.
    ============================================================ */
 const cvs = document.getElementById('game');
@@ -226,8 +230,17 @@ SPR.cac = SHAPES.map(sh => TINTS.map(t => {
 const spr = (img,x,y,cell) => ctx.drawImage(img, Math.round(x), Math.round(y), img.width*cell, img.height*cell);
 
 /* ---------------- stato di gioco ---------------- */
-/* VELOCITÀ ridotta: parte a 380 e sale a 1050 in ~11s */
-const START_V = 380, MAX_V = 1050, ACCEL = 60;
+/* VELOCITÀ IN BASE AI PUNTI:
+   - START_V = 320 (più lenta di prima)
+   - fino a 600 punti: +0.15 px/s per punto  (a 600 → 410)
+   - oltre 600 punti:  +0.45 px/s per punto (a 1500 → 815, cap a 1000) */
+const START_V = 320, MAX_V = 1000;
+const RAMP1 = 0.15, RAMP2 = 0.45, BOOST_AT = 600;
+function targetSpeed(){
+  if(score <= BOOST_AT) return START_V + score * RAMP1;
+  return Math.min(MAX_V, START_V + BOOST_AT*RAMP1 + (score - BOOST_AT) * RAMP2);
+}
+
 let mode = 'start';
 let time = 0, worldX = 0, vN = 0, speed = 0;
 let score = 0, hi = +(store.getItem('dinoHi') || 0);
@@ -265,6 +278,7 @@ function tone(f0, f1, delay, dur, type, vol){
 const snd = {
   jump: () => tone(420, 780, 0, .12, 'square', .07),
   mile: () => { tone(660,660,0,.07,'square',.06); tone(990,990,.1,.1,'square',.06); },
+  boost:() => { tone(520,880,0,.1,'square',.06); tone(880,1170,.09,.12,'square',.06); },
   die:  () => tone(320, 70, 0, .45, 'sawtooth', .11)
 };
 ['pointerdown','touchstart','mousedown'].forEach(ev =>
@@ -321,6 +335,7 @@ addEventListener('contextmenu', e => e.preventDefault());
 /* ---------------- flusso di gioco ---------------- */
 const ovStart = document.getElementById('ovStart');
 const ovOver  = document.getElementById('ovOver');
+const spdEl   = document.getElementById('spd');
 const pad = n => String(Math.min(99999, Math.floor(n))).padStart(5,'0');
 
 function startRun(){
@@ -408,11 +423,12 @@ function update(dt){
   if(flashT > 0) flashT -= dt;
 
   if(mode === 'run'){
-    // da 380 a 1050 in ~11s
-    vN = Math.min(MAX_V, vN + ACCEL*dt);
+    /* velocità inseguo il target calcolato sui PUNTI (transizione morbida) */
+    const tv = targetSpeed();
+    vN += (tv - vN) * Math.min(1, dt * 2.5);
     speed = vN * S;
     worldX += speed*dt;
-    score += vN*dt*0.04;
+    score += vN*dt*0.05;
 
     if(!dino.ground){
       let g = 2400*S;
@@ -456,6 +472,10 @@ function update(dt){
 
     if(score >= nextMile){
       flashT = 1.1; snd.mile(); nextMile += 100;
+    }
+    /* passaggio di marcia a 600 punti */
+    if(score - vN*dt*0.05 < BOOST_AT && score >= BOOST_AT){
+      snd.boost(); flashT = Math.max(flashT, 0.7);
     }
     for(const m of marks){
       m.x -= speed*dt;
@@ -555,7 +575,8 @@ function render(){
 
   document.getElementById('hiTxt').textContent = 'HI ' + pad(hi);
   document.getElementById('curTxt').textContent = pad(score);
-  document.getElementById('spd').textContent = 'VEL ×' + (vN/START_V).toFixed(1);
+  spdEl.textContent = 'VEL ×' + (vN/START_V).toFixed(1);
+  spdEl.classList.toggle('boost', score >= BOOST_AT);
 }
 
 /* ---------------- loop ---------------- */

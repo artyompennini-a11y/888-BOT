@@ -77,6 +77,5 @@ let handler = async (m, { conn }) => {
 handler.help = ['listafk']
 handler.tags = ['info']
 handler.command = /^(listafk)$/i
-handler.modoadminBypass = true
 
 export default handler

@@ -251,9 +251,21 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     const artListeners   = artistInfo?.stats?.listeners  || 0;
     const artPlaycount   = artistInfo?.stats?.playcount  || 0;
 
-    const caption = `🎧 *Now Playing*
-${songTitle}
-${artistName}`.trim();
+    const caption = `
+🎧 *Now Playing* • ${user}
+
+🎵 *Brano:* ${songTitle}
+👤 *Artista:* ${artistName}
+
+📊 *Statistiche*
+🔥 ${formatCount(playCount)} ascolti totali
+👥 ${formatCount(listeners)} ascoltatori
+🎤 ${formatCount(artListeners)} ascoltatori/mese dell'artista
+💿 ${formatCount(artPlaycount)} ascolti in carriera
+💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte
+
+🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
+`.trim();
 
     await conn.sendMessage(
       m.chat,

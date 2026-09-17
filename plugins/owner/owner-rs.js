@@ -1,4 +1,3 @@
-// Plugin by Elixir, Punisher & 888 staff
 import { existsSync, promises as fsPromises } from 'fs';
 import path from 'path';
 

@@ -1,4 +1,4 @@
-//Plugin by 888 staff - ModoAdmin Module (restricts bot commands to admins only)
+//Plugin by elixir
 
 export async function before(m, { isAdmin, isOwner, isROwner }) {
   if (m.fromMe) return true;
@@ -6,21 +6,17 @@ export async function before(m, { isAdmin, isOwner, isROwner }) {
   if (!m.isGroup) return false;
 
   const chat = global.db.data.chats[m.chat];
-  if (!chat.modoadmin) return true;
+  if (!chat?.modoadmin) return false;
 
-  if (isOwner || isROwner) return true;
-  if (!isAdmin) return true;
+  if (isOwner || isROwner || isAdmin) return false;
 
-  // If modoadmin is enabled, only admins can use bot commands
-  // This checks if the message is a command (starts with prefix)
-  const prefix = global.opts?.prefix || '.';
+  const prefix = global.prefix ?? global.opts?.prefix ?? '.';
   const text = (m.text || '').toString();
-  
-  if (text && text.startsWith(prefix)) {
-    // Non-admin is trying to use a command, but isAdmin check above already passed
-    // This is for additional filtering if needed
-    return true;
-  }
 
-  return true;
+  if (!text) return false;
+  if (prefix instanceof RegExp) return prefix.test(text);
+  if (Array.isArray(prefix)) {
+    return prefix.some(value => value instanceof RegExp ? value.test(text) : text.startsWith(value));
+  }
+  return text.startsWith(prefix);
 }

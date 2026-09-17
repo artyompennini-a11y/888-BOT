@@ -12,7 +12,6 @@
 
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 
 
 
@@ -42,30 +41,18 @@ function buildHTML(track, username) {
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 * { margin:0; padding:0; box-sizing:border-box; }
 body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-serif; background:#0d0d0d; }
-.card { position:relative; width:800px; height:400px; display:flex; overflow:hidden; background:linear-gradient(135deg,#121212,#0d0d0d); }
+.card { position:relative; width:800px; height:400px; display:flex; overflow:hidden; background:#111; }
 .bg-blur {
   position:absolute; inset:0;
   background-image:url('${albumArt}');
   background-size:cover; background-position:center;
-  filter:blur(38px) brightness(0.28) saturate(1.4);
-  transform:scale(1.18); z-index:0;
-}
-.cover-wrap {
-  position:relative; z-index:1;
-  width:320px; height:320px;
-  margin:40px 0 40px 40px;
-  border-radius:12px; object-fit:cover; position:relative; z-index:1;
-  box-shadow:0 20px 60px rgba(0,0,0,0.7);
-  overflow:hidden;
-  background:#0a0a0a;
-  border:1px solid rgba(255,255,255,0.08);
+  filter:blur(40px) brightness(0.3) saturate(1.5);
+  transform:scale(1.1); z-index:0;
 }
 .cover {
-  width:100%; height:100%;
-  display:block;
-  object-fit:cover;
-  object-position:center;
-  background:#111;
+  flex-shrink:0; width:340px; height:340px; margin:30px;
+  border-radius:12px; object-fit:cover; position:relative; z-index:1;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
 }
 .info {
   position:relative; z-index:1; display:flex; flex-direction:column;
@@ -100,23 +87,28 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
   overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
 .divider { width:40px; height:2px; background:${statusColor}; border-radius:2px; margin-bottom:24px; }
-.user-tag { display:flex; align-items:center; gap:8px; margin-top:auto; }
-.user-tag span { font-size:12px; color:#666; }
-.user-tag b { font-weight:600; color:#aaa; }
+.user-tag { display:flex; align-items:center; gap:8px; color:#555; font-size:13px; margin-top:auto; }
+.user-tag span { color:#777; font-weight:500; }
+.lastfm-logo {
+  font-family:'Syne',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.1em; color:#e00; text-transform:uppercase;
+  position:absolute; bottom:16px; right:20px; z-index:2; opacity:.7;
+}
 </style>
 </head>
 <body>
 <div class="card">
   <div class="bg-blur"></div>
-  <img class="cover" src="${albumArt}" alt="Cover">
+  <img class="cover" src="${albumArt}" onerror="this.style.background='#222';this.removeAttribute('src')" />
   <div class="info">
     <div class="status"><span class="dot"></span> ${statusText}</div>
     <div class="song-title">${songName}</div>
     <div class="artist">${artistName}</div>
     <div class="album">${albumName}</div>
     <div class="divider"></div>
-    <div class="user-tag"><span>🎧 Ultimo ascoltato da</span><b>@${username}</b></div>
+    <div class="user-tag">🎧 <span>${username}</span></div>
   </div>
+  <div class="lastfm-logo">Last.fm</div>
 </div>
 </body>
 </html>`;
@@ -125,23 +117,20 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
 async function renderWithPuppeteer(html) {
   const puppeteer = await import('puppeteer');
   const browser = await puppeteer.launch({
-    headless: 'new',
-    executablePath: '/usr/bin/chromium-browser',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process'
-    ]
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    headless: 'new'
   });
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const buf = await page.screenshot({ type: 'png' });
-    return Buffer.from(buf);
+    await page.setViewport({ width: 800, height: 400, deviceScaleFactor: 1 });
+    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 15000 });
+    await page.evaluate(() => Promise.all(
+      [...document.images].map(img => img.complete ? Promise.resolve() : new Promise(resolve => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      }))
+    ));
+    return await page.screenshot({ type: 'png' });
   } finally {
     await browser.close();
   }
@@ -181,21 +170,6 @@ async function renderWithCanvas(track, username) {
   const songName   = track.name            || 'Sconosciuto';
   const artistName = track.artist['#text'] || 'Sconosciuto';
   const albumName  = track.album?.['#text'] || 'Album sconosciuto';
-
-  ctx.fillStyle = '#111111';
-  ctx.fillRect(0, 0, 800, 400);
-
-  try {
-    const cover = await loadImg(albumArt);
-    ctx.save();
-    roundRect(ctx, 30, 30, 340, 340, 12);
-    ctx.clip();
-    ctx.drawImage(cover, 30, 30, 340, 340);
-    ctx.restore();
-  } catch {
-    ctx.fillStyle = '#333';
-    ctx.fillRect(30, 30, 340, 340);
-  }
 
   ctx.fillStyle = '#111111';
   ctx.fillRect(0, 0, 800, 400);

@@ -79,22 +79,21 @@ const execPromise = (cmd) => new Promise((resolve, reject) => {
 });
 
 async function downloadAudioFromQuery(query) {
+  let outputPath;
   try {
-    const search = await yts(query);
-    const vid = search?.videos?.[0];
-    if (!vid) return null;
+    const isUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(query);
+    const vid = isUrl ? { url: query, title: query } : (await yts(query))?.videos?.[0];
+    if (!vid?.url) return null;
 
     const tmpDir = os.tmpdir();
     const fileName = `cur_audio_${Date.now()}`;
-    const outputPath = path.join(tmpDir, `${fileName}.mp3`);
+    outputPath = path.join(tmpDir, `${fileName}.mp3`);
 
     await execPromise(`yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`);
 
     if (!fs.existsSync(outputPath)) return null;
 
     const buffer = fs.readFileSync(outputPath);
-    fs.unlinkSync(outputPath);
-
     return {
       buffer,
       title: vid.title,
@@ -103,6 +102,8 @@ async function downloadAudioFromQuery(query) {
   } catch (e) {
     console.error('[cur-download] errore:', e.message);
     return null;
+  } finally {
+    if (outputPath && fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
   }
 }
 
@@ -196,10 +197,12 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       }, { quoted: m });
     }
 
+    await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     const result = await downloadAudioFromQuery(query);
     if (!result) {
+      await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
       return conn.sendMessage(m.chat, {
-        text: '❌ Nessun risultato trovato per il download audio.'
+        text: '❌ Download audio non riuscito. Verifica che yt-dlp sia installato e aggiornato.'
       }, { quoted: m });
     }
 

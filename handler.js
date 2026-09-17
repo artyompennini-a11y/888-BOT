@@ -792,6 +792,19 @@ export async function handler(chatUpdate) {
             }
         }
 
+        if (m.isGroup && chat.modoadmin && !isAdmin && !isROwner && !isOwner) {
+            const prefix = global.prefix ?? global.opts?.prefix ?? '.';
+            const text = (m.text || '').toString();
+            const isCommand = prefix instanceof RegExp
+                ? prefix.test(text)
+                : typeof prefix === 'string'
+                    ? text.startsWith(prefix)
+                    : Array.isArray(prefix) && prefix.some(value =>
+                        value instanceof RegExp ? value.test(text) : text.startsWith(value));
+
+            if (isCommand) continue;
+        }
+
         if (chat.isBanned && !isOwner) continue;
 
         const activePlugins = Object.entries(global.plugins).filter(([, p]) => p && !p.disabled);

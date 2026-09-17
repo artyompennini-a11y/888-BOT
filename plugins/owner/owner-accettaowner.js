@@ -186,19 +186,21 @@ const initPlugin = () => {
   if (global.accettaownerInitDone) return;
   global.accettaownerInitDone = true;
   forzaPluginAttivo();
-  if (collegaListener()) return;
-  const interval = setInterval(() => {
-    forzaPluginAttivo();
-    if (collegaListener()) clearInterval(interval);
-  }, 1000);
+
+  if (!collegaListener()) {
+    const interval = setInterval(() => {
+      forzaPluginAttivo();
+      if (collegaListener()) clearInterval(interval);
+    }, 1000);
+  }
 };
 
 initPlugin();
 
 export const disabled = false;
-const handler = async () => {};
-handler.command = ['accettaowner'];
-handler.tags = ['owner'];
-handler.help = ['accettaowner'];
-handler.owner = true;
-export default handler;
+
+export default {
+  disabled: false,
+  all: async () => {},
+  before: async () => false,
+};

@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff
+//Plugin by Elixir, Punisher & 888 staff
 
 let handler = async (m, { args }) => {
   let user = global.db.data.users[m.sender]

@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 888 staff
-
 let handler = async (m, { conn }) => {
 
     let users = global.db.data.users
@@ -9,7 +7,7 @@ let handler = async (m, { conn }) => {
     user.lastProstituta = user.lastProstituta || 0
 
     let now = Date.now()
-    let cooldown = 5 * 60 * 1000 // ⏱️ 5 minuti
+    let cooldown = 5 * 60 * 1000 // 5 minuti
 
     let userTag = `@${m.sender.split('@')[0]}`
 
@@ -19,27 +17,27 @@ let handler = async (m, { conn }) => {
         let minutes = Math.floor(remainingMs / 60000)
         let seconds = Math.floor((remainingMs % 60000) / 1000)
 
-        return conn.reply(m.chat,
-`╭━━━〔 ⏳ ASPETTA 〕━━━╮
-┃
-┃ 👤 ${userTag}
-┃ ⏱️ Riprova tra ${minutes}m ${seconds}s
-┃
-╰━━━━━━━━━━━━━━━━━━━━━━╯`,
-        m,
-        { mentions: [m.sender] })
+        return conn.reply(
+            m.chat,
+            `⏳ *Cooldown attivo*
+
+👤 ${userTag}
+Riprova tra *${minutes}m ${seconds}s*`,
+            m,
+            { mentions: [m.sender] }
+        )
     }
 
     user.lastProstituta = now
 
     let eventi = [
-        { tipo: 'gain', min: 50, max: 200, testo: "💋 Hai lavorato tutta la notte" },
-        { tipo: 'gain', min: 100, max: 300, testo: "🔥 Cliente ricco trovato" },
-        { tipo: 'gain', min: 30, max: 150, testo: "😏 Serata tranquilla" },
+        { tipo: 'gain', min: 50, max: 200, testo: "Hai lavorato tutta la notte" },
+        { tipo: 'gain', min: 100, max: 300, testo: "Cliente ricco trovato" },
+        { tipo: 'gain', min: 30, max: 150, testo: "Serata tranquilla" },
 
-        { tipo: 'loss', min: 20, max: 100, testo: "🤒 Hai pagato cure mediche" },
-        { tipo: 'loss', min: 50, max: 150, testo: "🚔 Multa improvvisa" },
-        { tipo: 'loss', min: 10, max: 80, testo: "😬 Cliente scappato senza pagare" }
+        { tipo: 'loss', min: 20, max: 100, testo: "Hai pagato cure mediche" },
+        { tipo: 'loss', min: 50, max: 150, testo: "Multa improvvisa" },
+        { tipo: 'loss', min: 10, max: 80, testo: "Cliente scappato senza pagare" }
     ]
 
     let ev = eventi[Math.floor(Math.random() * eventi.length)]
@@ -52,29 +50,26 @@ let handler = async (m, { conn }) => {
         user.money += amount
 
         text =
-`╭━━━〔 💋 LAVORO NOTTURNO 〕━━━╮
-┃
-┃ 👤 ${userTag}
-┃ ${ev.testo}
-┃ 💰 Guadagno: +${amount} 888COIN
-┃ 💵 Totale: ${user.money} 888COIN
-┃
-╰━━━━━━━━━━━━━━━━━━━━━━╯`
+`💋 *Lavoro notturno*
 
+👤 ${userTag}
+${ev.testo}
+
+💰 Guadagno: +${amount} 888COIN
+💵 Totale: ${user.money} 888COIN`
     } else {
 
         user.money -= amount
         if (user.money < 0) user.money = 0
 
         text =
-`╭━━━〔 🤒 GIORNATA STORTA 〕━━━╮
-┃
-┃ 👤 ${userTag}
-┃ ${ev.testo}
-┃ 💸 Perdita: -${amount} 888COIN
-┃ 💵 Totale: ${user.money} 888COIN
-┃
-╰━━━━━━━━━━━━━━━━━━━━━━╯`
+`🤒 *Giornata storta*
+
+👤 ${userTag}
+${ev.testo}
+
+💸 Perdita: -${amount} 888COIN
+💵 Totale: ${user.money} 888COIN`
     }
 
     conn.reply(m.chat, text, m, {

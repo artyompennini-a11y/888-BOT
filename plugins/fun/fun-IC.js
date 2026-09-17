@@ -125,7 +125,7 @@ let handler = async (m, { conn, command }) => {
       text: `Sto scaricando il clip audio...`
     }, { quoted: m })
 
-    await execPromise(`yt-dlp -x --audio-format mp3 --postprocessor-args "-ss 30 -t 30" -o "${clipFile}" "${video.url}"`)
+    await execPromise(`yt-dlp --js-runtimes "node:/home/ubuntu/.nvm/versions/node/v20.20.2/bin/node" --cookies /home/ubuntu/888-BOT/cookies.txt -x --audio-format mp3 --postprocessor-args "-ss 30 -t 30" -o "${clipFile}" "${video.url}"`)
   } catch (e) {
     try { if (fs.existsSync(clipFile)) fs.unlinkSync(clipFile) } catch {}
     return m.reply("❌ Errore durante il recupero dell'audio.")

@@ -68,8 +68,8 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     await new Promise((resolve, reject) => {
       let cmd = isAudio
-        ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${url}"`
-        : `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -o "${outputPath}" "${url}"`;
+        ? `yt-dlp --js-runtimes "node:/home/ubuntu/.nvm/versions/node/v20.20.2/bin/node" --cookies /home/ubuntu/888-BOT/cookies.txt -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${url}"`
+        : `yt-dlp --js-runtimes "node:/home/ubuntu/.nvm/versions/node/v20.20.2/bin/node" --cookies /home/ubuntu/888-BOT/cookies.txt -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -o "${outputPath}" "${url}"`;
 
       exec(cmd, (err) => {
         if (err) reject(err);

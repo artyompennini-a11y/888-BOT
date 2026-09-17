@@ -4,43 +4,64 @@ import path from 'path';
 
 const handler = async (message, { conn }) => {
   try {
-    // Usa il nome sessione configurato nel bot (default: 888BotSession)
     const authFolder = global.authFile || '888BotSession';
     const sessionFolder = path.join(process.cwd(), authFolder);
     let deletedCount = 0;
-    let statusContent = '';
+    let skippedCount = 0;
+    const removedFiles = [];
+
+    console.log(`\n[SESSION CLEANUP] Inizio pulizia sessione: ${authFolder}`);
 
     if (!existsSync(sessionFolder)) {
-      statusContent = 'Directory sessioni non trovata.';
-    } else {
-      const sessionFiles = await fsPromises.readdir(sessionFolder);
-
-      for (const file of sessionFiles) {
-        if (file !== 'creds.json') {
-          await fsPromises.unlink(path.join(sessionFolder, file));
-          deletedCount++;
-        }
-      }
-
-      statusContent = deletedCount === 0
-        ? 'Cache già pulita.'
-        : `Svuotati ${deletedCount} archivi temporanei.`;
+      const statusContent = '⚠️ Session folder non trovata o non ancora creata.';
+      console.warn(`[SESSION CLEANUP] Cartella non trovata: ${sessionFolder}`);
+      await conn.sendMessage(message.chat, { text: `⚙️ ${global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧'}: ${statusContent}` });
+      return true;
     }
 
-    const botName = global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧';
+    const sessionFiles = await fsPromises.readdir(sessionFolder);
 
-    await conn.sendMessage(message.chat, { text: `⚙️ ${botName}: ${statusContent}` });
+    for (const file of sessionFiles) {
+      const fullPath = path.join(sessionFolder, file);
+      if (file === 'creds.json') {
+        skippedCount++;
+        continue;
+      }
+
+      await fsPromises.unlink(fullPath);
+      removedFiles.push(file);
+      deletedCount++;
+    }
+
+    const botName = global.db?.data?.nomedelbot || '𝟴𝟴𝟒 𝗕𝗢𝗧';
+
+    console.log(`[SESSION CLEANUP] Cartella: ${sessionFolder}`);
+    console.log(`[SESSION CLEANUP] File rimossi: ${deletedCount}`);
+    console.log(`[SESSION CLEANUP] File preservati: ${skippedCount}`);
+    if (removedFiles.length > 0) {
+      console.log(`[SESSION CLEANUP] File eliminati: ${removedFiles.join(', ')}`);
+    }
+
+    const statusContent = deletedCount === 0
+      ? '🧹 Sessione già pulita. Nessun file temporaneo da rimuovere.'
+      : `🧹 Sessione pulita con successo. File rimossi: ${deletedCount}.`;
+
+    await conn.sendMessage(message.chat, {
+      text: `⚙️ *${botName}*\n${statusContent}\n\n📌 Preservati: ${skippedCount} file di sicurezza.`
+    });
     return true;
   } catch (error) {
-    console.error('Errore deletession:', error);
-    await conn.sendMessage(message.chat, { text: '❌ Errore durante la pulizia sessioni.' });
+    console.error('[SESSION CLEANUP] Errore durante la pulizia:', error);
+    await conn.sendMessage(message.chat, {
+      text: '❌ *Session cleanup fallito*\nImpossibile completare la pulizia dei file temporanei.'
+    });
     return true;
   }
 };
 
-handler.help = ['.ds'];
+handler.help = ['.rs'];
 handler.tags = ['admin'];
-handler.command = /^(deletession|ds|clearallsession)$/i;
+handler.command = /^rs$/i;
 handler.admin = true;
 handler.owner = true;
 handler.private = false;

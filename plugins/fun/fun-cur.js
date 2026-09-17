@@ -89,7 +89,7 @@ async function downloadAudioFromQuery(query) {
     const fileName = `cur_audio_${Date.now()}`;
     outputPath = path.join(tmpDir, `${fileName}.mp3`);
 
-    await execPromise(`yt-dlp --js-runtimes "node:/home/ubuntu/.nvm/versions/node/v20.20.2/bin/node" --cookies /home/ubuntu/888-BOT/cookies.txt -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`);
+    await execPromise(`yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`);
 
     if (!fs.existsSync(outputPath)) return null;
 

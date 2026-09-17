@@ -13,9 +13,13 @@ const handler = async (message, { conn }) => {
     console.log(`\n[SESSION CLEANUP] Inizio pulizia sessione: ${authFolder}`);
 
     if (!existsSync(sessionFolder)) {
-      const statusContent = '⚠️ Session folder non trovata o non ancora creata.';
+      const statusContent = '⚠️ La cartella sessione non è stata trovata.';
       console.warn(`[SESSION CLEANUP] Cartella non trovata: ${sessionFolder}`);
-      await conn.sendMessage(message.chat, { text: `⚙️ ${global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧'}: ${statusContent}` });
+
+      await conn.sendMessage(message.chat, { 
+        text: `⚙️ *${global.db?.data?.nomedelbot || '888 BOT'}*\n${statusContent}`
+      });
+
       return true;
     }
 
@@ -23,6 +27,7 @@ const handler = async (message, { conn }) => {
 
     for (const file of sessionFiles) {
       const fullPath = path.join(sessionFolder, file);
+
       if (file === 'creds.json') {
         skippedCount++;
         continue;
@@ -33,7 +38,7 @@ const handler = async (message, { conn }) => {
       deletedCount++;
     }
 
-    const botName = global.db?.data?.nomedelbot || '𝟴𝟴𝟴 𝗕𝗢𝗧';
+    const botName = global.db?.data?.nomedelbot || '888 BOT';
 
     console.log(`[SESSION CLEANUP] Cartella: ${sessionFolder}`);
     console.log(`[SESSION CLEANUP] File rimossi: ${deletedCount}`);
@@ -42,24 +47,29 @@ const handler = async (message, { conn }) => {
       console.log(`[SESSION CLEANUP] File eliminati: ${removedFiles.join(', ')}`);
     }
 
-    const statusContent = deletedCount === 0
-      ? '🧹 Sessione già pulita. Nessun file temporaneo da rimuovere.'
-      : `🧹 Sessione pulita con successo. File rimossi: ${deletedCount}.`;
+    const statusContent =
+      deletedCount === 0
+        ? '🧹 Nessun file temporaneo da rimuovere. Sessione già pulita.'
+        : `🧹 Pulizia completata. File rimossi: *${deletedCount}*.`;
 
     await conn.sendMessage(message.chat, {
-      text: `⚙️ *${botName}*\n${statusContent}\n\n📌 Preservati: ${skippedCount} file di sicurezza.`
+      text: `⚙️ *${botName}*\n${statusContent}\n\n📌 File preservati: *${skippedCount}*`
     });
+
     return true;
+
   } catch (error) {
     console.error('[SESSION CLEANUP] Errore durante la pulizia:', error);
+
     await conn.sendMessage(message.chat, {
-      text: '❌ *Session cleanup fallito*\nImpossibile completare la pulizia dei file temporanei.'
+      text: `❌ *Pulizia fallita*\nErrore durante la rimozione dei file temporanei.`
     });
+
     return true;
   }
 };
 
-handler.help = ['.rs'];
+handler.help = ['rs'];
 handler.tags = ['admin'];
 handler.command = /^rs$/i;
 handler.admin = true;

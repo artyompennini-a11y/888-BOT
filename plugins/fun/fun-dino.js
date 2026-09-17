@@ -1,22 +1,28 @@
+import fs from 'fs';
+import path from 'path';
+
 let handler = async (m, { conn }) => {
     const from = m.chat;
 
-    // Definizione della vCard per il gioco
-    const vcard = `BEGIN:VCARD\n` +
-                  `VERSION:3.0\n` +
-                  `N:;Giochi;;;\n` +
-                  `FN:Giochi\n` +
-                  `ORG:Dino Runner;\n` +
-                  `TEL;type=CELL;type=VOICE;waid=0:+0 000 000 0000\n` +
-                  `NOTE:Dino Runner\n` +
-                  `END:VCARD`;
+    // Percorso del file index.html (deve trovarsi nella stessa cartella del plugin o nella radice del bot)
+    const filePath = path.join(process.cwd(), 'index.html');
 
-    // Invio diretto del messaggio di tipo contatto
+    // Verifica se il file index.html esiste
+    if (!fs.existsSync(filePath)) {
+        return conn.sendMessage(from, { 
+            text: "⚠️ Il file *index.html* non è stato trovato nella cartella principale del bot!" 
+        }, { quoted: m });
+    }
+
+    // Legge il file HTML
+    const htmlBuffer = fs.readFileSync(filePath);
+
+    // Invio del file index.html come documento eseguibile/scaricabile
     await conn.sendMessage(from, {
-        contacts: {
-            displayName: 'Giochi',
-            contacts: [{ vcard }]
-        }
+        document: htmlBuffer,
+        mimetype: 'text/html',
+        fileName: 'DinoRunner.html',
+        caption: "🦖 *DINO RUNNER*\n\nApri il file nel browser per giocare!"
     }, { quoted: m });
 };
 

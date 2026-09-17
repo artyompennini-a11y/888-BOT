@@ -77,18 +77,27 @@ const codaBatch = (chatId) => {
   return global.accettaownerBatch[chatId];
 };
 
+const forzaPluginAttivo = () => {
+  if (!global.plugins) return;
+  for (const [key, plugin] of Object.entries(global.plugins)) {
+    if (!plugin) continue;
+    const short = String(key).split(/[\\/]/).pop()?.toLowerCase() || '';
+    if (short === 'owner-accettaowner.js') plugin.disabled = false;
+  }
+};
+
 const scaricaBatch = async (conn, chatId) => {
   const batch = global.accettaownerBatch?.[chatId];
   if (!batch || batch.owner.length === 0) return;
   delete global.accettaownerBatch[chatId];
-  const menzioni = batch.owner.map((o) => o.who);
-  const righe = batch.owner.map((o) => `@${jidNum(o.who)}`).join('\n');
+  const menzioni = batch.owner.map((o) => o.who).filter(Boolean);
+  const righe = batch.owner.map((o) => `• @${jidNum(o.who)}`).join('\n');
   const nota = batch.owner.some((o) => o.promozioneFallita)
-    ? '\n\nPer uno o più owner la promozione ad admin non è andata a buon fine, ma sono stati accettati nel gruppo.'
+    ? '\n\n⚠️ Uno o più owner sono stati accettati ma la promozione a admin non è andata a buon fine.'
     : '';
   try {
     await conn.sendMessage(chatId, {
-      text: `I seguenti owner sono stati accettati e promossi ad admin in automatico:\n${righe}${nota}`,
+      text: `👑 *Owner accettati e promossi automaticamente ad amministratori:*\n${righe}${nota}`,
       mentions: menzioni,
     });
   } catch {}
@@ -176,8 +185,10 @@ const collegaListener = () => {
 const initPlugin = () => {
   if (global.accettaownerInitDone) return;
   global.accettaownerInitDone = true;
+  forzaPluginAttivo();
   if (collegaListener()) return;
   const interval = setInterval(() => {
+    forzaPluginAttivo();
     if (collegaListener()) clearInterval(interval);
   }, 1000);
 };

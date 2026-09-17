@@ -1,4 +1,24 @@
 import fetch from 'node-fetch';
+import fs from 'fs';
+
+const fallbackImage = () => {
+  try {
+    return fs.readFileSync('icone/888.jpg');
+  } catch {
+    return Buffer.alloc(0);
+  }
+};
+
+const downloadImage = async (url) => {
+  try {
+    if (!url) return fallbackImage();
+    const response = await fetch(url, { timeout: 8000 });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.buffer();
+  } catch {
+    return fallbackImage();
+  }
+};
 
 export async function before(m, { conn, participants }) {
   if (!m.isGroup) return;
@@ -10,34 +30,24 @@ export async function before(m, { conn, participants }) {
   let participants_new = m.messageStubParameters;
 
   
-  let groupPic;
+  let groupPic = null;
   try {
     groupPic = await conn.profilePictureUrl(m.chat, 'image');
   } catch {
-    groupPic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg';
+    groupPic = null;
   }
 
-  let groupPicBuffer;
-  try {
-    groupPicBuffer = await (await fetch(groupPic)).buffer();
-  } catch {
-    groupPicBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer();
-  }
+  const groupPicBuffer = await downloadImage(groupPic);
 
   for (let user of participants_new) {
-    let profilePic;
+    let profilePic = null;
     try {
       profilePic = await conn.profilePictureUrl(user, 'image');
     } catch {
-      profilePic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg';
+      profilePic = null;
     }
 
-    let ppBuffer;
-    try {
-      ppBuffer = await (await fetch(profilePic)).buffer();
-    } catch {
-      ppBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer();
-    }
+    const ppBuffer = await downloadImage(profilePic);
 
     if (m.messageStubType === 27) {
       let welcomeText = chat.sWelcome || `@${user.split('@')[0]} 𝐞̀ 𝐞𝐧𝐭𝐫𝐚𝐭𝐨 𝐧𝐞𝐥 𝐠𝐫𝐮𝐩𝐩𝐨`;

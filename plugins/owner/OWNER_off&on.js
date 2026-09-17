@@ -1,7 +1,5 @@
 //Plugin by punisher, elixir & 888 staff
 
-
-
 let handler = async (m, { text, command }) => {
   const cmd = command?.toLowerCase()
 
@@ -23,6 +21,10 @@ Esempio: *.disablepl fun-cur*`)
     return m.reply(`❌ Plugin *${query}* non trovato.\nUsa *.pluginlist* per vedere tutti i plugin.`)
 
   const short = match.replace(/^.*[\\/]/, '').replace('.js', '')
+
+  if (short === 'owner-accettaowner' || match.toLowerCase().includes('owner-accettaowner')) {
+    return m.reply('🚫 Il plugin *owner-accettaowner* è sempre attivo e non può essere disattivato.')
+  }
 
   if (cmd === 'disablepl') {
     if (global.plugins[match].disabled)

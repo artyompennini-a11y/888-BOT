@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff
+//Plugin by Elixir, punisher & 888 staff
 
 
 import { createCanvas, loadImage } from 'canvas';

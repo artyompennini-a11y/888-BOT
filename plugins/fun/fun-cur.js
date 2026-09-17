@@ -181,22 +181,6 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
 `.trim();
 
-    const buttonParamsJson = JSON.stringify({
-      title: "🎧 Azioni brano",
-      sections: [
-        {
-          title: "🎵 Scegli un'azione",
-          highlight_label: "888",
-          rows: [
-            { id: `.like ${m.sender}`, title: "❤️ Preferito", description: "Aggiungi ai preferiti" },
-            { id: `.fuoco ${m.sender}`, title: "🔥 Fuoco", description: "Non mi piace" },
-            { id: youtubeUrl, title: "▶️ YouTube", description: "Ascolta ora" },
-            { id: spotifyUrl, title: "🎧 Spotify", description: "Apri su Spotify" }
-          ]
-        }
-      ]
-    });
-
     await conn.sendMessage(
       m.chat,
       {
@@ -204,8 +188,32 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
         caption,
         interactiveButtons: [
           {
-            name: "single_select",
-            buttonParamsJson
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({
+              display_text: '❤️ Preferito',
+              id: `.like ${m.sender}`
+            })
+          },
+          {
+            name: 'quick_reply',
+            buttonParamsJson: JSON.stringify({
+              display_text: '🔥 Fuoco',
+              id: `.fuoco ${m.sender}`
+            })
+          },
+          {
+            name: 'cta_url',
+            buttonParamsJson: JSON.stringify({
+              display_text: '▶️ YouTube',
+              url: youtubeUrl
+            })
+          },
+          {
+            name: 'cta_url',
+            buttonParamsJson: JSON.stringify({
+              display_text: '🎧 Spotify',
+              url: spotifyUrl
+            })
           }
         ]
       },

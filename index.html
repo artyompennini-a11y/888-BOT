@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DINO RUN — una corsa nel deserto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#34291A; }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    overflow:hidden; background:#F1E5C8;
+    font-family:'VT323', monospace;
+    user-select:none; -webkit-user-select:none;
+    touch-action:none; -webkit-tap-highlight-color:transparent;
+  }
+  canvas{ position:fixed; inset:0; display:block; }
+
+  #hud{
+    position:fixed; top:18px; right:24px; text-align:right;
+    font-family:'Silkscreen', monospace; font-size:15px; letter-spacing:1px;
+    color:var(--ink); transition:color .6s; pointer-events:none;
+  }
+  #hud #hiTxt{ opacity:.55; margin-right:16px; }
+  #spd{
+    position:fixed; top:44px; right:24px; text-align:right;
+    font-family:'Silkscreen', monospace; font-size:11px; letter-spacing:1px;
+    color:var(--ink); opacity:.5; pointer-events:none; transition:color .6s;
+  }
+
+  #mute{
+    position:fixed; top:14px; left:16px; width:42px; height:42px;
+    background:transparent; border:2px solid var(--ink); color:var(--ink);
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:color .6s, border-color .6s;
+  }
+  #mute svg{ width:20px; height:20px; fill:currentColor; }
+  #mute .w{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  #mute .x{ display:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+  #mute.muted .w{ display:none; }
+  #mute.muted .x{ display:block; }
+
+  .overlay{
+    position:fixed; left:0; right:0; top:15%; text-align:center;
+    color:var(--ink); pointer-events:none;
+    transition:opacity .45s ease, color .6s;
+  }
+  .overlay.gone{ opacity:0; }
+  .overlay h1{
+    font-family:'Silkscreen', monospace; font-weight:700;
+    font-size:clamp(34px, 7vw, 62px); letter-spacing:5px;
+  }
+  .sub{ font-size:clamp(18px, 2.6vw, 24px); opacity:.72; margin-top:4px; }
+  .rules{ display:inline-block; text-align:left; margin-top:30px; font-size:clamp(18px, 2.4vw, 23px); line-height:2.05; }
+  .rules .r{ display:flex; align-items:baseline; gap:10px; }
+  .rules .k{ font-family:'Silkscreen', monospace; font-size:.68em; letter-spacing:.5px; }
+  .rules .d{ flex:1; min-width:26px; border-bottom:2px dotted currentColor; opacity:.45; transform:translateY(-6px); }
+  .cta{ margin-top:34px; font-size:clamp(19px, 2.6vw, 25px); animation:blink 1.15s steps(2, jump-none) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .scoreline{ font-size:clamp(21px, 3vw, 29px); margin-top:16px; }
+  .scoreline b{ font-family:'Silkscreen', monospace; font-size:.82em; }
+  #newRec{
+    display:none; margin-top:12px; color:#C4553B;
+    font-family:'Silkscreen', monospace; font-size:14px; letter-spacing:3px;
+  }
+  #newRec.show{ display:block; animation:blink .8s steps(2, jump-none) infinite; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud"><span id="hiTxt">HI 00000</span><span id="curTxt">00000</span></div>
+<div id="spd">VEL ×1.0</div>
+
+<button id="mute" aria-label="Audio">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 9v6h4l6 4V5L8 9H4z"/>
+    <path class="w" d="M16.5 8.5a5 5 0 0 1 0 7"/>
+    <line class="x" x1="16" y1="8" x2="22" y2="16"/>
+  </svg>
+</button>
+
+<div class="overlay" id="ovStart">
+  <h1>DINO RUN</h1>
+  <p class="sub">corri nel deserto, schiva i cactus</p>
+  <div class="rules">
+    <div class="r"><span class="k">CLICCA / SPAZIO</span><span class="d"></span><span>salta</span></div>
+    <div class="r"><span class="k">TIENI PREMUTO</span><span class="d"></span><span>salto più alto</span></div>
+    <div class="r"><span class="k">CLICCA IN ARIA</span><span class="d"></span><span>picchiata</span></div>
+  </div>
+  <p class="cta">— clicca per correre —</p>
+</div>
+
+<div class="overlay gone" id="ovOver">
+  <h1>GAME OVER</h1>
+  <p class="scoreline">PUNTI <b id="finalScore">00000</b> &nbsp;·&nbsp; RECORD <b id="finalHi">00000</b></p>
+  <p id="newRec">★ NUOVO RECORD ★</p>
+  <p class="cta">— clicca per riprovare —</p>
+</div>
+
+<script>
+/* ============================================================
+   DINO RUN — runner nel deserto, tutto in un file
+   Velocità alta fin dall'inizio, in crescita continua.
+   Ostacoli: SOLO cactus, 3 forme, gruppi fino a 4.
+   ============================================================ */
+const cvs = document.getElementById('game');
+const ctx = cvs.getContext('2d');
+
+let W, H, S, groundY, dinoX;
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cvs.width = W * dpr; cvs.height = H * dpr;
+  cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  S = Math.min(H / 540, Math.max(0.75, W / 760));
+  groundY = Math.round(H * 0.78);
+  dinoX = Math.max(40, Math.min(W * 0.16, 190));
+}
+addEventListener('resize', () => { resize(); initDecor(); });
+resize();
+
+/* ------------- storage sicuro (funziona anche in iframe sandbox) ------------- */
+const store = (() => {
+  try {
+    const t = '__dino_test__';
+    localStorage.setItem(t, '1'); localStorage.removeItem(t);
+    return localStorage;
+  } catch(e) {
+    const m = {};
+    return { getItem:k => (k in m ? m[k] : null), setItem:(k,v) => { m[k] = String(v); } };
+  }
+})();
+
+/* ---------------- palette giorno / notte ---------------- */
+const PAL = {
+  day:   { sky:[241,229,200], far:[224,204,158], near:[203,167,112], gf:[214,180,124],
+           gl:[118,90,55],  dot:[141,110,68], sun:[230,158,80], cloud:[252,244,224], ink:[52,41,26] },
+  night: { sky:[31,31,43],   far:[57,53,71],   near:[43,41,57],   gf:[29,28,39],
+           gl:[84,78,100],  dot:[56,53,79],   sun:[236,227,205], cloud:[236,227,205], ink:[233,225,202] }
+};
+let dayTval = 0;
+const mixA = (a,b,t) => `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
+const col = k => mixA(PAL.day[k], PAL.night[k], dayTval);
+
+/* ---------------- sprite in pixel-art ---------------- */
+const BODY = [
+"............XXXXXXXX..",
+"...........XXXXXXXXXX.",
+"...........XXXX.XXXXX.",
+"...........XXXXXXXXXX.",
+"...........XXXXXXXXXXX",
+"...........XXXXX......",
+"...........XXXXXXXX...",
+"X..........XXXXX......",
+"XX........XXXXX.......",
+"XXX......XXXXXX.XX....",
+"XXXX....XXXXXXXXXX....",
+"XXXXX..XXXXXXXXX......",
+"XXXXXXXXXXXXXXXX......",
+".XXXXXXXXXXXXXXX......",
+"..XXXXXXXXXXXXX.......",
+"...XXXXXXXXXXX........",
+"....XXXXXXXXX........."
+];
+const L_STAND = ["....XX...XX...........","....X.....X...........","....XX...XX..........."];
+const L_RUNA  = ["....XX...XX...........","....X.................","....XX................"];
+const L_RUNB  = ["....XX...XX...........","..........X...........","..........XX.........."];
+const BODY_BLINK = BODY.slice(); BODY_BLINK[2] = "...........XXXXXXXXXX.";
+const BODY_DEAD  = BODY.slice();
+BODY_DEAD[2] = "...........XXXX..XXXX.";
+BODY_DEAD[3] = "...........XXXXX.XXXX.";
+
+/* --- tre forme di cactus --- */
+const CAC_A = [ // classico
+"...XX...","...XX...",
+".X..XX.X",".X..XX.X",".X..XX.X",
+".XXXXXXX",
+"...XX...","...XX...","...XX...","...XX..."
+];
+const CAC_B = [ // alto
+"....XX....","....XX....",
+".X..XX..X.",".X..XX..X.",".X..XX..X.",".X..XX..X.",
+".XXXXXXXX.",
+"....XX....","....XX....","....XX....","....XX....",
+"....XX....","....XX....","....XX....","....XX...."
+];
+const CAC_C = [ // strisciante, largo
+"....XXXX....","....XXXX....",
+"XX..XXXX..XX","XX..XXXX..XX","XX..XXXX..XX",
+"XXXXXXXXXXXX",
+"....XXXX....","....XXXX....","....XXXX...."
+];
+const SHAPES = [
+  { mat:CAC_A, cell:3.7 },
+  { mat:CAC_B, cell:3.2 },
+  { mat:CAC_C, cell:3.4 }
+];
+const TINTS = ['#5E7355', '#4C6B4E'];
+
+const CLOUD = ["..XXXX....",".XXXXXXX..","XXXXXXXXXX"];
+
+const SPR = {};
+function bake(key, mat, color){
+  const c = document.createElement('canvas');
+  c.width = mat[0].length; c.height = mat.length;
+  const g = c.getContext('2d');
+  g.fillStyle = color;
+  mat.forEach((row,y)=>{ for(let x=0;x<row.length;x++) if(row[x]==='X') g.fillRect(x,y,1,1); });
+  SPR[key] = c;
+}
+bake('dinoA',  BODY.concat(L_RUNA),  '#C4553B');
+bake('dinoB',  BODY.concat(L_RUNB),  '#C4553B');
+bake('dinoI',  BODY.concat(L_STAND), '#C4553B');
+bake('dinoBl', BODY_BLINK.concat(L_STAND), '#C4553B');
+bake('dinoD',  BODY_DEAD.concat(L_STAND),  '#A84630');
+bake('cloud',  CLOUD, '#FBF3DF');
+/* cactus: SPR.cac[forma][tinta] */
+SPR.cac = SHAPES.map(sh => TINTS.map(t => {
+  const c = document.createElement('canvas');
+  c.width = sh.mat[0].length; c.height = sh.mat.length;
+  const g = c.getContext('2d');
+  g.fillStyle = t;
+  sh.mat.forEach((row,y)=>{ for(let x=0;x<row.length;x++) if(row[x]==='X') g.fillRect(x,y,1,1); });
+  return c;
+}));
+
+const spr = (img,x,y,cell) => ctx.drawImage(img, Math.round(x), Math.round(y), img.width*cell, img.height*cell);
+
+/* ---------------- stato di gioco ---------------- */
+/* VELOCITÀ: parte già a 430 e sale a 1200 in ~11 secondi */
+const START_V = 430, MAX_V = 1200, ACCEL = 70;
+let mode = 'start';
+let time = 0, worldX = 0, vN = 0, speed = 0;
+let score = 0, hi = +(store.getItem('dinoHi') || 0);
+let nextMile = 100, flashT = 0, shakeT = 0, overAt = 0, dustT = 0, runT = 0, distNext = 0;
+let held = false, newRec = false, jumpBuf = 0;
+const dino = { airY:0, vy:0, ground:true, fast:false };
+const DINO_CELL = 3, D_W = 22*DINO_CELL, D_H = 20*DINO_CELL;
+let obstacles = [], parts = [], marks = [], clouds = [], stars = [];
+
+function initDecor(){
+  marks  = Array.from({length:30}, () => ({ x:Math.random()*W, y:6+Math.random()*36, w:6+Math.random()*22 }));
+  stars  = Array.from({length:52}, () => ({ fx:Math.random(), fy:Math.random()*0.55, p:Math.random()*6.28 }));
+  clouds = Array.from({length:4},  () => ({ x:Math.random()*W, y:36+Math.random()*H*0.2, s:0.8+Math.random()*0.8, v:4+Math.random()*7 }));
+}
+initDecor();
+
+/* ---------------- audio ---------------- */
+let actx = null, muted = store.getItem('dinoMute') === '1';
+const muteBtn = document.getElementById('mute');
+muteBtn.classList.toggle('muted', muted);
+function ensureAudio(){
+  if(!actx){ try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(actx && actx.state === 'suspended') actx.resume();
+}
+function tone(f0, f1, delay, dur, type, vol){
+  if(muted || !actx) return;
+  const o = actx.createOscillator(), g = actx.createGain(), T = actx.currentTime + delay;
+  o.type = type;
+  o.frequency.setValueAtTime(f0, T);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30, f1), T + dur);
+  g.gain.setValueAtTime(vol, T);
+  g.gain.exponentialRampToValueAtTime(0.001, T + dur);
+  o.connect(g).connect(actx.destination);
+  o.start(T); o.stop(T + dur + 0.02);
+}
+const snd = {
+  jump: () => tone(420, 780, 0, .12, 'square', .07),
+  mile: () => { tone(660,660,0,.07,'square',.06); tone(990,990,.1,.1,'square',.06); },
+  die:  () => tone(320, 70, 0, .45, 'sawtooth', .11)
+};
+['pointerdown','touchstart','mousedown'].forEach(ev =>
+  muteBtn.addEventListener(ev, e => e.stopPropagation()));
+muteBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  muted = !muted;
+  store.setItem('dinoMute', muted ? '1' : '0');
+  muteBtn.classList.toggle('muted', muted);
+});
+
+/* ---------------- input ---------------- */
+function press(){
+  held = true;
+  if(mode === 'start'){ startRun(); return; }
+  if(mode === 'over'){
+    if(performance.now() - overAt > 350) restart();
+    return;
+  }
+  if(dino.ground) jump();
+  else { dino.fast = true; jumpBuf = 0.1; }
+}
+function release(){
+  held = false; dino.fast = false;
+  if(mode === 'run' && !dino.ground && dino.vy > 620*S) dino.vy = 620*S;
+}
+function rawPress(e){
+  if(e && e.cancelable && e.preventDefault) e.preventDefault();
+  ensureAudio();
+  press();
+}
+if(window.PointerEvent){
+  addEventListener('pointerdown', rawPress);
+  addEventListener('pointerup', release);
+  addEventListener('pointercancel', release);
+} else {
+  addEventListener('touchstart', rawPress, { passive:false });
+  addEventListener('touchend', release);
+  addEventListener('touchcancel', release);
+  addEventListener('mousedown', rawPress);
+  addEventListener('mouseup', release);
+}
+addEventListener('keydown', e => {
+  if(e.repeat) return;
+  if(e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Enter'){
+    e.preventDefault(); ensureAudio(); press();
+  }
+});
+addEventListener('keyup', e => {
+  if(e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Enter') release();
+});
+addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------------- flusso di gioco ---------------- */
+const ovStart = document.getElementById('ovStart');
+const ovOver  = document.getElementById('ovOver');
+const pad = n => String(Math.min(99999, Math.floor(n))).padStart(5,'0');
+
+function startRun(){
+  mode = 'run';
+  vN = START_V; speed = START_V * S;   // parte già veloce, senza rampa lenta
+  ovStart.classList.add('gone');
+  distNext = 480 * S;
+}
+function restart(){
+  obstacles.length = 0; parts.length = 0;
+  score = 0; nextMile = 100; flashT = 0; shakeT = 0; newRec = false;
+  dino.airY = 0; dino.vy = 0; dino.ground = true; dino.fast = false;
+  vN = START_V; speed = START_V * S; distNext = 480 * S;
+  document.getElementById('newRec').classList.remove('show');
+  ovOver.classList.add('gone');
+  mode = 'run';
+}
+function jump(){
+  dino.vy = 940 * S;
+  dino.ground = false; dino.fast = false;
+  jumpBuf = 0;
+  snd.jump();
+  burst(dinoX + 20*S, groundY - 4*S, 6, 90*S, 'dust');
+}
+function die(){
+  mode = 'over'; overAt = performance.now();
+  shakeT = 0.5; snd.die();
+  burst(dinoX + D_W*S/2, groundY - D_H*S/2 - dino.airY, 18, 240*S, 'blood');
+  if(score > hi){ hi = Math.floor(score); newRec = true; store.setItem('dinoHi', hi); }
+  document.getElementById('finalScore').textContent = pad(score);
+  document.getElementById('finalHi').textContent = pad(hi);
+  if(newRec) document.getElementById('newRec').classList.add('show');
+  ovOver.classList.remove('gone');
+}
+
+/* ---------------- particelle ---------------- */
+function burst(x, y, n, spread, kind){
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, v = (0.25+Math.random()*0.75)*spread;
+    parts.push({ x, y, vx:Math.cos(a)*v, vy:Math.sin(a)*v - spread*0.35,
+                 r:(1.4+Math.random()*2.4)*S, l:0.35+Math.random()*0.35, ml:0.7, kind });
+  }
+}
+
+/* ---------------- ostacoli: SOLO CACTUS ---------------- */
+function spawn(){
+  const r = Math.random();
+  let n;
+  if(r < 0.40)      n = 1;
+  else if(r < 0.70) n = 2;
+  else if(r < 0.93) n = 3;
+  else              n = (vN > 700) ? 4 : 2;   // il gruppo da 4 arriva solo a alta velocità
+  addCactus(Math.floor(Math.random()*3), n);
+}
+function addCactus(shapeIdx, n){
+  const sh = SHAPES[shapeIdx];
+  const cell = sh.cell * S;
+  const cw = sh.mat[0].length * cell;
+  const hgt = sh.mat.length * cell;
+  const gap = 3*S;
+  obstacles.push({
+    kind:'cactus', shape:shapeIdx, tint:Math.floor(Math.random()*TINTS.length),
+    x:W+60, cell, n, cw, gap, w:n*cw + (n-1)*gap, h:hgt, y:groundY - hgt
+  });
+}
+const overlap = (a,b) => a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+
+/* ---------------- update ---------------- */
+function update(dt){
+  time += dt;
+  jumpBuf = Math.max(0, jumpBuf - dt);
+
+  for(const c of clouds){
+    c.x -= (c.v + speed*0.1)*dt;
+    if(c.x < -180){ c.x = W + 80; c.y = 36 + Math.random()*H*0.2; }
+  }
+  for(let i=parts.length-1;i>=0;i--){
+    const p = parts[i];
+    p.l -= dt;
+    p.x += (p.vx - speed*0.85)*dt;
+    p.y += p.vy*dt; p.vy += 260*S*dt;
+    if(p.l <= 0) parts.splice(i,1);
+  }
+  if(shakeT > 0) shakeT -= dt;
+  if(flashT > 0) flashT -= dt;
+
+  if(mode === 'run'){
+    // accelerazione continua: da 430 a 1200 in ~11s
+    vN = Math.min(MAX_V, vN + ACCEL*dt);
+    speed = vN * S;
+    worldX += speed*dt;
+    score += vN*dt*0.04;
+
+    if(!dino.ground){
+      let g = 2400*S;
+      if(Math.abs(dino.vy) < 70*S) g *= 0.6;
+      if(dino.vy < 0) g *= (dino.fast ? 3.4 : 1.45);
+      if(dino.vy > 0 && held) g *= 0.82;
+      dino.vy -= g*dt;
+      dino.airY += dino.vy*dt;
+      if(dino.airY <= 0){
+        dino.airY = 0; dino.vy = 0; dino.ground = true;
+        burst(dinoX + 20*S, groundY - 4*S, 8, 130*S, 'dust');
+        if(jumpBuf > 0) jump();
+      }
+    } else {
+      if(jumpBuf > 0) jump();
+      runT += dt * speed / (36*S);
+      dustT -= dt;
+      if(dustT <= 0){
+        dustT = 0.06;
+        parts.push({ x:dinoX+9*S, y:groundY-3*S, vx:-(20+Math.random()*40)*S,
+                     vy:-(12+Math.random()*42)*S, r:(1.2+Math.random()*2)*S, l:0.5, ml:0.5, kind:'dust' });
+      }
+    }
+
+    distNext -= speed*dt;
+    if(distNext <= 0){
+      spawn();
+      // spazio tra gli ostacoli proporzionale alla velocità: sempre schivabile
+      distNext = (vN*(0.75 + Math.random()*0.5) + 260)*S;
+    }
+    for(let i=obstacles.length-1;i>=0;i--){
+      const o = obstacles[i];
+      o.x -= speed*dt;
+      if(o.x + o.w < -60) obstacles.splice(i,1);
+    }
+
+    const db = { x:dinoX + 7*S, y:groundY - D_H*S - dino.airY + 6*S, w:D_W*S - 16*S, h:D_H*S - 10*S };
+    for(const o of obstacles){
+      const ob = { x:o.x+2*S, y:o.y+2*S, w:o.w-4*S, h:o.h-3*S };
+      if(overlap(db, ob)){ die(); break; }
+    }
+
+    if(score >= nextMile){
+      flashT = 1.1; snd.mile(); nextMile += 100;
+    }
+    for(const m of marks){
+      m.x -= speed*dt;
+      if(m.x < -40){ m.x = W + Math.random()*120; m.y = 6+Math.random()*36; m.w = 6+Math.random()*22; }
+    }
+  }
+
+  if(mode === 'over' && !dino.ground){
+    dino.vy -= 2400*S*dt;
+    dino.airY += dino.vy*dt;
+    if(dino.airY <= 0){ dino.airY = 0; dino.vy = 0; dino.ground = true; }
+  }
+
+  dayTval = 0.5 - 0.5*Math.cos(worldX*Math.PI/(14000*S));
+}
+
+/* ---------------- render ---------------- */
+function duneLayer(f, base, ph, color){
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-20, H);
+  for(let x=-20; x<=W+20; x+=14){
+    const u = x + worldX*f;
+    const y = base + Math.sin(u*0.0042 + ph)*16*S + Math.sin(u*0.0116 + ph*2.1)*9*S;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(W+20, H);
+  ctx.closePath();
+  ctx.fill();
+}
+const circle = (x,y,r) => { ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); };
+
+function render(){
+  const t = dayTval;
+  const inkCol = col('ink');
+  document.documentElement.style.setProperty('--ink', inkCol);
+
+  let sx = 0, sy = 0;
+  if(shakeT > 0){
+    const a = shakeT*26*S;
+    sx = (Math.random()*2-1)*a; sy = (Math.random()*2-1)*a;
+  }
+  ctx.save();
+  ctx.translate(sx, sy);
+
+  ctx.fillStyle = col('sky');
+  ctx.fillRect(-24, -24, W+48, H+48);
+
+  if(t > 0.04){
+    ctx.fillStyle = mixA(PAL.day.cloud, PAL.night.cloud, t);
+    for(const s of stars){
+      ctx.globalAlpha = t*(0.3 + 0.7*(0.5 + 0.5*Math.sin(time*1.8 + s.p)));
+      ctx.fillRect(s.fx*W, s.fy*H, 2, 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.globalAlpha = 1 - t;
+  ctx.fillStyle = col('sun');
+  circle(W*0.76, H*(0.15 + t*0.3), 24*S);
+  ctx.globalAlpha = t;
+  const mx = W*0.22, my = H*(0.42 - t*0.28);
+  ctx.fillStyle = col('sun');
+  circle(mx, my, 19*S);
+  ctx.fillStyle = col('sky');
+  circle(mx + 8*S, my - 5*S, 17*S);
+  ctx.globalAlpha = 1;
+
+  ctx.globalAlpha = 0.9*(1 - t);
+  for(const c of clouds) spr(SPR.cloud, c.x, c.y, 4*S*c.s);
+  ctx.globalAlpha = 1;
+
+  duneLayer(0.25, groundY - 105*S, 2.0, col('far'));
+  duneLayer(0.55, groundY - 52*S, 5.1, col('near'));
+
+  ctx.fillStyle = col('gf');   ctx.fillRect(-24, groundY, W+48, H-groundY+24);
+  ctx.fillStyle = col('gl');   ctx.fillRect(-24, groundY, W+48, Math.max(2, 2.5*S));
+  ctx.fillStyle = col('dot');
+  for(const m of marks) ctx.fillRect(m.x, groundY + m.y*S, m.w*S, Math.max(1.5, 1.8*S));
+
+  for(const o of obstacles){
+    const img = SPR.cac[o.shape][o.tint];
+    for(let i=0;i<o.n;i++) spr(img, o.x + i*(o.cw + o.gap), o.y, o.cell);
+  }
+
+  for(const p of parts){
+    ctx.globalAlpha = Math.max(0, p.l/p.ml);
+    ctx.fillStyle = p.kind === 'blood' ? '#C4553B' : col('dot');
+    circle(p.x, p.y, p.r);
+  }
+  ctx.globalAlpha = 1;
+
+  const cell = DINO_CELL*S;
+  const top = groundY - D_H*S - dino.airY;
+  let img;
+  if(mode === 'over')       img = SPR.dinoD;
+  else if(mode === 'start') img = (time % 3.4 < 0.14) ? SPR.dinoBl : SPR.dinoI;
+  else                      img = dino.ground ? (Math.floor(runT)%2 ? SPR.dinoA : SPR.dinoB) : SPR.dinoA;
+  spr(img, dinoX, top, cell);
+
+  if(mode === 'over'){
+    const ex = dinoX + 15*cell, ey = top + 2*cell;
+    ctx.strokeStyle = 'rgba(15,12,8,.65)';
+    ctx.lineWidth = Math.max(1.5, cell*0.28);
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);            ctx.lineTo(ex + 2*cell, ey + 2*cell);
+    ctx.moveTo(ex + 2*cell, ey);   ctx.lineTo(ex, ey + 2*cell);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  document.getElementById('hiTxt').textContent = 'HI ' + pad(hi);
+  document.getElementById('curTxt').textContent = pad(score);
+  document.getElementById('spd').textContent = 'VEL ×' + (vN/START_V).toFixed(1);
+}
+
+/* ---------------- loop ---------------- */
+let last = 0;
+function loop(ts){
+  requestAnimationFrame(loop);
+  const now = ts/1000;
+  let dt = last ? now - last : 0.016;
+  last = now;
+  if(dt > 0.05) dt = 0.05;
+  update(dt);
+  render();
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

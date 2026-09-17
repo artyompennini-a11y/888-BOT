@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
 <style>
-  :root{ --ink:#34291A; }
   *{ margin:0; padding:0; box-sizing:border-box; }
   html,body{ height:100%; }
   body{
@@ -22,20 +21,19 @@
   #hud{
     position:fixed; top:18px; right:24px; text-align:right;
     font-family:'Silkscreen', monospace; font-size:15px; letter-spacing:1px;
-    color:var(--ink); transition:color .6s; pointer-events:none;
+    color:#34291A; pointer-events:none;
   }
   #hud #hiTxt{ opacity:.55; margin-right:16px; }
   #spd{
     position:fixed; top:44px; right:24px; text-align:right;
     font-family:'Silkscreen', monospace; font-size:11px; letter-spacing:1px;
-    color:var(--ink); opacity:.5; pointer-events:none; transition:color .6s;
+    color:#34291A; opacity:.5; pointer-events:none;
   }
 
   #mute{
     position:fixed; top:14px; left:16px; width:42px; height:42px;
-    background:transparent; border:2px solid var(--ink); color:var(--ink);
+    background:transparent; border:2px solid #34291A; color:#34291A;
     cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:color .6s, border-color .6s;
   }
   #mute svg{ width:20px; height:20px; fill:currentColor; }
   #mute .w{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
@@ -45,8 +43,8 @@
 
   .overlay{
     position:fixed; left:0; right:0; top:15%; text-align:center;
-    color:var(--ink); pointer-events:none;
-    transition:opacity .45s ease, color .6s;
+    color:#34291A; pointer-events:none;
+    transition:opacity .45s ease;
   }
   .overlay.gone{ opacity:0; }
   .overlay h1{
@@ -104,7 +102,7 @@
 <script>
 /* ============================================================
    DINO RUN — runner nel deserto, tutto in un file
-   Velocità alta fin dall'inizio, in crescita continua.
+   Sempre giorno. Velocità moderate che crescono col tempo.
    Ostacoli: SOLO cactus, 3 forme, gruppi fino a 4.
    ============================================================ */
 const cvs = document.getElementById('game');
@@ -137,16 +135,11 @@ const store = (() => {
   }
 })();
 
-/* ---------------- palette giorno / notte ---------------- */
-const PAL = {
-  day:   { sky:[241,229,200], far:[224,204,158], near:[203,167,112], gf:[214,180,124],
-           gl:[118,90,55],  dot:[141,110,68], sun:[230,158,80], cloud:[252,244,224], ink:[52,41,26] },
-  night: { sky:[31,31,43],   far:[57,53,71],   near:[43,41,57],   gf:[29,28,39],
-           gl:[84,78,100],  dot:[56,53,79],   sun:[236,227,205], cloud:[236,227,205], ink:[233,225,202] }
+/* ---------------- palette fissa: sempre giorno ---------------- */
+const C = {
+  sky:'#F1E5C8', far:'#E0CC9E', near:'#CBA770', gf:'#D6B47C',
+  gl:'#765A37', dot:'#8D6E44', sun:'#E69E50', cloud:'#FCF4E0'
 };
-let dayTval = 0;
-const mixA = (a,b,t) => `rgb(${Math.round(a[0]+(b[0]-a[0])*t)},${Math.round(a[1]+(b[1]-a[1])*t)},${Math.round(a[2]+(b[2]-a[2])*t)})`;
-const col = k => mixA(PAL.day[k], PAL.night[k], dayTval);
 
 /* ---------------- sprite in pixel-art ---------------- */
 const BODY = [
@@ -219,7 +212,7 @@ bake('dinoB',  BODY.concat(L_RUNB),  '#C4553B');
 bake('dinoI',  BODY.concat(L_STAND), '#C4553B');
 bake('dinoBl', BODY_BLINK.concat(L_STAND), '#C4553B');
 bake('dinoD',  BODY_DEAD.concat(L_STAND),  '#A84630');
-bake('cloud',  CLOUD, '#FBF3DF');
+bake('cloud',  CLOUD, C.cloud);
 /* cactus: SPR.cac[forma][tinta] */
 SPR.cac = SHAPES.map(sh => TINTS.map(t => {
   const c = document.createElement('canvas');
@@ -233,8 +226,8 @@ SPR.cac = SHAPES.map(sh => TINTS.map(t => {
 const spr = (img,x,y,cell) => ctx.drawImage(img, Math.round(x), Math.round(y), img.width*cell, img.height*cell);
 
 /* ---------------- stato di gioco ---------------- */
-/* VELOCITÀ: parte già a 430 e sale a 1200 in ~11 secondi */
-const START_V = 430, MAX_V = 1200, ACCEL = 70;
+/* VELOCITÀ ridotta: parte a 380 e sale a 1050 in ~11s */
+const START_V = 380, MAX_V = 1050, ACCEL = 60;
 let mode = 'start';
 let time = 0, worldX = 0, vN = 0, speed = 0;
 let score = 0, hi = +(store.getItem('dinoHi') || 0);
@@ -242,11 +235,10 @@ let nextMile = 100, flashT = 0, shakeT = 0, overAt = 0, dustT = 0, runT = 0, dis
 let held = false, newRec = false, jumpBuf = 0;
 const dino = { airY:0, vy:0, ground:true, fast:false };
 const DINO_CELL = 3, D_W = 22*DINO_CELL, D_H = 20*DINO_CELL;
-let obstacles = [], parts = [], marks = [], clouds = [], stars = [];
+let obstacles = [], parts = [], marks = [], clouds = [];
 
 function initDecor(){
   marks  = Array.from({length:30}, () => ({ x:Math.random()*W, y:6+Math.random()*36, w:6+Math.random()*22 }));
-  stars  = Array.from({length:52}, () => ({ fx:Math.random(), fy:Math.random()*0.55, p:Math.random()*6.28 }));
   clouds = Array.from({length:4},  () => ({ x:Math.random()*W, y:36+Math.random()*H*0.2, s:0.8+Math.random()*0.8, v:4+Math.random()*7 }));
 }
 initDecor();
@@ -333,7 +325,7 @@ const pad = n => String(Math.min(99999, Math.floor(n))).padStart(5,'0');
 
 function startRun(){
   mode = 'run';
-  vN = START_V; speed = START_V * S;   // parte già veloce, senza rampa lenta
+  vN = START_V; speed = START_V * S;
   ovStart.classList.add('gone');
   distNext = 480 * S;
 }
@@ -380,7 +372,7 @@ function spawn(){
   if(r < 0.40)      n = 1;
   else if(r < 0.70) n = 2;
   else if(r < 0.93) n = 3;
-  else              n = (vN > 700) ? 4 : 2;   // il gruppo da 4 arriva solo a alta velocità
+  else              n = (vN > 700) ? 4 : 2;
   addCactus(Math.floor(Math.random()*3), n);
 }
 function addCactus(shapeIdx, n){
@@ -416,7 +408,7 @@ function update(dt){
   if(flashT > 0) flashT -= dt;
 
   if(mode === 'run'){
-    // accelerazione continua: da 430 a 1200 in ~11s
+    // da 380 a 1050 in ~11s
     vN = Math.min(MAX_V, vN + ACCEL*dt);
     speed = vN * S;
     worldX += speed*dt;
@@ -448,7 +440,6 @@ function update(dt){
     distNext -= speed*dt;
     if(distNext <= 0){
       spawn();
-      // spazio tra gli ostacoli proporzionale alla velocità: sempre schivabile
       distNext = (vN*(0.75 + Math.random()*0.5) + 260)*S;
     }
     for(let i=obstacles.length-1;i>=0;i--){
@@ -477,8 +468,6 @@ function update(dt){
     dino.airY += dino.vy*dt;
     if(dino.airY <= 0){ dino.airY = 0; dino.vy = 0; dino.ground = true; }
   }
-
-  dayTval = 0.5 - 0.5*Math.cos(worldX*Math.PI/(14000*S));
 }
 
 /* ---------------- render ---------------- */
@@ -498,10 +487,6 @@ function duneLayer(f, base, ph, color){
 const circle = (x,y,r) => { ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); };
 
 function render(){
-  const t = dayTval;
-  const inkCol = col('ink');
-  document.documentElement.style.setProperty('--ink', inkCol);
-
   let sx = 0, sy = 0;
   if(shakeT > 0){
     const a = shakeT*26*S;
@@ -510,53 +495,44 @@ function render(){
   ctx.save();
   ctx.translate(sx, sy);
 
-  ctx.fillStyle = col('sky');
+  // cielo
+  ctx.fillStyle = C.sky;
   ctx.fillRect(-24, -24, W+48, H+48);
 
-  if(t > 0.04){
-    ctx.fillStyle = mixA(PAL.day.cloud, PAL.night.cloud, t);
-    for(const s of stars){
-      ctx.globalAlpha = t*(0.3 + 0.7*(0.5 + 0.5*Math.sin(time*1.8 + s.p)));
-      ctx.fillRect(s.fx*W, s.fy*H, 2, 2);
-    }
-    ctx.globalAlpha = 1;
-  }
+  // sole
+  ctx.fillStyle = C.sun;
+  circle(W*0.76, H*0.18, 24*S);
 
-  ctx.globalAlpha = 1 - t;
-  ctx.fillStyle = col('sun');
-  circle(W*0.76, H*(0.15 + t*0.3), 24*S);
-  ctx.globalAlpha = t;
-  const mx = W*0.22, my = H*(0.42 - t*0.28);
-  ctx.fillStyle = col('sun');
-  circle(mx, my, 19*S);
-  ctx.fillStyle = col('sky');
-  circle(mx + 8*S, my - 5*S, 17*S);
-  ctx.globalAlpha = 1;
-
-  ctx.globalAlpha = 0.9*(1 - t);
+  // nuvole
+  ctx.globalAlpha = 0.9;
   for(const c of clouds) spr(SPR.cloud, c.x, c.y, 4*S*c.s);
   ctx.globalAlpha = 1;
 
-  duneLayer(0.25, groundY - 105*S, 2.0, col('far'));
-  duneLayer(0.55, groundY - 52*S, 5.1, col('near'));
+  // dune in parallasse
+  duneLayer(0.25, groundY - 105*S, 2.0, C.far);
+  duneLayer(0.55, groundY - 52*S, 5.1, C.near);
 
-  ctx.fillStyle = col('gf');   ctx.fillRect(-24, groundY, W+48, H-groundY+24);
-  ctx.fillStyle = col('gl');   ctx.fillRect(-24, groundY, W+48, Math.max(2, 2.5*S));
-  ctx.fillStyle = col('dot');
+  // suolo
+  ctx.fillStyle = C.gf;   ctx.fillRect(-24, groundY, W+48, H-groundY+24);
+  ctx.fillStyle = C.gl;   ctx.fillRect(-24, groundY, W+48, Math.max(2, 2.5*S));
+  ctx.fillStyle = C.dot;
   for(const m of marks) ctx.fillRect(m.x, groundY + m.y*S, m.w*S, Math.max(1.5, 1.8*S));
 
+  // ostacoli
   for(const o of obstacles){
     const img = SPR.cac[o.shape][o.tint];
     for(let i=0;i<o.n;i++) spr(img, o.x + i*(o.cw + o.gap), o.y, o.cell);
   }
 
+  // particelle
   for(const p of parts){
     ctx.globalAlpha = Math.max(0, p.l/p.ml);
-    ctx.fillStyle = p.kind === 'blood' ? '#C4553B' : col('dot');
+    ctx.fillStyle = p.kind === 'blood' ? '#C4553B' : C.dot;
     circle(p.x, p.y, p.r);
   }
   ctx.globalAlpha = 1;
 
+  // dinosauro
   const cell = DINO_CELL*S;
   const top = groundY - D_H*S - dino.airY;
   let img;

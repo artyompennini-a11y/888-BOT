@@ -55,8 +55,6 @@ function formatAFK(ms) {
 }
 
 let handler = m => m
-// Consenti l'uso anche quando 'modoadmin' (Solo admin) è attivo nel gruppo
-handler.modoadminBypass = true
 
 handler.all = async function (m) {
     try {

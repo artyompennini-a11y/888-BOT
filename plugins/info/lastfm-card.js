@@ -1,4 +1,4 @@
-﻿//Plugin by Gab, Lucifero & 888 staff
+//Plugin by Elixir
 
 /**
  * lastfm-card.js
@@ -42,22 +42,34 @@ function buildHTML(track, username) {
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 * { margin:0; padding:0; box-sizing:border-box; }
 body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-serif; background:#0d0d0d; }
-.card { position:relative; width:800px; height:400px; display:flex; overflow:hidden; background:#111; }
+.card { position:relative; width:800px; height:400px; display:flex; overflow:hidden; background:linear-gradient(135deg,#121212,#0d0d0d); }
 .bg-blur {
   position:absolute; inset:0;
   background-image:url('${albumArt}');
   background-size:cover; background-position:center;
-  filter:blur(40px) brightness(0.3) saturate(1.5);
-  transform:scale(1.1); z-index:0;
+  filter:blur(38px) brightness(0.28) saturate(1.4);
+  transform:scale(1.18); z-index:0;
+}
+.cover-wrap {
+  position:relative; z-index:1;
+  width:320px; height:320px;
+  margin:40px 0 40px 40px;
+  border-radius:18px;
+  overflow:hidden;
+  background:#0a0a0a;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 18px 48px rgba(0,0,0,0.72);
 }
 .cover {
-  flex-shrink:0; width:340px; height:340px; margin:30px;
-  border-radius:12px; object-fit:cover; position:relative; z-index:1;
-  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  width:100%; height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:center;
+  background:#111;
 }
 .info {
   position:relative; z-index:1; display:flex; flex-direction:column;
-  justify-content:center; padding:30px 30px 30px 0; flex:1; overflow:hidden;
+  justify-content:center; padding:28px 28px 28px 22px; flex:1; overflow:hidden;
 }
 .status {
   display:inline-flex; align-items:center; gap:6px;
@@ -74,7 +86,7 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
 }
 .song-title {
   font-family:'Syne',sans-serif; font-weight:800; color:#fff;
-  line-height:1.1; margin-bottom:10px;
+  line-height:1.08; margin-bottom:10px;
   font-size:${titleSize}px;
   overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical;
   -webkit-line-clamp:2; word-break:break-word;
@@ -84,10 +96,10 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
   overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
 .album {
-  font-size:${albumSize}px; color:#666; margin-bottom:24px;
+  font-size:${albumSize}px; color:#666; margin-bottom:20px;
   overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
-.divider { width:40px; height:2px; background:${statusColor}; border-radius:2px; margin-bottom:24px; }
+.divider { width:44px; height:3px; background:${statusColor}; border-radius:2px; margin-bottom:20px; }
 .user-tag { display:flex; align-items:center; gap:8px; margin-top:auto; }
 .user-tag span { font-size:12px; color:#666; }
 .user-tag b { font-weight:600; color:#aaa; }
@@ -96,7 +108,9 @@ body { width:800px; height:400px; overflow:hidden; font-family:'DM Sans',sans-se
 <body>
 <div class="card">
   <div class="bg-blur"></div>
-  <img class="cover" src="${albumArt}" alt="Cover">
+  <div class="cover-wrap">
+    <img class="cover" src="${albumArt}" alt="Cover">
+  </div>
   <div class="info">
     <div class="status"><span class="dot"></span> ${statusText}</div>
     <div class="song-title">${songName}</div>
@@ -236,7 +250,7 @@ export async function makeCard(track, username) {
 }
 
 /**
- * Invia un'immagine Buffer su WhatsApp con @888-BOT/888baileys.
+ * Invia un'immagine Buffer su WhatsApp con @chatunity/baileys.
  * Salva su file temp e passa url: filepath — unico formato accettato dalla lib.
  */
 export async function sendImage(conn, m, buffer, caption = '', buttons = [], opts = {}) {

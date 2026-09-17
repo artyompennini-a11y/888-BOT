@@ -1,7 +1,3 @@
-//Plugin by Gab, Lucifero & 888 staff
-
-
-
 let freezeTimers = global.freezeTimers || (global.freezeTimers = {})
 
 let handler = async (m, { conn, command, isBotAdmin }) => {
@@ -16,24 +12,33 @@ let handler = async (m, { conn, command, isBotAdmin }) => {
 
   const duration = minutes * 60 * 1000
 
+  // Chiude il gruppo
   await conn.groupSettingUpdate(m.chat, 'announcement')
 
+  // Reset timer precedente
   if (freezeTimers[m.chat]) clearTimeout(freezeTimers[m.chat])
 
   freezeTimers[m.chat] = setTimeout(async () => {
     await conn.groupSettingUpdate(m.chat, 'not_announcement')
     await conn.sendMessage(m.chat, { 
-      text: "🔓 𝐆𝐫𝐮𝐩𝐩𝐨 𝐫𝐢𝐚𝐩𝐞𝐫𝐭𝐨 𝐚𝐮𝐭𝐨𝐦𝐚𝐭𝐢𝐜𝐚𝐦𝐞𝐧𝐭𝐞." 
+      text: "🔓 *Gruppo riaperto automaticamente.*"
     })
     delete freezeTimers[m.chat]
   }, duration)
 
   await conn.sendMessage(m.chat, {
-    text: `🚨 𝐆𝐑𝐔𝐏𝐏𝐎 𝐂𝐇𝐈𝐔𝐒𝐎 𝐓𝐄𝐌𝐏𝐎𝐑𝐀𝐍𝐄𝐀𝐌𝐄𝐍𝐓𝐄 𝐃𝐀 𝐔𝐍 𝐀𝐃𝐌𝐈𝐍 𝐏𝐄𝐑 𝐒𝐈𝐂𝐔𝐑𝐄𝐙𝐙𝐀\n\n⏳ 𝐒𝐢 𝐫𝐢𝐚𝐩𝐫𝐢𝐫𝐚̀ 𝐭𝐫𝐚 *${minutes}* 𝐦𝐢𝐧𝐮𝐭𝐨/𝐢.`
+    text: `🧊 *FREEZE ATTIVATO*
+
+Il gruppo è stato chiuso temporaneamente da un admin.
+
+⏳ Riapertura automatica tra *${minutes}* minuto/i.
+
+🔐 Modalità sicurezza attiva.`
   })
 }
 
 handler.command = /^freeze_(1|5|10)$/i
 handler.group = true
 handler.admin = true
+
 export default handler

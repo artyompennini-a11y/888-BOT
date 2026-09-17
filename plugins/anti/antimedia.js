@@ -1,4 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff - AntiMedia Module (blocks risky media)
+//Plugin by Elixir, Punisher & 888 staff - AntiMedia Module (blocks risky media)
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
   if (m.fromMe) return true;

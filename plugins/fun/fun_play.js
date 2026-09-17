@@ -5,22 +5,16 @@ import path from 'path';
 import os from 'os';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  let outputPath;
-  let voicePath;
   if (!text) return m.reply(`╭───〔 𝟴𝟴𝟴 𝗕𝗢𝗧 〕───╮\n│\n│ 💡 *Uso corretto:* \n│ ${usedPrefix + command} <nome canzone>\n│\n╰───────────────────╯`);
 
   try {
-    const isDownloadCommand = command === 'playaud' || command === 'playvid';
-    const directUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(text.trim())
-      ? text.trim()
-      : null;
-    const search = directUrl ? null : await yts(text);
-    const vid = directUrl ? { url: directUrl, title: directUrl, timestamp: '', author: { name: '' }, views: 0 } : search?.videos?.[0];
+    const search = await yts(text);
+    const vid = search.videos[0];
     if (!vid) return m.reply('❌ *Nessun risultato trovato per la ricerca.*');
 
     const url = vid.url;
 
-    if (!isDownloadCommand) {
+    if (command === 'play') {
       let infoMsg =
         `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n` +
         `🎵 *Titolo:* ${vid.title}\n` +
@@ -64,12 +58,13 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     const isAudio = command === 'playaud';
     const tmpDir = os.tmpdir();
     const fileName = `file_${Date.now()}`;
-    outputPath = path.join(tmpDir, `${fileName}.${isAudio ? 'mp3' : 'mp4'}`);
+    const outputPath = path.join(tmpDir, `${fileName}.${isAudio ? 'mp3' : 'mp4'}`);
 
     await new Promise((resolve, reject) => {
+
       let cmd = isAudio
-        ? `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${url}"`
-        : `yt-dlp -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" -o "${outputPath}" "${url}"`;
+        ? `yt-dlp -x --audio-format mp3 -o "${outputPath}" "${url}"`
+        : `yt-dlp -f mp4 -o "${outputPath}" "${url}"`;
 
       exec(cmd, (err) => {
         if (err) reject(err);
@@ -80,7 +75,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     if (!fs.existsSync(outputPath)) throw new Error('Download fallito.');
 
     if (isAudio) {
-      voicePath = path.join(tmpDir, `${fileName}.ogg`);
+      const voicePath = path.join(tmpDir, `${fileName}.ogg`);
 
       await new Promise((resolve, reject) => {
         exec(
@@ -115,18 +110,12 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
       );
     }
 
+    if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
     await conn.sendMessage(m.chat, { react: { text: "✅", key: m.key } });
 
   } catch (e) {
     console.error("Handler Error:", e.message);
-    const message = /not found|is not recognized/i.test(e.message)
-      ? '⚠️ *Errore:* Installa yt-dlp e ffmpeg, poi riprova.'
-      : '⚠️ *Errore:* Impossibile completare il download.';
-    m.reply(message);
-  } finally {
-    for (const file of [outputPath, voicePath]) {
-      if (file && fs.existsSync(file)) fs.unlinkSync(file);
-    }
+    m.reply('⚠️ *Errore:* Impossibile completare il download.');
   }
 };
 

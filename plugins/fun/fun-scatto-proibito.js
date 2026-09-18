@@ -52,7 +52,7 @@ async function renderImage(emoji, step) {
   bctx.textBaseline = 'middle'
   bctx.shadowColor = 'rgba(0,0,0,0.30)'
   bctx.shadowBlur = 16
-  bctx.font = `${Math.round(BIG * 0.82)}px sans-serif`
+  bctx.font = `${Math.round(BIG * 0.82)}px NotoColorEmoji, sans-serif`
   bctx.fillText(emoji, BIG / 2, BIG / 2)
   bctx.shadowBlur = 0
 
@@ -73,7 +73,7 @@ async function renderImage(emoji, step) {
   ctx.lineWidth = 5
   ctx.strokeRect(3, 3, CONFIG.SIZE - 6, CONFIG.SIZE - 6)
 
-  return out.toBuffer('image/jpeg', { quality: 0.92 })
+  return out.toBuffer('image/jpeg', 92)
 }
 
 async function sendBoard(conn, chat, g, extraText) {

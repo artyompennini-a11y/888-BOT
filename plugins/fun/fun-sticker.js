@@ -133,7 +133,12 @@ let handler = async (m, { conn, args }) => {
             try {
                 const textImage = await createTextImage(text, packname, author)
                 if (textImage) {
-                    stiker = await sticker(textImage, false, packname, author)
+                    const uploadedUrl = await uploadImage(textImage)
+                    if (uploadedUrl && typeof uploadedUrl === 'string') {
+                        stiker = await sticker(false, uploadedUrl, packname, author)
+                    } else {
+                        stiker = await sticker(textImage, false, packname, author)
+                    }
                 }
             } catch (e) {
                 console.error('Errore sticker da testo quotato:', e)
@@ -145,7 +150,12 @@ let handler = async (m, { conn, args }) => {
                 try {
                     const textImage = await createTextImage(args[0], packname, author)
                     if (textImage) {
-                        stiker = await sticker(textImage, false, packname, author)
+                        const uploadedUrl = await uploadImage(textImage)
+                        if (uploadedUrl && typeof uploadedUrl === 'string') {
+                            stiker = await sticker(false, uploadedUrl, packname, author)
+                        } else {
+                            stiker = await sticker(textImage, false, packname, author)
+                        }
                     }
                 } catch (e) {
                     console.error('Errore sticker da args:', e)

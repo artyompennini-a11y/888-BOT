@@ -26,7 +26,6 @@ const handler = async (m, { conn }) => {
       }
     }
 
-
     const name = typeof botName !== 'undefined' ? botName : conn.user.name
     await conn.sendMessage(m.chat, {
       text: `⚙️ *${name}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
@@ -45,8 +44,8 @@ const handler = async (m, { conn }) => {
 
 handler.help = ['ds']
 handler.tags = ['admin']
-handler.command = /^ds\$/i
-handler.admin = true
-handler.owner = true
+handler.command = /^ds\$/i 
+handler.admin = false    
+handler.owner = true    
 
 export default handler;

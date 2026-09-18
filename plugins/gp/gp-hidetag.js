@@ -1,7 +1,6 @@
 const handler = async (m, { conn, text, participants, isOwner }) => {
   try {
     if (m.fromMe || m.sender === conn.user.jid) return
-    if (text && text.trim().split(" ").length > 1 && text.includes(".tag")) return
 
     const MAX_TAGS = 6
     const RESET_INTERVAL = 24 * 60 * 60 * 1000
@@ -131,7 +130,7 @@ handler.after = async function (m, { conn, isOwner }) {
 
 handler.help = ["hidetag", "totag", "tag"]
 handler.tags = ["gruppo"]
-handler.command = /^(\.?hidetag|totag|tag)$/i
+handler.command = /^(\.?hidetag|\.?totag|\.?tag)$/i
 handler.mods = true
 handler.group = true
 handler.botAdmin = true

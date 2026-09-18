@@ -16,12 +16,12 @@ const createTextImage = async (text, packname, author) => {
         ctx.fillRect(0, 0, 500, 300)
 
         ctx.fillStyle = '#000000'
-        ctx.font = 'bold 40px Arial'
+        ctx.font = 'bold 50px Arial'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
 
         const maxWidth = 450
-        const lineHeight = 50
+        const lineHeight = 60
         const lines = []
         let line = ''
         const words = text.split(' ')
@@ -32,25 +32,29 @@ const createTextImage = async (text, packname, author) => {
             if (metrics.width > maxWidth && line) {
                 lines.push(line)
                 line = word
-            } else line = testLine
+            } else {
+                line = testLine
+            }
         }
         if (line) lines.push(line)
 
         const totalHeight = lines.length * lineHeight
-        let startY = (300 - totalHeight) / 2
+        let startY = (300 - totalHeight) / 2 + 30
 
         for (let textLine of lines) {
             ctx.fillText(textLine, 250, startY)
             startY += lineHeight
         }
 
-        ctx.font = 'bold 14px Arial'
-        ctx.fillStyle = '#666666'
+        ctx.font = 'bold 16px Arial'
+        ctx.fillStyle = '#999999'
         ctx.textAlign = 'right'
-        ctx.fillText(`By: ${author}`, 480, 285)
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(`By: ${author}`, 480, 295)
 
         return canvas.toBuffer('image/png')
-    } catch {
+    } catch (error) {
+        console.error('Errore creazione immagine:', error)
         return null
     }
 }
@@ -66,7 +70,7 @@ let handler = async (m, { conn, args }) => {
 
         let mime = (q.msg || q).mimetype || q.mediaType || ''
 
-        let text =
+        let quotedText = (
             q.text ||
             q.body ||
             q.caption ||
@@ -77,8 +81,9 @@ let handler = async (m, { conn, args }) => {
             q.message?.conversation ||
             q.message?.extendedTextMessage?.text ||
             ''
+        ).trim()
 
-        text = typeof text === 'string' ? text.trim() : ''
+        let argsText = args.join(' ').trim()
 
         const senderName = m.pushName || m.sender.split('@')[0] || 'Utente'
         const packname = `${senderName}`
@@ -89,7 +94,9 @@ let handler = async (m, { conn, args }) => {
                 const img = global.screenStickerMap[args[0]]
                 delete global.screenStickerMap[args[0]]
                 stiker = await sticker(img, false, packname, author)
-            } catch {}
+            } catch (error) {
+                console.error('Errore scratchpad:', error)
+            }
         } else if (/webp|image|video/g.test(mime)) {
             if (/video/g.test(mime) && (q.msg || q).seconds > 9)
                 return m.reply('🚫 Il video è troppo lungo (max 9 secondi).')
@@ -97,37 +104,60 @@ let handler = async (m, { conn, args }) => {
             let img = await q.download?.()
             if (!img) return m.reply('🚫 Impossibile scaricare il media.')
 
-            let out
             try {
                 stiker = await sticker(img, false, packname, author)
-            } catch {
-            } finally {
-                if (!stiker) {
+            } catch (error) {
+                let out
+                try {
                     if (/image|webp/g.test(mime)) out = await uploadImage(img)
                     else if (/video/g.test(mime)) out = await uploadFile(img)
                     if (typeof out !== 'string') out = await uploadImage(img)
                     stiker = await sticker(false, out, packname, author)
+                } catch (uploadError) {
+                    console.error('Errore upload:', uploadError)
                 }
             }
-        } else if (text) {
+        } else if (quotedText && quotedText.length > 0) {
             try {
-                const textImage = await createTextImage(text, packname, author)
-                if (textImage) stiker = await sticker(textImage, false, packname, author)
-            } catch {}
-        } else if (args[0]) {
-            if (isUrl(args[0])) stiker = await sticker(false, args[0], packname, author)
-            else return m.reply('🚫 Formato non valido.')
-        } else return m.reply('🚫 Rispondi a un media/testo oppure invia un URL o del testo dopo il comando.')
-    } catch {
+                const textImage = await createTextImage(quotedText, packname, author)
+                if (textImage) {
+                    stiker = await sticker(textImage, false, packname, author)
+                }
+            } catch (error) {
+                console.error('Errore creazione sticker da testo quotato:', error)
+            }
+        } else if (argsText && argsText.length > 0 && !isUrl(argsText)) {
+            try {
+                const textImage = await createTextImage(argsText, packname, author)
+                if (textImage) {
+                    stiker = await sticker(textImage, false, packname, author)
+                }
+            } catch (error) {
+                console.error('Errore creazione sticker da args:', error)
+            }
+        } else if (argsText && isUrl(argsText)) {
+            try {
+                stiker = await sticker(false, argsText, packname, author)
+            } catch (error) {
+                console.error('Errore sticker da URL:', error)
+            }
+        } else {
+            return m.reply('🚫 Rispondi a un media/testo oppure invia un URL o del testo dopo il comando.')
+        }
+    } catch (error) {
+        console.error('Errore generale:', error)
         stiker = false
     } finally {
-        if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
-        else return m.reply('❌ Non sono riuscito a creare lo sticker.')
+        if (stiker) {
+            conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+        } else {
+            return m.reply('❌ Non sono riuscito a creare lo sticker.')
+        }
     }
 }
 
-handler.help = ['stiker', 'stikergif']
+handler.help = ['s', 'stiker', 'stikergif']
 handler.tags = ['sticker']
-handler.command = /^(s|stiker|sticker|stikergif|stickergif)$/i
+handler.command = /^(omo|stiker|sticker|stikergif|stickergif)$/i
 
 export default handler

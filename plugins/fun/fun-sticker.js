@@ -1,85 +1,129 @@
 import { sticker } from '../../lib/sticker.js'
+import uploadFile from '../../lib/uploadFile.js'
+import uploadImage from '../../lib/uploadImage.js'
 import { createCanvas } from '@napi-rs/canvas'
 
-const handler = async (m, { conn }) => {
-  try {
-    let q = m.quoted ? m.quoted : m
-    
-    if (q.msg || q.mediaKey) {
-      let mime = (q.msg || q).mimetype || ''
-      
-      if (!mime.includes('image') && !mime.includes('video')) {
-        return m.reply('⚠️ Rispondi a un\'immagine, video o messaggio di testo!')
-      }
-      
-      let media = await q.download?.()
-      if (!media) return m.reply('❌ Errore nel download')
-      
-      let stk = await sticker(false, media, m.pushName)
-      await conn.sendFile(m.chat, stk, 'sticker.webp', '', m, false, {
-        asSticker: true
-      })
-    }
-    else if (q.text && !q.msg) {
-      let text = q.text
-      
-      const canvas = createCanvas(512, 512)
-      const ctx = canvas.getContext('2d')
-      
-      ctx.fillStyle = '#FFFFFF'
-      ctx.fillRect(0, 0, 512, 512)
-      
-      let fontSize = 60
-      ctx.font = `bold ${fontSize}px Arial`
-      ctx.fillStyle = '#000000'
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      
-      let textWidth = ctx.measureText(text).width
-      if (textWidth > 450) {
-        fontSize = Math.floor((450 / textWidth) * fontSize)
-        ctx.font = `bold ${fontSize}px Arial`
-      }
-      
-      let lines = []
-      let maxCharsPerLine = 20
-      
-      if (text.length > maxCharsPerLine) {
-        for (let i = 0; i < text.length; i += maxCharsPerLine) {
-          lines.push(text.substr(i, maxCharsPerLine))
+const isUrl = (t) => t.match(/https?:\/\/\S+\.(jpg|jpeg|png|gif)/i)
+
+const createTextImage = async (text, packname, author) => {
+    try {
+        const canvas = createCanvas(500, 300)
+        const ctx = canvas.getContext('2d')
+
+        ctx.fillStyle = '#fff'
+        ctx.fillRect(0, 0, 500, 300)
+
+        ctx.fillStyle = '#000'
+        ctx.font = 'bold 40px Arial'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+
+        const maxWidth = 450
+        const lineHeight = 50
+        const words = text.split(' ')
+        const lines = []
+        let line = ''
+
+        for (let w of words) {
+            const test = line ? line + ' ' + w : w
+            if (ctx.measureText(test).width > maxWidth) {
+                lines.push(line)
+                line = w
+            } else line = test
         }
-      } else {
-        lines = [text]
-      }
-      
-      const lineHeight = fontSize + 20
-      const totalHeight = lines.length * lineHeight
-      let startY = (512 - totalHeight) / 2 + fontSize / 2
-      
-      for (let line of lines) {
-        ctx.fillText(line, 256, startY)
-        startY += lineHeight
-      }
-      
-      const buffer = canvas.toBuffer('image/png')
-      let stk = await sticker(false, buffer, m.pushName)
-      
-      await conn.sendFile(m.chat, stk, 'sticker.webp', '', m, false, {
-        asSticker: true
-      })
+        if (line) lines.push(line)
+
+        const totalHeight = lines.length * lineHeight
+        let y = (300 - totalHeight) / 2
+
+        for (let l of lines) {
+            ctx.fillText(l, 250, y)
+            y += lineHeight
+        }
+
+        ctx.font = 'bold 14px Arial'
+        ctx.fillStyle = '#666'
+        ctx.textAlign = 'right'
+        ctx.fillText(`By: ${author}`, 480, 285)
+
+        return canvas.toBuffer('image/png')
+    } catch {
+        return null
     }
-    else {
-      m.reply('⚠️ Rispondi a un\'immagine, video o messaggio di testo!')
+}
+
+let handler = async (m, { conn, args }) => {
+    let stiker = false
+    try {
+        let q = m.quoted ? m.quoted : m
+
+        if (q.viewOnce || q.msg?.viewOnce) return m.reply('🚫 Foto a visualizzazione singola non supportata.')
+
+        let mime = (q.msg || q).mimetype || q.mediaType || ''
+
+        let text =
+            q.text ||
+            q.body ||
+            q.caption ||
+            q.conversation ||
+            q.msg?.conversation ||
+            q.msg?.text ||
+            q.msg?.extendedTextMessage?.text ||
+            q.extendedTextMessage?.text ||
+            ''
+
+        text = typeof text === 'string' ? text.trim() : ''
+
+        const senderName = m.pushName || m.sender.split('@')[0]
+        const packname = senderName
+        const author = '888 bot'
+
+        if (args[0] && global.screenStickerMap?.[args[0]]) {
+            const img = global.screenStickerMap[args[0]]
+            delete global.screenStickerMap[args[0]]
+            stiker = await sticker(img, false, packname, author)
+        }
+
+        else if (/webp|image|video/g.test(mime)) {
+            if (/video/g.test(mime) && (q.msg || q).seconds > 9)
+                return m.reply('🚫 Video troppo lungo (max 9s).')
+
+            let img = await q.download?.()
+            if (!img) return m.reply('🚫 Impossibile scaricare il media.')
+
+            try {
+                stiker = await sticker(img, false, packname, author)
+            } catch {
+                let out
+                if (/image|webp/g.test(mime)) out = await uploadImage(img)
+                else out = await uploadFile(img)
+                if (typeof out !== 'string') out = await uploadImage(img)
+                stiker = await sticker(false, out, packname, author)
+            }
+        }
+
+        else if (text) {
+            const textImage = await createTextImage(text, packname, author)
+            if (!textImage) return m.reply('❌ Errore nella generazione immagine testo.')
+            stiker = await sticker(textImage, false, packname, author)
+        }
+
+        else if (args[0]) {
+            if (isUrl(args[0])) stiker = await sticker(false, args[0], packname, author)
+            else return m.reply('🚫 Invia un media, testo o URL valido.')
+        }
+
+        else return m.reply('🚫 Rispondi a un media/testo oppure invia un URL.')
+    } catch {
+        stiker = false
+    } finally {
+        if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
+        else m.reply('❌ Non sono riuscito a creare lo sticker.')
     }
-    
-  } catch (error) {
-    console.error(error)
-    m.reply('❌ Errore: ' + error.message)
-  }
 }
 
 handler.help = ['stiker', 'stikergif']
 handler.tags = ['sticker']
-handler.command = /^(s|stiker|sticker|stikergif|stickergif)$/i
+handler.command = /^s(tic?ker)?(gif)?$/i
 
 export default handler

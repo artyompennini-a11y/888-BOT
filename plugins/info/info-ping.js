@@ -1,5 +1,3 @@
-// Codice di info/info-ping.js
-
 import speed from 'performance-now'
 import os from 'os'
 import dns from 'dns'
@@ -7,6 +5,18 @@ import fetch from 'node-fetch'
 import fs from 'fs'
 import process from 'process'
 import { fetchLatestBaileysVersion } from '@888-BOT/888baileys'
+
+function detectDeviceOS(msgId) {
+  if (!msgId || typeof msgId !== 'string') return 'unknown';
+  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgId)) return 'bot_emulator';
+  if (msgId.startsWith('false_') || msgId.startsWith('true_')) return 'web';
+  if (msgId.startsWith('3EB0')) return 'android';
+  if (msgId.includes(':')) return 'desktop';
+  if (/^[A-F0-9]{32}$/i.test(msgId)) return 'android';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgId)) return 'ios';
+  if (/^[A-Z0-9]{20,25}$/i.test(msgId)) return 'ios';
+  return 'unknown';
+}
 
 const uptimeFmt = ms => {
   const d = Math.floor(ms / 86400000)
@@ -87,32 +97,41 @@ let handler = async (m, { conn, usedPrefix }) => {
 📂 Apri il pannello dal pulsante sotto.
 `.trim()
 
-  const buttonParamsJson = JSON.stringify({
-    title: "Pannello Ping 888",
-    sections: [
-      {
-        title: "📡 Diagnostica",
-        highlight_label: "888",
-        rows: [
-          { id: `${usedPrefix}ping`, title: "🔄 Ricalcola Ping", description: "Esegui un nuovo test" },
-          { id: `${usedPrefix}status`, title: "⚙️ Stato Sistema", description: "Info hardware & runtime" },
-          { id: `${usedPrefix}menu`, title: "📋 Menu Principale", description: "Torna al menu 888" }
-        ]
-      }
-    ]
-  })
+  const rows = [
+    { id: `${usedPrefix}ping`, title: "🔄 Ricalcola Ping", description: "Esegui un nuovo test" },
+    { id: `${usedPrefix}status`, title: "⚙️ Stato Sistema", description: "Info hardware & runtime" },
+    { id: `${usedPrefix}menu`, title: "📋 Menu Principale", description: "Torna al menu 888" }
+  ]
+
+  const isIOS = detectDeviceOS(m.id) === 'ios'
+
+  const interactiveButtons = isIOS
+    ? rows.map(r => ({
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({ display_text: r.title, id: r.id })
+      }))
+    : [
+        {
+          name: "single_select",
+          buttonParamsJson: JSON.stringify({
+            title: "Pannello Ping 888",
+            sections: [
+              {
+                title: "📡 Diagnostica",
+                highlight_label: "888",
+                rows
+              }
+            ]
+          })
+        }
+      ]
 
   await conn.sendMessage(m.chat, {
     image: imageBuffer,
     caption,
     footer: "",
     headerType: 4,
-    interactiveButtons: [
-      {
-        name: "single_select",
-        buttonParamsJson
-      }
-    ]
+    interactiveButtons
   }, { quoted: m })
 }
 

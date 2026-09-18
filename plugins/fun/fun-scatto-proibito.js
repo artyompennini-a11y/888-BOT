@@ -1,7 +1,7 @@
-// Plugin by Elixir, Punisher & 888 staff
+// Plugin by Elixir, Punisher & 888 staff — versione 888 minimal/premium
 import { importCanvas } from '../../lib/canvas-fallback.js'
-const SUBJECTS = [
 
+const SUBJECTS = [
   { e: '🦁', n: 'leone', al: [] },
   { e: '🐘', n: 'elefante', al: ['pachiderma'] },
   { e: '🐱', n: 'gatto', al: ['felino', 'micio'] },
@@ -297,16 +297,17 @@ const SUBJECTS = [
   { e: '🪣', n: 'secchio', al: [] },
   { e: '🧹', n: 'scopa', al: [] }
 ]
-const MAX_REVEALS = 8            
-const REVEAL_INTERVAL_MS = 18000 
-const MIN_BET = 50               
-const WIN_QUOTA = 0.60           
-const REFUND_QUOTA = 0.90        
-const PENALTY = 25               
-const ZOOM_COST = 20             
-const SIZE = 480                 
 
-const games = {}                 
+const MAX_REVEALS = 8
+const REVEAL_INTERVAL_MS = 18000
+const MIN_BET = 50
+const WIN_QUOTA = 0.60
+const REFUND_QUOTA = 0.90
+const PENALTY = 25
+const ZOOM_COST = 20
+const SIZE = 480
+
+const games = {}
 
 const norm = (t = '') =>
   String(t)
@@ -360,11 +361,16 @@ async function renderImage(emoji, step) {
   ctx.fillStyle = '#131318'
   ctx.fillRect(0, 0, SIZE, SIZE)
 
-  if (prog < 1) {
-    try { ctx.filter = `blur(${Math.round((1 - prog) * 6)}px)` } catch (e) { /* fallback */ }
-    try { ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, SIZE, SIZE) } catch (e) { /* fallback */ }
-    try { ctx.filter = 'none' } catch (e) { /* fallback */ }
-  } else {
+  try { ctx.filter = `blur(${Math.round((1 - prog) * 6)}px)` } catch {}
+  try { ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, SIZE, SIZE) } catch {}
+  try { ctx.filter = 'none' } catch {}
+
+  ctx.strokeStyle = '#ffd24a'
+  ctx.lineWidth = 5
+  ctx.strokeRect(3, 3, SIZE - 6, SIZE - 6)
+
+  return out.toBuffer('image/jpeg', { quality: 0.92 })
+}
 
 async function sendBoard(conn, chat, g, extraText) {
   const img = await renderImage(g.emoji, g.step)
@@ -374,11 +380,11 @@ async function sendBoard(conn, chat, g, extraText) {
   const winNow = winPot + bonusFor(g.step)
 
   let cap =
-`╭━━━〔 📸 *LO SCATTO PROIBITO* 〕━━━┈
-┃ 🔎 Rivelazione: *${g.step}/${MAX_REVEALS}*
-┃ 💰 Piatto: *${pot} 888COIN* (${bettors} giocatori)
-┃ 🏆 Se indovini ORA: ~*${winNow} 888COIN*
-╰━━━━━━━━━━━━━━━━━━┈`
+`📸 *LO SCATTO PROIBITO*
+Rivelazione: ${g.step}/${MAX_REVEALS}
+Piatto: ${pot} 888COIN (${bettors} giocatori)
+Se indovini ora: ~${winNow} 888COIN`
+
   if (extraText) cap += `\n\n${extraText}`
 
   await conn.sendMessage(chat, {
@@ -391,9 +397,10 @@ async function sendBoard(conn, chat, g, extraText) {
   await conn.sendMessage(chat, {
     text:
 `📸 *LO SCATTO PROIBITO*
-💡 Indovina: .scatto <parola>
-💵 Scommetti: .scatto p <somma>
-⏭️ Rivela: .scatto zoom · 🛑 Stop: .scatto stop`,
+Indovina: .scatto <parola>
+Scommetti: .scatto p <somma>
+Rivela: .scatto zoom
+Stop: .scatto stop`,
     buttons: [
       { buttonId: `.scatto p ${MIN_BET}`, buttonText: { displayText: '💵 Punto 50 888COIN' }, type: 1 },
       { buttonId: `.scatto p 100`, buttonText: { displayText: '💶 Punto 100 888COIN' }, type: 1 },
@@ -409,10 +416,10 @@ async function doReveal(conn, chat) {
   if (!g || g.over) return
   g.step++
   if (g.step >= MAX_REVEALS + 1) {
-    endRefund(conn, chat, 'Il soggetto si è rivelato per intero!')
+    endRefund(conn, chat, 'Il soggetto si è rivelato per intero.')
     return
   }
-  await sendBoard(conn, chat, g, `🧩 Nuovo pezzo rivelato (${g.step}/${MAX_REVEALS}).`)
+  await sendBoard(conn, chat, g, `Nuovo pezzo rivelato (${g.step}/${MAX_REVEALS}).`)
 }
 
 function startTimer(conn, chat) {
@@ -444,16 +451,15 @@ function endWin(conn, chat, winnerJid) {
 
   conn.sendMessage(chat, {
     text:
-`╭━━━〔 🏆 *SCATTO RISOLTO!* 〕━━━┈
-┃ 👤 Vincitore: *@${shortJid(winnerJid)}*
-┃ 🖼️ Era: ${g.emoji} *${g.name}*
-┃
-┃ 💰 60% del piatto: +${winPot} 888COIN
-┃ ⚡ Bonus velocità: +${bonus} 888COIN
-┃ ➕ *Totale: +${total} 888COIN*
-┃
-┃ 📦 Piatto finale: ${g.pot} 888COIN
-╰━━━━━━━━━━━━━━━━━━┈`,
+`🏆 *SCATTO RISOLTO*
+Vincitore: @${shortJid(winnerJid)}
+Era: ${g.emoji} ${g.name}
+
+60% del piatto: +${winPot} 888COIN
+Bonus velocità: +${bonus} 888COIN
+Totale: +${total} 888COIN
+
+Piatto finale: ${g.pot} 888COIN`,
     mentions: [winnerJid]
   }).catch(() => {})
   delete games[chat]
@@ -474,27 +480,17 @@ function endRefund(conn, chat, why) {
 
   conn.sendMessage(chat, {
     text:
-`╭━━━〔 🕗 *SCATTO TERMINATO* 〕━━━┈
-┃ ${why}
-┃ 🖼️ Il soggetto era: ${g.emoji} *${g.name}*
-┃
-┃ 💰 Piatto: ${g.pot} 888COIN
-┃ ↩️ Restituito (90%): *${refunded} 888COIN*
-┃ 🔻 Tassa banco: ~${g.pot - refunded} 888COIN
-┃
-┃ 📸 Usa .scatto per riprovare!
-╰━━━━━━━━━━━━━━━━━━┈`
+`🕗 *SCATTO TERMINATO*
+${why}
+
+Era: ${g.emoji} ${g.name}
+Piatto: ${g.pot} 888COIN
+Restituito (90%): ${refunded} 888COIN
+Tassa banco: ${g.pot - refunded} 888COIN
+
+Usa .scatto per riprovare.`
   }).catch(() => {})
   delete games[chat]
-}
-    ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, SIZE, SIZE)
-  }
-
-  ctx.strokeStyle = '#ffd24a'
-  ctx.lineWidth = 5
-  ctx.strokeRect(3, 3, SIZE - 6, SIZE - 6)
-
-  return out.toBuffer('image/jpeg', { quality: 0.92 })
 }
 
 let handler = async (m, { conn }) => {
@@ -524,11 +520,11 @@ let handler = async (m, { conn }) => {
 
   if (!game) {
     if (args.length > 0) {
-      return m.reply('❌ Nessuna partita in corso. Scrivi *".scatto"* per avviarne una.')
+      return m.reply('❌ Nessuna partita in corso. Scrivi ".scatto" per avviarne una.')
     }
     const starter = getUser(sender)
     if ((starter.money || 0) < MIN_BET) {
-      return m.reply(`❌ Ti servono almeno *${MIN_BET} 888COIN* per avviare una partita.`)
+      return m.reply(`❌ Ti servono almeno ${MIN_BET} 888COIN per avviare una partita.`)
     }
 
     const subject = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)]
@@ -545,7 +541,7 @@ let handler = async (m, { conn }) => {
       timer: null,
       startedAt: Date.now()
     }
-    await sendBoard(conn, chat, games[chat], '🎯 *Indovina subito* per il bonus massimo, o aggiungi al piatto!')
+    await sendBoard(conn, chat, games[chat], '🎯 Indovina subito per il bonus massimo, o aggiungi al piatto!')
     startTimer(conn, chat)
     return
   }
@@ -558,68 +554,62 @@ let handler = async (m, { conn }) => {
 
   const first = args[0]
 
-  const bareNum = /^\d+$/.test(first) ? parseInt(first, 10) : NaN
-  if (first === 'p' || first === 'punto' || (Number.isFinite(bareNum) && bareNum >= MIN_BET)) {
-    const amt = (first === 'p' || first === 'punto') ? parseInt(args[1], 10) : bareNum
-    if (!amt || !Number.isFinite(amt) || amt < MIN_BET) {
-      return m.reply(`❌ Puntata minima *${MIN_BET} 888COIN*.`)
+  // Scommessa
+  if (first === 'p') {
+    const amount = parseInt(args[1], 10)
+    if (!amount || amount < MIN_BET) {
+      return m.reply(`💵 Puntata minima: ${MIN_BET} 888COIN`)
     }
     const u = getUser(sender)
-    if ((u.money || 0) < amt) {
-      return m.reply(`❌ Hai solo *${u.money || 0} 888COIN* sul conto.`)
+    if ((u.money || 0) < amount) {
+      return m.reply('❌ Non hai abbastanza 888COIN.')
     }
-    u.money -= amt
-    game.bets[sender] = (game.bets[sender] || 0) + amt
-    game.pot += amt
-    await conn.sendMessage(chat, {
-      text: `💵 @${shortJid(sender)} ha puntato *${amt} 888COIN*. Piatto: *${game.pot} 888COIN*`,
-      mentions: [sender]
-    })
+    u.money -= amount
+    game.pot += amount
+    game.bets[sender] = (game.bets[sender] || 0) + amount
+    await sendBoard(conn, chat, game, `💵 Hai aggiunto ${amount} 888COIN al piatto.`)
     return
   }
 
-  if (first === 'zoom' || first === 'rivela') {
+  // Zoom manuale
+  if (first === 'zoom') {
     const u = getUser(sender)
     if ((u.money || 0) < ZOOM_COST) {
-      return m.reply(`❌ Lo zoom costa *${ZOOM_COST} 888COIN* (hai ${u.money || 0} 888COIN).`)
+      return m.reply(`❌ Ti servono almeno ${ZOOM_COST} 888COIN per rivelare un pezzo.`)
     }
     u.money -= ZOOM_COST
-    game.pot += ZOOM_COST
-    game.bets[sender] = (game.bets[sender] || 0) + ZOOM_COST
-    await conn.sendMessage(chat, { text: '⏭️ Rivela forzata! (+20 888COIN al piatto)' })
     await doReveal(conn, chat)
     return
   }
-  if (first === 'stop' || first === 'abbandona') {
-    return endRefund(conn, chat, 'Partita annullata.')
+
+  // Stop partita
+  if (first === 'stop') {
+    endRefund(conn, chat, 'Partita interrotta dal gruppo.')
+    return
   }
 
-  const guessWord = args.join(' ')
-  if (findSubject(guessWord)) {
-    return endWin(conn, chat, sender)
+  // Tentativo di indovinare
+  const guessText = args.join(' ')
+  const subj = findSubject(guessText) || { n: guessText }
+  const guessName = norm(subj.n)
+  const realName = norm(game.name)
+
+  if (guessName === realName) {
+    endWin(conn, chat, sender)
+    return
   }
 
   const u = getUser(sender)
-  if ((u.money || 0) < PENALTY) {
-    await conn.sendMessage(chat, {
-      text: `❌ @${shortJid(sender)} ha sbagliato (non ha 25 888COIN per la penalità). Rivelo un pezzo…`,
-      mentions: [sender]
-    })
-  } else {
+  if ((u.money || 0) >= PENALTY) {
     u.money -= PENALTY
-    game.pot += PENALTY
-    game.bets[sender] = (game.bets[sender] || 0) + PENALTY
-    await conn.sendMessage(chat, {
-      text: `❌ @${shortJid(sender)} ha sbagliato e paga *${PENALTY} 888COIN*! Rivelo un pezzo…`,
-      mentions: [sender]
-    })
+    await sendBoard(conn, chat, game, `❌ Tentativo sbagliato: "${guessText}". Penalità: -${PENALTY} 888COIN.`)
+  } else {
+    await sendBoard(conn, chat, game, `❌ Tentativo sbagliato: "${guessText}". Non hai abbastanza 888COIN per la penalità.`)
   }
-  await doReveal(conn, chat)
 }
 
-handler.command = /^scatto/i
 handler.help = ['scatto', 'scattostat']
-handler.tags = ['giochi']
-handler.group = true
+handler.tags = ['game']
+handler.command = /^scatto(stat)?$/i
 
 export default handler

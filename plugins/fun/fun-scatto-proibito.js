@@ -1,314 +1,25 @@
-// Plugin by Elixir, Punisher & 888 staff — versione 888 minimal/premium
+// Plugin by Elixir, Punisher & 888 Staff — versione 888 Premium
 import { importCanvas } from '../../lib/canvas-fallback.js'
 
-const SUBJECTS = [
-  { e: '🦁', n: 'leone', al: [] },
-  { e: '🐘', n: 'elefante', al: ['pachiderma'] },
-  { e: '🐱', n: 'gatto', al: ['felino', 'micio'] },
-  { e: '🐶', n: 'cane', al: ['cagnolino'] },
-  { e: '🐺', n: 'lupo', al: ['lupetto'] },
-  { e: '🦊', n: 'volpe', al: [] },
-  { e: '🐻', n: 'orso', al: ['orsacchiotto'] },
-  { e: '🐼', n: 'panda', al: [] },
-  { e: '🐨', n: 'koala', al: [] },
-  { e: '🐯', n: 'tigre', al: [] },
-  { e: '🐆', n: 'leopardo', al: ['pantera'] },
-  { e: '🦓', n: 'zebra', al: [] },
-  { e: '🦒', n: 'giraffa', al: [] },
-  { e: '🦏', n: 'rinoceronte', al: [] },
-  { e: '🦛', n: 'ippopotamo', al: ['ippo'] },
-  { e: '🐮', n: 'mucca', al: ['vacca'] },
-  { e: '🐷', n: 'maiale', al: ['porco'] },
-  { e: '🐸', n: 'rana', al: [] },
-  { e: '🐢', n: 'tartaruga', al: ['testuggine'] },
-  { e: '🐊', n: 'coccodrillo', al: [] },
-  { e: '🦎', n: 'lucertola', al: ['geco'] },
-  { e: '🐍', n: 'serpente', al: ['biscia'] },
-  { e: '🦈', n: 'squalo', al: ['pescecane'] },
-  { e: '🐬', n: 'delfino', al: [] },
-  { e: '🐳', n: 'balena', al: ['capodoglio'] },
-  { e: '🐙', n: 'polpo', al: ['piovra'] },
-  { e: '🦀', n: 'granchio', al: [] },
-  { e: '🦞', n: 'aragosta', al: [] },
-  { e: '🐚', n: 'conchiglia', al: [] },
-  { e: '🐌', n: 'lumaca', al: ['chiocciola'] },
-  { e: '🦋', n: 'farfalla', al: [] },
-  { e: '🐝', n: 'ape', al: ['vespa'] },
-  { e: '🐞', n: 'coccinella', al: [] },
-  { e: '🦂', n: 'scorpione', al: [] },
-  { e: '🦘', n: 'canguro', al: [] },
-  { e: '🦬', n: 'bisonte', al: [] },
-  { e: '🦌', n: 'cervo', al: ['capriolo'] },
-  { e: '🐐', n: 'capra', al: [] },
-  { e: '🐑', n: 'pecora', al: ['agnello'] },
-  { e: '🐓', n: 'gallo', al: [] },
-  { e: '🐔', n: 'gallina', al: ['pollo'] },
-  { e: '🦆', n: 'anatra', al: ['papera'] },
-  { e: '🦉', n: 'gufo', al: ['civetta'] },
-  { e: '🦅', n: 'aquila', al: [] },
-  { e: '🦢', n: 'cigno', al: [] },
-  { e: '🦩', n: 'fenicottero', al: [] },
-  { e: '🦚', n: 'pavone', al: [] },
-  { e: '🐧', n: 'pinguino', al: [] },
-  { e: '🦔', n: 'riccio', al: [] },
-  { e: '🐿️', n: 'scoiattolo', al: [] },
-  { e: '🦝', n: 'procione', al: [] },
-  { e: '🦥', n: 'bradipo', al: [] },
-  { e: '🐫', n: 'cammello', al: ['dromedario'] },
-  { e: '🐹', n: 'criceto', al: [] },
-  { e: '🐰', n: 'coniglio', al: ['lepre'] },
-  { e: '🐭', n: 'topo', al: ['topolino'] },
-  { e: '🐦', n: 'uccello', al: ['passero'] },
-  { e: '🦜', n: 'pappagallo', al: ['ara'] },
-  { e: '🦇', n: 'pipistrello', al: [] },
-  { e: '🐎', n: 'cavallo', al: ['corsiero'] },
-  { e: '🐄', n: 'toro', al: ['manzo'] },
-  { e: '🐃', n: 'bufalo', al: ['bisonte'] },
-  { e: '🦭', n: 'foca', al: ['otaria'] },
-  { e: '🦤', n: 'dodo', al: [] },
-
-  { e: '🍕', n: 'pizza', al: [] },
-  { e: '🍔', n: 'hamburger', al: ['burger'] },
-  { e: '🍟', n: 'patatine', al: ['fritte'] },
-  { e: '🌭', n: 'hot dog', al: ['wurstel'] },
-  { e: '🥓', n: 'pancetta', al: ['bacon'] },
-  { e: '🍗', n: 'pollo arrosto', al: ['coscia'] },
-  { e: '🥖', n: 'baguette', al: ['pane'] },
-  { e: '🥨', n: 'pretzel', al: [] },
-  { e: '🧀', n: 'formaggio', al: ['cacio'] },
-  { e: '🍳', n: 'uovo', al: ['uova'] },
-  { e: '🥞', n: 'pancake', al: [] },
-  { e: '🧇', n: 'waffle', al: [] },
-  { e: '🍩', n: 'ciambella', al: ['donut'] },
-  { e: '🍪', n: 'biscotto', al: [] },
-  { e: '🎂', n: 'torta', al: [] },
-  { e: '🍰', n: 'fetta di torta', al: [] },
-  { e: '🧁', n: 'muffin', al: ['cupcake'] },
-  { e: '🍫', n: 'cioccolato', al: ['cioccolata'] },
-  { e: '🍬', n: 'caramella', al: [] },
-  { e: '🍭', n: 'lecca lecca', al: [] },
-  { e: '🍦', n: 'gelato', al: ['cono'] },
-  { e: '🍧', n: 'sorbetto', al: ['granita'] },
-  { e: '🍨', n: 'coppa gelato', al: ['sundae'] },
-  { e: '🍿', n: 'popcorn', al: [] },
-  { e: '🥜', n: 'arachidi', al: ['noccioline'] },
-  { e: '🍯', n: 'miele', al: [] },
-  { e: '🥛', n: 'latte', al: [] },
-  { e: '🍵', n: 'tè', al: ['matcha'] },
-  { e: '☕', n: 'caffè', al: [] },
-  { e: '🧋', n: 'tè boba', al: ['bubble tea'] },
-  { e: '🥤', n: 'bibita', al: ['soda'] },
-  { e: '🧃', n: 'succo', al: [] },
-  { e: '🍹', n: 'cocktail', al: ['bevanda'] },
-  { e: '🥂', n: 'brindisi', al: ['champagne'] },
-  { e: '🍺', n: 'birra', al: [] },
-  { e: '🍷', n: 'vino', al: [] },
-  { e: '🍾', n: 'spumante', al: ['champagne'] },
-  { e: '🍴', n: 'posate', al: ['forchetta'] },
-  { e: '🥄', n: 'cucchiaio', al: [] },
-  { e: '🥢', n: 'bacchette', al: [] },
-  { e: '🍽️', n: 'piatto', al: [] },
-  { e: '🍳', n: 'padella', al: [] },
-  { e: '🥫', n: 'scatoletta', al: ['lattina'] },
-  { e: '🍶', n: 'sake', al: [] },
-
-  { e: '🍎', n: 'mela', al: [] },
-  { e: '🍏', n: 'mela verde', al: [] },
-  { e: '🍐', n: 'pera', al: [] },
-  { e: '🍊', n: 'arancia', al: [] },
-  { e: '🍋', n: 'limone', al: [] },
-  { e: '🍌', n: 'banana', al: [] },
-  { e: '🍉', n: 'anguria', al: ['cocomero'] },
-  { e: '🍇', n: 'uva', al: [] },
-  { e: '🍓', n: 'fragola', al: [] },
-  { e: '🫐', n: 'mirtillo', al: [] },
-  { e: '🍒', n: 'ciliegie', al: [] },
-  { e: '🍑', n: 'pesca', al: [] },
-  { e: '🍍', n: 'ananas', al: [] },
-  { e: '🥭', n: 'mango', al: [] },
-  { e: '🥥', n: 'cocco', al: [] },
-  { e: '🍈', n: 'melone', al: [] },
-  { e: '🥝', n: 'kiwi', al: [] },
-  { e: '🥑', n: 'avocado', al: [] },
-  { e: '🍅', n: 'pomodoro', al: [] },
-  { e: '🍆', n: 'melanzana', al: [] },
-  { e: '🥦', n: 'broccolo', al: ['verdura'] },
-  { e: '🥕', n: 'carota', al: [] },
-  { e: '🌽', n: 'mais', al: ['granturco'] },
-  { e: '🌶️', n: 'peperoncino', al: ['piccante'] },
-  { e: '🫑', n: 'peperone', al: [] },
-  { e: '🧄', n: 'aglio', al: [] },
-  { e: '🧅', n: 'cipolla', al: [] },
-  { e: '🥔', n: 'patata', al: [] },
-  { e: '🍠', n: 'patata dolce', al: ['batata'] },
-
-  { e: '✈️', n: 'aereo', al: ['velivolo'] },
-  { e: '🚗', n: 'auto', al: ['macchina'] },
-  { e: '🚕', n: 'taxi', al: [] },
-  { e: '🚌', n: 'autobus', al: ['bus'] },
-  { e: '🚜', n: 'trattore', al: [] },
-  { e: '🏍️', n: 'moto', al: ['motocicletta'] },
-  { e: '🚲', n: 'bicicletta', al: ['bici'] },
-  { e: '🚂', n: 'treno', al: [] },
-  { e: '🚁', n: 'elicottero', al: [] },
-  { e: '🚀', n: 'razzo', al: ['astronave'] },
-  { e: '🛸', n: 'ufo', al: ['disco volante'] },
-  { e: '🚢', n: 'nave', al: ['piroscafo'] },
-  { e: '🚤', n: 'motoscafo', al: [] },
-  { e: '🛶', n: 'canoa', al: ['kayak'] },
-  { e: '⛵', n: 'barca a vela', al: ['veliero'] },
-  { e: '🛴', n: 'monopattino', al: [] },
-  { e: '🚇', n: 'metropolitana', al: ['metro'] },
-  { e: '🚉', n: 'stazione', al: ['binario'] },
-  { e: '🛩️', n: 'aereo piccolo', al: ['cessna'] },
-
-  { e: '🏰', n: 'castello', al: ['fortezza'] },
-  { e: '🏯', n: 'castello giapponese', al: [] },
-  { e: '🏠', n: 'casa', al: ['abitazione'] },
-  { e: '🏢', n: 'grattacielo', al: ['palazzo'] },
-  { e: '🏛️', n: 'tempio', al: ['colosseo'] },
-  { e: '⛺', n: 'tenda', al: ['campeggio'] },
-  { e: '🏆', n: 'trofeo', al: ['coppa'] },
-  { e: '👑', n: 'corona', al: ['diadema'] },
-  { e: '🎁', n: 'regalo', al: ['dono', 'pacco'] },
-  { e: '🎲', n: 'dado', al: ['dadi'] },
-  { e: '🔑', n: 'chiave', al: [] },
-  { e: '🔒', n: 'lucchetto', al: ['catenaccio'] },
-  { e: '💎', n: 'diamante', al: ['gemma'] },
-  { e: '💰', n: 'soldi', al: ['denaro'] },
-  { e: '💵', n: 'banconota', al: [] },
-  { e: '🪙', n: 'moneta', al: [] },
-  { e: '📱', n: 'telefono', al: ['smartphone'] },
-  { e: '💻', n: 'computer', al: ['pc', 'portatile'] },
-  { e: '⌨️', n: 'tastiera', al: [] },
-  { e: '🖱️', n: 'mouse', al: [] },
-  { e: '📺', n: 'televisione', al: ['tv'] },
-  { e: '🎮', n: 'console', al: ['videogioco', 'playstation'] },
-  { e: '🎧', n: 'cuffie', al: ['auricolari'] },
-  { e: '📷', n: 'fotocamera', al: ['macchina fotografica'] },
-  { e: '🎥', n: 'videocamera', al: [] },
-  { e: '📚', n: 'libri', al: ['biblioteca'] },
-  { e: '✏️', n: 'matita', al: [] },
-  { e: '🖊️', n: 'penna', al: [] },
-  { e: '⏰', n: 'sveglia', al: [] },
-  { e: '⌚', n: 'orologio', al: [] },
-  { e: '💡', n: 'lampadina', al: ['luce'] },
-  { e: '🕯️', n: 'candela', al: [] },
-  { e: '🧸', n: 'orsacchiotto', al: ['peluche'] },
-  { e: '🎈', n: 'palloncino', al: [] },
-  { e: '🎀', n: 'fiocco', al: [] },
-  { e: '🪀', n: 'yo-yo', al: [] },
-  { e: '🧩', n: 'puzzle', al: [] },
-  { e: '♟️', n: 'scacchi', al: ['pedone'] },
-  { e: '🎯', n: 'bersaglio', al: ['freccette'] },
-  { e: '⚽', n: 'pallone', al: ['calcio'] },
-  { e: '🏀', n: 'basket', al: ['pallacanestro'] },
-  { e: '🎾', n: 'tennis', al: ['racchetta'] },
-  { e: '🏈', n: 'football', al: ['nfl'] },
-  { e: '⚾', n: 'baseball', al: [] },
-  { e: '🏐', n: 'pallavolo', al: ['volley'] },
-  { e: '🏉', n: 'rugby', al: [] },
-  { e: '🏓', n: 'ping pong', al: ['tennistavolo'] },
-  { e: '🥊', n: 'boxe', al: ['guantoni'] },
-  { e: '🎳', n: 'bowling', al: ['birilli'] },
-
-  { e: '🌙', n: 'luna', al: [] },
-  { e: '☀️', n: 'sole', al: ['astro'] },
-  { e: '⭐', n: 'stella', al: ['astro'] },
-  { e: '🌈', n: 'arcobaleno', al: ['iride'] },
-  { e: '☁️', n: 'nuvola', al: [] },
-  { e: '🌧️', n: 'pioggia', al: ['temporale'] },
-  { e: '⚡', n: 'fulmine', al: ['lampo'] },
-  { e: '❄️', n: 'fiocco di neve', al: ['neve'] },
-  { e: '🌴', n: 'palma', al: [] },
-  { e: '🌲', n: 'pino', al: ['abete'] },
-  { e: '🌳', n: 'albero', al: ['quercia'] },
-  { e: '🌵', n: 'cactus', al: [] },
-  { e: '🌸', n: 'fiore', al: ['fior di ciliegio'] },
-  { e: '🌻', n: 'girasole', al: [] },
-  { e: '🌷', n: 'tulipano', al: [] },
-  { e: '🌹', n: 'rosa', al: [] },
-  { e: '🍁', n: 'foglia d acero', al: ['foglia'] },
-  { e: '🍄', n: 'fungo', al: ['funghino'] },
-  { e: '🌊', n: 'onda', al: ['oceano'] },
-  { e: '🌋', n: 'vulcano', al: ['eruzione'] },
-  { e: '🏝️', n: 'isola', al: ['tropicale'] },
-  { e: '⛰️', n: 'montagna', al: ['cima'] },
-  { e: '🗻', n: 'fuji', al: ['monte'] },
-  { e: '🏔️', n: 'vetta', al: [] },
-  { e: '🏝️', n: 'spiaggia', al: ['mare'] },
-
-  { e: '👻', n: 'fantasma', al: ['spirito'] },
-  { e: '🤖', n: 'robot', al: ['android'] },
-  { e: '🧙', n: 'mago', al: ['stregone'] },
-  { e: '🧚', n: 'fata', al: ['fatina'] },
-  { e: '🧛', n: 'vampiro', al: ['conte'] },
-  { e: '🧟', n: 'zombie', al: ['non morto'] },
-  { e: '🏴‍☠️', n: 'pirata', al: ['corsaro'] },
-  { e: '🦄', n: 'unicorno', al: ['alicorno'] },
-  { e: '🐉', n: 'drago', al: ['dragone'] },
-  { e: '👽', n: 'alieno', al: ['extraterrestre'] },
-  { e: '🎃', n: 'zucca', al: ['halloween'] },
-  { e: '💀', n: 'teschio', al: ['scheletro'] },
-  { e: '👁️', n: 'occhio', al: [] },
-  { e: '👅', n: 'lingua', al: [] },
-  { e: '🫀', n: 'cuore', al: ['organo'] },
-  { e: '🧠', n: 'cervello', al: [] },
-  { e: '🦴', n: 'osso', al: [] },
-  { e: '👣', n: 'piedi', al: ['impronte'] },
-  { e: '🕷️', n: 'ragno', al: ['tarantola'] },
-  { e: '🦠', n: 'virus', al: ['batterio'] },
-  { e: '🧿', n: 'portafortuna', al: ['amuleti'] },
-  { e: '💍', n: 'anello', al: ['gioiello'] },
-  { e: '🎩', n: 'cappello', al: ['cilindro'] },
-  { e: '👓', n: 'occhiali', al: [] },
-  { e: '🕶️', n: 'occhiali da sole', al: [] },
-  { e: '🧤', n: 'guanti', al: [] },
-  { e: '🧣', n: 'sciarpa', al: [] },
-  { e: '👖', n: 'pantaloni', al: ['jeans'] },
-  { e: '👕', n: 'maglietta', al: ['t-shirt'] },
-  { e: '👗', n: 'vestito', al: ['abito'] },
-  { e: '👟', n: 'scarpe', al: ['scarpa da ginnastica'] },
-  { e: '👠', n: 'tacco', al: ['tacchi'] },
-  { e: '👾', n: 'mostriciattolo', al: ['alieno pixel'] },
-  { e: '🎭', n: 'maschera', al: ['teatro'] },
-  { e: '🪄', n: 'bacchetta', al: ['varita'] },
-  { e: '🗝️', n: 'chiave antica', al: [] },
-  { e: '🧨', n: 'petardo', al: ['dinamite'] },
-  { e: '💣', n: 'bomba', al: [] },
-  { e: '🔫', n: 'pistola', al: ['arma'] },
-  { e: '🏹', n: 'arco', al: ['freccia'] },
-  { e: '🛡️', n: 'scudo', al: [] },
-  { e: '⚔️', n: 'spada', al: ['lama'] },
-  { e: '🪓', n: 'ascia', al: [] },
-  { e: '🪃', n: 'boomerang', al: [] },
-  { e: '⚓', n: 'ancora', al: ['nave'] },
-  { e: '🗿', n: 'moai', al: ['statua'] },
-  { e: '🛖', n: 'capanna', al: ['igloo'] },
-  { e: '🏟️', n: 'stadio', al: ['campo'] },
-  { e: '🎪', n: 'circo', al: ['tenda da circo'] },
-  { e: '🎢', n: 'montagne russe', al: ['ottovolante'] },
-  { e: '🎡', n: 'ruota panoramica', al: [] },
-  { e: '🎠', n: 'giostra', al: ['cavallo gioco'] },
-  { e: '🛍️', n: 'buste', al: ['shopping'] },
-  { e: '💊', n: 'pillola', al: ['medicina'] },
-  { e: '🩹', n: 'cerotto', al: [] },
-  { e: '🧻', n: 'carta igienica', al: ['rotolo'] },
-  { e: '🪣', n: 'secchio', al: [] },
-  { e: '🧹', n: 'scopa', al: [] }
-]
-
-const MAX_REVEALS = 8
-const REVEAL_INTERVAL_MS = 18000
-const MIN_BET = 50
-const WIN_QUOTA = 0.60
-const REFUND_QUOTA = 0.90
-const PENALTY = 25
-const ZOOM_COST = 20
-const SIZE = 480
+/* -------------------------------------------------------
+ * CONFIGURAZIONE
+ * ----------------------------------------------------- */
+const CONFIG = {
+  MAX_REVEALS: 8,
+  REVEAL_INTERVAL_MS: 18000,
+  MIN_BET: 50,
+  WIN_QUOTA: 0.60,
+  REFUND_QUOTA: 0.90,
+  PENALTY: 25,
+  ZOOM_COST: 20,
+  SIZE: 480
+}
 
 const games = {}
 
+/* -------------------------------------------------------
+ * UTILITÀ
+ * ----------------------------------------------------- */
 const norm = (t = '') =>
   String(t)
     .toLowerCase()
@@ -323,6 +34,14 @@ const getUser = (jid) => {
 
 const shortJid = (jid) => ((jid || '').split('@')[0] || jid)
 
+const bonusFor = (step) =>
+  (CONFIG.MAX_REVEALS - Math.min(step, CONFIG.MAX_REVEALS)) * 40
+
+/* -------------------------------------------------------
+ * SOGGETTI
+ * ----------------------------------------------------- */
+import SUBJECTS from './subjects.js' // 🔥 Spostato in file separato per ordine
+
 function findSubject(txt) {
   const t = norm(txt)
   for (const s of SUBJECTS) {
@@ -332,14 +51,13 @@ function findSubject(txt) {
   return null
 }
 
-function bonusFor(step) {
-  return (MAX_REVEALS - Math.min(step, MAX_REVEALS)) * 40
-}
-
+/* -------------------------------------------------------
+ * RENDER IMMAGINE
+ * ----------------------------------------------------- */
 async function renderImage(emoji, step) {
   const { createCanvas } = await importCanvas()
   const BIG = 640
-  const prog = Math.max(0, Math.min(1, step / MAX_REVEALS))
+  const prog = Math.max(0, Math.min(1, step / CONFIG.MAX_REVEALS))
 
   const big = createCanvas(BIG, BIG)
   const bctx = big.getContext('2d')
@@ -356,34 +74,38 @@ async function renderImage(emoji, step) {
   const cropX = (BIG - cropW) / 2
   const cropY = (BIG - cropW) / 2
 
-  const out = createCanvas(SIZE, SIZE)
+  const out = createCanvas(CONFIG.SIZE, CONFIG.SIZE)
   const ctx = out.getContext('2d')
   ctx.fillStyle = '#131318'
-  ctx.fillRect(0, 0, SIZE, SIZE)
+  ctx.fillRect(0, 0, CONFIG.SIZE, CONFIG.SIZE)
 
   try { ctx.filter = `blur(${Math.round((1 - prog) * 6)}px)` } catch {}
-  try { ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, SIZE, SIZE) } catch {}
+  try { ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, CONFIG.SIZE, CONFIG.SIZE) } catch {}
   try { ctx.filter = 'none' } catch {}
 
   ctx.strokeStyle = '#ffd24a'
   ctx.lineWidth = 5
-  ctx.strokeRect(3, 3, SIZE - 6, SIZE - 6)
+  ctx.strokeRect(3, 3, CONFIG.SIZE - 6, CONFIG.SIZE - 6)
 
   return out.toBuffer('image/jpeg', { quality: 0.92 })
 }
 
+/* -------------------------------------------------------
+ * INVIO TAVOLA
+ * ----------------------------------------------------- */
 async function sendBoard(conn, chat, g, extraText) {
   const img = await renderImage(g.emoji, g.step)
-  const pot = g.pot
   const bettors = Object.keys(g.bets || {}).length
-  const winPot = Math.round(pot * WIN_QUOTA)
+  const winPot = Math.round(g.pot * CONFIG.WIN_QUOTA)
   const winNow = winPot + bonusFor(g.step)
 
   let cap =
 `📸 *LO SCATTO PROIBITO*
-Rivelazione: ${g.step}/${MAX_REVEALS}
-Piatto: ${pot} 888COIN (${bettors} giocatori)
-Se indovini ora: ~${winNow} 888COIN`
+━━━━━━━━━━━━━━━━━━━━
+🔍 Rivelazione: ${g.step}/${CONFIG.MAX_REVEALS}
+💰 Piatto: ${g.pot} 888COIN (${bettors} giocatori)
+🏆 Vincita ora: ~${winNow} 888COIN
+━━━━━━━━━━━━━━━━━━━━`
 
   if (extraText) cap += `\n\n${extraText}`
 
@@ -396,14 +118,14 @@ Se indovini ora: ~${winNow} 888COIN`
 
   await conn.sendMessage(chat, {
     text:
-`📸 *LO SCATTO PROIBITO*
-Indovina: .scatto <parola>
-Scommetti: .scatto p <somma>
-Rivela: .scatto zoom
-Stop: .scatto stop`,
+`🎮 *COMANDI*
+Indovina → .scatto <parola>
+Punta → .scatto p <somma>
+Rivela → .scatto zoom
+Stop → .scatto stop`,
     buttons: [
-      { buttonId: `.scatto p ${MIN_BET}`, buttonText: { displayText: '💵 Punto 50 888COIN' }, type: 1 },
-      { buttonId: `.scatto p 100`, buttonText: { displayText: '💶 Punto 100 888COIN' }, type: 1 },
+      { buttonId: `.scatto p ${CONFIG.MIN_BET}`, buttonText: { displayText: '💵 Punto 50' }, type: 1 },
+      { buttonId: `.scatto p 100`, buttonText: { displayText: '💶 Punto 100' }, type: 1 },
       { buttonId: `.scatto zoom`, buttonText: { displayText: '⏭️ Rivela' }, type: 1 },
       { buttonId: `.scatto stop`, buttonText: { displayText: '🛑 Stop' }, type: 1 }
     ],
@@ -411,37 +133,53 @@ Stop: .scatto stop`,
   })
 }
 
-async function doReveal(conn, chat) {
-  const g = games[chat]
-  if (!g || g.over) return
-  g.step++
-  if (g.step >= MAX_REVEALS + 1) {
-    endRefund(conn, chat, 'Il soggetto si è rivelato per intero.')
-    return
-  }
-  await sendBoard(conn, chat, g, `Nuovo pezzo rivelato (${g.step}/${MAX_REVEALS}).`)
-}
-
+/* -------------------------------------------------------
+ * TIMER
+ * ----------------------------------------------------- */
 function startTimer(conn, chat) {
   const g = games[chat]
   if (!g) return
   if (g.timer) clearInterval(g.timer)
+
   g.timer = setInterval(() => {
     const cur = games[chat]
-    if (!cur || cur.over) { clearInterval(g.timer); return }
+    if (!cur || cur.over) {
+      clearInterval(g.timer)
+      return
+    }
     doReveal(conn, chat).catch((e) => console.error('[scatto] timer:', e))
-  }, REVEAL_INTERVAL_MS)
+  }, CONFIG.REVEAL_INTERVAL_MS)
 }
 
+/* -------------------------------------------------------
+ * RIVELAZIONE
+ * ----------------------------------------------------- */
+async function doReveal(conn, chat) {
+  const g = games[chat]
+  if (!g || g.over) return
+  g.step++
+
+  if (g.step >= CONFIG.MAX_REVEALS + 1) {
+    endRefund(conn, chat, 'Il soggetto si è rivelato completamente.')
+    return
+  }
+
+  await sendBoard(conn, chat, g, `🔎 Nuovo pezzo rivelato (${g.step}/${CONFIG.MAX_REVEALS}).`)
+}
+
+/* -------------------------------------------------------
+ * FINE PARTITA — VITTORIA
+ * ----------------------------------------------------- */
 function endWin(conn, chat, winnerJid) {
   const g = games[chat]
   if (!g || g.over) return
   g.over = true
-  if (g.timer) { clearInterval(g.timer); g.timer = null }
+  if (g.timer) clearInterval(g.timer)
 
-  const winPot = Math.round(g.pot * WIN_QUOTA)
+  const winPot = Math.round(g.pot * CONFIG.WIN_QUOTA)
   const bonus = bonusFor(g.step)
   const total = winPot + bonus
+
   const winnerUser = getUser(winnerJid)
   winnerUser.money = (winnerUser.money || 0) + total
 
@@ -455,26 +193,30 @@ function endWin(conn, chat, winnerJid) {
 Vincitore: @${shortJid(winnerJid)}
 Era: ${g.emoji} ${g.name}
 
-60% del piatto: +${winPot} 888COIN
-Bonus velocità: +${bonus} 888COIN
-Totale: +${total} 888COIN
+💰 60% del piatto: +${winPot}
+⚡ Bonus velocità: +${bonus}
+🎉 Totale: +${total}
 
 Piatto finale: ${g.pot} 888COIN`,
     mentions: [winnerJid]
-  }).catch(() => {})
+  })
+
   delete games[chat]
 }
 
+/* -------------------------------------------------------
+ * FINE PARTITA — RIMBORSO
+ * ----------------------------------------------------- */
 function endRefund(conn, chat, why) {
   const g = games[chat]
   if (!g || g.over) return
   g.over = true
-  if (g.timer) { clearInterval(g.timer); g.timer = null }
+  if (g.timer) clearInterval(g.timer)
 
   let refunded = 0
   for (const [jid, stake] of Object.entries(g.bets || {})) {
-    const back = Math.floor(stake * REFUND_QUOTA)
-    getUser(jid).money = (getUser(jid).money || 0) + back
+    const back = Math.floor(stake * CONFIG.REFUND_QUOTA)
+    getUser(jid).money += back
     refunded += back
   }
 
@@ -484,15 +226,19 @@ function endRefund(conn, chat, why) {
 ${why}
 
 Era: ${g.emoji} ${g.name}
-Piatto: ${g.pot} 888COIN
-Restituito (90%): ${refunded} 888COIN
-Tassa banco: ${g.pot - refunded} 888COIN
+💰 Piatto: ${g.pot}
+🔄 Restituito (90%): ${refunded}
+🏦 Tassa banco: ${g.pot - refunded}
 
 Usa .scatto per riprovare.`
-  }).catch(() => {})
+  })
+
   delete games[chat]
 }
 
+/* -------------------------------------------------------
+ * HANDLER PRINCIPALE
+ * ----------------------------------------------------- */
 let handler = async (m, { conn }) => {
   if (!m.isGroup) return m.reply('❌ Questo gioco funziona solo nei gruppi.')
 
@@ -518,50 +264,54 @@ let handler = async (m, { conn }) => {
   const args = body.replace(/^\.scatto/, '').trim().split(/\s+/).filter(Boolean)
   const game = games[chat]
 
+  /* --- Avvio nuova partita --- */
   if (!game) {
     if (args.length > 0) {
-      return m.reply('❌ Nessuna partita in corso. Scrivi ".scatto" per avviarne una.')
+      return m.reply('❌ Nessuna partita in corso. Scrivi ".scatto" per iniziarne una.')
     }
+
     const starter = getUser(sender)
-    if ((starter.money || 0) < MIN_BET) {
-      return m.reply(`❌ Ti servono almeno ${MIN_BET} 888COIN per avviare una partita.`)
+    if (starter.money < CONFIG.MIN_BET) {
+      return m.reply(`❌ Ti servono almeno ${CONFIG.MIN_BET} 888COIN per avviare una partita.`)
     }
 
     const subject = SUBJECTS[Math.floor(Math.random() * SUBJECTS.length)]
-    starter.money -= MIN_BET
+    starter.money -= CONFIG.MIN_BET
 
     games[chat] = {
       emoji: subject.e,
       name: subject.n,
       step: 0,
-      pot: MIN_BET,
-      bets: { [sender]: MIN_BET },
+      pot: CONFIG.MIN_BET,
+      bets: { [sender]: CONFIG.MIN_BET },
       starter: sender,
       over: false,
       timer: null,
       startedAt: Date.now()
     }
-    await sendBoard(conn, chat, games[chat], '🎯 Indovina subito per il bonus massimo, o aggiungi al piatto!')
+
+    await sendBoard(conn, chat, games[chat], '🎯 Indovina subito per il bonus massimo!')
     startTimer(conn, chat)
     return
   }
 
   if (game.over) return
 
+  /* --- Comandi durante la partita --- */
   if (args.length === 0) {
     return m.reply('📸 Partita in corso! Usa: .scatto <parola> · .scatto p <somma> · .scatto zoom · .scatto stop')
   }
 
   const first = args[0]
 
-  // Scommessa
+  /* --- Puntata --- */
   if (first === 'p') {
     const amount = parseInt(args[1], 10)
-    if (!amount || amount < MIN_BET) {
-      return m.reply(`💵 Puntata minima: ${MIN_BET} 888COIN`)
+    if (!amount || amount < CONFIG.MIN_BET) {
+      return m.reply(`💵 Puntata minima: ${CONFIG.MIN_BET} 888COIN`)
     }
     const u = getUser(sender)
-    if ((u.money || 0) < amount) {
+    if (u.money < amount) {
       return m.reply('❌ Non hai abbastanza 888COIN.')
     }
     u.money -= amount
@@ -571,24 +321,24 @@ let handler = async (m, { conn }) => {
     return
   }
 
-  // Zoom manuale
+  /* --- Zoom --- */
   if (first === 'zoom') {
     const u = getUser(sender)
-    if ((u.money || 0) < ZOOM_COST) {
-      return m.reply(`❌ Ti servono almeno ${ZOOM_COST} 888COIN per rivelare un pezzo.`)
+    if (u.money < CONFIG.ZOOM_COST) {
+      return m.reply(`❌ Ti servono almeno ${CONFIG.ZOOM_COST} 888COIN per rivelare un pezzo.`)
     }
-    u.money -= ZOOM_COST
+    u.money -= CONFIG.ZOOM_COST
     await doReveal(conn, chat)
     return
   }
 
-  // Stop partita
+  /* --- Stop --- */
   if (first === 'stop') {
     endRefund(conn, chat, 'Partita interrotta dal gruppo.')
     return
   }
 
-  // Tentativo di indovinare
+  /* --- Tentativo --- */
   const guessText = args.join(' ')
   const subj = findSubject(guessText) || { n: guessText }
   const guessName = norm(subj.n)
@@ -600,9 +350,9 @@ let handler = async (m, { conn }) => {
   }
 
   const u = getUser(sender)
-  if ((u.money || 0) >= PENALTY) {
-    u.money -= PENALTY
-    await sendBoard(conn, chat, game, `❌ Tentativo sbagliato: "${guessText}". Penalità: -${PENALTY} 888COIN.`)
+  if (u.money >= CONFIG.PENALTY) {
+    u.money -= CONFIG.PENALTY
+    await sendBoard(conn, chat, game, `❌ Tentativo sbagliato: "${guessText}". Penalità: -${CONFIG.PENALTY} 888COIN.`)
   } else {
     await sendBoard(conn, chat, game, `❌ Tentativo sbagliato: "${guessText}". Non hai abbastanza 888COIN per la penalità.`)
   }

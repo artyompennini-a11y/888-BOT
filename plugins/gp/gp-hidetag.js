@@ -137,4 +137,3 @@ handler.group = true
 handler.botAdmin = true
 
 export default handler
-Fai che la regola dei tag giornalieri valga solo per i moderatori

@@ -98,7 +98,7 @@ Privilegi Amministratore
 • ${prefix}giuria  
 • ${prefix}simula  
 • ${prefix}nuke  
-• ${prefix}rs  
+• ${prefix}ds  
 
 ━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ In caso di bug usa: *${prefix}segnala*

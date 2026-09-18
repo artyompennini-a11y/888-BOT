@@ -1,4 +1,4 @@
-const handler = async (m, { conn, text, participants, isOwner }) => {
+const handler = async (m, { conn, text, participants, isOwner, isAdmin, isMod }) => {
   try {
     if (m.fromMe || m.sender === conn.user.jid) return
     if (text && text.trim().split(" ").length > 1 && text.includes(".tag")) return
@@ -6,7 +6,7 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
     const MAX_TAGS = 6
     const RESET_INTERVAL = 24 * 60 * 60 * 1000
 
-    if (m.isGroup && !isOwner) {
+    if (m.isGroup && isMod && !isOwner && !isAdmin) {
       if (!global.db.data) await global.loadDatabase()
       const chatDb = global.db.data.chats[m.chat]
 
@@ -26,7 +26,7 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
           const remainingH = Math.max(1, Math.ceil(remainingMs / 3600000))
 
           return conn.sendMessage(m.chat, {
-            text: `🚫 Limite tag giornalieri raggiunto.\nReset tra circa ${remainingH} ora/e.`
+            text: `🚫 Limite tag giornalieri per moderatori raggiunto.\nReset tra circa ${remainingH} ora/e.`
           }, { quoted: m })
         }
 
@@ -113,8 +113,9 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
   }
 }
 
-handler.after = async function (m, { conn, isOwner }) {
-  if (!m.isGroup || isOwner) return
+handler.after = async function (m, { conn, isOwner, isAdmin, isMod }) {
+  if (!m.isGroup) return
+  if (!isMod || isOwner || isAdmin) return
   if (typeof m.__tagRemaining !== "number") return
 
   const remaining = m.__tagRemaining
@@ -123,7 +124,7 @@ handler.after = async function (m, { conn, isOwner }) {
   try {
     await conn.sendMessage(m.chat, {
       text: remaining > 0
-        ? `📊 Tag rimanenti: ${remaining}/6`
+        ? `📊 Tag rimanenti (moderatori): ${remaining}/6`
         : `⚠️ Ultimo tag disponibile. Reset tra 24 ore.`
     }, { quoted: m })
   } catch {}

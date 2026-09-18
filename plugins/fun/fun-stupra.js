@@ -22,7 +22,7 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
 
     let abrazo = await conn.sendMessage(m.chat, {
         text: `━━━━━━━━━━━━━
-@${who.split('@')[0]} *sei stata stuprata come una troia di merda da* @${m.sender.split('@')[0]} *e ti ha fatto urlare che ne volevi di più* " *Ahhh..*, *Aaahh, *si continua*, *non fermarti*, *più cazzo Oshyy*" *ti ha lasciata così piena di sborra che manco ti reggi in piedi puttana di merda*.
+@${who.split('@')[0]} *sei stata stuprata come una troia di merda da* @${m.sender.split('@')[0]} *e ti ha fatto urlare che ne volevi di più* " *Ahhh..*, *Aaahh*, *si continua*, *non fermarti*, *più cazzo Oshyy* *ti ha lasciata così piena di sborra che manco ti reggi in piedi puttana di merda*.
 ━━━━━━━━━━━━━`,
         mentions: [who, m.sender],
     }, {

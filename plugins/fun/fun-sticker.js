@@ -158,6 +158,6 @@ let handler = async (m, { conn, args }) => {
 
 handler.help = ['s', 'stiker', 'stikergif']
 handler.tags = ['sticker']
-handler.command = /^(omo|stiker|sticker|stikergif|stickergif)$/i
+handler.command = /^(s|stiker|sticker|stikergif|stickergif)$/i
 
 export default handler

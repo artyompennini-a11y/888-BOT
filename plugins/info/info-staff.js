@@ -6,6 +6,18 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+function detectDeviceOS(msgId) {
+  if (!msgId || typeof msgId !== 'string') return 'unknown';
+  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgId)) return 'bot_emulator';
+  if (msgId.startsWith('false_') || msgId.startsWith('true_')) return 'web';
+  if (msgId.startsWith('3EB0')) return 'android';
+  if (msgId.includes(':')) return 'desktop';
+  if (/^[A-F0-9]{32}$/i.test(msgId)) return 'android';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgId)) return 'ios';
+  if (/^[A-Z0-9]{20,25}$/i.test(msgId)) return 'ios';
+  return 'unknown';
+}
+
 const loadStaff = () => {
   try {
     return JSON.parse(fs.readFileSync(join(__dirname, '../../data/staff.json'), 'utf8'));
@@ -22,14 +34,12 @@ const cleanValue = (value) => {
   return text;
 };
 
-const formattaMembro = (membro) => {
-  const emoji = membro.emoji || '👤';
-  const righe = [`${emoji} *${membro.nome}*`, `_${membro.ruolo}_`];
-
-  if (membro.bio) righe.push(`\n${membro.bio}`);
-  if (membro.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(membro.instagram)}`);
-  if (membro.telegram) righe.push(`\n📞 https://t.me/${cleanValue(membro.telegram)}`);
-
+const formattaMembro = (m) => {
+  const emoji = m.emoji || '👤';
+  const righe = [`${emoji} *${m.nome}*`, `_${m.ruolo}_`];
+  if (m.bio) righe.push(`\n${m.bio}`);
+  if (m.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(m.instagram)}`);
+  if (m.telegram) righe.push(`\n📞 https://t.me/${cleanValue(m.telegram)}`);
   return righe.join('\n');
 };
 
@@ -38,7 +48,6 @@ const inviaTelegram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
   }
-
   const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
@@ -48,7 +57,6 @@ const inviaInstagram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
   }
-
   const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
@@ -57,7 +65,6 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
   }
-
   const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
   return conn.sendMessage(chat, { text: testo }, { quoted });
 };
@@ -96,33 +103,42 @@ const handler = async (m, { conn, usedPrefix, text }) => {
   const contattiTelegram = staffData.filter(m => cleanValue(m.telegram)).length;
   const contattiInstagram = staffData.filter(m => cleanValue(m.instagram)).length;
 
-  const buttonParamsJson = JSON.stringify({
-    title: 'Staff 888',
-    sections: [
-      {
-        title: '📁 Contatti Staff',
-        highlight_label: '888',
-        rows: [
-          { id: `${usedPrefix}staff tg`, title: '📞 Telegram', description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : 'Nessun contatto disponibile' },
-          { id: `${usedPrefix}staff ig`, title: '📷 Instagram', description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : 'Nessun profilo disponibile' },
-          { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff', description: staffData.length > 0 ? `${staffData.length} membri del team` : 'Nessun membro trovato' }
-        ]
-      }
-    ]
-  });
+  const rows = [
+    { id: `${usedPrefix}staff tg`, title: '📞 Telegram', description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : 'Nessun contatto disponibile' },
+    { id: `${usedPrefix}staff ig`, title: '📷 Instagram', description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : 'Nessun profilo disponibile' },
+    { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff', description: staffData.length > 0 ? `${staffData.length} membri del team` : 'Nessun membro trovato' }
+  ];
+
+  const isIOS = detectDeviceOS(m.id) === 'ios';
+
+  const interactiveButtons = isIOS
+    ? rows.map(r => ({
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({ display_text: r.title, id: r.id })
+      }))
+    : [
+        {
+          name: 'single_select',
+          buttonParamsJson: JSON.stringify({
+            title: 'Staff 888',
+            sections: [
+              {
+                title: '📁 Contatti Staff',
+                highlight_label: '888',
+                rows
+              }
+            ]
+          })
+        }
+      ];
 
   await conn.sendMessage(m.chat, {
     image: imageBuffer,
     caption: menuText,
     footer: '',
     headerType: 4,
-    interactiveButtons: [
-      {
-        name: 'single_select',
-        buttonParamsJson
-      }
-    ]
-  }, { quoted: { key: { participants: '0@s.whatsapp.net', fromMe: false, id: 'STAFF' }, message: { contactMessage: { displayName: 'Staff', vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\nFN:y\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD` } }, participant: '0@s.whatsapp.net' } });
+    interactiveButtons
+  }, { quoted: m });
 
   m.react('📌');
 };

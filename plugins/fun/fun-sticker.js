@@ -4,7 +4,13 @@ import uploadImage from '../../lib/uploadImage.js'
 import { createCanvas } from '@napi-rs/canvas'
 
 const isUrl = (text) => {
-    return text.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)(jpe?g|gif|png)/gi)
+    if (!text || typeof text !== 'string') return false
+    try {
+        new URL(text)
+        return true
+    } catch {
+        return false
+    }
 }
 
 const createTextImage = async (text, packname, author) => {
@@ -66,19 +72,24 @@ let handler = async (m, { conn, args }) => {
 
         let mime = (q.msg || q).mimetype || q.mediaType || ''
 
-        let text =
-            q.text ||
-            q.body ||
-            q.caption ||
-            q.conversation ||
-            q.msg?.conversation ||
-            q.msg?.text ||
-            q.msg?.extendedTextMessage?.text ||
-            q.message?.conversation ||
-            q.message?.extendedTextMessage?.text ||
-            q.quoted?.body ||
-            q.quoted?.caption ||
-            ''
+        let text = ''
+        
+        if (q.text) text = q.text
+        else if (q.body) text = q.body
+        else if (q.caption) text = q.caption
+        else if (q.conversation) text = q.conversation
+        else if (q.msg?.conversation) text = q.msg.conversation
+        else if (q.msg?.text) text = q.msg.text
+        else if (q.msg?.extendedTextMessage?.text) text = q.msg.extendedTextMessage.text
+        else if (q.message?.conversation) text = q.message.conversation
+        else if (q.message?.extendedTextMessage?.text) text = q.message.extendedTextMessage.text
+        else if (q.quoted?.text) text = q.quoted.text
+        else if (q.quoted?.body) text = q.quoted.body
+        else if (q.quoted?.caption) text = q.quoted.caption
+        else if (q.quoted?.conversation) text = q.quoted.conversation
+        else if (q.quoted?.message?.extendedTextMessage?.text) text = q.quoted.message.extendedTextMessage.text
+        else if (q.quoted?.msg?.text) text = q.quoted.msg.text
+        else if (q.quoted?.msg?.extendedTextMessage?.text) text = q.quoted.msg.extendedTextMessage.text
 
         text = typeof text === 'string' ? text.trim() : ''
 
@@ -117,9 +128,17 @@ let handler = async (m, { conn, args }) => {
                 if (textImage) stiker = await sticker(textImage, false, packname, author)
             } catch {}
         } else if (args[0]) {
-            if (isUrl(args[0])) stiker = await sticker(false, args[0], packname, author)
-            else return m.reply('🚫 Formato non valido.')
-        } else return m.reply('🚫 Rispondi a un media/testo oppure invia un URL o del testo dopo il comando.')
+            if (isUrl(args[0])) {
+                stiker = await sticker(false, args[0], packname, author)
+            } else {
+                try {
+                    const textImage = await createTextImage(args[0], packname, author)
+                    if (textImage) stiker = await sticker(textImage, false, packname, author)
+                } catch {}
+            }
+        } else {
+            return m.reply('🚫 Rispondi a un media/testo oppure invia un URL o del testo dopo il comando.')
+        }
     } catch {
         stiker = false
     } finally {

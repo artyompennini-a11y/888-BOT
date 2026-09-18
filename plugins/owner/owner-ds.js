@@ -1,31 +1,37 @@
+import fs from 'fs'
+import path from 'path'
+
 const handler = async (m, { conn }) => {
   try {
-
-    const { keys } = conn.authState
+   
+    const sessionDir = path.join(process.cwd(), '888BotSession')
     let deletedCount = 0
 
-    const keyTypes = [
-      'pre-key',
-      'session',
-      'sender-key',
-      'app-state-sync-key',
-      'app-state-sync-version',
-      'sender-key-memory'
-    ]
+   
+    if (!fs.existsSync(sessionDir)) {
+      await conn.sendMessage(m.chat, {
+        text: `❌ La cartella *888BotSession* non esiste.`
+      })
+      return true
+    }
 
-    for (const type of keyTypes) {
-      const allKeys = await keys.get(type)
-      if (!allKeys) continue
 
-      for (const key of Object.keys(allKeys)) {
-        if (key.includes('creds')) continue
-        await keys.set({ type, key }, null)
+    const files = fs.readdirSync(sessionDir)
+
+    for (const file of files) {
+    
+      if (file.includes('creds.json')) continue
+
+      const filePath = path.join(sessionDir, file)
+    
+      if (fs.lstatSync(filePath).isFile()) {
+        fs.unlinkSync(filePath)
         deletedCount++
       }
     }
 
     await conn.sendMessage(m.chat, {
-      text: `⚙️ *${botName}*\nSessioni svuotate: *${deletedCount}*`
+      text: `⚙️ *${botName}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
     })
 
     return true
@@ -33,7 +39,7 @@ const handler = async (m, { conn }) => {
   } catch (e) {
     console.error('[DELETE SESSION] Errore:', e)
     await conn.sendMessage(m.chat, {
-      text: `❌ Errore durante la pulizia sessioni.`
+      text: `❌ Errore durante la pulizia della cartella sessioni.`
     })
     return true
   }
@@ -41,7 +47,7 @@ const handler = async (m, { conn }) => {
 
 handler.help = ['ds']
 handler.tags = ['admin']
-handler.command = /^ds$/i
+handler.command = /^ds\$/i
 handler.admin = true
 handler.owner = true
 

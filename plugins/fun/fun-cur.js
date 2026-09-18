@@ -1,10 +1,12 @@
+// Plugin by 888
+
 import fetch from 'node-fetch';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { exec } from 'child_process';
 import yts from 'yt-search';
-import { makeCard, sendImage } from '../info/lastfm-card.js';
+import { makeCard } from '../info/lastfm-card.js';
 
 const DB_PATH = path.join(process.cwd(), 'db.json');
 
@@ -24,6 +26,19 @@ if (fs.existsSync(DB_PATH)) {
 
 function saveDB() {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+
+// Rilevamento dispositivo (coerente con menu 888)
+function detectDeviceOS(msgId) {
+  if (!msgId || typeof msgId !== 'string') return 'unknown';
+  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgId)) return 'bot_emulator';
+  if (msgId.startsWith('false_') || msgId.startsWith('true_')) return 'web';
+  if (msgId.startsWith('3EB0')) return 'android';
+  if (msgId.includes(':')) return 'desktop';
+  if (/^[A-F0-9]{32}$/i.test(msgId)) return 'android';
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgId)) return 'ios';
+  if (/^[A-Z0-9]{20,25}$/i.test(msgId)) return 'ios';
+  return 'unknown';
 }
 
 const invalidateRecentCache = (username) => {};
@@ -270,34 +285,44 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
 `.trim();
 
+    const isIOS = detectDeviceOS(m.id) === 'ios';
+
+    const rows = [
+      { id: `.like ${m.sender}`, title: '💜 Mi piace', description: 'Metti like al brano' },
+      { id: `.fuoco ${m.sender}`, title: '🔥 Fuoco', description: 'Reagisci al brano' },
+      { id: `.scarica ${searchQuery}`, title: '🎵 Scarica audio', description: 'Scarica il brano in MP3' }
+    ];
+
+    const interactiveButtons = isIOS
+      ? rows.map(r => ({
+          name: 'quick_reply',
+          buttonParamsJson: JSON.stringify({
+            display_text: r.title,
+            id: r.id
+          })
+        }))
+      : [
+          {
+            name: 'single_select',
+            buttonParamsJson: JSON.stringify({
+              title: 'Brano Last.fm',
+              sections: [
+                {
+                  title: '🎧 Azioni disponibili',
+                  highlight_label: '888',
+                  rows
+                }
+              ]
+            })
+          }
+        ];
+
     await conn.sendMessage(
       m.chat,
       {
         image: imageBuffer,
         caption,
-        interactiveButtons: [
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({
-              display_text: '💜 Mi piace',
-              id: `.like ${m.sender}`
-            })
-          },
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({
-              display_text: '🔥 Fuoco',
-              id: `.fuoco ${m.sender}`
-            })
-          },
-          {
-            name: 'quick_reply',
-            buttonParamsJson: JSON.stringify({
-              display_text: '🎵 Scarica audio',
-              id: `.scarica ${searchQuery}`
-            })
-          }
-        ]
+        interactiveButtons
       },
       { quoted: m }
     );

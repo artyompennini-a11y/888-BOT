@@ -1,6 +1,6 @@
-import { sticker } from '../lib/sticker.js'
-import uploadFile from '../lib/uploadFile.js'
-import uploadImage from '../lib/uploadImage.js'
+import { sticker } from '../../lib/sticker.js'
+import uploadFile from '../../lib/uploadFile.js'
+import uploadImage from '../../lib/uploadImage.js'
 import { createCanvas } from '@napi-rs/canvas'
 
 const isUrl = (text) => {
@@ -12,17 +12,14 @@ const createTextImage = async (text, packname, author) => {
         const canvas = createCanvas(500, 300)
         const ctx = canvas.getContext('2d')
 
-        // Sfondo bianco
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(0, 0, 500, 300)
 
-        // Testo principale - grande e centrato
         ctx.fillStyle = '#000000'
         ctx.font = 'bold 40px Arial'
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
 
-        // Word wrap con margini
         const maxWidth = 450
         const lineHeight = 50
         const lines = []
@@ -42,7 +39,6 @@ const createTextImage = async (text, packname, author) => {
         }
         if (line) lines.push(line)
 
-        // Disegna righe centrate
         const totalHeight = lines.length * lineHeight
         let startY = (300 - totalHeight) / 2
 
@@ -51,7 +47,6 @@ const createTextImage = async (text, packname, author) => {
             startY += lineHeight
         }
 
-        // Autore in basso a destra
         ctx.font = 'bold 14px Arial'
         ctx.fillStyle = '#666666'
         ctx.textAlign = 'right'
@@ -110,7 +105,6 @@ let handler = async (m, { conn, args }) => {
                 }
             }
         } else if (text && !mime) {
-            // Testo normale - crea immagine da testo
             m.reply('ⓘ 𝐂𝐫𝐞𝐨 𝐬𝐭𝐢𝐜𝐤𝐞𝐫 𝐝𝐚 𝐭𝐞𝐬𝐭𝐨...')
             try {
                 const textImage = await createTextImage(text, packname, author)

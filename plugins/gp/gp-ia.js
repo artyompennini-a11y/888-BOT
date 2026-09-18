@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIGURAZIONE
 // ─────────────────────────────────────────────────────────────────────────────
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = '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';
 
 const CFG = {
   MAX_HISTORY : 40,
@@ -563,3 +563,4 @@ handler.tags = ['ai'];
 handler.description = 'Aimia — Assistente AI testuale con memoria e reply chain automatica (powered by Groq)';
 
 export default handler;
+                            

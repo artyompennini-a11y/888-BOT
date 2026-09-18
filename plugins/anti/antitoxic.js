@@ -1,12 +1,10 @@
-//Plugin by 888 staff - AntiToxic Module (detects insults/toxic language)
-
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 const toxicWords = [
   'coglione', 'cog**', 'cog*', 'cog.d', 'cog.',
-  'stronzo', 'stronz*, 'stron.',
+  'stronzo', 'stronz*', 'stron.',
   'vaffanculo', 'vaffa', 'vaffancu',
   'bastardo', 'bastard*',
   'puttana', 'puttan*',
@@ -18,10 +16,8 @@ const toxicWords = [
   'merda', 'merd*',
   'fano', 'fanno', 'fanculo',
   'minchia', 'minchi*',
-  'bastardo', 'bastard*',
-  'coglione', 'coglion*', 'cogl.*',
-  'stronzo', 'stronz*', 'stron.',
-  'vaffanculo', 'vaffancu*'
+  'cogl.*',
+  'vaffancu*'
 ];
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
@@ -35,7 +31,16 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   if (isAdmin || isOwner || isROwner) return true;
   if (!isBotAdmin) return true;
 
-  let text = (m.text || m.caption || (m.message && (m.message.conversation || (m.message.extendedTextMessage && m.message.extendedTextMessage.text))) || '').toString();
+  let text =
+    m.text ||
+    m.caption ||
+    (m.message && (
+      m.message.conversation ||
+      (m.message.extendedTextMessage && m.message.extendedTextMessage.text)
+    )) ||
+    '';
+
+  text = text.toString();
   if (!text) return true;
 
   const lowered = text.toLowerCase();
@@ -43,6 +48,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   for (const word of toxicWords) {
     const pattern = new RegExp(escapeRegex(word), 'i');
     if (pattern.test(lowered)) {
+
       await conn.sendMessage(m.chat, {
         delete: {
           remoteJid: m.chat,

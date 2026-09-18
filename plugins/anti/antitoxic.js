@@ -5,7 +5,7 @@ function escapeRegex(s) {
 }
 
 const toxicWords = [
-  'coglione', 'cog**, 'cog*, 'cog.d', 'cog.',
+  'coglione', 'cog**', 'cog*', 'cog.d', 'cog.',
   'stronzo', 'stronz*, 'stron.',
   'vaffanculo', 'vaffa', 'vaffancu',
   'bastardo', 'bastard*',

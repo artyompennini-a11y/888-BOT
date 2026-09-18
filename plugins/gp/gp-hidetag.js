@@ -11,13 +11,14 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
 
       if (chatDb) {
         const now = Date.now()
-        chatDb.tagCount ??= 0
-        chatDb.tagLastReset ??= now
+
+        if (chatDb.tagCount == null) chatDb.tagCount = 0
+        if (chatDb.tagLastReset == null) chatDb.tagLastReset = now
 
         if (now - chatDb.tagLastReset >= RESET_INTERVAL) {
           chatDb.tagCount = 0
           chatDb.tagLastReset = now
-          global.markDbDirty?.()
+          if (typeof global.markDbDirty === "function") global.markDbDirty()
         }
 
         if (chatDb.tagCount >= MAX_TAGS) {
@@ -31,7 +32,7 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
 
         chatDb.tagCount++
         m.__tagRemaining = MAX_TAGS - chatDb.tagCount
-        global.markDbDirty?.()
+        if (typeof global.markDbDirty === "function") global.markDbDirty()
       }
     }
 

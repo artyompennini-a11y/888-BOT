@@ -49,4 +49,4 @@ handler.command = /^ds\$/i
 handler.admin = true
 handler.owner = true
 
-export default handler
+export default handler;

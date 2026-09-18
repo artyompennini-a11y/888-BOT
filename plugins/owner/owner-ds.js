@@ -16,20 +16,23 @@ const handler = async (m, { conn }) => {
     const files = fs.readdirSync(sessionDir)
 
     for (const file of files) {
-      if (file.includes('creds.json')) continue
+      if (file === 'creds.json') continue
 
       const filePath = path.join(sessionDir, file)
-      
-      if (fs.lstatSync(filePath).isFile()) {
-        fs.unlinkSync(filePath)
-        deletedCount++
+
+      try {
+        if (fs.lstatSync(filePath).isFile()) {
+          fs.unlinkSync(filePath)
+          deletedCount++
+        }
+      } catch (err) {
+        console.error(`[DELETE SESSION] Impossibile eliminare ${file}:`, err.message)
       }
     }
 
-    const name = global.db?.data?.nomedelbot || conn.user.name
-
+    const name = typeof botName !== 'undefined' ? botName : conn.user.name
     await conn.sendMessage(m.chat, {
-      text: `⚙️ *${name}*\nSessioni svuotate: *${deletedCount}*.`
+      text: `⚙️ *${name}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
     })
 
     return true
@@ -46,7 +49,7 @@ const handler = async (m, { conn }) => {
 handler.help = ['ds']
 handler.tags = ['admin']
 handler.command = /^ds$/i
-handler.admin = true
+handler.admin = false
 handler.owner = true
 
 export default handler

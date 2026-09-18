@@ -73,7 +73,7 @@ let handler = async (m, { conn, args }) => {
 
         const senderName = m.pushName || m.sender.split('@')[0] || 'Utente'
         const packname = `${senderName}`
-        const author = `333 bot`
+        const author = `888-BOT`
 
         if (args[0] && global.screenStickerMap && global.screenStickerMap[args[0]]) {
             m.reply('ⓘ 𝐂𝐫𝐞𝐨 𝐬𝐭𝐢𝐜𝐤𝐞𝐫...')

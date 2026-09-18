@@ -3,11 +3,9 @@ import path from 'path'
 
 const handler = async (m, { conn }) => {
   try {
-   
     const sessionDir = path.join(process.cwd(), '888BotSession')
     let deletedCount = 0
 
-   
     if (!fs.existsSync(sessionDir)) {
       await conn.sendMessage(m.chat, {
         text: `❌ La cartella *888BotSession* non esiste.`
@@ -15,23 +13,23 @@ const handler = async (m, { conn }) => {
       return true
     }
 
-
     const files = fs.readdirSync(sessionDir)
 
     for (const file of files) {
-    
       if (file.includes('creds.json')) continue
 
       const filePath = path.join(sessionDir, file)
-    
+      
       if (fs.lstatSync(filePath).isFile()) {
         fs.unlinkSync(filePath)
         deletedCount++
       }
     }
 
+
+    const name = typeof botName !== 'undefined' ? botName : conn.user.name
     await conn.sendMessage(m.chat, {
-      text: `⚙️ *${botName}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
+      text: `⚙️ *${name}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
     })
 
     return true
@@ -51,4 +49,4 @@ handler.command = /^ds\$/i
 handler.admin = true
 handler.owner = true
 
-export default handler;
+export default handler

@@ -1,5 +1,5 @@
 // Plugin by Elixir, Punisher & 888 Staff — versione 888 Premium
-import { importCanvas } from '../../lib/canvas-fallback.js'
+import { importCanvas, canvasAvailable } from '../../lib/canvas-fallback.js'
 
 /* -------------------------------------------------------
  * CONFIGURAZIONE
@@ -38,7 +38,7 @@ const bonusFor = (step) =>
   (CONFIG.MAX_REVEALS - Math.min(step, CONFIG.MAX_REVEALS)) * 40
 
 /* -------------------------------------------------------
- * SOGGETTI
+ * SOGGETTI — importazione e ricerca (spostati in ./subjects.js)
  * ----------------------------------------------------- */
 import SUBJECTS from './subjects.js' // 🔥 Spostato in file separato per ordine
 
@@ -66,7 +66,12 @@ async function renderImage(emoji, step) {
   bctx.textBaseline = 'middle'
   bctx.shadowColor = 'rgba(0,0,0,0.30)'
   bctx.shadowBlur = 16
-  bctx.font = `${Math.round(BIG * 0.82)}px sans-serif`
+  // Font emoji con fallback a sans-serif; la fonte NotoColorEmoji è
+  // registrata da canvas-fallback.js (se disponibile).
+  // Nota: su alcuni endpoint il colore delle emoji potrebbe non essere
+  // supportato → l'emoji verrà comunque renderizzata (eventualmente in
+  // bianco/nero), senza sollevare errori.
+  bctx.font = `${Math.round(BIG * 0.82)}px NotoColorEmoji, sans-serif`
   bctx.fillText(emoji, BIG / 2, BIG / 2)
   bctx.shadowBlur = 0
 
@@ -94,7 +99,6 @@ async function renderImage(emoji, step) {
  * INVIO TAVOLA
  * ----------------------------------------------------- */
 async function sendBoard(conn, chat, g, extraText) {
-  const img = await renderImage(g.emoji, g.step)
   const bettors = Object.keys(g.bets || {}).length
   const winPot = Math.round(g.pot * CONFIG.WIN_QUOTA)
   const winNow = winPot + bonusFor(g.step)
@@ -109,27 +113,23 @@ async function sendBoard(conn, chat, g, extraText) {
 
   if (extraText) cap += `\n\n${extraText}`
 
+  cap += `\n\n🎮 Soggetto: ${g.emoji} ${g.name}\n`
+  cap += `🤖 Indovina → .scatto <parola>  ·  💵 Punta → .scatto p <somma>\n`
+  cap += `⏭️ Rivela → .scatto zoom (${CONFIG.ZOOM_COST} 888COIN)  ·  🛑 Stop → .scatto stop`
+
+  // Se canvas non è disponibile (nessun pacchetto installato), invia solo
+  // testo invece di blocco immagine. Il gioco continua comunque.
+  if (!canvasAvailable()) {
+    await conn.sendMessage(chat, { text: cap })
+    return
+  }
+
+    const img = await renderImage(g.emoji, g.step)
   await conn.sendMessage(chat, {
     image: img,
     mimetype: 'image/jpeg',
     fileName: 'scatto.jpg',
     caption: cap
-  })
-
-  await conn.sendMessage(chat, {
-    text:
-`🎮 *COMANDI*
-Indovina → .scatto <parola>
-Punta → .scatto p <somma>
-Rivela → .scatto zoom
-Stop → .scatto stop`,
-    buttons: [
-      { buttonId: `.scatto p ${CONFIG.MIN_BET}`, buttonText: { displayText: '💵 Punto 50' }, type: 1 },
-      { buttonId: `.scatto p 100`, buttonText: { displayText: '💶 Punto 100' }, type: 1 },
-      { buttonId: `.scatto zoom`, buttonText: { displayText: '⏭️ Rivela' }, type: 1 },
-      { buttonId: `.scatto stop`, buttonText: { displayText: '🛑 Stop' }, type: 1 }
-    ],
-    headerType: 1
   })
 }
 

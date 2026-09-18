@@ -1,6 +1,5 @@
 const handler = async (m, { conn }) => {
   try {
-    const botName = global.db?.data?.nomedelbot || '888-BOT'
 
     const { keys } = conn.authState
     let deletedCount = 0

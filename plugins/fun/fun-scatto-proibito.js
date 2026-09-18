@@ -1,9 +1,6 @@
-// Plugin by Elixir, Punisher & 888 Staff — versione 888 Premium
 import { importCanvas } from '../../lib/canvas-fallback.js'
+import SUBJECTS from './subjects.js'
 
-/* -------------------------------------------------------
- * CONFIGURAZIONE
- * ----------------------------------------------------- */
 const CONFIG = {
   MAX_REVEALS: 8,
   REVEAL_INTERVAL_MS: 18000,
@@ -17,9 +14,6 @@ const CONFIG = {
 
 const games = {}
 
-/* -------------------------------------------------------
- * UTILITÀ
- * ----------------------------------------------------- */
 const norm = (t = '') =>
   String(t)
     .toLowerCase()
@@ -37,11 +31,6 @@ const shortJid = (jid) => ((jid || '').split('@')[0] || jid)
 const bonusFor = (step) =>
   (CONFIG.MAX_REVEALS - Math.min(step, CONFIG.MAX_REVEALS)) * 40
 
-/* -------------------------------------------------------
- * SOGGETTI
- * ----------------------------------------------------- */
-import SUBJECTS from './subjects.js' // 🔥 Spostato in file separato per ordine
-
 function findSubject(txt) {
   const t = norm(txt)
   for (const s of SUBJECTS) {
@@ -51,9 +40,6 @@ function findSubject(txt) {
   return null
 }
 
-/* -------------------------------------------------------
- * RENDER IMMAGINE
- * ----------------------------------------------------- */
 async function renderImage(emoji, step) {
   const { createCanvas } = await importCanvas()
   const BIG = 640
@@ -90,9 +76,6 @@ async function renderImage(emoji, step) {
   return out.toBuffer('image/jpeg', { quality: 0.92 })
 }
 
-/* -------------------------------------------------------
- * INVIO TAVOLA
- * ----------------------------------------------------- */
 async function sendBoard(conn, chat, g, extraText) {
   const img = await renderImage(g.emoji, g.step)
   const bettors = Object.keys(g.bets || {}).length
@@ -133,9 +116,6 @@ Stop → .scatto stop`,
   })
 }
 
-/* -------------------------------------------------------
- * TIMER
- * ----------------------------------------------------- */
 function startTimer(conn, chat) {
   const g = games[chat]
   if (!g) return
@@ -151,9 +131,6 @@ function startTimer(conn, chat) {
   }, CONFIG.REVEAL_INTERVAL_MS)
 }
 
-/* -------------------------------------------------------
- * RIVELAZIONE
- * ----------------------------------------------------- */
 async function doReveal(conn, chat) {
   const g = games[chat]
   if (!g || g.over) return
@@ -167,9 +144,6 @@ async function doReveal(conn, chat) {
   await sendBoard(conn, chat, g, `🔎 Nuovo pezzo rivelato (${g.step}/${CONFIG.MAX_REVEALS}).`)
 }
 
-/* -------------------------------------------------------
- * FINE PARTITA — VITTORIA
- * ----------------------------------------------------- */
 function endWin(conn, chat, winnerJid) {
   const g = games[chat]
   if (!g || g.over) return
@@ -204,9 +178,6 @@ Piatto finale: ${g.pot} 888COIN`,
   delete games[chat]
 }
 
-/* -------------------------------------------------------
- * FINE PARTITA — RIMBORSO
- * ----------------------------------------------------- */
 function endRefund(conn, chat, why) {
   const g = games[chat]
   if (!g || g.over) return
@@ -236,35 +207,31 @@ Usa .scatto per riprovare.`
   delete games[chat]
 }
 
-/* -------------------------------------------------------
- * HANDLER PRINCIPALE
- * ----------------------------------------------------- */
 let handler = async (m, { conn }) => {
   if (!m.isGroup) return m.reply('❌ Questo gioco funziona solo nei gruppi.')
 
   const chat = m.chat
   const sender = m.sender
   const body = norm(m.text || '')
-  const isScatto = /^\.scatto/.test(body)
 
-  if (/^\.scattostat/.test(body)) {
-    const wl = global.scattoWinners || []
+  if (/^[^a-z0-9\s]?scattostat/.test(body)) {
+    const wl = [...(global.scattoWinners || [])]
     if (wl.length === 0) {
       return m.reply('📊 *Classifica SCATTO*\n\nNessun vincitore in questa sessione.')
     }
-    const lines = wl
-      .sort((a, b) => b.win - a.win)
-      .slice(0, 10)
-      .map((x, i) => `${i + 1}. @${shortJid(x.jid)} — +${x.win} 888COIN (${x.name})`)
-    return m.reply(`📊 *TOP VINCITORI SCATTO*\n\n${lines.join('\n')}\n\n— 888 BOT —`)
+    const top = wl.sort((a, b) => b.win - a.win).slice(0, 10)
+    const lines = top.map((x, i) => `${i + 1}. @${shortJid(x.jid)} — +${x.win} 888COIN (${x.name})`)
+    return conn.sendMessage(chat, {
+      text: `📊 *TOP VINCITORI SCATTO*\n\n${lines.join('\n')}\n\n— 888 BOT —`,
+      mentions: top.map((x) => x.jid)
+    }, { quoted: m })
   }
 
-  if (!isScatto) return
+  if (!/^[^a-z0-9\s]?scatto/.test(body)) return
 
-  const args = body.replace(/^\.scatto/, '').trim().split(/\s+/).filter(Boolean)
+  const args = body.replace(/^[^a-z0-9\s]?scatto/, '').trim().split(/\s+/).filter(Boolean)
   const game = games[chat]
 
-  /* --- Avvio nuova partita --- */
   if (!game) {
     if (args.length > 0) {
       return m.reply('❌ Nessuna partita in corso. Scrivi ".scatto" per iniziarne una.')
@@ -297,14 +264,12 @@ let handler = async (m, { conn }) => {
 
   if (game.over) return
 
-  /* --- Comandi durante la partita --- */
   if (args.length === 0) {
     return m.reply('📸 Partita in corso! Usa: .scatto <parola> · .scatto p <somma> · .scatto zoom · .scatto stop')
   }
 
   const first = args[0]
 
-  /* --- Puntata --- */
   if (first === 'p') {
     const amount = parseInt(args[1], 10)
     if (!amount || amount < CONFIG.MIN_BET) {
@@ -321,8 +286,10 @@ let handler = async (m, { conn }) => {
     return
   }
 
-  /* --- Zoom --- */
   if (first === 'zoom') {
+    if (game.step >= CONFIG.MAX_REVEALS) {
+      return m.reply('🔎 Il soggetto è già rivelato al massimo, indovina ora!')
+    }
     const u = getUser(sender)
     if (u.money < CONFIG.ZOOM_COST) {
       return m.reply(`❌ Ti servono almeno ${CONFIG.ZOOM_COST} 888COIN per rivelare un pezzo.`)
@@ -332,13 +299,11 @@ let handler = async (m, { conn }) => {
     return
   }
 
-  /* --- Stop --- */
   if (first === 'stop') {
     endRefund(conn, chat, 'Partita interrotta dal gruppo.')
     return
   }
 
-  /* --- Tentativo --- */
   const guessText = args.join(' ')
   const subj = findSubject(guessText) || { n: guessText }
   const guessName = norm(subj.n)

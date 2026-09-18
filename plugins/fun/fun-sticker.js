@@ -15,6 +15,10 @@ const isUrl = (text) => {
 
 const createTextImage = async (text, packname, author) => {
     try {
+        if (!text || typeof text !== 'string' || text.trim().length === 0) {
+            return null
+        }
+
         const canvas = createCanvas(500, 300)
         const ctx = canvas.getContext('2d')
 
@@ -30,7 +34,7 @@ const createTextImage = async (text, packname, author) => {
         const lineHeight = 50
         const lines = []
         let line = ''
-        const words = text.split(' ')
+        const words = text.trim().split(' ')
 
         for (let word of words) {
             const testLine = line + (line ? ' ' : '') + word
@@ -38,12 +42,14 @@ const createTextImage = async (text, packname, author) => {
             if (metrics.width > maxWidth && line) {
                 lines.push(line)
                 line = word
-            } else line = testLine
+            } else {
+                line = testLine
+            }
         }
         if (line) lines.push(line)
 
         const totalHeight = lines.length * lineHeight
-        let startY = (300 - totalHeight) / 2
+        let startY = Math.max(30, (300 - totalHeight) / 2)
 
         for (let textLine of lines) {
             ctx.fillText(textLine, 250, startY)
@@ -56,7 +62,8 @@ const createTextImage = async (text, packname, author) => {
         ctx.fillText(`By: ${author}`, 480, 285)
 
         return canvas.toBuffer('image/png')
-    } catch {
+    } catch (e) {
+        console.error('Errore createTextImage:', e)
         return null
     }
 }
@@ -122,24 +129,33 @@ let handler = async (m, { conn, args }) => {
                     stiker = await sticker(false, out, packname, author)
                 }
             }
-        } else if (text) {
+        } else if (text && text.length > 0) {
             try {
                 const textImage = await createTextImage(text, packname, author)
-                if (textImage) stiker = await sticker(textImage, false, packname, author)
-            } catch {}
+                if (textImage) {
+                    stiker = await sticker(textImage, false, packname, author)
+                }
+            } catch (e) {
+                console.error('Errore sticker da testo quotato:', e)
+            }
         } else if (args[0]) {
             if (isUrl(args[0])) {
                 stiker = await sticker(false, args[0], packname, author)
             } else {
                 try {
                     const textImage = await createTextImage(args[0], packname, author)
-                    if (textImage) stiker = await sticker(textImage, false, packname, author)
-                } catch {}
+                    if (textImage) {
+                        stiker = await sticker(textImage, false, packname, author)
+                    }
+                } catch (e) {
+                    console.error('Errore sticker da args:', e)
+                }
             }
         } else {
             return m.reply('🚫 Rispondi a un media/testo oppure invia un URL o del testo dopo il comando.')
         }
-    } catch {
+    } catch (e) {
+        console.error('Errore generale:', e)
         stiker = false
     } finally {
         if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)

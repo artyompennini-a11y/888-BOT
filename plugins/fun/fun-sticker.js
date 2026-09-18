@@ -75,7 +75,19 @@ let handler = async (m, { conn, args }) => {
         }
 
         let mime = (q.msg || q).mimetype || q.mediaType || ''
-        let text = q.text || q.body || q.caption || ''
+
+        // Estrazione testo più robusta: copre più formati di messaggio citato
+        let text = q.text
+            || q.body
+            || q.caption
+            || q.conversation
+            || q.msg?.conversation
+            || q.msg?.text
+            || q.msg?.extendedTextMessage?.text
+            || q.extendedTextMessage?.text
+            || ''
+
+        text = typeof text === 'string' ? text.trim() : ''
 
         const senderName = m.pushName || m.sender.split('@')[0] || 'Utente'
         const packname = `${senderName}`
@@ -112,8 +124,8 @@ let handler = async (m, { conn, args }) => {
                     stiker = await sticker(false, out, packname, author)
                 }
             }
-        } else if (text && !mime) {
-            // Testo normale - crea immagine da testo
+        } else if (text) {
+            // Testo (proprio o citato) - crea immagine da testo
             m.reply('ⓘ 𝐂𝐫𝐞𝐨 𝐬𝐭𝐢𝐜𝐤𝐞𝐫 𝐝𝐚 𝐭𝐞𝐬𝐭𝐨...')
             try {
                 const textImage = await createTextImage(text, packname, author)
@@ -132,7 +144,7 @@ let handler = async (m, { conn, args }) => {
         }
     } catch (e) {
         console.error(e)
-        if (!stiker) stiker = false
+        stiker = false
     } finally {
         if (stiker) conn.sendFile(m.chat, stiker, 'sticker.webp', '', m)
         else return m.reply('❌ Non sono riuscito a creare lo sticker.')

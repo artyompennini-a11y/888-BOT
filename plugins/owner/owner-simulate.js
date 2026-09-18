@@ -2,12 +2,10 @@ import fetch from 'node-fetch';
 
 let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => {
     if (!evento) return await m.reply(
-`╭━━━〔 ⚠️ *USO DEL COMANDO* 〕━━━┈
-┃ ${usedPrefix + command} benvenuto @user
-┃ ${usedPrefix + command} addio @user
-┃ ${usedPrefix + command} promozione/p @user
-┃ ${usedPrefix + command} retrocessione/r @user
-╰━━━━━━━━━━━━━━━━━━┈`
+`${usedPrefix + command} benvenuto @user
+${usedPrefix + command} addio @user
+${usedPrefix + command} promozione/p @user
+${usedPrefix + command} retrocessione/r @user`
     );
 
     let mentions = text.replace(evento, '').trimStart();
@@ -18,9 +16,6 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
 
     switch (evento.toLowerCase()) {
 
-        // ───────────────────────────────
-        // 🔥 BENVENUTO — STILE 888
-        // ───────────────────────────────
         case 'benvenuto':
         case 'welcome':
         case 'add':
@@ -28,7 +23,7 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
         case 'bienvenida': {
 
             act = 'add';
-            testoEvento = "𝐛𝐞𝐧𝐯𝐞𝐧𝐮𝐭𝐨";
+            testoEvento = "benvenuto";
 
             let groupMetadata = await conn.groupMetadata(m.chat);
             let chat = global.db.data.chats[m.chat];
@@ -45,14 +40,10 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
                 let ppBuffer = await (await fetch(profilePic)).buffer();
 
                 let welcomeText = chat.sWelcome || 
-`╭━━━〔 👋 *BENVENUTO 888* 〕━━━┈
-┃ 👤 @user
-┃ 📱 *Gruppo:* @group
-┃ 👥 *Membri:* @count
-┃━━━━━━━━━━━━━━━━━━
-┃ 📜 *Descrizione:*
-┃ @desc
-╰━━━━━━━━━━━━━━━━━━┈`;
+`👋 Benvenuto @user
+Gruppo: @group
+Membri: @count
+Descrizione: @desc`;
 
                 let welcome = welcomeText
                     .replace('@user', `@${user.split('@')[0]}`)
@@ -65,8 +56,8 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
                     contextInfo: {
                         mentionedJid: [user],
                         externalAdReply: {
-                            title: '👋 Nuovo Membro',
-                            body: 'Benvenuto nel gruppo!',
+                            title: 'Nuovo Membro',
+                            body: 'Benvenuto nel gruppo',
                             mediaType: 1,
                             renderLargerThumbnail: true,
                             thumbnail: ppBuffer,
@@ -78,9 +69,6 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
             return;
         }
 
-        // ───────────────────────────────
-        // 🔥 ADDIO — STILE 888
-        // ───────────────────────────────
         case 'addio':
         case 'bye':
         case 'kick':
@@ -88,7 +76,7 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
         case 'remove': {
 
             act = 'remove';
-            testoEvento = "𝐚𝐝𝐝𝐢𝐨";
+            testoEvento = "addio";
 
             let groupMeta = await conn.groupMetadata(m.chat);
             let chatData = global.db.data.chats[m.chat];
@@ -105,13 +93,9 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
                 let ppBuffer = await (await fetch(profilePic)).buffer();
 
                 let byeText = chatData.sBye || 
-`╭━━━〔 👋 *ADDIO 888* 〕━━━┈
-┃ 👤 @user
-┃ 📱 *Gruppo:* @group
-┃ 👥 *Membri:* @count
-┃━━━━━━━━━━━━━━━━━━
-┃ 💭 Ci mancherai...
-╰━━━━━━━━━━━━━━━━━━┈`;
+`👋 Addio @user
+Gruppo: @group
+Membri: @count`;
 
                 let bye = byeText
                     .replace('@user', `@${user.split('@')[0]}`)
@@ -123,7 +107,7 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
                     contextInfo: {
                         mentionedJid: [user],
                         externalAdReply: {
-                            title: '👋 Addio',
+                            title: 'Addio',
                             body: 'Un membro ha lasciato il gruppo',
                             mediaType: 1,
                             renderLargerThumbnail: true,
@@ -136,53 +120,35 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
             return;
         }
 
-        // ───────────────────────────────
-        // 🔥 PROMOZIONE — STILE 888
-        // ───────────────────────────────
         case 'promozione':
         case 'promote':
         case 'p': {
-
             act = 'promote';
-            testoEvento = "𝐩𝐫𝐨𝐦𝐨𝐳𝐢𝐨𝐧𝐞";
+            testoEvento = "promozione";
             break;
         }
 
-        // ───────────────────────────────
-        // 🔥 RETROCESSIONE — STILE 888
-        // ───────────────────────────────
         case 'retrocessione':
         case 'demote':
         case 'r': {
-
             act = 'demote';
-            testoEvento = "𝐫𝐞𝐭𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐨𝐧𝐞";
+            testoEvento = "retrocessione";
             break;
         }
 
         default:
             return m.reply(
-`╭━━━〔 ⚠️ *OPZIONE NON VALIDA* 〕━━━┈
-┃ ${usedPrefix + command} benvenuto @user
-┃ ${usedPrefix + command} addio @user
-┃ ${usedPrefix + command} promozione/p @user
-┃ ${usedPrefix + command} retrocessione/r @user
-╰━━━━━━━━━━━━━━━━━━┈`
+`${usedPrefix + command} benvenuto @user
+${usedPrefix + command} addio @user
+${usedPrefix + command} promozione/p @user
+${usedPrefix + command} retrocessione/r @user`
             );
     }
 
-    // ───────────────────────────────
-    // 🔥 SIMULAZIONE EVENTO — STILE 888
-    // ───────────────────────────────
     m.reply(
-`╭━━━〔 ⚠️ *SIMULAZIONE EVENTO* 〕━━━┈
-┃ 🔧 Evento: ${testoEvento}
-┃ ⏳ Il bot sta simulando
-┃    l’azione richiesta.
-┃━━━━━━━━━━━━━━━━━━
-┃ ⚠️ Nessun effetto reale
-┃    verrà applicato al gruppo.
-╰━━━━━━━━━━━━━━━━━━┈`
+`Evento: ${testoEvento}
+Simulazione in corso.
+Nessun effetto reale verrà applicato.`
     );
 
     if (act) return conn.participantsUpdate({
@@ -192,7 +158,7 @@ let handler = async (m, { conn, usedPrefix, command, args: [evento], text }) => 
     });
 };
 
-handler.help = ['𝐬𝐢𝐦𝐮𝐥𝐚'];
+handler.help = ['simula'];
 handler.tags = ['owner'];
 handler.command = /^sim|simula$/i;
 handler.group = true;

@@ -2,52 +2,50 @@ let handler = async (m, { conn, participants, args }) => {
 
     const normalizeJid = jid => (jid || '').replace(/\D/g, '') + '@s.whatsapp.net';
 
-    // Inizializza la chat nel database se non esiste
     let chat = global.db.data.chats[m.chat];
     if (!chat) {
         global.db.data.chats[m.chat] = {};
         chat = global.db.data.chats[m.chat];
     }
 
+    // DEBUG: quante chiavi ci sono davvero in topUsers per questa chat?
+    console.log('[DEBUG top] chat.topUsers raw:', chat.topUsers);
+    console.log('[DEBUG top] chat.topUsers keys:', Object.keys(chat.topUsers || {}));
+
     if (!chat.topUsers || Object.keys(chat.topUsers).length === 0) {
         return await conn.sendMessage(m.chat, { 
-            text: '📭 Nessun messaggio registrato in questo gruppo.' 
+            text: '📭 [DEBUG A] topUsers è vuoto o non esiste — il counter non sta scrivendo nulla.' 
         });
     }
 
-    // Filtra i membri presenti nel gruppo ed esclude il bot
-    // Normalizziamo gli id dei partecipanti con lo stesso schema usato in handler.js
-    // per salvare le chiavi in topUsers (solo cifre + @s.whatsapp.net), altrimenti
-    // il confronto fallisce silenziosamente e la classifica risulta vuota.
+    console.log('[DEBUG top] participants raw:', JSON.stringify(participants, null, 2));
+
     const groupMembers = new Set(
         (participants || []).map(p => normalizeJid(p.id || p.jid || p.lid))
     );
     const botJid = normalizeJid(conn.user.jid || conn.user.id);
 
+    console.log('[DEBUG top] groupMembers set:', [...groupMembers]);
+    console.log('[DEBUG top] botJid:', botJid);
+
     const users = Object.entries(chat.topUsers)
         .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
 
+    console.log('[DEBUG top] users dopo filtro:', users);
+
     if (users.length === 0) {
         return await conn.sendMessage(m.chat, { 
-            text: '📭 Nessun messaggio registrato in questo gruppo.' 
+            text: '📭 [DEBUG B] topUsers ha dati, ma il filtro sui partecipanti li ha esclusi tutti.' 
         });
     }
 
-    // Ordina gli utenti dal più attivo al meno attivo
     users.sort((a, b) => b[1] - a[1]);
     const top = users.slice(0, 10);
 
     const titles = [
-        'Re del gruppo',
-        'Nerd',
-        'Nerd inesperto',
-        'Presente tra noi',
-        'A volte c’è a volte no',
-        'È timido',
-        'Inutile',
-        'Fa finta di scrivere',
-        'Con una vita sociale',
-        'Fai prima a quittare'
+        'Re del gruppo', 'Nerd', 'Nerd inesperto', 'Presente tra noi',
+        'A volte c’è a volte no', 'È timido', 'Inutile', 'Fa finta di scrivere',
+        'Con una vita sociale', 'Fai prima a quittare'
     ];
 
     const newFirst = top[0][0];

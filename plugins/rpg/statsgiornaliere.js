@@ -193,7 +193,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
 📌 *Posizione del gruppo:*
 ${positionText}\n
 🕛 Reset automatico alle *00:00* (ora italiana)
-🜙 *Sistema 888 Premium — Elixir & Punisher*`
+*Sistema 888*`
 
     const mentions = top3.map(r=> r[0]).filter(Boolean)
     await conn.sendMessage(chat, { text: out, mentions })

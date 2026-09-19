@@ -1,35 +1,32 @@
 let handler = async (m, { conn, participants, args }) => {
 
-    const normalizeJid = jid => (jid || '').replace(/\D/g, '') + '@s.whatsapp.net';
+    const users = global.db.data.users || {};
 
-    let chat = global.db.data.chats[m.chat];
-    if (!chat) {
-        global.db.data.chats[m.chat] = {};
-        chat = global.db.data.chats[m.chat];
-    }
+    const participantJids = participants.map(p => p.jid).filter(jid => jid);
 
-    if (!chat.topUsers || Object.keys(chat.topUsers).length === 0) {
+    participantJids.forEach(jid => {
+        if (!users[jid]) {
+            users[jid] = { messaggi: 0 };
+        }
+        if (typeof users[jid].messaggi !== 'number') users[jid].messaggi = 0;
+    });
+
+    let usersData = participantJids
+        .filter(jid => jid !== conn.user.jid && users[jid])
+        .map(jid => ({
+            jid: jid,
+            messaggi: users[jid].messaggi || 0
+        }))
+        .sort((a, b) => b.messaggi - a.messaggi)
+        .slice(0, 10);
+
+    if (usersData.length === 0) {
         return await conn.sendMessage(m.chat, { 
             text: '📭 topUsers è vuoto o non esiste — il counter non sta scrivendo nulla.' 
         });
     }
 
-    const groupMembers = new Set(
-        (participants || []).map(p => normalizeJid(p.id || p.jid || p.lid))
-    );
-    const botJid = normalizeJid(conn.user.jid || conn.user.id);
-
-    const users = Object.entries(chat.topUsers)
-        .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
-
-    if (users.length === 0) {
-        return await conn.sendMessage(m.chat, { 
-            text: '📭 topUsers ha dati, ma il filtro sui partecipanti li ha esclusi tutti.' 
-        });
-    }
-
-    users.sort((a, b) => b[1] - a[1]);
-    const top = users.slice(0, 10);
+    const top = usersData.map(u => [u.jid, u.messaggi]);
 
     const titles = [
         'Re del gruppo', 'Nerd', 'Nerd inesperto', 'Presente tra noi',
@@ -38,6 +35,12 @@ let handler = async (m, { conn, participants, args }) => {
     ];
 
     const newFirst = top[0][0];
+
+    let chat = global.db.data.chats[m.chat];
+    if (!chat) {
+        global.db.data.chats[m.chat] = {};
+        chat = global.db.data.chats[m.chat];
+    }
 
     if (chat.prevFirst && chat.prevFirst !== newFirst) {
         await conn.sendMessage(m.chat, {

@@ -1,10 +1,16 @@
-// Plugin by 888 staff — .888spam (solo owner)
-const handler = async (m, { conn, text, isOwnerBot }) => {
+// Plugin by 888 staff — .888spam (owner da config.js)
+const handler = async (m, { conn, text }) => {
   try {
-    // Solo owner del bot
-    if (!isOwnerBot) {
+    // Controllo owner dal file config.js
+    const senderNumber = m.sender.split('@')[0];
+
+    const ownerNumbers = global.owner.map(o =>
+      Array.isArray(o) ? o[0].replace(/[^0-9]/g, '') : String(o).replace(/[^0-9]/g, '')
+    );
+
+    if (!ownerNumbers.includes(senderNumber)) {
       return conn.sendMessage(m.chat, {
-        text: "❌ Solo l'owner del bot può usare questo comando."
+        text: "❌ Solo gli *owner del bot* possono usare questo comando."
       });
     }
 
@@ -33,6 +39,7 @@ const handler = async (m, { conn, text, isOwnerBot }) => {
     }
 
     await conn.sendMessage(m.chat, { text: msg });
+
   } catch (e) {
     console.error("Errore .888spam:", e);
   }

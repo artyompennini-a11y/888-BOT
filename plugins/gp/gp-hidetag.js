@@ -51,8 +51,18 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
 
     if (quoted) {
       const type = quoted.mtype
-      const media = await quoted.download().catch(() => null)
+      const mediaTypes = ["imageMessage", "videoMessage", "audioMessage", "documentMessage", "stickerMessage"]
       const base = { mentions: users }
+
+      // Scarica il media SOLO se il messaggio quotato è effettivamente un media.
+      // Evita di chiamare download() su messaggi di testo semplice, che causava il crash.
+      let media = null
+      if (mediaTypes.includes(type)) {
+        media = await quoted.download().catch((err) => {
+          console.error("[hidetag] download error:", err)
+          return null
+        })
+      }
 
       switch (type) {
         case "imageMessage":
@@ -92,6 +102,7 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
           }, { quoted: m })
 
         default:
+          // testo semplice o altro tipo non gestito: nessun download, solo testo + tag
           return conn.sendMessage(m.chat, {
             text: text || quoted.text || "",
             ...base
@@ -121,11 +132,21 @@ handler.after = async function (m, { conn, isOwner }) {
   delete m.__tagRemaining
 
   try {
-    await conn.sendMessage(m.chat, {
-      text: remaining > 0
-        ? `📊 Tag rimanenti: ${remaining}/6`
-        : `⚠️ Ultimo tag disponibile. Reset tra 24 ore.`
-    }, { quoted: m })
+    if (remaining > 0) {
+      await conn.sendMessage(m.chat, {
+        text: `📊 Tag rimanenti: ${remaining}/6`
+      }, { quoted: m })
+    } else {
+      const RESET_INTERVAL = 24 * 60 * 60 * 1000
+      const chatDb = global.db.data.chats[m.chat]
+      const now = Date.now()
+      const remainingMs = RESET_INTERVAL - (now - (chatDb?.tagLastReset ?? now))
+      const remainingH = Math.max(1, Math.ceil(remainingMs / 3600000))
+
+      await conn.sendMessage(m.chat, {
+        text: `⚠️ Ultimo tag disponibile. Reset tra circa ${remainingH} ora/e.`
+      }, { quoted: m })
+    }
   } catch {}
 }
 

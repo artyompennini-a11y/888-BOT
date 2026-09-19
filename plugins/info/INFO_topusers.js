@@ -1,9 +1,5 @@
 let handler = async (m, { conn, participants, args }) => {
-    // Normalizza uno stesso JID nello STESSO modo in cui handler.js lo scrive in topUsers:
-    //  - usa conn.decodeJid (che risolve i LID tramite global.lidCache)
-    //  - se risulta @lid o non ha server (es. solo numero), costringe a @s.whatsapp.net
-    //    (le chiavi di topUsers sono sempre @s.whatsapp.net, vedi handler.js:517)
-    const normalizeJid = jid => {
+ const normalizeJid = jid => {
         if (!jid) return '';
         let decoded = (conn && typeof conn.decodeJid === 'function') ? conn.decodeJid(jid) : jid;
         if (!decoded || typeof decoded !== 'string') {
@@ -31,9 +27,6 @@ let handler = async (m, { conn, participants, args }) => {
         });
     }
 
-    // Se il bot non è admin/non è richiesto il metadata, `participants` può arrivare vuoto
-    // (vedi handler.js:879 — il refresh di normalizedParticipants avviene solo per plugin admin/botAdmin).
-    // In quel caso ricostruisco i partecipanti fetchando il metadata del gruppo.
     let groupParticipants = participants;
     if (!groupParticipants || !Array.isArray(groupParticipants) || groupParticipants.length === 0) {
         try {
@@ -49,10 +42,9 @@ let handler = async (m, { conn, participants, args }) => {
     const botJid = normalizeJid(conn.user.jid || conn.user.id);
 
     const users = Object.entries(chat.topUsers)
-        .map(([jid, count]) => [normalizeJid(jid), count]) // Normalizza le chiavi con la stessa funzione usata per i partecipanti
+        .map(([jid, count]) => [normalizeJid(jid), count]) 
         .filter(([jid]) => jid && groupMembers.has(jid) && jid !== botJid);
 
-    // Log diagnostico (solo console): confronta chiavi topUsers vs partecipanti
     console.log('[DEBUG top] groupMembers count:', (groupParticipants || []).length);
     console.log('[DEBUG top] topUsers keys normalized:', [...new Set(Object.entries(chat.topUsers).map(([jid]) => normalizeJid(jid)))].slice(0, 25));
     console.log('[DEBUG top] groupMembers normalized:', [...groupMembers].slice(0, 25));

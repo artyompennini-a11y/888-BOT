@@ -1,52 +1,71 @@
-// Plugin by 888 staff — .888spam (owner da config.js)
-const handler = async (m, { conn, text }) => {
-  try {
-    // Controllo owner dal file config.js
-    const senderNumber = m.sender.split('@')[0];
+// Plugin by Elixir, Punisher & 888 staff
 
-    const ownerNumbers = global.owner.map(o =>
-      Array.isArray(o) ? o[0].replace(/[^0-9]/g, '') : String(o).replace(/[^0-9]/g, '')
+const manually = `𝐂𝐎𝐌𝐌𝐔𝐍𝐈𝐓𝐘 & 𝐂𝐀𝐍𝐀𝐋𝐄 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
+
+╭───⭓
+│ 🌐 𝗖𝗼𝗺𝗺𝘂𝗻𝗶𝘁𝘆
+│ https://chat.whatsapp.com/CuMIAMfhTNo92h0UE2NGrb
+│
+│ 📢 𝗖𝗮𝗻𝗮𝗹𝗲 𝗨𝗳𝗳𝗶𝗰𝗶𝗮𝗹𝗲
+│ https://whatsapp.com/channel/0029Vb8Y0igGufJ0xMYJmU40
+╰───⭓`;
+
+import { generateWAMessageFromContent } from '@888-BOT/888baileys';
+
+const handler = async (m, { conn, args, text }) => {
+  // Controllo owner dal config.js
+  const senderNumber = m.sender.split('@')[0];
+  const ownerNumbers = global.owner.map(o =>
+    Array.isArray(o) ? o[0].replace(/[^0-9]/g, '') : String(o).replace(/[^0-9]/g, '')
+  );
+
+  if (!ownerNumbers.includes(senderNumber)) {
+    return m.reply("❌ Solo gli *owner del bot* possono usare questo comando.");
+  }
+
+  if (parseInt(args[1])) {
+    return m.reply(`Inserisci prima la quantità di messaggi da inviare e poi il testo`);
+  }
+
+  if (!parseInt(args[0])) {
+    return m.reply(`Inserisci nel comando la quantità di messaggi da inviare`);
+  }
+
+  const number = parseInt(args[0]) ? parseInt(args[0]) : 1;
+
+  let count = 0;
+  while (true) {
+    count++;
+
+    const msg = conn.cMod(
+      m.chat,
+      generateWAMessageFromContent(
+        m.chat,
+        {
+          extendedTextMessage: {
+            text: args[1] ? text.replace(args[0] + ' ', '') : manually
+          }
+        },
+        { userJid: conn.user.id }
+      ),
+      null,
+      conn.user.jid,
+      {
+        mentions: conn.chats[m.chat].metadata.participants.map(u =>
+          conn.decodeJid(u.id)
+        )
+      }
     );
 
-    if (!ownerNumbers.includes(senderNumber)) {
-      return conn.sendMessage(m.chat, {
-        text: "❌ Solo gli *owner del bot* possono usare questo comando."
-      });
-    }
+    await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id });
 
-    if (!text) {
-      return conn.sendMessage(m.chat, {
-        text: "Uso corretto:\n.888spam [numero]"
-      });
-    }
-
-    const num = parseInt(text.trim(), 10);
-
-    if (isNaN(num) || num <= 0) {
-      return conn.sendMessage(m.chat, {
-        text: "Inserisci un numero valido.\nEsempio: .888spam 5"
-      });
-    }
-
-    const max = 50; // limite sicurezza
-    const times = Math.min(num, max);
-
-    const link = "https://chat.whatsapp.com/CuMIAMfhTNo92h0UE2NGrb";
-
-    let msg = "";
-    for (let i = 0; i < times; i++) {
-      msg += link + "\n";
-    }
-
-    await conn.sendMessage(m.chat, { text: msg });
-
-  } catch (e) {
-    console.error("Errore .888spam:", e);
+    if (count === number) break;
   }
 };
 
-handler.help = ["888spam"];
-handler.tags = ["tools"];
-handler.command = /^\.?888spam$/i;
+handler.command = ['888spam'];
+handler.help = ['888spam'];
+handler.tags = ['owner'];
+handler.owner = true;
 
 export default handler;

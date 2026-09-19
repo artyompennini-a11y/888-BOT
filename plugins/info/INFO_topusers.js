@@ -1,6 +1,11 @@
 let handler = async (m, { conn, participants, args }) => {
 
-    const normalizeJid = jid => (jid || '').replace(/\D/g, '') + '@s.whatsapp.net';
+
+    const normalizeJid = jid => {
+        if (!jid) return '';
+        const num = jid.split('@')[0].replace(/\D/g, '');
+        return num + '@s.whatsapp.net';
+    };
 
     let chat = global.db.data.chats[m.chat];
     if (!chat) {
@@ -8,7 +13,6 @@ let handler = async (m, { conn, participants, args }) => {
         chat = global.db.data.chats[m.chat];
     }
 
-    // DEBUG: quante chiavi ci sono davvero in topUsers per questa chat?
     console.log('[DEBUG top] chat.topUsers raw:', chat.topUsers);
     console.log('[DEBUG top] chat.topUsers keys:', Object.keys(chat.topUsers || {}));
 
@@ -29,6 +33,7 @@ let handler = async (m, { conn, participants, args }) => {
     console.log('[DEBUG top] botJid:', botJid);
 
     const users = Object.entries(chat.topUsers)
+        .map(([jid, count]) => [normalizeJid(jid), count]) // Normalizza anche le chiavi di topUsers per il confronto
         .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
 
     console.log('[DEBUG top] users dopo filtro:', users);
@@ -50,39 +55,27 @@ let handler = async (m, { conn, participants, args }) => {
 
     const newFirst = top[0][0];
 
+
     if (chat.prevFirst && chat.prevFirst !== newFirst) {
         await conn.sendMessage(m.chat, {
-            text: `🏆 @${newFirst.split('@')[0]} ha superato @${chat.prevFirst.split('@')[0]} ed è il nuovo primo in classifica!`,
-            mentions: [newFirst, chat.prevFirst]
+            text: `🏆 Il vecchio Re del gruppo è stato spodestato! @${newFirst.split('@')[0]} è il nuovo Re!`,
+            mentions: [newFirst]
         });
     }
-
     chat.prevFirst = newFirst;
 
-    let text = `🏆 *TOP 10 UTENTI PIÙ ATTIVI DEL GRUPPO*\n`;
-    text += `🎁 Se sei il primo, riscatta il tuo premio con *.premiotop*\n\n`;
 
-    const posEmojis = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
-
-    for (let i = 0; i < top.length; i++) {
-        const [jid, count] = top[i];
-        const title = titles[i] || 'Membro della chat';
-        text += `${posEmojis[i]} @${jid.split('@')[0]} — ${title} • ${count} messaggi\n`;
-    }
+    let txt = `📊 *TOP 10 UTENTI PIÙ ATTIVI* 📊\n\n`;
+    top.forEach(([jid, count], i) => {
+        const title = titles[i] || 'Membro';
+        txt += `${i + 1}. @${jid.split('@')[0]} (${title}) — *${count}* messaggi\n`;
+    });
 
     await conn.sendMessage(m.chat, {
-        text,
-        mentions: top.map(u => u[0]),
-        buttons: [
-            { buttonId: '.topgruppi', buttonText: { displayText: '🌍 Top gruppi' }, type: 1 },
-            { buttonId: '.statsgiornaliere', buttonText: { displayText: '📊 Statistiche giornaliere' }, type: 1 }
-        ],
-        headerType: 1
+        text: txt,
+        mentions: top.map(u => u[0])
     });
 };
 
-handler.help = ['top10'];
-handler.tags = ['group'];
-handler.command = ['top', 'top10'];
-
+handler.command = ['top'];
 export default handler;

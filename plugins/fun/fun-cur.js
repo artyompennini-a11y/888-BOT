@@ -454,7 +454,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
   }
 };
 
-handler.command = ['setuser', 'profilo', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre', 'scarica', 'download', 'downloadaudio'];
+handler.command = ['setuser', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre', 'scarica', 'download', 'downloadaudio'];
 handler.tags = ['fun'];
 handler.group = true;
 

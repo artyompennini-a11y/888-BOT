@@ -1,5 +1,7 @@
 let handler = async (m, { conn, participants, args }) => {
 
+    const normalizeJid = jid => (jid || '').replace(/\D/g, '') + '@s.whatsapp.net';
+
     // Inizializza la chat nel database se non esiste
     let chat = global.db.data.chats[m.chat];
     if (!chat) {
@@ -14,8 +16,13 @@ let handler = async (m, { conn, participants, args }) => {
     }
 
     // Filtra i membri presenti nel gruppo ed esclude il bot
-    const groupMembers = new Set(participants?.map(p => p.id) || []);
-    const botJid = conn.user.jid || conn.user.id;
+    // Normalizziamo gli id dei partecipanti con lo stesso schema usato in handler.js
+    // per salvare le chiavi in topUsers (solo cifre + @s.whatsapp.net), altrimenti
+    // il confronto fallisce silenziosamente e la classifica risulta vuota.
+    const groupMembers = new Set(
+        (participants || []).map(p => normalizeJid(p.id || p.jid || p.lid))
+    );
+    const botJid = normalizeJid(conn.user.jid || conn.user.id);
 
     const users = Object.entries(chat.topUsers)
         .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
@@ -45,7 +52,6 @@ let handler = async (m, { conn, participants, args }) => {
 
     const newFirst = top[0][0];
 
-    // Notifica cambio primo posto
     if (chat.prevFirst && chat.prevFirst !== newFirst) {
         await conn.sendMessage(m.chat, {
             text: `🏆 @${newFirst.split('@')[0]} ha superato @${chat.prevFirst.split('@')[0]} ed è il nuovo primo in classifica!`,
@@ -55,7 +61,6 @@ let handler = async (m, { conn, participants, args }) => {
 
     chat.prevFirst = newFirst;
 
-    // Messaggio classifica
     let text = `🏆 *TOP 10 UTENTI PIÙ ATTIVI DEL GRUPPO*\n`;
     text += `🎁 Se sei il primo, riscatta il tuo premio con *.premiotop*\n\n`;
 
@@ -67,7 +72,6 @@ let handler = async (m, { conn, participants, args }) => {
         text += `${posEmojis[i]} @${jid.split('@')[0]} — ${title} • ${count} messaggi\n`;
     }
 
-    // Invio messaggio con bottoni premium
     await conn.sendMessage(m.chat, {
         text,
         mentions: top.map(u => u[0]),

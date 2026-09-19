@@ -3,7 +3,7 @@ import { xpRange } from '../../lib/levelling.js'
 
 const handler = async (m, { conn, groupMetadata }) => {
 
-  if (!m.isGroup) 
+  if (!m.isGroup)
     return await conn.sendMessage(m.chat, { text: 'Questo comando funziona solo nei gruppi.' })
 
   groupMetadata = groupMetadata || await conn.groupMetadata?.(m.chat).catch(() => null)
@@ -18,12 +18,11 @@ const handler = async (m, { conn, groupMetadata }) => {
   const groupMemberJids = new Set(participants.map(p => p.id))
   const botJid = conn.user && (conn.user.jid || conn.user.id)
 
-  // 🔧 FIX: rimosso il filtro che escludeva TUTTI gli utenti
+  // 🔥 Raccolta dati utenti
   let values = Array.from(groupMemberJids)
-    .filter(jid => jid !== botJid) // esclude solo il bot
+    .filter(jid => jid !== botJid)
     .map(jid => {
       const user = usersDb[jid] || {}
-
       return {
         jid,
         level: Number(user.level || 0),
@@ -38,14 +37,35 @@ const handler = async (m, { conn, groupMetadata }) => {
     return await conn.sendMessage(m.chat, { text: 'Nessun rank disponibile per i membri di questo gruppo.' })
   }
 
-  // Ordina per livello, poi XP
+  // 📊 Ordina per livello → XP
   values.sort((a, b) => b.level - a.level || b.exp - a.exp)
 
   const top = values.slice(0, 10)
 
+  // 🏆 Rilevamento nuovo primo
+  const newFirst = top[0].jid
+
+  let chat = global.db.data.chats[m.chat]
+  if (!chat) {
+    global.db.data.chats[m.chat] = {}
+    chat = global.db.data.chats[m.chat]
+  }
+
+  if (chat.prevFirst && chat.prevFirst !== newFirst) {
+    await conn.sendMessage(m.chat, {
+      text: `🏆 @${newFirst.split('@')[0]} ha superato @${chat.prevFirst.split('@')[0]} ed è il nuovo primo in classifica!`,
+      mentions: [newFirst, chat.prevFirst]
+    })
+  }
+
+  chat.prevFirst = newFirst
+
+  // 🎨 Grafica minimal/premium 888
   const header =
 `🏆 *TOP 10 RANK DEL GRUPPO*
 👥 Gruppo: ${groupMetadata.subject || m.chat.split('@')[0]}
+
+🎁 Se sei il primo, riscatta il tuo premio con *.premiotop*
 
 `
 
@@ -77,7 +97,12 @@ const handler = async (m, { conn, groupMetadata }) => {
 
   await conn.sendMessage(m.chat, {
     text: header + lines,
-    mentions: top.map(u => u.jid)
+    mentions: top.map(u => u.jid),
+    buttons: [
+      { buttonId: '.top', buttonText: { displayText: '📊 Top messaggi' }, type: 1 },
+      { buttonId: '.statsgiornaliere', buttonText: { displayText: '📅 Statistiche giornaliere' }, type: 1 }
+    ],
+    headerType: 1
   })
 }
 

@@ -1,10 +1,20 @@
 let handler = async (m, { conn, participants, args }) => {
-
-
+    // Normalizza uno stesso JID nello STESSO modo in cui handler.js lo scrive in topUsers:
+    //  - usa conn.decodeJid (che risolve i LID tramite global.lidCache)
+    //  - se risulta @lid o non ha server (es. solo numero), costringe a @s.whatsapp.net
+    //    (le chiavi di topUsers sono sempre @s.whatsapp.net, vedi handler.js:517)
     const normalizeJid = jid => {
         if (!jid) return '';
-        const num = jid.split('@')[0].replace(/\D/g, '');
-        return num + '@s.whatsapp.net';
+        let decoded = (conn && typeof conn.decodeJid === 'function') ? conn.decodeJid(jid) : jid;
+        if (!decoded || typeof decoded !== 'string') {
+            const num = String(jid || '').split('@')[0].replace(/\D/g, '');
+            return num + '@s.whatsapp.net';
+        }
+        if (decoded.endsWith('@lid') || !decoded.includes('@')) {
+            const num = decoded.split('@')[0].replace(/\D/g, '');
+            return num + '@s.whatsapp.net';
+        }
+        return decoded;
     };
 
     let chat = global.db.data.chats[m.chat];
@@ -13,34 +23,44 @@ let handler = async (m, { conn, participants, args }) => {
         chat = global.db.data.chats[m.chat];
     }
 
-    console.log('[DEBUG top] chat.topUsers raw:', chat.topUsers);
-    console.log('[DEBUG top] chat.topUsers keys:', Object.keys(chat.topUsers || {}));
+    chat.topUsers ||= {};
 
     if (!chat.topUsers || Object.keys(chat.topUsers).length === 0) {
-        return await conn.sendMessage(m.chat, { 
-            text: '📭 [DEBUG A] topUsers è vuoto o non esiste — il counter non sta scrivendo nulla.' 
+        return await conn.sendMessage(m.chat, {
+            text: '📭 Nessun dato di top users disponibile per questo gruppo — il counter non sta ancora registrando niente.'
         });
     }
 
-    console.log('[DEBUG top] participants raw:', JSON.stringify(participants, null, 2));
+    // Se il bot non è admin/non è richiesto il metadata, `participants` può arrivare vuoto
+    // (vedi handler.js:879 — il refresh di normalizedParticipants avviene solo per plugin admin/botAdmin).
+    // In quel caso ricostruisco i partecipanti fetchando il metadata del gruppo.
+    let groupParticipants = participants;
+    if (!groupParticipants || !Array.isArray(groupParticipants) || groupParticipants.length === 0) {
+        try {
+            groupParticipants = (await conn.groupMetadata(m.chat))?.participants || [];
+        } catch (e) {
+            groupParticipants = [];
+        }
+    }
 
     const groupMembers = new Set(
-        (participants || []).map(p => normalizeJid(p.id || p.jid || p.lid))
+        (groupParticipants || []).map(p => normalizeJid(p.id || p.jid || p.lid))
     );
     const botJid = normalizeJid(conn.user.jid || conn.user.id);
 
-    console.log('[DEBUG top] groupMembers set:', [...groupMembers]);
-    console.log('[DEBUG top] botJid:', botJid);
-
     const users = Object.entries(chat.topUsers)
-        .map(([jid, count]) => [normalizeJid(jid), count]) // Normalizza anche le chiavi di topUsers per il confronto
-        .filter(([jid]) => groupMembers.has(jid) && jid !== botJid);
+        .map(([jid, count]) => [normalizeJid(jid), count]) // Normalizza le chiavi con la stessa funzione usata per i partecipanti
+        .filter(([jid]) => jid && groupMembers.has(jid) && jid !== botJid);
 
-    console.log('[DEBUG top] users dopo filtro:', users);
+    // Log diagnostico (solo console): confronta chiavi topUsers vs partecipanti
+    console.log('[DEBUG top] groupMembers count:', (groupParticipants || []).length);
+    console.log('[DEBUG top] topUsers keys normalized:', [...new Set(Object.entries(chat.topUsers).map(([jid]) => normalizeJid(jid)))].slice(0, 25));
+    console.log('[DEBUG top] groupMembers normalized:', [...groupMembers].slice(0, 25));
+    console.log('[DEBUG top] matched users:', users.length);
 
     if (users.length === 0) {
-        return await conn.sendMessage(m.chat, { 
-            text: '📭 [DEBUG B] topUsers ha dati, ma il filtro sui partecipanti li ha esclusi tutti.' 
+        return await conn.sendMessage(m.chat, {
+            text: '📭 topUsers ha dati, ma nessuno dei record corrisponde a un partecipante attivo del gruppo.\n\n💡 Possibili cause: i JID registrati in topUsers non coincidono con i partecipanti (es. LID vs numero reale) — controlla i log `[DEBUG top]` sulla console, o ricomincia il bot in group per risincronizzare i LID.'
         });
     }
 

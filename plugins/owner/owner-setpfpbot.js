@@ -13,14 +13,22 @@ const processImage = async (media) => {
 
 let handler = async (m, { args, conn }) => {
   if (m.sender !== AUTHORIZED_USER) {
-    return m.reply('⚠️ Non hai il permesso di usare questo comando!');
+    try {
+      return m.reply('⚠️ Non hai il permesso di usare questo comando!');
+    } catch (error) {
+      console.error('Errore reply:', error.message);
+    }
   }
 
   const media = await (m.quoted || m).download();
   const mime = (m.quoted?.msg || m.quoted || m).mimetype || '';
 
   if (!mime.includes('image')) {
-    return m.reply('Rispondi a un\'immagine.');
+    try {
+      return m.reply('Rispondi a un\'immagine.');
+    } catch (error) {
+      console.error('Errore reply:', error.message);
+    }
   }
 
   try {
@@ -44,10 +52,18 @@ let handler = async (m, { args, conn }) => {
       await conn.updateProfilePicture(conn.user.jid, buffer);
     }
 
-    m.reply('✅ Foto profilo cambiata con successo!');
+    try {
+      m.reply('✅ Foto profilo cambiata con successo!');
+    } catch (error) {
+      console.error('Errore reply:', error.message);
+    }
   } catch (error) {
     console.error('Errore:', error.message);
-    m.reply('❌ Errore durante l\'aggiornamento della foto profilo.');
+    try {
+      m.reply('❌ Errore durante l\'aggiornamento della foto profilo.');
+    } catch (replyError) {
+      console.error('Errore reply:', replyError.message);
+    }
   }
 };
 

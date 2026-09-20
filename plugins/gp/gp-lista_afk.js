@@ -44,7 +44,9 @@ let handler = async (m, { conn }) => {
     }))
 
     const filtered = Object.entries(afkData).filter(([jid, data]) => {
-        if (!groupMembers.has(jid)) return false
+        let normalizedJid = jid
+        try { normalizedJid = conn.decodeJid(jid) } catch {}
+        if (!groupMembers.has(normalizedJid)) return false
         return data.onlyGroup == null || data.onlyGroup === m.chat
     })
 

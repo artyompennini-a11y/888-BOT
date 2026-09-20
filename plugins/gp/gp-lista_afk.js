@@ -5,7 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
+const AFK_FILE = path.join(__dirname, '..', '..', 'data', 'afk.json')
 
 const formatDur = (ms) => {
     if (!ms || ms < 0) ms = 0

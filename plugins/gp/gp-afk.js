@@ -5,7 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
+const AFK_FILE = path.join(__dirname, '..', '..', 'data', 'afk.json')
 
 let afkData = {}
 let antiSpam = {}   // Anti-tag cache
@@ -130,7 +130,7 @@ handler.all = async function (m) {
             return
         }
 
-        // 4️⃣ Tag AFK → Timer + Anti-tag (NO FOTO)
+        // 4️⃣ Tag AFK → aggiorna il timer; il filtro comune gestisce le menzioni.
         const mentioned = m.mentionedJid || []
         if (mentioned.length > 0) {
             for (const jid of mentioned) {
@@ -143,24 +143,6 @@ handler.all = async function (m) {
                     // Anti-spam: skip if recently notified (10 seconds cooldown)
                     if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
                     antiSpam[jid] = now
-
-                    const { reason, since } = afkData[jid]
-                    const readable = formatAFK(now - since)
-                    
-                    // Get name safely - use local store first
-                    let name = jid.split('@')[0]
-                    try {
-                        const localName = await this.getName(jid)
-                        if (localName && localName !== 'undefined') {
-                            name = localName
-                        }
-                    } catch {
-                        // Fallback to jid prefix if getName fails
-                    }
-
-                    await this.sendMessage(m.chat, {
-                        text: `💤 *${name}* è AFK da *${readable}*\n📝 Motivo: ${reason}\n🚫 Anti-tag attivo (evita spam)`
-                    }, { quoted: m })
                 }
             }
         }

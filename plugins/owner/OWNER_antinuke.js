@@ -14,7 +14,8 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
 
   const botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
 
-    if ([28, 29, 30].includes(m.messageStubType)) {
+  // 🚫 Protezione bot: nessuno può toccare i permessi del bot
+  if ([28, 29, 30].includes(m.messageStubType)) {
     const target = m.messageStubParameters?.[0];
 
     if (target === botJid) {
@@ -58,12 +59,13 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
 
   if (allowed.includes(sender)) return;
 
-    if (m.messageStubType === 28) {
+  // Evita falsi positivi su rimozione utente
+  if (m.messageStubType === 28) {
     const affected = m.messageStubParameters?.[0];
     if (affected === sender) return;
   }
 
-    if (!currentParticipants || !Array.isArray(currentParticipants) || currentParticipants.length === 0) {
+  if (!currentParticipants || !Array.isArray(currentParticipants) || currentParticipants.length === 0) {
     try {
       const metadata = await conn.groupMetadata(m.chat);
       currentParticipants = metadata.participants;
@@ -71,16 +73,27 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
   }
   if (!currentParticipants || !Array.isArray(currentParticipants) || currentParticipants.length === 0) return;
 
-  
   const senderData = currentParticipants.find(p => p.id === sender || p.jid === sender);
-  
-    const isAdmin = senderData?.admin || senderData?.superAdmin;
+  const isAdmin = senderData?.admin || senderData?.superAdmin;
   if (!isAdmin) return;
 
-  const usersToDemote = [sender];
+  // 🔥 NUOVA FUNZIONE: se qualcuno PROMUOVE admin → degrada anche lui
+  if (m.messageStubType === 29) {
+    const promoted = m.messageStubParameters?.[0];
 
+    // Se il promotore ha promosso qualcuno → degrada il promotore
+    if (promoted && promoted !== botJid) {
+      try {
+        await conn.groupParticipantsUpdate(m.chat, [sender], 'demote');
+      } catch (e) {
+        console.error('[ANTINUKE ERRORE] Impossibile degradare il promotore:', e);
+      }
+    }
+  }
+
+  // Degrada comunque l’autore dell’azione sospetta
   try {
-    await conn.groupParticipantsUpdate(m.chat, usersToDemote, 'demote');
+    await conn.groupParticipantsUpdate(m.chat, [sender], 'demote');
     await conn.groupSettingUpdate(m.chat, 'announcement');
   } catch (e) {
     console.error('[ANTINUKE ERRORE] Impossibile eseguire azioni di sicurezza:', e);
@@ -106,7 +119,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
 ━━━━━━━━━━━━━━━━━━━━
 📉 Autore dell'azione degradato
 🔒 Gruppo impostato in sola lettura
-✅ Utenti in whitelist preservati
+🔁 Promozioni admin annullate
 ━━━━━━━━━━━━━━━━━━━━
 🔐 *888 SECURITY SYSTEM*`;
 

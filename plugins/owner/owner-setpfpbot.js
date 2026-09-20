@@ -1,66 +1,59 @@
 import * as Jimp from 'jimp';
+import ownerData from './config.js';
 
-let handler = async (m, { args, conn, command }) => {
-  const numeroAutorizzato = '393882471151@s.whatsapp.net';
-  const gruppoNotifica = '120363396779012019@g.us';
+const AUTHORIZED_USER = `${ownerData[0][0]}@s.whatsapp.net`;
 
-  if (m.sender !== numeroAutorizzato) {
-    let alertMessage = `⚠️ Numero *${m.sender.split('@')[0]}* ha provato a usare il comando *setppbot*!`;
-    
-    await conn.sendMessage(gruppoNotifica, {
-      text: alertMessage,
-      mentions: [m.sender]
-    });
+const processImage = async (media) => {
+  const image = await Jimp.read(media);
+  const size = Math.min(image.getWidth(), image.getHeight());
+  const scaled = image.crop(0, 0, size, size).scaleToFit(720, 720);
+  
+  return await scaled.getBufferAsync(Jimp.MIME_JPEG);
+};
 
-    await m.reply('⚠️ Non hai il permesso di usare questo comando!');
-    return;
+let handler = async (m, { args, conn }) => {
+  if (m.sender !== AUTHORIZED_USER) {
+    return m.reply('⚠️ Non hai il permesso di usare questo comando!');
   }
 
-  let q = m.quoted ? m.quoted : m;
-  let mime = (q.msg || q).mimetype || q.mediaType || '';
-  
-  if (!/image/g.test(mime)) {
+  const media = await (m.quoted || m).download();
+  const mime = (m.quoted?.msg || m.quoted || m).mimetype || '';
+
+  if (!mime.includes('image')) {
     return m.reply('Rispondi a un\'immagine.');
   }
 
-  let media = await q.download();
+  try {
+    const buffer = await processImage(media);
 
-  if (args[0] === '--full') {
-    let { img } = await pepe(media);
-    await conn.query({
-      tag: 'iq',
-      attrs: {
-        to: conn.user.jid,
-        type: 'set',
-        xmlns: 'w:profile:picture'
-      },
-      content: [{
-        tag: 'picture',
-        attrs: { type: 'image' },
-        content: img
-      }]
-    });
-    return m.reply('La foto profilo del bot è stata cambiata con successo.');
+    if (args[0] === '--full') {
+      await conn.query({
+        tag: 'iq',
+        attrs: {
+          to: conn.user.jid,
+          type: 'set',
+          xmlns: 'w:profile:picture'
+        },
+        content: [{
+          tag: 'picture',
+          attrs: { type: 'image' },
+          content: buffer
+        }]
+      });
+    } else {
+      await conn.updateProfilePicture(conn.user.jid, buffer);
+    }
+
+    m.reply('✅ Foto profilo cambiata con successo!');
+  } catch (error) {
+    console.error('Errore:', error.message);
+    m.reply('❌ Errore durante l\'aggiornamento della foto profilo.');
   }
-
-  await conn.updateProfilePicture(conn.user.jid, media);
-  await m.reply('La foto profilo del bot è stata cambiata con successo.');
 };
 
-handler.help = ['𝐬𝐞𝐭𝐩𝐩𝐛𝐨𝐭'];
+handler.help = ['setppbot'];
 handler.tags = ['owner'];
-handler.command = /^setpp|setppbot|immagineprofilo?$/i;
+handler.command = /^(setpp|setppbot|immagineprofilo)$/i;
 handler.owner = true;
 
 export default handler;
-
-async function pepe(media) {
-  const j = await Jimp.read(media);
-  const min = j.getWidth();
-  const max = j.getHeight();
-  const cropped = j.crop(0, 0, min, max);
-  return {
-    img: await cropped.scaleToFit(720, 720).getBufferAsync(Jimp.MIME_JPEG),
-    preview: await cropped.normalize().getBufferAsync(Jimp.MIME_JPEG)
-  };
-}

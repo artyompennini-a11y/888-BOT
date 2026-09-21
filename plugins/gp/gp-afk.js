@@ -1,150 +1,117 @@
-// by Elixir, Punisher & 888 Staff
+const getAfkState = () => {
+  global.afkState = global.afkState || {}
+  return global.afkState
+}
 
-import fs from 'fs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+const getPendingState = () => {
+  global.afkPending = global.afkPending || {}
+  return global.afkPending
+}
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
+const formatMention = (jid = '') => `@${jid.split('@')[0]}`
 
-let afkData = {}
-let antiSpam = {}
-let antiSpamCleanup = null
+const formatDuration = (ms) => {
+  const seconds = Math.floor((ms / 1000) % 60)
+  const minutes = Math.floor((ms / (1000 * 60)) % 60)
+  const hours = Math.floor((ms / (1000 * 60 * 60)) % 24)
+  const days = Math.floor(ms / (1000 * 60 * 60 * 24))
 
-function loadAfkData() {
-    try {
-        if (fs.existsSync(AFK_FILE)) {
-            afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'))
-        } else afkData = {}
-    } catch {
-        afkData = {}
+  const parts = []
+  if (days > 0) parts.push(`${days}g`)
+  if (hours > 0) parts.push(`${hours}h`)
+  if (minutes > 0) parts.push(`${minutes}m`)
+  if (seconds > 0) parts.push(`${seconds}s`)
+
+  return parts.length > 0 ? parts.join(' ') : '0s'
+}
+
+const handler = async (m, { conn, text, command }) => {
+  const afkState = getAfkState()
+  const pendingState = getPendingState()
+
+  if (command === 'afk') {
+    const reason = (text || '').trim() || 'nessun motivo specificato'
+
+    pendingState[m.sender] = { reason, chat: m.chat, at: Date.now() }
+
+    return conn.sendMessage(m.chat, {
+      text: `🛌 Dove vuoi essere AFK?\n\nMotivo: ${reason}`,
+      footer: '333 AFK',
+      buttons: [
+        { buttonId: '.afk_scope group', buttonText: { displayText: '📍 Su questo gruppo' }, type: 1 },
+        { buttonId: '.afk_scope all', buttonText: { displayText: '🌍 Su tutti i gruppi' }, type: 1 }
+      ],
+      headerType: 1
+    }, { quoted: m })
+  }
+
+  if (command === 'afk_scope') {
+    const pending = pendingState[m.sender]
+    if (!pending) return conn.reply(m.chat, '⚠️ Non hai una richiesta AFK in corso.', m)
+
+    const scope = (text || '').trim().toLowerCase() === 'all' ? 'all' : 'group'
+    afkState[m.sender] = {
+      reason: pending.reason,
+      scope,
+      chat: m.chat,
+      at: Date.now()
     }
+    delete pendingState[m.sender]
+
+    return conn.sendMessage(m.chat, {
+      text: `✅ AFK attivato ${scope === 'all' ? 'su tutti i gruppi' : 'su questo gruppo'}\n\nMotivo: ${afkState[m.sender].reason}\n\nNon verrai menzionato/a negli hidetag.\n\nBuon riposo, ${formatMention(m.sender)}!`,
+      mentions: [m.sender]
+    }, { quoted: m })
+  }
 }
 
-function saveAfkData() {
-    try {
-        fs.writeFileSync(AFK_FILE, JSON.stringify(afkData, null, 2), 'utf8')
-    } catch {}
+handler.before = async (m, { conn }) => {
+  const afkState = getAfkState()
+  const pendingState = getPendingState()
+  const botJid = conn?.user?.jid
+
+  if (!m?.sender || m.sender === botJid || m.fromMe || m.key?.fromMe) return false
+
+  const isAfkRelated = /^(afk|afk_scope)$/i.test((m.text || '').replace(/^\./, '').split(/\s+/)[0] || '')
+
+  if (afkState[m.sender] && !isAfkRelated) {
+    const duration = formatDuration(Date.now() - afkState[m.sender].at)
+    delete afkState[m.sender]
+    delete pendingState[m.sender]
+    await conn.sendMessage(m.chat, {
+      text: `✅ AFK disattivato, bentornato ${formatMention(m.sender)}!\n\n⏱️ Sei stato AFK per: ${duration}\n\nSperiamo che tu abbia riposato bene!`,
+      mentions: [m.sender]
+    }, { quoted: m }).catch(() => {})
+    return false
+  }
+
+  const mentions = (Array.isArray(m.mentionedJid) ? m.mentionedJid : [])
+    .filter(Boolean)
+    .filter((jid) => jid !== m.sender && jid !== botJid)
+
+  if (!mentions.length) return false
+
+  for (const jid of mentions) {
+    const entry = afkState[jid]
+    if (!entry) continue
+
+    const allowed = entry.scope === 'all' || entry.chat === m.chat
+    if (!allowed) continue
+
+    const duration = formatDuration(Date.now() - entry.at)
+    await conn.sendMessage(m.chat, {
+      text: `👋 Hey ${formatMention(m.sender)}, ${formatMention(jid)} è offline per il seguente motivo:\n\n"${entry.reason}"\n\n⏱️ AFK da: ${duration}`,
+      mentions: [m.sender, jid]
+    }, { quoted: m }).catch(() => {})
+    break
+  }
+
+  return false
 }
 
-function startAntiSpamCleanup() {
-    if (antiSpamCleanup) clearInterval(antiSpamCleanup)
-    antiSpamCleanup = setInterval(() => {
-        const now = Date.now()
-        for (const [jid, ts] of Object.entries(antiSpam)) {
-            if (now - ts > 30000) delete antiSpam[jid]
-        }
-    }, 300000)
-}
-
-loadAfkData()
-startAntiSpamCleanup()
-
-function formatAFK(ms) {
-    const sec = Math.floor(ms / 1000)
-    const min = Math.floor(sec / 60)
-    const hrs = Math.floor(min / 60)
-    return `${hrs}h ${min % 60}m ${sec % 60}s`
-}
-
-let handler = m => m
-
-handler.all = async function (m, { conn }) {
-    try {
-        if (m.fromMe) return
-        if (!m.isGroup) return
-
-        const sender = m.sender
-        const rawBody = (m.text || "").trim()
-
-        const nativeBtn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
-
-        const isBtn = !!nativeBtn
-            ? String(nativeBtn).trim().startsWith('.afk')
-            : /^\.afk_(here|all)(\s|$)/i.test(rawBody)
-
-        const btnBody = isBtn
-            ? (nativeBtn ? String(nativeBtn).trim() : rawBody)
-            : ''
-
-        if (isBtn && btnBody) {
-            const isGlobal = /^\.afk_all/i.test(btnBody)
-            const reason = btnBody.replace(/^\.afk_(here|all)/i, '').trim() || 'Nessun motivo specificato'
-
-            afkData[sender] = {
-                reason,
-                since: Date.now(),
-                onlyGroup: isGlobal ? null : m.chat
-            }
-            saveAfkData()
-
-            const msg = isGlobal
-                ? `🌐 *AFK attivato in TUTTI i gruppi!*\n📝 Motivo: ${reason}\n\n*888 AFK*`
-                : `📍 *AFK attivato SOLO in questo gruppo!*\n📝 Motivo: ${reason}\n\n*888 AFK*`
-
-            await this.sendMessage(m.chat, { text: msg }, { quoted: m })
-            return
-        }
-
-        const isAfkCmd = /^\.afk(\s|$)/i.test(rawBody)
-        if (isAfkCmd) {
-            let reason = rawBody.replace(/^\.afk/i, '').trim()
-            if (!reason) reason = 'Nessun motivo specificato'
-
-            await this.sendMessage(m.chat, {
-                text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}\n\n*888 AFK*`,
-                buttons: [
-                    { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
-                    { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
-                ],
-                headerType: 1
-            }, { quoted: m })
-
-            return
-        }
-
-        if (afkData[sender] && !rawBody.startsWith('.') && !isBtn) {
-            const { since, reason } = afkData[sender]
-            const readable = formatAFK(Date.now() - since)
-
-            delete afkData[sender]
-            saveAfkData()
-
-            await this.sendMessage(m.chat, {
-                text: `👋 *Bentornato!* Hai disattivato l'AFK.\n⏱️ AFK per *${readable}*\n📝 Motivo: ${reason}\n\n*888 AFK*`
-            }, { quoted: m })
-
-            return
-        }
-
-        const mentioned = m.mentionedJid || []
-        if (mentioned.length > 0) {
-            let count = 0
-            const now = Date.now()
-
-            for (const jid of mentioned) {
-                const entry = afkData[jid]
-                if (!entry) continue
-
-                const allowed = entry.onlyGroup === null || entry.onlyGroup === m.chat
-                if (!allowed) continue
-
-                if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
-                antiSpam[jid] = now
-
-                count++
-            }
-
-            if (count > 0) {
-                await this.sendMessage(m.chat, {
-                    text: `⚠️ *Hai taggato ${count} utenti in AFK*\n\n*888 AFK*`
-                }, { quoted: m })
-            }
-        }
-
-    } catch (error) {
-        console.error('[AFK] Errore:', error)
-    }
-}
+handler.command = /^(afk|afk_scope)$/i
+handler.help = ['afk [motivo]']
+handler.tags = ['fun']
+handler.modoadminBypass = true
 
 export default handler

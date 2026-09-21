@@ -1,5 +1,4 @@
 // by Elixir, Punisher & 888 Staff
-
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -49,7 +48,7 @@ function formatAFK(ms) {
 
 let handler = m => m
 
-handler.all = async function (m) {
+handler.all = async function (m, { conn, participants }) {
     try {
         if (m.fromMe) return
         if (!m.isGroup) return
@@ -83,10 +82,10 @@ handler.all = async function (m) {
             saveAfkData()
 
             const msg = isGlobal
-                ? `🌐 AFK attivato in tutti i gruppi\nMotivo: ${reason}`
-                : `📍 AFK attivato solo in questo gruppo\nMotivo: ${reason}`
+                ? `AFK attivato in tutti i gruppi`
+                : `AFK attivato solo in questo gruppo`
 
-            await this.sendMessage(m.chat, { text: msg }, { quoted: m })
+            await conn.sendMessage(m.chat, { text: msg }, { quoted: m })
             return
         }
 
@@ -94,8 +93,8 @@ handler.all = async function (m) {
             let reason = rawBody.replace(/^\.afk/i, '').trim()
             if (!reason) reason = 'Nessun motivo specificato'
 
-            await this.sendMessage(m.chat, {
-                text: `Dove vuoi attivare l'AFK?\nMotivo: ${reason}`,
+            await conn.sendMessage(m.chat, {
+                text: `Dove vuoi attivare l'AFK?`,
                 buttons: [
                     { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "Solo questo gruppo" }, type: 1 },
                     { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "Tutti i gruppi" }, type: 1 }
@@ -113,59 +112,35 @@ handler.all = async function (m) {
             delete afkData[sender]
             saveAfkData()
 
-            await this.sendMessage(m.chat, {
+            await conn.sendMessage(m.chat, {
                 text: `Bentornato!\nAFK per ${readable}\nMotivo: ${reason}`
             }, { quoted: m })
 
             return
         }
 
-        let textMentions = []
-        if (rawBody.includes('@')) {
-            const regex = /@(\d{5,16})/g
-            let match
-            while ((match = regex.exec(rawBody)) !== null) {
-                textMentions.push(match[1] + '@s.whatsapp.net')
+        const users = participants.map(u => conn.decodeJid(u.id))
+
+        let count = 0
+        const now = Date.now()
+
+        for (const jid of users) {
+            if (afkData[jid] && jid !== sender) {
+                if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
+                if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
+                antiSpam[jid] = now
+                count++
             }
         }
 
-        const mentioned = [
-            ...(m.mentionedJid || []),
-            ...textMentions
-        ]
-
-        if (mentioned.length > 0) {
-            const now = Date.now()
-            const afkMentioned = []
-
-            for (const jid of mentioned) {
-                if (afkData[jid] && jid !== sender) {
-                    if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
-                    if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
-                    antiSpam[jid] = now
-                    afkMentioned.push(jid)
-                }
-            }
-
-            if (afkMentioned.length > 0) {
-                let lines = []
-                for (const jid of afkMentioned) {
-                    const { since, reason } = afkData[jid]
-                    const readable = formatAFK(now - since)
-                    const tag = '@' + jid.split('@')[0]
-                    lines.push(`• ${tag} AFK da ${readable}\nMotivo: ${reason}`)
-                }
-
-                const msg = `AFK attivi (${afkMentioned.length}):\n\n` + lines.join('\n\n')
-
-                await this.sendMessage(m.chat, {
-                    text: msg,
-                    mentions: afkMentioned
-                }, { quoted: m })
-            }
+        if (count > 0) {
+            await conn.sendMessage(m.chat, {
+                text: `Ci sono ${count} utenti in AFK`
+            }, { quoted: m })
         }
 
     } catch {}
 }
 
 export default handler
+

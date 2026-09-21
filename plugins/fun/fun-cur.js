@@ -1,76 +1,63 @@
 // Plugin by 888
 
-import fetch from 'node-fetch';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { exec } from 'child_process';
-import yts from 'yt-search';
-import { makeCard } from '../info/lastfm-card.js';
+import fetch from 'node-fetch'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
+import { exec } from 'child_process'
+import yts from 'yt-search'
+import { makeCard } from '../info/lastfm-card.js'
 
-const DB_PATH = path.join(process.cwd(), 'db.json');
+const DB_PATH = path.join(process.cwd(), 'db.json')
 
-let db = { users: {}, likes: {}, favorites: {} };
+let db = { users: {}, likes: {}, favorites: {} }
 if (fs.existsSync(DB_PATH)) {
   try {
-    const fileData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    const fileData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'))
     db = {
       users: fileData.users || {},
       likes: fileData.likes || {},
       favorites: fileData.favorites || {}
-    };
+    }
   } catch (e) {
-    console.error('Errore nel caricamento del database Last.fm, resetto...', e);
+    console.error('Errore nel caricamento del database Last.fm, resetto...', e)
   }
 }
 
 function saveDB() {
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2))
 }
 
-// Rilevamento dispositivo (coerente con menu 888)
-function detectDeviceOS(msgId) {
-  if (!msgId || typeof msgId !== 'string') return 'unknown';
-  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgId)) return 'bot_emulator';
-  if (msgId.startsWith('false_') || msgId.startsWith('true_')) return 'web';
-  if (msgId.startsWith('3EB0')) return 'android';
-  if (msgId.includes(':')) return 'desktop';
-  if (/^[A-F0-9]{32}$/i.test(msgId)) return 'android';
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgId)) return 'ios';
-  if (/^[A-Z0-9]{20,25}$/i.test(msgId)) return 'ios';
-  return 'unknown';
-}
-
-const invalidateRecentCache = (username) => {};
+const invalidateRecentCache = (username) => {}
 const generateSongId = (username, artist, song) =>
-  `${username}_${artist}_${song}`.toLowerCase().replace(/\s+/g, '');
+  `${username}_${artist}_${song}`.toLowerCase().replace(/\s+/g, '')
 
 const addSongLike = (songId, sender) => {
-  if (!db.likes[songId]) db.likes[songId] = [];
-  if (db.likes[songId].includes(sender)) return { alreadyLiked: true };
-  db.likes[songId].push(sender);
-  saveDB();
-  return { alreadyLiked: false };
-};
+  if (!db.likes[songId]) db.likes[songId] = []
+  if (db.likes[songId].includes(sender)) return { alreadyLiked: true }
+  db.likes[songId].push(sender)
+  saveDB()
+  return { alreadyLiked: false }
+}
 
 const addFavorite = (userId, artist, song) => {
-  if (!db.favorites[userId]) db.favorites[userId] = [];
+  if (!db.favorites[userId]) db.favorites[userId] = []
   const dup = db.favorites[userId].some(
     (f) => f.artist.toLowerCase() === artist.toLowerCase() && f.song.toLowerCase() === song.toLowerCase()
-  );
-  if (dup) return { alreadyFav: true };
-  db.favorites[userId].push({ artist, song, at: Date.now() });
-  saveDB();
-  return { alreadyFav: false };
-};
+  )
+  if (dup) return { alreadyFav: true }
+  db.favorites[userId].push({ artist, song, at: Date.now() })
+  saveDB()
+  return { alreadyFav: false }
+}
 
-const getFavorites = (userId) => db.favorites[userId] || [];
-const getUsernameFromId = (id) => db.users[id] || id;
+const getFavorites = (userId) => db.favorites[userId] || []
+const getUsernameFromId = (id) => db.users[id] || id
 
 const formatFavoriteList = (userId, label) => {
-  const favorites = getFavorites(userId);
+  const favorites = getFavorites(userId)
   if (!favorites.length) {
-    return `❤️ *Nessun brano nei preferiti*${label ? ` di ${label}` : ''}.\n\n👉 Aggiungine uno premendo il bottone *❤️ Preferito* sotto una card.`;
+    return `❤️ *Nessun brano nei preferiti*${label ? ` di ${label}` : ''}.\n\n👉 Aggiungine uno premendo il bottone *❤️ Preferito* sotto una card.`
   }
 
   const list = favorites
@@ -78,147 +65,147 @@ const formatFavoriteList = (userId, label) => {
     .reverse()
     .slice(0, 8)
     .map((item, index) => `${index + 1}. *${item.song}* — *${item.artist}*`)
-    .join('\n');
+    .join('\n')
 
-  const extra = favorites.length > 8 ? `\n\n… e altri ${favorites.length - 8} brani` : '';
-  return `❤️ *Preferiti${label ? ` di ${label}` : ''}*\n\n${list}${extra}`;
-};
+  const extra = favorites.length > 8 ? `\n\n… e altri ${favorites.length - 8} brani` : ''
+  return `❤️ *Preferiti${label ? ` di ${label}` : ''}*\n\n${list}${extra}`
+}
 
-const LASTFM_API_KEY = '36f859a1fc4121e7f0e931806507d5f9';
+const LASTFM_API_KEY = '36f859a1fc4121e7f0e931806507d5f9'
 
 const execPromise = (cmd) => new Promise((resolve, reject) => {
   exec(cmd, (error, stdout, stderr) => {
-    if (error) return reject(error);
-    resolve({ stdout, stderr });
-  });
-});
+    if (error) return reject(error)
+    resolve({ stdout, stderr })
+  })
+})
 
 async function downloadAudioFromQuery(query) {
-  let outputPath;
+  let outputPath
   try {
-    const isUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(query);
-    const vid = isUrl ? { url: query, title: query } : (await yts(query))?.videos?.[0];
-    if (!vid?.url) return null;
+    const isUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(query)
+    const vid = isUrl ? { url: query, title: query } : (await yts(query))?.videos?.[0]
+    if (!vid?.url) return null
 
-    const tmpDir = os.tmpdir();
-    const fileName = `cur_audio_${Date.now()}`;
-    outputPath = path.join(tmpDir, `${fileName}.mp3`);
+    const tmpDir = os.tmpdir()
+    const fileName = `cur_audio_${Date.now()}`
+    outputPath = path.join(tmpDir, `${fileName}.mp3`)
 
-    await execPromise(`yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`);
+    await execPromise(`yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${vid.url}"`)
 
-    if (!fs.existsSync(outputPath)) return null;
+    if (!fs.existsSync(outputPath)) return null
 
-    const buffer = fs.readFileSync(outputPath);
+    const buffer = fs.readFileSync(outputPath)
     return {
       buffer,
       title: vid.title,
       url: vid.url
-    };
+    }
   } catch (e) {
-    console.error('[cur-download] errore:', e.message);
-    return null;
+    console.error('[cur-download] errore:', e.message)
+    return null
   } finally {
-    if (outputPath && fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+    if (outputPath && fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
   }
 }
 
 async function getRecentTrack(username) {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.recenttracks?.track?.[0] || null;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.recenttracks?.track?.[0] || null
   } catch {
-    return null;
+    return null
   }
 }
 
 async function getTopArtists(username) {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&period=7day&limit=3`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.topartists?.artist || null;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.gettopartists&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&period=7day&limit=3`
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.topartists?.artist || null
   } catch {
-    return null;
+    return null
   }
 }
 
 async function getTrackInfo(artist, track, username) {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&username=${encodeURIComponent(username || '')}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.track || null;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=track.getInfo&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&username=${encodeURIComponent(username || '')}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.track || null
   } catch {
-    return null;
+    return null
   }
 }
 
 async function getArtistInfo(artist) {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artist)}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.artist || null;
+    const url = `https://ws.audioscrobbler.com/2.0/?method=artist.getInfo&artist=${encodeURIComponent(artist)}&api_key=${LASTFM_API_KEY}&format=json&autocorrect=1`
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const json = await res.json()
+    return json?.artist || null
   } catch {
-    return null;
+    return null
   }
 }
 
 const formatCount = (n) => {
-  const num = parseInt(n, 10) || 0;
-  if (num >= 1e6) return `${(num / 1e6).toFixed(num >= 1e7 ? 0 : 1)}M`;
-  if (num >= 1e3) return `${(num / 1e3).toFixed(num >= 1e5 ? 0 : 1)}k`;
-  return String(num);
-};
+  const num = parseInt(n, 10) || 0
+  if (num >= 1e6) return `${(num / 1e6).toFixed(num >= 1e7 ? 0 : 1)}M`
+  if (num >= 1e3) return `${(num / 1e3).toFixed(num >= 1e5 ? 0 : 1)}k`
+  return String(num)
+}
 
 const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
   if (command === 'setuser') {
-    const username = (text || '').trim();
+    const username = (text || '').trim()
     if (!username) {
       return conn.sendMessage(m.chat, {
         text: `❌ Usa il comando così: ${usedPrefix + command} <username>`
-      }, { quoted: m });
+      }, { quoted: m })
     }
-    db.users[m.sender] = username;
-    saveDB();
+    db.users[m.sender] = username
+    saveDB()
     return conn.sendMessage(m.chat, {
       text: `✅ Username Last.fm impostato su *${username}*`
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
   if (command === 'curlike' || command === 'preferiti' || command === 'mypre') {
     const targetId = m.quoted && !m.quoted.fromMe
       ? m.quoted.sender
-      : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender);
+      : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.sender)
 
-    const targetUsername = db.users[targetId];
+    const targetUsername = db.users[targetId]
     return conn.sendMessage(m.chat, {
       text: formatFavoriteList(targetId, targetId === m.sender ? '' : (targetUsername || targetId.split('@')[0]))
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
   if (command === 'scarica' || command === 'download' || command === 'downloadaudio') {
-    const query = (text || '').trim() || (m.quoted?.text ? m.quoted.text : '');
+    const query = (text || '').trim() || (m.quoted?.text ? m.quoted.text : '')
     if (!query) {
       return conn.sendMessage(m.chat, {
         text: `❌ Usa: ${usedPrefix}${command} <titolo brano>`
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-    const result = await downloadAudioFromQuery(query);
+    await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } })
+    const result = await downloadAudioFromQuery(query)
     if (!result) {
-      await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+      await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
       return conn.sendMessage(m.chat, {
         text: '❌ Download audio non riuscito. Verifica che yt-dlp sia installato e aggiornato.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
     return conn.sendMessage(m.chat, {
@@ -226,48 +213,48 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       mimetype: 'audio/mpeg',
       fileName: `${(result.title || 'audio').replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp3`,
       caption: `🎵 *Download audio*\n${result.title}`
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
-  const user = db.users[m.sender];
+  const user = db.users[m.sender]
   if (!user) {
     return conn.sendMessage(m.chat, {
       text: `⚠️ Usa prima \`${usedPrefix}setuser <username>\` per collegare il tuo account Last.fm.`
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
   if (command === 'profilo' || command === 'cur') {
-    const track = await getRecentTrack(user);
+    const track = await getRecentTrack(user)
     if (!track) {
       return conn.sendMessage(m.chat, {
         text: '❌ Nessun brano trovato o utente inesistente su Last.fm.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    let imageBuffer;
+    let imageBuffer
     try {
-      imageBuffer = await makeCard(track, user);
+      imageBuffer = await makeCard(track, user)
     } catch (e) {
-      console.error('[cur] makeCard error:', e.message);
+      console.error('[cur] makeCard error:', e.message)
       return conn.sendMessage(m.chat, {
         text: '❌ Errore nella generazione della card grafica.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const songTitle = track.name || 'Traccia sconosciuta';
-    const artistName = track.artist?.['#text'] || 'Artista sconosciuto';
-    const searchQuery = `${songTitle} ${artistName}`;
+    const songTitle = track.name || 'Traccia sconosciuta'
+    const artistName = track.artist?.['#text'] || 'Artista sconosciuto'
+    const searchQuery = `${songTitle} ${artistName}`
 
     const [trackInfo, artistInfo] = await Promise.all([
       getTrackInfo(artistName, songTitle, user),
       getArtistInfo(artistName)
-    ]);
+    ])
 
-    const playCount      = trackInfo?.playcount      || 0;
-    const listeners      = trackInfo?.listeners      || 0;
-    const userPlayCount  = trackInfo?.userplaycount  || 0;
-    const artListeners   = artistInfo?.stats?.listeners  || 0;
-    const artPlaycount   = artistInfo?.stats?.playcount  || 0;
+    const playCount      = trackInfo?.playcount      || 0
+    const listeners      = trackInfo?.listeners      || 0
+    const userPlayCount  = trackInfo?.userplaycount  || 0
+    const artListeners   = artistInfo?.stats?.listeners  || 0
+    const artPlaycount   = artistInfo?.stats?.playcount  || 0
 
     const caption = `
 🎧 *Now Playing* • ${user}
@@ -283,39 +270,21 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 💫 Tu l'hai ascoltata ${formatCount(userPlayCount)} volte
 
 🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
-`.trim();
-
-    const isIOS = detectDeviceOS(m.id) === 'ios';
+`.trim()
 
     const rows = [
-      { id: `.like ${m.sender}`, title: '💜 Mi piace', description: 'Metti like al brano' },
-      { id: `.fuoco ${m.sender}`, title: '🔥 Fuoco', description: 'Reagisci al brano' },
-      { id: `.scarica ${searchQuery}`, title: '🎵 Scarica audio', description: 'Scarica il brano in MP3' }
-    ];
+      { id: `.like ${m.sender}`, title: '💜 Mi piace' },
+      { id: `.fuoco ${m.sender}`, title: '🔥 Fuoco' },
+      { id: `.scarica ${searchQuery}`, title: '🎵 Scarica audio' }
+    ]
 
-    const interactiveButtons = isIOS
-      ? rows.map(r => ({
-          name: 'quick_reply',
-          buttonParamsJson: JSON.stringify({
-            display_text: r.title,
-            id: r.id
-          })
-        }))
-      : [
-          {
-            name: 'single_select',
-            buttonParamsJson: JSON.stringify({
-              title: 'Brano Last.fm',
-              sections: [
-                {
-                  title: '🎧 Azioni disponibili',
-                  highlight_label: '888',
-                  rows
-                }
-              ]
-            })
-          }
-        ];
+    const interactiveButtons = rows.map(r => ({
+      name: 'quick_reply',
+      buttonParamsJson: JSON.stringify({
+        display_text: r.title,
+        id: r.id
+      })
+    }))
 
     await conn.sendMessage(
       m.chat,
@@ -325,137 +294,141 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
         interactiveButtons
       },
       { quoted: m }
-    );
+    )
 
-    return;
+    return
   }
 
   if (command === 'top' || command === 'stats') {
-    const artists = await getTopArtists(user);
+    const artists = await getTopArtists(user)
     if (!artists || !artists.length) {
       return conn.sendMessage(m.chat, {
         text: '❌ Nessun dato trovato per gli ultimi 7 giorni.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const medals = ['🥇', '🥈', '🥉'];
+    const medals = ['🥇', '🥈', '🥉']
     const topList = artists
       .map((a, i) =>
         `${medals[i]} *${a.name}*\n📊 ${a.playcount} scrobble${parseInt(a.playcount) > 1 ? 's' : ''}`
       )
-      .join('\n\n');
+      .join('\n\n')
 
     return conn.sendMessage(m.chat, {
       text: `🏆 *Top artisti di ${user}* (ultimi 7 giorni)\n\n${topList}`
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
   if (command === 'like') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe
         ? m.quoted.sender
-        : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null);
+        : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null)
 
     if (!targetUserId && args[0]) {
-      const parsedArg = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+      const parsedArg = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net'
       if (db.users[parsedArg]) {
-        targetUserId = parsedArg;
+        targetUserId = parsedArg
       }
     }
 
-    targetUserId = targetUserId || m.sender;
+    targetUserId = targetUserId || m.sender
 
-    const targetUsername = db.users[targetUserId];
+    const targetUsername = db.users[targetUserId]
     if (!targetUsername) {
       return conn.sendMessage(m.chat, {
         text: '❌ Quell\'utente non ha ancora registrato un account Last.fm.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const track = await getRecentTrack(targetUsername);
+    const track = await getRecentTrack(targetUsername)
     if (!track) {
       return conn.sendMessage(m.chat, {
         text: '❌ Impossibile recuperare l\'ultimo brano dell\'utente.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const artist = track.artist?.['#text'] || 'Unknown';
-    const songName = track.name || 'Unknown';
+    const artist = track.artist?.['#text'] || 'Unknown'
+    const songName = track.name || 'Unknown'
 
-    const result = addFavorite(m.sender, artist, songName);
+    const result = addFavorite(m.sender, artist, songName)
 
     if (result.alreadyFav) {
       return conn.sendMessage(m.chat, {
         text: `❤️ *${songName}* di *${artist}* è già tra i tuoi preferiti!`
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
     return conn.sendMessage(m.chat, {
       text: `❤️ Aggiunto *${songName}* di *${artist}* ai tuoi preferiti!\n📋 Guardali con ${usedPrefix}curlike`
-    }, { quoted: m });
+    }, { quoted: m })
   }
 
   if (command === 'fuoco') {
     let targetUserId =
       m.quoted && !m.quoted.fromMe
         ? m.quoted.sender
-        : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null);
+        : (m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : null)
 
     if (!targetUserId && args[0]) {
-      const parsedArg = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+      const parsedArg = args[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net'
       if (db.users[parsedArg]) {
-        targetUserId = parsedArg;
+        targetUserId = parsedArg
       }
     }
 
     if (!targetUserId) {
       return conn.sendMessage(m.chat, {
         text: '⚠️ Devi premere il bottone sotto la card, rispondere al messaggio di un utente o menzionarlo per dargli fuoco 🔥!'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const targetUsername = db.users[targetUserId];
+    const targetUsername = db.users[targetUserId]
     if (!targetUsername) {
       return conn.sendMessage(m.chat, {
         text: '❌ Questo utente non ha ancora registrato un account Last.fm.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
     if (m.sender === targetUserId) {
       return conn.sendMessage(m.chat, {
         text: '🔥 Non puoi mettere a fuoco la tua stessa musica!'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    invalidateRecentCache(targetUsername);
-    const track = await getRecentTrack(targetUsername);
+    invalidateRecentCache(targetUsername)
+    const track = await getRecentTrack(targetUsername)
     if (!track) {
       return conn.sendMessage(m.chat, {
         text: '❌ Impossibile recuperare i dettagli dell\'ultimo brano dell\'utente.'
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const artist = track.artist?.['#text'] || 'Unknown';
-    const songName = track.name || 'Unknown';
+    const artist = track.artist?.['#text'] || 'Unknown'
+    const songName = track.name || 'Unknown'
 
-    const songId = generateSongId(targetUsername, artist, songName);
-    const result = addSongLike(songId, m.sender);
+    const songId = generateSongId(targetUsername, artist, songName)
+    const result = addSongLike(songId, m.sender)
 
     if (result.alreadyLiked) {
       return conn.sendMessage(m.chat, {
         text: `⚠️ Hai già messo fuoco a "${songName}" ascoltata da ${targetUsername}!`
-      }, { quoted: m });
+      }, { quoted: m })
     }
 
-    const targetName = getUsernameFromId(targetUserId);
+    const targetName = getUsernameFromId(targetUserId)
     return conn.sendMessage(m.chat, {
       text: `🔥 Hai messo fuoco a *${songName}* di *${targetName}*!`
-    }, { quoted: m });
+    }, { quoted: m })
   }
-};
+}
 
-handler.command = ['setuser', 'cur', 'stats', 'fuoco', 'like', 'curlike', 'preferiti', 'mypre', 'scarica', 'download', 'downloadaudio'];
-handler.tags = ['fun'];
-handler.group = true;
+handler.command = [
+  'setuser', 'cur', 'stats', 'fuoco', 'like',
+  'curlike', 'preferiti', 'mypre',
+  'scarica', 'download', 'downloadaudio'
+]
+handler.tags = ['fun']
+handler.group = true
 
-export default handler;
+export default handler

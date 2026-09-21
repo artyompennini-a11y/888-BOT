@@ -5,7 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
+const AFK_FILE = path.join(__dirname, '..', '..', 'data', 'afk.json')
 
 const formatDur = (ms) => {
     if (!ms || ms < 0) ms = 0
@@ -32,7 +32,7 @@ let handler = async (m, { conn }) => {
         if (fs.existsSync(AFK_FILE)) {
             afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'))
         }
-    } catch (e) {}
+    } catch {}
 
     const meta = await conn.groupMetadata(m.chat)
     const groupName = meta.subject || await conn.getName(m.chat).catch(() => '?')
@@ -42,9 +42,9 @@ let handler = async (m, { conn }) => {
     }))
 
     const filtered = Object.entries(afkData).filter(([jid, data]) => {
-        let normalizedJid = jid
-        try { normalizedJid = conn.decodeJid(jid) } catch {}
-        if (!groupMembers.has(normalizedJid)) return false
+        let normalized = jid
+        try { normalized = conn.decodeJid(jid) } catch {}
+        if (!groupMembers.has(normalized)) return false
         return data.onlyGroup == null || data.onlyGroup === m.chat
     })
 

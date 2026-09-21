@@ -1,10 +1,11 @@
 // by Elixir, Punisher & 888 Staff
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', '..', 'data', 'afk.json')
+const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
 
 let afkData = {}
 let antiSpam = {}
@@ -30,8 +31,8 @@ function startAntiSpamCleanup() {
     if (antiSpamCleanup) clearInterval(antiSpamCleanup)
     antiSpamCleanup = setInterval(() => {
         const now = Date.now()
-        for (const [jid, timestamp] of Object.entries(antiSpam)) {
-            if (now - timestamp > 30000) delete antiSpam[jid]
+        for (const [jid, ts] of Object.entries(antiSpam)) {
+            if (now - ts > 30000) delete antiSpam[jid]
         }
     }, 300000)
 }
@@ -54,11 +55,7 @@ handler.all = async function (m, { conn, participants }) {
         if (!m.isGroup) return
 
         const sender = m.sender
-        const rawBody =
-            (m.text ||
-            m.message?.conversation ||
-            m.message?.extendedTextMessage?.text ||
-            "").trim()
+        const rawBody = (m.text || "").trim()
 
         const nativeBtn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
@@ -82,22 +79,23 @@ handler.all = async function (m, { conn, participants }) {
             saveAfkData()
 
             const msg = isGlobal
-                ? `AFK attivato in tutti i gruppi`
-                : `AFK attivato solo in questo gruppo`
+                ? `🌐 *AFK attivato in TUTTI i gruppi!*\n📝 Motivo: ${reason}\n\n*888 AFK*`
+                : `📍 *AFK attivato SOLO in questo gruppo!*\n📝 Motivo: ${reason}\n\n*888 AFK*`
 
-            await conn.sendMessage(m.chat, { text: msg }, { quoted: m })
+            await this.sendMessage(m.chat, { text: msg }, { quoted: m })
             return
         }
 
-        if (/^\.afk(\s|$)/i.test(rawBody)) {
+        const isAfkCmd = /^\.afk(\s|$)/i.test(rawBody)
+        if (isAfkCmd) {
             let reason = rawBody.replace(/^\.afk/i, '').trim()
             if (!reason) reason = 'Nessun motivo specificato'
 
-            await conn.sendMessage(m.chat, {
-                text: `Dove vuoi attivare l'AFK?`,
+            await this.sendMessage(m.chat, {
+                text: `💤 *Dove vuoi attivare l'AFK?*\n📝 Motivo: ${reason}\n\n*888 AFK*`,
                 buttons: [
-                    { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "Solo questo gruppo" }, type: 1 },
-                    { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "Tutti i gruppi" }, type: 1 }
+                    { buttonId: `.afk_here ${reason}`, buttonText: { displayText: "📍 Solo questo gruppo" }, type: 1 },
+                    { buttonId: `.afk_all ${reason}`, buttonText: { displayText: "🌐 Tutti i gruppi" }, type: 1 }
                 ],
                 headerType: 1
             }, { quoted: m })
@@ -112,8 +110,8 @@ handler.all = async function (m, { conn, participants }) {
             delete afkData[sender]
             saveAfkData()
 
-            await conn.sendMessage(m.chat, {
-                text: `Bentornato!\nAFK per ${readable}\nMotivo: ${reason}`
+            await this.sendMessage(m.chat, {
+                text: `👋 *Bentornato!* Hai disattivato l'AFK.\n⏱️ AFK per *${readable}*\n📝 Motivo: ${reason}\n\n*888 AFK*`
             }, { quoted: m })
 
             return
@@ -125,22 +123,29 @@ handler.all = async function (m, { conn, participants }) {
         const now = Date.now()
 
         for (const jid of users) {
-            if (afkData[jid] && jid !== sender) {
-                if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
-                if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
-                antiSpam[jid] = now
-                count++
-            }
+            const entry = afkData[jid]
+            if (!entry) continue
+
+            const allowed = entry.onlyGroup === null || entry.onlyGroup === m.chat
+            if (!allowed) continue
+
+            if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
+            antiSpam[jid] = now
+
+            count++
         }
 
         if (count > 0) {
-            await conn.sendMessage(m.chat, {
-                text: `Ci sono ${count} utenti in AFK`
+            await this.sendMessage(m.chat, {
+                text: `⚠️ *Ci sono ${count} utenti in AFK*\n\n*888 AFK*`
             }, { quoted: m })
         }
 
-    } catch {}
+    } catch (error) {
+        console.error('[AFK] Errore:', error)
+    }
 }
 
 export default handler
+
 

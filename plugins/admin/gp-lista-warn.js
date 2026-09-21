@@ -1,3 +1,5 @@
+// Plugin by Elixir, Punisher & 888 staff
+
 const MAX_WARN = 5;
 
 const handler = async (msg, { conn }) => {
@@ -11,8 +13,11 @@ const handler = async (msg, { conn }) => {
   const participants = groupMetadata.participants;
   const sender = participants.find(p => p.id === msg.sender);
 
-  if (!sender || !(sender.admin === 'admin' || sender.admin === 'superadmin')) {
-    return conn.reply(chatId, '⛔ Accesso negato — servono privilegi admin.', msg);
+  const senderAdmin = sender && (sender.admin === 'admin' || sender.admin === 'superadmin');
+  const senderOwner = global.owner.includes(msg.sender.split('@')[0]);
+
+  if (!senderAdmin && !senderOwner) {
+    return conn.reply(chatId, '⛔ Accesso negato — servono privilegi admin o owner.', msg);
   }
 
   let warnList = [];

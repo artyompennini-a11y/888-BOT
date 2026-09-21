@@ -35,11 +35,28 @@ const initPurgeHistoryListener = () => {
   }
 };
 initPurgeHistoryListener();
-let handler = async (m, { conn, text, isGroup, isAdmin, isROwner, usedPrefix, command }) => {
-  if (!isGroup) return m.reply('⚠️ Questo comando funziona solo nei gruppi.');
-  if (!isAdmin && !isROwner) {
-    return m.reply('❌ Solo admin o proprietario del bot possono usare questo comando.');
+let handler = async (m, { conn, text, usedPrefix, command }) => {
+  // Verifica se è un gruppo controllando direttamente il chat
+  const chatId = m.chat;
+  const isGroupChat = chatId.endsWith('@g.us');
+  
+  if (!isGroupChat) {
+    return m.reply('⚠️ Questo comando funziona solo nei gruppi.');
   }
+  
+  // Controllo permessi - va fatto tramite conn
+  try {
+    const participant = await conn.groupMetadata(chatId);
+    const me = participant.participants.find(p => p.id === conn.user.id);
+    const isBotAdmin = me?.isAdmin || me?.isAdmin == true;
+    
+    if (!isBotAdmin) {
+      return m.reply('❌ Il bot deve essere admin per usare questo comando.');
+    }
+  } catch (e) {
+    // Se non riesco a verificare, assumiamo che sia admin
+  }
+  
   if (!text || isNaN(text)) {
     return m.reply(`🧹 𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐏𝐔𝐑𝐆𝐄
 ❌ Devi specificare il numero di messaggi da eliminare!
@@ -103,7 +120,6 @@ let handler = async (m, { conn, text, isGroup, isAdmin, isROwner, usedPrefix, co
 handler.help = ['purge <numero>'];
 handler.tags = ['admin', 'group'];
 handler.command = /^purge$/i;
-handler.group = true;
 handler.admin = true;
 handler.botAdmin = true;
 export default handler;

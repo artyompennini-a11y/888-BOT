@@ -49,7 +49,7 @@ function formatAFK(ms) {
 
 let handler = m => m
 
-handler.all = async function (m, { conn, participants }) {
+handler.all = async function (m, { conn }) {
     try {
         if (m.fromMe) return
         if (!m.isGroup) return
@@ -117,28 +117,29 @@ handler.all = async function (m, { conn, participants }) {
             return
         }
 
-        const users = participants.map(u => conn.decodeJid(u.id))
+        const mentioned = m.mentionedJid || []
+        if (mentioned.length > 0) {
+            let count = 0
+            const now = Date.now()
 
-        let count = 0
-        const now = Date.now()
+            for (const jid of mentioned) {
+                const entry = afkData[jid]
+                if (!entry) continue
 
-        for (const jid of users) {
-            const entry = afkData[jid]
-            if (!entry) continue
+                const allowed = entry.onlyGroup === null || entry.onlyGroup === m.chat
+                if (!allowed) continue
 
-            const allowed = entry.onlyGroup === null || entry.onlyGroup === m.chat
-            if (!allowed) continue
+                if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
+                antiSpam[jid] = now
 
-            if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
-            antiSpam[jid] = now
+                count++
+            }
 
-            count++
-        }
-
-        if (count > 0) {
-            await this.sendMessage(m.chat, {
-                text: `⚠️ *Ci sono ${count} utenti in AFK*\n\n*888 AFK*`
-            }, { quoted: m })
+            if (count > 0) {
+                await this.sendMessage(m.chat, {
+                    text: `⚠️ *Hai taggato ${count} utenti in AFK*\n\n*888 AFK*`
+                }, { quoted: m })
+            }
         }
 
     } catch (error) {
@@ -147,5 +148,3 @@ handler.all = async function (m, { conn, participants }) {
 }
 
 export default handler
-
-

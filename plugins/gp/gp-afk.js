@@ -1,3 +1,4 @@
+//Plugin by Elixir, Punisher & 888 staff
 const getAfkState = () => {
   global.afkState = global.afkState || {}
   return global.afkState
@@ -35,8 +36,17 @@ const handler = async (m, { conn, text, command }) => {
     pendingState[m.sender] = { reason, chat: m.chat, at: Date.now() }
 
     return conn.sendMessage(m.chat, {
-      text: `🛌 Dove vuoi essere AFK?\n\nMotivo: ${reason}`,
-      footer: '333 AFK',
+      text: `🌙 **Modalità AFK**
+
+📝 Motivo impostato:
+«${reason}»
+
+Scegli dove attivare la modalità:
+📍 *Questo gruppo*
+🌍 *Tutti i gruppi*
+
+888 • AFK Module`,
+      footer: '888',
       buttons: [
         { buttonId: '.afk_scope group', buttonText: { displayText: '📍 Su questo gruppo' }, type: 1 },
         { buttonId: '.afk_scope all', buttonText: { displayText: '🌍 Su tutti i gruppi' }, type: 1 }
@@ -59,7 +69,15 @@ const handler = async (m, { conn, text, command }) => {
     delete pendingState[m.sender]
 
     return conn.sendMessage(m.chat, {
-      text: `✅ AFK attivato ${scope === 'all' ? 'su tutti i gruppi' : 'su questo gruppo'}\n\nMotivo: ${afkState[m.sender].reason}\n\nNon verrai menzionato/a negli hidetag.\n\nBuon riposo, ${formatMention(m.sender)}!`,
+      text: `✅ **AFK attivato!**
+
+📌 Ambito: ${scope === 'all' ? '🌍 *Tutti i gruppi*' : '📍 *Questo gruppo*'}
+📝 Motivo: «${afkState[m.sender].reason}»
+
+🔕 Non verrai incluso negli hidetag.
+😴 Buon riposo ${formatMention(m.sender)}.
+
+888 • AFK Engine`,
       mentions: [m.sender]
     }, { quoted: m })
   }
@@ -79,7 +97,14 @@ handler.before = async (m, { conn }) => {
     delete afkState[m.sender]
     delete pendingState[m.sender]
     await conn.sendMessage(m.chat, {
-      text: `✅ AFK disattivato, bentornato ${formatMention(m.sender)}!\n\n⏱️ Sei stato AFK per: ${duration}\n\nSperiamo che tu abbia riposato bene!`,
+      text: `🌅 **Bentornato ${formatMention(m.sender)}!**
+
+⏱️ Sei stato AFK per:
+➡️ *${duration}*
+
+Spero tu abbia ricaricato le energie ⚡
+
+888 • AFK Recovery`,
       mentions: [m.sender]
     }, { quoted: m }).catch(() => {})
     return false
@@ -100,7 +125,17 @@ handler.before = async (m, { conn }) => {
 
     const duration = formatDuration(Date.now() - entry.at)
     await conn.sendMessage(m.chat, {
-      text: `👋 Hey ${formatMention(m.sender)}, ${formatMention(jid)} è offline per il seguente motivo:\n\n"${entry.reason}"\n\n⏱️ AFK da: ${duration}`,
+      text: `👋 Hey ${formatMention(m.sender)}!
+
+⚠️ ${formatMention(jid)} è attualmente AFK.
+
+📝 Motivo:
+«${entry.reason}»
+
+⏱️ Offline da:
+➡️ *${duration}*
+
+888 • AFK Notify`,
       mentions: [m.sender, jid]
     }, { quoted: m }).catch(() => {})
     break
@@ -115,3 +150,4 @@ handler.tags = ['fun']
 handler.modoadminBypass = true
 
 export default handler
+

@@ -1,5 +1,5 @@
 import * as Jimp from 'jimp';
-import ownerData from './config.js';
+import ownerData from '../../config.js';
 
 const AUTHORIZED_USER = `${ownerData[0][0]}@s.whatsapp.net`;
 

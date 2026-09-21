@@ -5,7 +5,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const AFK_FILE = path.join(__dirname, '..', '..', 'data', 'afk.json')
+const AFK_FILE = path.join(__dirname, '..', 'data', 'afk.json')
 
 const formatDur = (ms) => {
     if (!ms || ms < 0) ms = 0
@@ -32,9 +32,7 @@ let handler = async (m, { conn }) => {
         if (fs.existsSync(AFK_FILE)) {
             afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'))
         }
-    } catch (e) {
-        console.error('[listaAFK] Errore caricamento AFK:', e)
-    }
+    } catch (e) {}
 
     const meta = await conn.groupMetadata(m.chat)
     const groupName = meta.subject || await conn.getName(m.chat).catch(() => '?')

@@ -1,6 +1,6 @@
 // Plugin by Elixir, Punisher & 888 staff
 
-import { owner } from '../config.js'
+import { owner } from '../../config.js'
 
 const MAX_WARN = 5;
 

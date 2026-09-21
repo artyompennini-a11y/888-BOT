@@ -1,136 +1,109 @@
 // Plugin by Elixir & 888 staff
-import fetch from 'node-fetch';
-import fs from 'fs';
-import path, { join } from 'path';
-import { fileURLToPath } from 'url';
+import fetch from 'node-fetch'
+import fs from 'fs'
+import path, { join } from 'path'
+import { fileURLToPath } from 'url'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-function detectDeviceOS(msgId) {
-  if (!msgId || typeof msgId !== 'string') return 'unknown';
-  if (/^[a-zA-Z]+-[a-fA-F0-9]+$/.test(msgId)) return 'bot_emulator';
-  if (msgId.startsWith('false_') || msgId.startsWith('true_')) return 'web';
-  if (msgId.startsWith('3EB0')) return 'android';
-  if (msgId.includes(':')) return 'desktop';
-  if (/^[A-F0-9]{32}$/i.test(msgId)) return 'android';
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(msgId)) return 'ios';
-  if (/^[A-Z0-9]{20,25}$/i.test(msgId)) return 'ios';
-  return 'unknown';
-}
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const loadStaff = () => {
   try {
-    return JSON.parse(fs.readFileSync(join(__dirname, '../../data/staff.json'), 'utf8'));
+    return JSON.parse(fs.readFileSync(join(__dirname, '../../data/staff.json'), 'utf8'))
   } catch {
-    return [];
+    return []
   }
-};
+}
 
 const cleanValue = (value) => {
-  if (!value) return '';
-  let text = String(value).trim();
-  if (text.startsWith('@')) text = text.slice(1);
-  text = text.replace(/^https?:\/\/(www\.)?(instagram\.com|t\.me)\//i, '');
-  return text;
-};
+  if (!value) return ''
+  let text = String(value).trim()
+  if (text.startsWith('@')) text = text.slice(1)
+  text = text.replace(/^https?:\/\/(www\.)?(instagram\.com|t\.me)\//i, '')
+  return text
+}
 
 const formattaMembro = (m) => {
-  const emoji = m.emoji || '👤';
-  const righe = [`${emoji} *${m.nome}*`, `_${m.ruolo}_`];
-  if (m.bio) righe.push(`\n${m.bio}`);
-  if (m.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(m.instagram)}`);
-  if (m.telegram) righe.push(`\n📞 https://t.me/${cleanValue(m.telegram)}`);
-  return righe.join('\n');
-};
+  const emoji = m.emoji || '👤'
+  const righe = [`${emoji} *${m.nome}*`, `_${m.ruolo}_`]
+  if (m.bio) righe.push(`\n${m.bio}`)
+  if (m.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(m.instagram)}`)
+  if (m.telegram) righe.push(`\n📞 https://t.me/${cleanValue(m.telegram)}`)
+  return righe.join('\n')
+}
 
 const inviaTelegram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => cleanValue(m.telegram));
+  const membri = staffData.filter(m => cleanValue(m.telegram))
   if (membri.length === 0) {
-    return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted });
+    return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted })
   }
-  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')}`;
-  return conn.sendMessage(chat, { text: testo }, { quoted });
-};
+  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')}`
+  return conn.sendMessage(chat, { text: testo }, { quoted })
+}
 
 const inviaInstagram = async (conn, chat, staffData, quoted) => {
-  const membri = staffData.filter(m => cleanValue(m.instagram));
+  const membri = staffData.filter(m => cleanValue(m.instagram))
   if (membri.length === 0) {
-    return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted });
+    return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted })
   }
-  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')}`;
-  return conn.sendMessage(chat, { text: testo }, { quoted });
-};
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')}`
+  return conn.sendMessage(chat, { text: testo }, { quoted })
+}
 
 const inviaStaff = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
-    return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted });
+    return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted })
   }
-  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`;
-  return conn.sendMessage(chat, { text: testo }, { quoted });
-};
+  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`
+  return conn.sendMessage(chat, { text: testo }, { quoted })
+}
 
 const handler = async (m, { conn, usedPrefix, text }) => {
-  const staffData = loadStaff();
-  const lowerText = String(text || '').toLowerCase();
+  const staffData = loadStaff()
+  const lowerText = String(text || '').toLowerCase()
 
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
-    return inviaTelegram(conn, m.chat, staffData, m);
+    return inviaTelegram(conn, m.chat, staffData, m)
   }
   if (lowerText.includes('ig') || lowerText.includes('instagram')) {
-    return inviaInstagram(conn, m.chat, staffData, m);
+    return inviaInstagram(conn, m.chat, staffData, m)
   }
   if (lowerText.includes('lista') || lowerText.includes('team') || lowerText === 'staff') {
-    return inviaStaff(conn, m.chat, staffData, m);
+    return inviaStaff(conn, m.chat, staffData, m)
   }
 
-  let imageBuffer;
+  let imageBuffer
   try {
-    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg');
+    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg')
   } catch {
-    imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer();
+    imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
   }
 
-  const botName = global.db?.data?.nomedelbot || global.nomebot || '🤖 888 BOT';
-  const botVersion = global.versione || global.db?.data?.version || '1.2';
+  const botName = global.db?.data?.nomedelbot || global.nomebot || '🤖 888 BOT'
+  const botVersion = global.versione || global.db?.data?.version || '1.2'
 
   const menuText = `
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
 
 📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
-`.trim();
+`.trim()
 
-  const contattiTelegram = staffData.filter(m => cleanValue(m.telegram)).length;
-  const contattiInstagram = staffData.filter(m => cleanValue(m.instagram)).length;
+  const contattiTelegram = staffData.filter(m => cleanValue(m.telegram)).length
+  const contattiInstagram = staffData.filter(m => cleanValue(m.instagram)).length
 
   const rows = [
-    { id: `${usedPrefix}staff tg`, title: '📞 Telegram', description: contattiTelegram > 0 ? `${contattiTelegram} contatti disponibili` : 'Nessun contatto disponibile' },
-    { id: `${usedPrefix}staff ig`, title: '📷 Instagram', description: contattiInstagram > 0 ? `${contattiInstagram} profili disponibili` : 'Nessun profilo disponibile' },
-    { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff', description: staffData.length > 0 ? `${staffData.length} membri del team` : 'Nessun membro trovato' }
-  ];
+    { id: `${usedPrefix}staff tg`, title: '📞 Telegram' },
+    { id: `${usedPrefix}staff ig`, title: '📷 Instagram' },
+    { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff' }
+  ]
 
-  const isIOS = detectDeviceOS(m.id) === 'ios';
-
-  const interactiveButtons = isIOS
-    ? rows.map(r => ({
-        name: 'quick_reply',
-        buttonParamsJson: JSON.stringify({ display_text: r.title, id: r.id })
-      }))
-    : [
-        {
-          name: 'single_select',
-          buttonParamsJson: JSON.stringify({
-            title: 'Staff 888',
-            sections: [
-              {
-                title: '📁 Contatti Staff',
-                highlight_label: '888',
-                rows
-              }
-            ]
-          })
-        }
-      ];
+  const interactiveButtons = rows.map(r => ({
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: r.title,
+      id: r.id
+    })
+  }))
 
   await conn.sendMessage(m.chat, {
     image: imageBuffer,
@@ -138,13 +111,13 @@ const handler = async (m, { conn, usedPrefix, text }) => {
     footer: '',
     headerType: 4,
     interactiveButtons
-  }, { quoted: m });
+  }, { quoted: m })
 
-  m.react('📌');
-};
+  m.react('📌')
+}
 
-handler.help = ['staff', 'team'];
-handler.tags = ['main'];
-handler.command = ['staff', 'team'];
+handler.help = ['staff', 'team']
+handler.tags = ['main']
+handler.command = ['staff', 'team']
 
-export default handler;
+export default handler

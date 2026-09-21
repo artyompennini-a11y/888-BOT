@@ -1,5 +1,7 @@
 // Plugin by Elixir, Punisher & 888 staff
 
+import { owner } from '../config.js'
+
 const MAX_WARN = 5;
 
 const handler = async (msg, { conn }) => {
@@ -14,7 +16,7 @@ const handler = async (msg, { conn }) => {
   const sender = participants.find(p => p.id === msg.sender);
 
   const senderAdmin = sender && (sender.admin === 'admin' || sender.admin === 'superadmin');
-  const senderOwner = global.owner.includes(msg.sender.split('@')[0]);
+  const senderOwner = owner.includes(msg.sender.split('@')[0]);
 
   if (!senderAdmin && !senderOwner) {
     return conn.reply(chatId, '⛔ Accesso negato — servono privilegi admin o owner.', msg);

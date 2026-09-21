@@ -30,18 +30,18 @@ function saveAfkData() {
     }
 }
 
-// Cleanup anti-spam cache every 5 minutes to prevent memory leaks
+// Cleanup anti-spam cache ogni 5 minuti
 function startAntiSpamCleanup() {
     if (antiSpamCleanup) clearInterval(antiSpamCleanup)
     antiSpamCleanup = setInterval(() => {
         const now = Date.now()
-        const expireTime = 30000 // 30 seconds
+        const expireTime = 30000 // 30 secondi
         for (const [jid, timestamp] of Object.entries(antiSpam)) {
             if (now - timestamp > expireTime) {
                 delete antiSpam[jid]
             }
         }
-    }, 300000) // Run every 5 minutes
+    }, 300000) // ogni 5 minuti
 }
 
 loadAfkData()
@@ -58,17 +58,19 @@ let handler = m => m
 
 handler.all = async function (m) {
     try {
+        // Ignora messaggi del bot e fuori dai gruppi
         if (m.fromMe) return
         if (!m.isGroup) return
 
         const sender = m.sender
-        const rawBody = (m.text || "").trim()
 
-        // 🔥 Il pulsante può arrivare come buttonsResponseMessage NATIVO...
+        // In molti setup Baileys, il testo può stare in posti diversi
+        const rawBody = (m.text || m.message?.conversation || m.message?.extendedTextMessage?.text || "").trim()
+
+        // Pulsante nativo
         const nativeBtn = m?.message?.buttonsResponseMessage?.selectedButtonId || null
 
-        // ...oppure, in questo framework, viene rinviato come messaggio di testo
-        // sintetico in cui m.text = ID del pulsante (es. ".afk_all motivo").
+        // Riconoscimento se è un pulsante AFK
         const isBtn = !!nativeBtn
             ? String(nativeBtn).trim().startsWith('.afk')
             : /^\.afk_(here|all)(\s|$)/i.test(rawBody)
@@ -130,20 +132,41 @@ handler.all = async function (m) {
             return
         }
 
-        // 4️⃣ Tag AFK → aggiorna il timer; il filtro comune gestisce le menzioni.
+        // 4️⃣ Tag AFK → notifica + anti-spam + conteggio utenti AFK
         const mentioned = m.mentionedJid || []
         if (mentioned.length > 0) {
+            const now = Date.now()
+            const afkMentioned = []
+
             for (const jid of mentioned) {
                 if (afkData[jid] && jid !== sender) {
-
+                    // Se AFK solo in un gruppo diverso → salta
                     if (afkData[jid].onlyGroup && afkData[jid].onlyGroup !== m.chat) continue
 
-                    const now = Date.now()
-
-                    // Anti-spam: skip if recently notified (10 seconds cooldown)
+                    // Anti-spam: cooldown 10 secondi per singolo utente
                     if (antiSpam[jid] && now - antiSpam[jid] < 10000) continue
+
                     antiSpam[jid] = now
+                    afkMentioned.push(jid)
                 }
+            }
+
+            // Se ci sono utenti AFK taggati → manda messaggio
+            if (afkMentioned.length > 0) {
+                let lines = []
+                for (const jid of afkMentioned) {
+                    const { since, reason } = afkData[jid]
+                    const readable = formatAFK(now - since)
+                    const tag = '@' + jid.split('@')[0]
+                    lines.push(`• ${tag} è AFK da *${readable}*\n  📝 Motivo: ${reason}`)
+                }
+
+                const msg = `⚠️ *AFK attivi tra gli utenti taggati (${afkMentioned.length})*\n\n` + lines.join('\n\n')
+
+                await this.sendMessage(m.chat, {
+                    text: msg,
+                    mentions: afkMentioned
+                }, { quoted: m })
             }
         }
     } catch (error) {

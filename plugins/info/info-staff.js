@@ -25,9 +25,11 @@ const cleanValue = (value) => {
 const formattaMembro = (m) => {
   const emoji = m.emoji || '👤'
   const righe = [`${emoji} *${m.nome}*`, `_${m.ruolo}_`]
+
   if (m.bio) righe.push(`\n${m.bio}`)
   if (m.instagram) righe.push(`\n📷 https://instagram.com/${cleanValue(m.instagram)}`)
   if (m.telegram) righe.push(`\n📞 https://t.me/${cleanValue(m.telegram)}`)
+
   return righe.join('\n')
 }
 
@@ -36,7 +38,11 @@ const inviaTelegram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Telegram disponibile.' }, { quoted })
   }
-  const testo = `📞 *TELEGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')}`
+
+  const testo = `📞 *TELEGRAM STAFF*\n\n${
+    membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📞 https://t.me/${cleanValue(m.telegram)}`).join('\n\n')
+  }`
+
   return conn.sendMessage(chat, { text: testo }, { quoted })
 }
 
@@ -45,7 +51,11 @@ const inviaInstagram = async (conn, chat, staffData, quoted) => {
   if (membri.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun contatto Instagram disponibile.' }, { quoted })
   }
-  const testo = `📷 *INSTAGRAM STAFF*\n\n${membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')}`
+
+  const testo = `📷 *INSTAGRAM STAFF*\n\n${
+    membri.map(m => `👤 *${m.nome}* (${m.ruolo})\n📷 https://instagram.com/${cleanValue(m.instagram)}`).join('\n\n')
+  }`
+
   return conn.sendMessage(chat, { text: testo }, { quoted })
 }
 
@@ -53,7 +63,11 @@ const inviaStaff = async (conn, chat, staffData, quoted) => {
   if (!staffData || staffData.length === 0) {
     return conn.sendMessage(chat, { text: '❌ Nessun membro dello staff trovato.' }, { quoted })
   }
-  const testo = `⚡ *TEAM 888*\n\n${staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')}`
+
+  const testo = `⚡ *TEAM 888*\n\n${
+    staffData.map(formattaMembro).join('\n\n━━━━━━━━━━━━━━━━━━\n\n')
+  }`
+
   return conn.sendMessage(chat, { text: testo }, { quoted })
 }
 
@@ -64,9 +78,11 @@ const handler = async (m, { conn, usedPrefix, text }) => {
   if (lowerText.includes('tg') || lowerText.includes('telegram')) {
     return inviaTelegram(conn, m.chat, staffData, m)
   }
+
   if (lowerText.includes('ig') || lowerText.includes('instagram')) {
     return inviaInstagram(conn, m.chat, staffData, m)
   }
+
   if (lowerText.includes('lista') || lowerText.includes('team') || lowerText === 'staff') {
     return inviaStaff(conn, m.chat, staffData, m)
   }
@@ -85,11 +101,8 @@ const handler = async (m, { conn, usedPrefix, text }) => {
 ⚡ *TEAM ${botName.toUpperCase()}*
 *VERSIONE*: ${botVersion}
 
-📂 *Apri il menu dal pulsante sotto e scegli cosa vedere.*
+📂 Scegli una categoria dai bottoni sotto.
 `.trim()
-
-  const contattiTelegram = staffData.filter(m => cleanValue(m.telegram)).length
-  const contattiInstagram = staffData.filter(m => cleanValue(m.instagram)).length
 
   const rows = [
     { id: `${usedPrefix}staff tg`, title: '📞 Telegram' },

@@ -1,5 +1,6 @@
 // Plugin by Elixir
-import fetch from 'node-fetch'
+import { createCanvas } from '@napi-rs/canvas'
+import { sticker } from '../../lib/sticker.js'
 
 const quotes = [
   "\"La vita è ciò che ti succede mentre sei impegnato a fare altri piani.\" — John Lennon",
@@ -16,55 +17,23 @@ const quotes = [
   "\"Le cose moverse sono quelle che ti mantengono in movimento.\" — Albert Einstein"
 ]
 
-const CARD_W = 500
-const CARD_H = 220
-const PADDING = 30
-const AVATAR_SIZE = 160
+const CARD_W = 512
+const CARD_H = 224
+const PADDING = 24
+const AVATAR_SIZE = 128
 const AVATAR_X = PADDING
 const AVATAR_Y = PADDING
-const TEXT_X = PADDING + AVATAR_SIZE + 30
-const TEXT_Y = PADDING + 30
+const TEXT_X = PADDING + AVATAR_SIZE + 24
+const TEXT_Y = PADDING + 16
 const TEXT_MAX_WIDTH = CARD_W - TEXT_X - PADDING
 
 const GRADIENT_START = [138, 43, 226]
 const GRADIENT_END = [135, 206, 250]
 
-let jimpCtx = null
-const jimpFontCache = new Map()
 
-async function getJimp() {
-  if (jimpCtx) return jimpCtx
-  const mod = await import('jimp')
-  const JimpClass = mod.Jimp || mod.default || mod
-  const legacy = typeof JimpClass.FONT_SANS_16_WHITE !== 'undefined' || typeof JimpClass.MIME_PNG === 'string'
-  jimpCtx = { mod, JimpClass, legacy }
-  return jimpCtx
-}
 
-function nearestFontSize(sizes, wanted) {
-  return sizes.slice().sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted) || b - a)[0]
-}
 
-async function getFont(size) {
-  const cacheKey = String(size)
-  if (jimpFontCache.has(cacheKey)) return jimpFontCache.get(cacheKey)
-  const { mod, JimpClass, legacy } = await getJimp()
-  let font
-  if (legacy) {
-    const sizes = [8, 10, 12, 14, 16, 32, 64, 128].filter(s => JimpClass[`FONT_SANS_${s}_WHITE`] !== undefined)
-    const target = nearestFontSize(sizes, size)
-    font = await JimpClass.loadFont(JimpClass[`FONT_SANS_${target}_WHITE`])
-  } else {
-    const fonts = await import('jimp/fonts')
-    const sizes = Object.keys(fonts).filter(k => /^SANS_\d+_WHITE$/.test(k)).map(k => parseInt(k.slice(5), 10))
-    const target = nearestFontSize(sizes, size)
-    font = await mod.loadFont(fonts[`SANS_${target}_WHITE`])
-  }
-  jimpFontCache.set(cacheKey, font)
-  return font
-}
-
-function textWidth(ctx, font, text) {
+function textWidth(ctx, text) {
   const measure = ctx.JimpClass.measureText || ctx.mod.measureText
   if (typeof measure === 'function') return measure(font, String(text))
   return String(text).length * 10
@@ -287,73 +256,50 @@ function wrapText(ctx, text, maxWidth) {
   return lines;
 }
 async function generateQuoteCard(imageUrl, messageText, senderName) {
-  const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-  const ctx = canvas.getContext('2d');
-  ctx.filter = 'blur(2px)';
-  const gradient = createLinearGradient(ctx, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT, GRADIENT_COLORS.start, GRADIENT_COLORS.end);
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.filter = 'none';
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+  const ctx = await getJimp()
+  let card = newImage(ctx, CARD_W, CARD_H, 0xFFFFFFFF)
+  fillGradientVertical(card, GRADIENT_START, GRADIENT_END)
+  
+  // Texture leggera
+  const { data, width, height } = bitmapOf(card)
   for (let i = 0; i < 50; i++) {
-    ctx.fillRect(Math.random() * CANVAS_WIDTH, Math.random() * CANVAS_HEIGHT, 2, 2);
+    const x = Math.floor(Math.random() * width)
+    const y = Math.floor(Math.random() * height)
+    const idx = ((y * width) + x) << 2
+    data[idx] = Math.min(255, data[idx] + Math.floor(Math.random() * 30))
+    data[idx + 1] = Math.min(255, data[idx + 1] + Math.floor(Math.random() * 30))
+    data[idx + 2] = Math.min(255, data[idx + 2] + Math.floor(Math.random() * 30))
   }
-  let avatarBuffer;
-  try {
-    const response = await fetch(imageUrl);
-    const buffer = Buffer.from(await response.arrayBuffer());
-    avatarBuffer = buffer;
-  } catch (e) {
-    const fallbackCanvas = createCanvas(AVATAR_SIZE, AVATAR_SIZE);
-    const fallbackCtx = fallbackCanvas.getContext('2d');
-    fallbackCtx.fillStyle = '#888888';
-    fallbackCtx.fillRect(0, 0, AVATAR_SIZE, AVATAR_SIZE);
-    avatarBuffer = fallbackCanvas.toBuffer('image/png');
+  
+  await drawAvatar(ctx, card, imageUrl, AVATAR_X, AVATAR_Y, AVATAR_SIZE)
+  
+  const fontSmall = await getFont(16)
+  const fontBold = await getFont(18)
+  
+  if (ctx.JimpClass.print) ctx.JimpClass.print(fontBold, card, TEXT_X, TEXT_Y, senderName || 'Utente')
+  fillRect(card, TEXT_X, TEXT_Y + 28, CARD_W - TEXT_X - PADDING, 1, [255, 255, 255, 128])
+  
+  const lines = wrapText(messageText, TEXT_MAX_WIDTH, fontSmall, ctx)
+  let currentY = TEXT_Y + 40
+  for (const line of lines.slice(0, 6)) {
+    if (currentY + 30 > CARD_H - PADDING) break
+    if (ctx.JimpClass.print) ctx.JimpClass.print(fontSmall, card, TEXT_X, currentY, line)
+    currentY += 26
   }
-  const avatarImage = await createImageBitmap(avatarBuffer);
-  drawCircularAvatar(ctx, avatarImage, PADDING, PADDING, AVATAR_SIZE);
-  const textStartX = PADDING + AVATAR_SIZE + 30;
-  const textMaxWidth = CANVAS_WIDTH - textStartX - PADDING;
-  const textStartY = PADDING + 30;
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 18px Arial';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.fillText(senderName || 'Utente', textStartX, textStartY);
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(textStartX, textStartY + 28);
-  ctx.lineTo(CANVAS_WIDTH - PADDING, textStartY + 28);
-  ctx.stroke();
-  const messageLines = wrapText(ctx, messageText, textMaxWidth);
-  const lineHeight = 26;
-  let currentY = textStartY + 40;
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '16px Arial';
-  ctx.textBaseline = 'top';
-  for (const line of messageLines.slice(0, 6)) {
-    if (currentY + 30 > CANVAS_HEIGHT - PADDING) break;
-    ctx.fillText(line, textStartX, currentY);
-    currentY += lineHeight;
+  if (lines.length > 6 && ctx.JimpClass.print) ctx.JimpClass.print(fontSmall, card, TEXT_X, currentY, '…')
+  
+  // Bordi arrotondati esterni
+  for (let i = 0; i < 3; i++) {
+    const alpha = Math.round(77 * (1 - i / 3))
+    fillRect(card, i, i, CARD_W - i * 2, 1, [255, 255, 255, alpha])
+    fillRect(card, i, CARD_H - i - 1, CARD_W - i * 2, 1, [255, 255, 255, alpha])
+    fillRect(card, i, i, 1, CARD_H - i * 2, [255, 255, 255, alpha])
+    fillRect(card, CARD_W - i - 1, i, 1, CARD_H - i * 2, [255, 255, 255, alpha])
   }
-  if (messageLines.length > 6) ctx.fillText('...', textStartX, currentY);
-  const cornerRadius = 15;
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(cornerRadius, 0);
-  ctx.lineTo(CANVAS_WIDTH - cornerRadius, 0);
-  ctx.quadraticCurveTo(CANVAS_WIDTH, 0, CANVAS_WIDTH, cornerRadius);
-  ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - cornerRadius);
-  ctx.quadraticCurveTo(CANVAS_WIDTH, CANVAS_HEIGHT, CANVAS_WIDTH - cornerRadius, CANVAS_HEIGHT);
-  ctx.lineTo(cornerRadius, CANVAS_HEIGHT);
-  ctx.quadraticCurveTo(0, CANVAS_HEIGHT, 0, CANVAS_HEIGHT - cornerRadius);
-  ctx.lineTo(0, cornerRadius);
-  ctx.quadraticCurveTo(0, 0, cornerRadius, 0);
-  ctx.closePath();
-  ctx.stroke();
-  return canvas.toBuffer('image/png');
+  
+  applyRoundedCorners(card, 15)
+  const buffer = await toPngBuffer(ctx, card)
+  return Buffer.from(buffer)
 }
 const handler = async (m, { conn, text, usedPrefix, command, quoted, isGroup }) => {
   try {

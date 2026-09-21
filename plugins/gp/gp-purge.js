@@ -35,7 +35,7 @@ const initPurgeHistoryListener = () => {
   }
 };
 initPurgeHistoryListener();
-let handler = async (m, { conn, text, usedPrefix, command }) => {
+let handler = async (m, { conn, text, isGroup, isAdmin, isROwner, usedPrefix, command }) => {
   // Verifica se è un gruppo controllando direttamente il chat
   const chatId = m.chat;
   const isGroupChat = chatId.endsWith('@g.us');
@@ -44,17 +44,9 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     return m.reply('⚠️ Questo comando funziona solo nei gruppi.');
   }
   
-  // Controllo permessi - va fatto tramite conn
-  try {
-    const participant = await conn.groupMetadata(chatId);
-    const me = participant.participants.find(p => p.id === conn.user.id);
-    const isBotAdmin = me?.isAdmin || me?.isAdmin == true;
-    
-    if (!isBotAdmin) {
-      return m.reply('❌ Il bot deve essere admin per usare questo comando.');
-    }
-  } catch (e) {
-    // Se non riesco a verificare, assumiamo che sia admin
+  // Usa i permessi forniti dal sistema handler (calcolati correttamente da Baileys)
+  if (!isAdmin && !isROwner) {
+    return m.reply('❌ Solo admin o proprietario del bot possono usare questo comando.');
   }
   
   if (!text || isNaN(text)) {

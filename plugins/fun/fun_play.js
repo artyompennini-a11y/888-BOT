@@ -1,3 +1,4 @@
+// Plugin by Elixir, Punisher & 888 Staff
 import yts from 'yt-search'
 import { exec } from 'child_process'
 import fs from 'fs'

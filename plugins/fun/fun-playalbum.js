@@ -4,11 +4,13 @@ import { exec } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import os from 'os'
-import fetch from 'node-fetch'
 
-const isOwner = (m, { conn }) => {
-  const owner = global.owner || []
-  return owner.includes(m.sender.split('@')[0]) || owner.includes(m.sender)
+// Solo Elixir può usare questo comando
+const ONLY_ELIXIR = '393297014539'
+
+const isOwner = (m) => {
+  const sender = String(m.sender || '').split('@')[0].replace(/[^0-9]/g, '')
+  return sender === ONLY_ELIXIR
 }
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {

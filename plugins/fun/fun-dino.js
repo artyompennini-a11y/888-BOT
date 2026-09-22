@@ -4,25 +4,38 @@ import path from 'path';
 let handler = async (m, { conn }) => {
     const from = m.chat;
 
-    // Percorso del file index.html (deve trovarsi nella stessa cartella del plugin o nella radice del bot)
     const filePath = path.join(process.cwd(), 'index.html');
 
-    // Verifica se il file index.html esiste
     if (!fs.existsSync(filePath)) {
         return conn.sendMessage(from, { 
             text: "⚠️ Il file *index.html* non è stato trovato nella cartella principale del bot!" 
         }, { quoted: m });
     }
 
-    // Legge il file HTML
     const htmlBuffer = fs.readFileSync(filePath);
 
-    // Invio del file index.html come documento eseguibile/scaricabile
     await conn.sendMessage(from, {
         document: htmlBuffer,
         mimetype: 'text/html',
         fileName: 'DinoRunner.html',
-        caption: "🦖 *DINO RUNNER*\n\nApri il file nel browser per giocare!"
+        caption: "🦖 *DINO RUNNER*\n\nClicca il tasto sotto per aprire il gioco!",
+        cards: [
+            {
+                image: { url: 'media/menu/dino.jpeg' },
+                title: "🦖 Dino Runner",
+                body: "Apri il gioco direttamente dal file HTML!",
+                footer: "𝟠𝟠𝟠𝙱𝙾𝚃",
+                buttons: [
+                    {
+                        name: 'cta_url',
+                        buttonParamsJson: JSON.stringify({
+                            display_text: '▶️ Apri DinoRunner.html',
+                            url: 'https://github.com/artyompennini-a11y/888dinorunhtml/blob/main/index.html'
+                        })
+                    }
+                ]
+            }
+        ]
     }, { quoted: m });
 };
 
@@ -31,3 +44,4 @@ handler.tags = ['fun', 'games'];
 handler.command = /^(dino)$/i;
 
 export default handler;
+

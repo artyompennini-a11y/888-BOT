@@ -21,7 +21,6 @@ let handler = async (m, { conn }) => {
         caption: "🦖 *DINO RUNNER*\n\nClicca il tasto sotto per aprire il gioco!",
         cards: [
             {
-                image: { url: 'media/menu/dino.jpeg' },
                 title: "🦖 Dino Runner",
                 body: "Apri il gioco direttamente dal file HTML!",
                 footer: "𝟠𝟠𝟠𝙱𝙾𝚃",
@@ -44,4 +43,3 @@ handler.tags = ['fun', 'games'];
 handler.command = /^(dino)$/i;
 
 export default handler;
-

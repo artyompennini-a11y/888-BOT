@@ -1,3 +1,4 @@
+// Plugin by Elixir
 const handler = async (m, { conn, text, participants, isOwner }) => {
   try {
     if (m.fromMe || m.sender === conn.user.jid) return
@@ -37,6 +38,19 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
     }
 
     const users = participants.map(u => conn.decodeJid(u.id))
+
+    // Filtra gli utenti AFK — collegamento perfetto con gp-afk.js
+    const afkState = global.afkState || {}
+    const botJid = conn.user.jid
+    const usersFiltered = users.filter(jid => {
+      if (jid === botJid) return false
+      const afkEntry = afkState[jid]
+      if (!afkEntry) return true
+      // Se scope è 'all' o se l'utente AFK è nello stesso gruppo, lo saltiamo
+      if (afkEntry.scope === 'all' || afkEntry.chat === m.chat) return false
+      return true
+    })
+
     const quoted = m.quoted
 
     const isViewOnce =
@@ -45,17 +59,65 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
       quoted?.message?.viewOnceMessageV2Extension ||
       quoted?.viewOnce
 
-    if (quoted && isViewOnce) {
+    if (quoted && !quoted?.pollMessage && isViewOnce) {
       return m.reply("❌ Non puoi usare hidetag su messaggi a visualizzazione singola.")
     }
 
     if (quoted) {
       const type = quoted.mtype
-      const mediaTypes = ["imageMessage", "videoMessage", "audioMessage", "documentMessage", "stickerMessage"]
-      const base = { mentions: users }
+      const mediaTypes = [
+        "imageMessage",
+        "videoMessage",
+        "audioMessage",
+        "documentMessage",
+        "stickerMessage",
+      ]
 
-      // Scarica il media SOLO se il messaggio quotato è effettivamente un media.
-      // Evita di chiamare download() su messaggi di testo semplice, che causava il crash.
+
+      const pollTypes = [
+        "pollCreationMessage",
+        "pollCreationMessageV2",
+        "pollCreationMessageV3",
+      ]
+      const poll = pollTypes.includes(type) ? quoted : quoted.pollMessage
+
+      if (poll) {
+        const q = poll.name || ""
+        const opts = (poll.options || []).map((o) => ({
+          optionName: (o && o.optionName) || "",
+        }))
+        const multi =
+          typeof poll.selectableOptionsCount === "number"
+            ? poll.selectableOptionsCount
+            : 1
+
+        try {
+          await conn.relayMessage(
+            m.chat,
+            {
+              pollCreationMessage: {
+                name: q,
+                options: opts,
+                selectableOptionsCount: multi,
+              },
+            },
+            { mentions: usersFiltered, quoted: m }
+          )
+        } catch (relayErr) {
+          console.error("[hidetag] poll relay error:", relayErr)
+          await conn.sendMessage(m.chat, {
+            pollCreationMessage: {
+              name: q,
+              options: opts,
+              selectableOptionsCount: multi,
+            },
+            mentions: usersFiltered
+          }, { quoted: m })
+        }
+        return
+      }
+
+
       let media = null
       if (mediaTypes.includes(type)) {
         media = await quoted.download().catch((err) => {
@@ -69,21 +131,21 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
           return conn.sendMessage(m.chat, {
             image: media,
             caption: text || quoted.text || "",
-            ...base
+            mentions: usersFiltered
           }, { quoted: m })
 
         case "videoMessage":
           return conn.sendMessage(m.chat, {
             video: media,
             caption: text || quoted.text || "",
-            ...base
+            mentions: usersFiltered
           }, { quoted: m })
 
         case "audioMessage":
           return conn.sendMessage(m.chat, {
             audio: media,
             mimetype: "audio/mp4",
-            ...base
+            mentions: usersFiltered
           }, { quoted: m })
 
         case "documentMessage":
@@ -92,20 +154,25 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
             mimetype: quoted.mimetype,
             fileName: quoted.fileName,
             caption: text || quoted.text || "",
-            ...base
+            mentions: usersFiltered
           }, { quoted: m })
 
         case "stickerMessage":
-          return conn.sendMessage(m.chat, {
+          await conn.sendMessage(m.chat, {
             sticker: media,
-            ...base
           }, { quoted: m })
+          if (usersFiltered.length > 0) {
+            await conn.sendMessage(m.chat, {
+              text: usersFiltered.map((jid) => `@${jid.split("@")[0]}`).join(" "),
+              mentions: usersFiltered
+            })
+          }
+          return
 
         default:
-          // testo semplice o altro tipo non gestito: nessun download, solo testo + tag
           return conn.sendMessage(m.chat, {
             text: text || quoted.text || "",
-            ...base
+            mentions: usersFiltered
           }, { quoted: m })
       }
     }
@@ -113,7 +180,7 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
     if (text) {
       return conn.sendMessage(m.chat, {
         text,
-        mentions: users
+        mentions: usersFiltered
       }, { quoted: m })
     }
 

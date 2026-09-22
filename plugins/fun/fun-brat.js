@@ -37,6 +37,7 @@ async function getFont(size) {
     (a, b) => Math.abs(a - size) - Math.abs(b - size) || b - a
   )[0]
   return mod.loadFont(fonts[`SANS_${nearest}_WHITE`])
+}
 
 function newImage(ctx, width, height, color) {
   return ctx.legacy
@@ -182,7 +183,8 @@ function chooseFontSize(text) {
   if (len <= 40) return 14
   return 12
 }
-}
+
+
 
 
 let handler = async (m, { conn, text, command }) => {

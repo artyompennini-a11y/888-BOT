@@ -61,14 +61,14 @@ let handler = async (m, { conn, text, usedPrefix, command, isGroup }) => {
 
   if (!target) {
     return conn.sendMessage(chat, {
-      text: '*⚠️ Devi menzionare qualcuno o rispondere a un messaggio per scoprire la passione con la limona appassionata 🍋🔥*\n\n*Esempio:*\n*' + usedPrefix + command + ' @utente*',
+      text: '*⚠️ Devi menzionare qualcuno o rispondere a un messaggio per limonare qualcuno 🔥*\n\n*Esempio:*\n*' + usedPrefix + command + ' @utente*',
       contextInfo: global.rcanal?.contextInfo || {}
     }, { quoted: q });
   }
 
   if (target === sender) {
     return conn.sendMessage(chat, {
-      text: '*🔥🍋 ' + tag(sender) + ' sei cosi bello che hai fatto un sguardo a te stesso... 🥵❤️‍🔥*',
+      text: '*🔥 ' + tag(sender) + ' sei cosi bello che hai fatto un sguardo a te stesso... 🔥*',
       contextInfo: {
         ...(global.rcanal?.contextInfo || {})
       },
@@ -80,7 +80,7 @@ let handler = async (m, { conn, text, usedPrefix, command, isGroup }) => {
   const senderNumero = String(sender).split('@')[0].split(':')[0];
 
   await conn.sendMessage(chat, {
-    text: '*🍋🔥 ' + tag(sender) + ' ha scoperto la sua passione con ' + tag(target) + '... la limona appassionata ti ha fissato con inside 🔥🥵❤️‍🔥*',
+    text: '*🔥 ' + tag(sender) + ' ha scoperto la sua passione per ' + tag(target) + '... lo limona appassionatamente🔥*',
     contextInfo: {
       ...(global.rcanal?.contextInfo || {})
     },
@@ -96,9 +96,9 @@ let handler = async (m, { conn, text, usedPrefix, command, isGroup }) => {
   }, { quoted: q });
 };
 
-handler.help = ['limona @user 🔥🍋'];
+handler.help = ['limona @user 🔥'];
 handler.tags = ['fun'];
-handler.command = ['limona', 'limon_appassionato', 'limona_appassionata', 'limona_appassionato'];
+handler.command = ['limona'];
 handler.group = true;
 
 export default handler;

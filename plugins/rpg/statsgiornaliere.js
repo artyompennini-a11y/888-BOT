@@ -124,7 +124,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
       const cs = global.dailyStats.chats[chat] || { total: 0, users: {} }
 
       if (cs.awardedDate === todayDate()) {
-        prizesText = '\nAncora nessuno, aggiudicati la top per avere 1000 888COIN!'
+        prizesText = '\n🎁 Premi già assegnati oggi.'
       } else {
         for (const row of top3) {
           const jid = row?.[0]
@@ -139,7 +139,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
         global.dailyStats.chats[chat] = cs
       }
     } catch (e) {
-      prizesText = '\nImpossibile assegnare premi (errore interno)'
+      prizesText = '\nImpossibile assegnare premi'
     }
 
     let botGroups = {}
@@ -166,7 +166,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
         const diff = (above.total || 0) - total
         let aboveName
         try { aboveName = await conn.getName(above.chatId) } catch (e) { aboveName = above.chatId.split('@')[0] }
-        positionText += `\nGruppo sopra: *${aboveName}* — ${above.total} messaggi\nMancano: ${diff} messaggi per raggiungerli`
+        positionText += `\nGruppo sopra: *${aboveName}* — ${above.total} messaggi\nMancano: ${diff} messaggi`
       } else {
         positionText += `\n*Sei in testa!*`
       }
@@ -201,8 +201,7 @@ ${positionText}\n
     if (typeof global.markDbDirty === 'function') global.markDbDirty()
 
   } catch (e) {
-    const msg = `❌ Errore nello script statsgiornaliere:\n${e && e.message ? e.message : String(e)}`
-    try { await m.reply(msg) } catch {}
+    try { await m.reply('❌ Errore nello script statsgiornaliere') } catch {}
   }
 }
 

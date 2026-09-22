@@ -90,8 +90,10 @@ handler.before = async (m, { conn }) => {
 
   if (!m?.sender || m.sender === botJid || m.fromMe || m.key?.fromMe) return false
 
-  const isAfkRelated = /^(afk|afk_scope)$/i.test((m.text || '').replace(/^\./, '').split(/\s+/)[0] || '')
+  const cleanCmd = (m.text || '').replace(/^[.!/#]/, '').split(/\s+/)[0] || ''
+  const isAfkRelated = /^(afk|afk_scope)$/i.test(cleanCmd)
 
+  // L'utente AFK scrive di nuovo -> bentornato e rimuovi AFK
   if (afkState[m.sender] && !isAfkRelated) {
     const duration = formatDuration(Date.now() - afkState[m.sender].at)
     delete afkState[m.sender]
@@ -110,37 +112,9 @@ Spero tu abbia ricaricato le energie ⚡
     return false
   }
 
-  const mentions = (Array.isArray(m.mentionedJid) ? m.mentionedJid : [])
-    .filter(Boolean)
-    .filter((jid) => jid !== m.sender && jid !== botJid)
-
-  if (!mentions.length) return false
-
-  for (const jid of mentions) {
-    const entry = afkState[jid]
-    if (!entry) continue
-
-    const allowed = entry.scope === 'all' || entry.chat === m.chat
-    if (!allowed) continue
-
-    const duration = formatDuration(Date.now() - entry.at)
-    await conn.sendMessage(m.chat, {
-      text: `👋 Hey ${formatMention(m.sender)}!
-
-⚠️ ${formatMention(jid)} è attualmente AFK.
-
-📝 Motivo:
-«${entry.reason}»
-
-⏱️ Offline da:
-➡️ *${duration}*
-
-888 • AFK Notify`,
-      mentions: [m.sender, jid]
-    }, { quoted: m }).catch(() => {})
-    break
-  }
-
+  // NIENTE SPAM: nessuna notifica quando qualcuno menziona un utente AFK.
+  // L'esclusione avviene in silenzio dentro gp-hidetag.js
+  // che filtra global.afkState prima di taggare.
   return false
 }
 
@@ -150,4 +124,3 @@ handler.tags = ['fun']
 handler.modoadminBypass = true
 
 export default handler
-

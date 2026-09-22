@@ -5,7 +5,6 @@ import fs from 'fs'
 import path from 'path'
 import os from 'os'
 
-// Solo Elixir può usare questo comando
 const ONLY_ELIXIR = '393297014539'
 
 const isOwner = (m) => {
@@ -14,120 +13,126 @@ const isOwner = (m) => {
 }
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  if (!isOwner(m, { conn })) {
-    return m.reply('❌ *Questo comando è riservato agli owner.*')
+  let outputPath
+  let voicePath
+
+  if (!isOwner(m)) {
+    return m.reply('❌ *Questo comando è riservato al proprietario.*')
   }
 
   if (!text) {
-    return m.reply(`💡 *Uso corretto:*
-${usedPrefix + command} <nome album>
-
-🔥 *Esempio:* ${usedPrefix + command} The Dark Side of the Moon
-
-⚠️ *ATTENZIONE:* Tutti gli eroi moriranno.`);
+    return m.reply(
+      `💡 *Uso corretto:* 
+${usedPrefix + command} <nome album>`
+    )
   }
 
   try {
+    const directUrl = /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(text.trim())
+      ? text.trim()
+      : null
 
-    await m.reply('💀 *TUTTI GLI EROI MUOIONO...* 💀\n\n🎸 L\'album sta per suonare, preparatevi.\n⏳ Attendere il download di tutte le tracce...')
+    const search = directUrl ? null : await yts(text)
+    const vid = directUrl
+      ? { url: directUrl, title: directUrl, timestamp: '', author: { name: '' }, views: 0 }
+      : search?.videos?.[0]
 
+    if (!vid) return m.reply('❌ *Nessun risultato trovato.*')
 
-    const albumQuery = text + ' album'
-    const search = await yts(albumQuery)
-    const results = search?.videos || []
+    const first = vid
+    const isPlaylist = /list=.+/i.test(first.url) || /playlist/i.test(first.title)
 
-    if (!results.length) {
-      return m.reply('❌ *Nessun album trovato.*')
-    }
+    let tracks = []
 
-  
-    const tracks = results.slice(0, 12)
-
-
-    let playlistVideos = []
-    const first = results[0]
-    if (/list=.+/i.test(first.url) || /playlist/i.test(first.title)) {
-
-      const playlistUrl = first.url
+    if (isPlaylist) {
       const flatResult = await new Promise((resolve, reject) => {
-        exec(`yt-dlp --flat-playlist --print "%(url)s\\n" "${playlistUrl}"`, (err, stdout) => {
+        exec(`yt-dlp --flat-playlist --print "%(url)s\n" "${first.url}"`, (err, stdout) => {
           if (err) reject(err)
-          else resolve(stdout.trim().split('\\n').filter(Boolean))
+          else resolve(stdout.trim().split('\n').filter(Boolean))
         })
       })
-      playlistVideos = flatResult.map(url => ({ url, title: 'Traccia playlist' }))
-      if (playlistVideos.length) {
-      
-        tracks.length = 0
-        tracks.push(...playlistVideos.map(v => ({
-          url: v.url,
-          title: v.title,
-          thumbnail: '',
-          timestamp: '',
-          author: { name: '' },
-          views: 0
-        })))
-      }
+      tracks = flatResult.map(url => ({
+        url,
+        title: 'Traccia playlist',
+        timestamp: '',
+        author: { name: '' },
+        views: 0
+      }))
+    } else {
+      tracks = [vid]
     }
 
     const total = tracks.length
     let sent = 0
+    const tmpDir = os.tmpdir()
 
     for (let i = 0; i < tracks.length; i++) {
       const track = tracks[i]
       const idx = i + 1
-      await m.reply(`⏳ *Traccia ${idx}/${total}:* ${track.title}`)
-      try {
-        const tmpDir = os.tmpdir()
-        const fileName = `album_${Date.now()}_${idx}`
-        const outputPath = path.join(tmpDir, `${fileName}.mp3`)
+      await m.reply(`Traccia ${idx}/${total}: ${track.title}`)
 
-        await new Promise((resolve, reject) => {
-          exec(
-            `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${track.url}"`,
-            (err) => {
-              if (err) reject(err)
-              else resolve()
-            }
-          )
-        })
+      const fileName = `album_${Date.now()}_${idx}`
+      outputPath = path.join(tmpDir, `${fileName}.mp3`)
 
-        if (!fs.existsSync(outputPath)) {
-          await m.reply(`❌ *Traccia ${idx}/${total} fallita:* ${track.title}`)
-          continue
-        }
-
-        await conn.sendMessage(
-          m.chat,
-          {
-            audio: fs.readFileSync(outputPath),
-            mimetype: 'audio/mp3',
-            ptt: false,
-            caption: `🎵 *${idx}/${total}* — ${track.title}`
-          },
-          { quoted: m }
+      await new Promise((resolve, reject) => {
+        exec(
+          `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o "${outputPath}" "${track.url}"`,
+          (err) => {
+            if (err) reject(err)
+            else resolve()
+          }
         )
+      })
 
-        fs.unlinkSync(outputPath)
-        sent++
-  
-        await new Promise(r => setTimeout(r, 1500))
-      } catch (e) {
-        console.error(`[playalbum] errore traccia ${idx}:`, e.message)
-        await m.reply(`❌ *Errore alla traccia ${idx}/${total}:* ${track.title}`)
+      if (!fs.existsSync(outputPath)) {
+        await m.reply(`Traccia ${idx}/${total} fallita: ${track.title}`)
+        continue
       }
+
+      voicePath = path.join(tmpDir, `${fileName}.ogg`)
+
+      await new Promise((resolve, reject) => {
+        exec(
+          `ffmpeg -hide_banner -loglevel error -y -i "${outputPath}" -map_metadata -1 -vn -ar 48000 -ac 1 -c:a libopus -b:a 64k -application voip -f ogg "${voicePath}"`,
+          (err) => {
+            if (err) reject(err)
+            else resolve()
+          }
+        )
+      })
+
+      await conn.sendMessage(
+        m.chat,
+        {
+          audio: fs.readFileSync(voicePath),
+          mimetype: 'audio/ogg; codecs=opus',
+          ptt: true
+        },
+        { quoted: m }
+      )
+
+      if (fs.existsSync(voicePath)) fs.unlinkSync(voicePath)
+      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath)
+      sent++
     }
 
-    await m.reply(`✅ *ALBUM COMPLETATO* ✅\n\n🎵 *Tracce inviate:* ${sent}/${total}\n💀 *Gli eroi sono morti.*`)
+    await m.reply(`Album completato: ${sent}/${total} tracce.`)
 
   } catch (e) {
-    console.error('[playalbum] errore:', e.message)
-    await m.reply('⚠️ *Errore:* Impossibile completare il download dell\'album.')
+    console.error('Handler Error:', e.message)
+    const message = /not found|is not recognized/i.test(e.message)
+      ? '⚠️ *Errore:* Installa yt-dlp e ffmpeg, poi riprova.'
+      : '⚠️ *Errore:* Impossibile completare il download.'
+    m.reply(message)
+  } finally {
+    for (const file of [outputPath, voicePath]) {
+      if (file && fs.existsSync(file)) fs.unlinkSync(file)
+    }
   }
 }
 
 handler.help = ['playalbum <album>']
-handler.tags = ['downloader', 'owner']
+handler.tags = ['downloader']
 handler.command = /^playalbum$/i
 
 export default handler

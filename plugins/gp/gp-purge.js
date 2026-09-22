@@ -35,20 +35,35 @@ const initPurgeHistoryListener = () => {
   }
 };
 initPurgeHistoryListener();
-let handler = async (m, { conn, text, isGroup, isAdmin, isROwner, usedPrefix, command }) => {
+
+const isUserAdminInGroup = async (conn, chatId, sender) => {
+  try {
+    const meta = await conn.groupMetadata?.(chatId);
+    if (!meta?.participants) return false;
+    const user = meta.participants.find(p => p.id === sender || String(p.id).split('@')[0] === sender.split('@')[0]);
+    return !!(user?.admin === 'admin' || user?.admin === 'superadmin' || user?.admin === true);
+  } catch {
+    return false;
+  }
+};
+
+let handler = async (m, { conn, text, isGroup, isAdmin, isROwner, isGroupAdmin, usedPrefix, command }) => {
   // Verifica se è un gruppo controllando direttamente il chat
   const chatId = m.chat;
   const isGroupChat = chatId.endsWith('@g.us');
-  
+
   if (!isGroupChat) {
     return m.reply('⚠️ Questo comando funziona solo nei gruppi.');
   }
-  
-  // Usa i permessi forniti dal sistema handler (calcolati correttamente da Baileys)
-  if (!isAdmin && !isROwner) {
+
+  // Verifica permessi: usa sia i permessi del sistema handler che una verifica locale fallback
+  const sender = m.sender;
+  const isLocalAdmin = await isUserAdminInGroup(conn, chatId, sender);
+
+  if (!isAdmin && !isROwner && !isGroupAdmin && !isLocalAdmin) {
     return m.reply('❌ Solo admin o proprietario del bot possono usare questo comando.');
   }
-  
+
   if (!text || isNaN(text)) {
     return m.reply(`🧹 𝐂𝐎𝐌𝐀𝐍𝐃𝐎 𝐏𝐔𝐑𝐆𝐄
 ❌ Devi specificare il numero di messaggi da eliminare!

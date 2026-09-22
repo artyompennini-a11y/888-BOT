@@ -32,7 +32,7 @@ const handler = async (m, { conn }) => {
 
     const name = typeof botName !== 'undefined' ? botName : conn.user.name
     await conn.sendMessage(m.chat, {
-      text: `⚙️ *${name}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
+      text: `⚙️ *${nomebot}*\nSessioni svuotate: *${deletedCount}* file eliminati.`
     })
 
     return true

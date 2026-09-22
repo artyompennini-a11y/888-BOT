@@ -18,14 +18,14 @@ let handler = async (m, { conn }) => {
         document: htmlBuffer,
         mimetype: 'text/html',
         fileName: 'DinoRunner.html',
-        caption: `🦖 *DINO RUNNER*\n\nApri il gioco con il pulsante qui sotto.`,
+        caption: `🦖 *DINO RUNNER*\n\nPremi il pulsante per aprire il gioco.`,
         headerType: 4,
         interactiveButtons: [
             {
                 name: "cta_url",
                 buttonParamsJson: JSON.stringify({
-                    display_text: "▶️ Apri DinoRunner",
-                    url: "https://github.com/artyompennini-a11y/888dinorunhtml/blob/main/index.html"
+                    display_text: "▶️ Apri Dino Runner",
+                    url: "DinoRunner.html"
                 })
             }
         ]

@@ -1,12 +1,14 @@
 //Plugin by Elixir, Punisher & 888 staff
 
+function normalizeJid(jid) {
+  return jid.split(':')[0]
+}
+
 const travaWarnings = {}
 
 export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
-  // --- Bypass totale se il bot è il mittente ---
   if (m.fromMe) return true
-
   if (m.isBaileys && m.fromMe) return true
   if (!m.isGroup) return true
 
@@ -26,7 +28,12 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
   )
   const hasInvisibleSpam = /[\u200b\u200c\u200d\u2060\uFEFF]{10,}/.test(text)
 
-  const isTravaPayload = messageSize > 18000 || text.length > 1600 || fileLength > 8_000_000 || hasInvisibleSpam
+  const isTravaPayload =
+    messageSize > 18000 ||
+    text.length > 1600 ||
+    fileLength > 8_000_000 ||
+    hasInvisibleSpam
+
   if (!isTravaPayload) return true
 
   global.db.data.users[m.sender] = global.db.data.users[m.sender] || {}
@@ -39,8 +46,8 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
 👤 @${m.sender.split('@')[0]}
 📝 Messaggio rimosso perché potenzialmente crash/trava
-⚠️ Warn: ${user.antitrava}/2`
-    , mentions: [m.sender]
+⚠️ Warn: ${user.antitrava}/2`,
+    mentions: [m.sender]
   })
 
   try {
@@ -56,11 +63,15 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
   if (user.antitrava >= 2) {
     try {
-      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+      const jid = normalizeJid(m.sender)
+
+      await conn.groupParticipantsUpdate(m.chat, [jid], 'remove')
+
       await conn.sendMessage(m.chat, {
-        text: `👋 @${m.sender.split('@')[0]} espulso per aver inviato travi ripetute.`,
-        mentions: [m.sender]
+        text: `👋 @${jid.split('@')[0]} espulso per aver inviato travi ripetute.`,
+        mentions: [jid]
       })
+
       user.antitrava = 0
     } catch (e) {
       console.log('Errore espulsione antitrava:', e)
@@ -69,4 +80,3 @@ export async function before(m, { conn, isAdmin, isBotAdmin }) {
 
   return false
 }
-

@@ -4,28 +4,18 @@ import path from 'path'
 let handler = async (m, { conn }) => {
     const from = m.chat
 
-    const filePath = path.join(process.cwd(), 'index.html')
-
-    if (!fs.existsSync(filePath)) {
-        return conn.sendMessage(from, { 
-            text: "⚠️ Il file *index.html* non è stato trovato nella cartella principale del bot!"
-        }, { quoted: m })
-    }
-
-    const htmlBuffer = fs.readFileSync(filePath)
+    const gameUrl = "https://artyompennini-a11y.github.io/888dinorunhtml/"
 
     await conn.sendMessage(from, {
-        document: htmlBuffer,
-        mimetype: 'text/html',
-        fileName: 'DinoRunner.html',
-        caption: `🦖 *DINO RUNNER*\n\nPremi il pulsante per aprire il gioco.`,
+        text: `🦖 *DINO RUNNER*\n\n🕹️ Salta con un tocco\n🏆 Batti il tuo record\n⚡ Sfida i tuoi amici\n\n_Buona fortuna!_ 🍀`,
+        footer: "888 Games",
         headerType: 4,
         interactiveButtons: [
             {
                 name: "cta_url",
                 buttonParamsJson: JSON.stringify({
                     display_text: "▶️ Apri Dino Runner",
-                    url: "DinoRunner.html"
+                    url: gameUrl
                 })
             }
         ]

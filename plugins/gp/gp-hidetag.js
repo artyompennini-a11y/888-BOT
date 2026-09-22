@@ -42,14 +42,19 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
     // Filtra gli utenti AFK — collegamento perfetto con gp-afk.js
     const afkState = global.afkState || {}
     const botJid = conn.user.jid
+    let afkSkipped = 0
     const usersFiltered = users.filter(jid => {
       if (jid === botJid) return false
       const afkEntry = afkState[jid]
       if (!afkEntry) return true
       // Se scope è 'all' o se l'utente AFK è nello stesso gruppo, lo saltiamo
-      if (afkEntry.scope === 'all' || afkEntry.chat === m.chat) return false
+      if (afkEntry.scope === 'all' || afkEntry.chat === m.chat) {
+        afkSkipped++
+        return false
+      }
       return true
     })
+    m.__afkSkipped = afkSkipped
 
     const quoted = m.quoted
 
@@ -199,6 +204,13 @@ handler.after = async function (m, { conn, isOwner }) {
   delete m.__tagRemaining
 
   try {
+    const skipped = typeof m.__afkSkipped === 'number' ? m.__afkSkipped : 0
+    delete m.__afkSkipped
+    if (skipped > 0) {
+      await conn.sendMessage(m.chat, {
+        text: `💤 ${skipped} ${skipped === 1 ? 'utente AFK non è stato taggato' : 'utenti AFK non sono stati taggati'}.`
+      }, { quoted: m })
+    }
     if (remaining > 0) {
       await conn.sendMessage(m.chat, {
         text: `📊 Tag rimanenti: ${remaining}/6`

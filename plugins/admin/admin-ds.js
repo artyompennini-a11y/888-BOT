@@ -50,6 +50,6 @@ handler.help = ['ds']
 handler.tags = ['admin']
 handler.command = /^ds$/i
 handler.admin = true
-handler.owner = true
+handler.owner = false
 
 export default handler

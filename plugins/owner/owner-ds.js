@@ -49,7 +49,7 @@ const handler = async (m, { conn }) => {
 handler.help = ['ds']
 handler.tags = ['admin']
 handler.command = /^ds$/i
-handler.admin = false
+handler.admin = true
 handler.owner = true
 
 export default handler

@@ -100,9 +100,9 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
     const total = gstats.total || 0
     const usersObj = gstats.users || {}
 
-    const memberNumbers = new Set((participants || []).map(p => cleanJid(p.id)))
-    const entries = Object.entries(usersObj).filter(([jid]) => memberNumbers.has(cleanJid(jid)))
-    entries.sort((a,b) => b[1] - a[1])
+    const entries = Object.entries(usersObj)
+      .filter(([jid]) => jid && jid !== 'undefined')
+      .sort((a, b) => b[1] - a[1])
 
     const top3 = entries.slice(0,3)
 
@@ -207,7 +207,7 @@ ${positionText}\n
   }
 }
 
-handler.before = async (m, { conn }) => {
+handler.before = async (m) => {
   try {
     if (!m.isGroup) return
     if (!m.message) return
@@ -219,8 +219,15 @@ handler.before = async (m, { conn }) => {
 
     if (!global.dailyStats.chats[chat]) global.dailyStats.chats[chat] = { total: 0, users: {} }
     const cs = global.dailyStats.chats[chat]
+    
+    // Trova il mittente reale anche se m.sender fallisce
+    const rawSender = m.sender || m.key?.participant || m.participant
+    if (!rawSender) return
+
     cs.total = (cs.total || 0) + 1
-    const who = m.sender
+    
+    // Salviamo l'utente usando sempre il JID pulito per evitare discrepanze
+    const who = cleanJid(rawSender) + '@s.whatsapp.net'
     cs.users[who] = (cs.users[who] || 0) + 1
   } catch (e) {}
 }

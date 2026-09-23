@@ -111,7 +111,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
       const row = top3[i]
       if (!row) continue
       const [jid,count] = row
-      const tag = `*@${jid.split('@')[0]}*`
+      const tag = `*@${cleanJid(jid)}*`
       topText += `\n${i+1}. ${tag} — ${count} messaggi`
     }
 
@@ -134,7 +134,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
           if (!usersDb[jid]) usersDb[jid] = {}
           usersDb[jid].money = (usersDb[jid].money || 0) + 1000
           usersDb[jid]['888coin'] = (usersDb[jid]['888coin'] || 0) + 1000
-          prizesTextLocal += `\n- *@${jid.split('@')[0]}* — +1000 888COIN`
+          prizesTextLocal += `\n- *@${cleanJid(jid)}* — +1000 888COIN`
         }
         prizesText = prizesTextLocal || '\nNessun premio'
         cs.awardedDate = todayDate()

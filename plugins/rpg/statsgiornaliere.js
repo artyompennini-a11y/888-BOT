@@ -2,6 +2,8 @@ const DAY_MS = 24 * 60 * 60 * 1000
 const STATS_KEY = 'statsgiornaliere'
 const TIMEZONE = 'Europe/Rome'
 
+const cleanJid = (jid = '') => jid.split('@')[0].split(':')[0]
+
 function getRomeDateParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: TIMEZONE,
@@ -98,8 +100,8 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
     const total = gstats.total || 0
     const usersObj = gstats.users || {}
 
-    const groupMembers = new Set(participants?.map(p => p.id) || [])
-    const entries = Object.entries(usersObj).filter(([jid]) => groupMembers.has(jid))
+    const memberNumbers = new Set((participants || []).map(p => cleanJid(p.id)))
+    const entries = Object.entries(usersObj).filter(([jid]) => memberNumbers.has(cleanJid(jid)))
     entries.sort((a,b) => b[1] - a[1])
 
     const top3 = entries.slice(0,3)

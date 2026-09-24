@@ -9,114 +9,111 @@ import moment from 'moment-timezone'
 import NodeCache from 'node-cache'
 
 const pkg = JSON.parse(await fs.promises.readFile(new URL('./package.json', import.meta.url), 'utf-8'))
-const moduleCache = new NodeCache({ stdTTL: 300 })
+const moduleCache = new NodeCache({ stdTTL: 300 });
 
-// Normalizzazione numeri (RISOLVE IL TUO PROBLEMA)
-global.normalizeNumber = function (num) {
-  if (!num) return null
-  let clean = String(num).replace(/\D/g, '')
-  return clean + '@s.whatsapp.net'
-}
+/* ============================================================
+   PATCH ANTI-USERNAME WHATSAPP
+   ============================================================ */
 
-// Normalizzazione owner
 function normalizeOwnerList(list) {
   return list
-    .filter(entry => /^\+?\d{6,15}$/.test(entry[0]))
+    .filter(entry => {
+      const num = entry[0];
+
+      return /^\+?\d{6,15}$/.test(num);
+    })
     .map(entry => [
-      global.normalizeNumber(entry[0]),
+      entry[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net',
       entry[1],
       entry[2]
-    ])
+    ]);
 }
 
-// Numeri gab
-global.gab = [
-  '79524931364',
-  '393297014539',
-  'xxxx'
-]
+/* ============================================================
+   LISTE GLOBALI
+   ============================================================ */
 
-// Owner
+global.gab = ['79524931364','393297014539','xxxx']
+
 let ownerData = [
-  ['+393297014539', 'elixir', true],
-  ['+393331663641', 'Manu', true],
-  ['+972552671306', 'manux', true],
-  ['+79524931364', 'Punisher', true], // IL TUO NUMERO
-  ['+573180770909', '888bot', true],
-  ['+212785655331', 'Ghost', true],
-  ['+447785114563', 'Dado', true],
-  ['+17577575541', 'Axtral', true],
-  ['+393784409415', 'Bot', true],
-]
+  ['393297014539', 'elixir', true],
+  ['393331663641', 'Manu', true],              
+  ['972552671306', 'manux', true],
+  ['79524931364', 'Punisher', true],
+  ['573180770909', '888bot', true],
+  ['212785655331', 'Ghost', true],
+  ['447785114563', 'Dado', true],
+  ['17577575541', 'Axtral', true],
+  ['393784409415', 'Bot', true],
+];
 
-// owner.json
 if (fs.existsSync('./owner.json')) {
   try {
-    ownerData = JSON.parse(fs.readFileSync('./owner.json', 'utf-8'))
+    ownerData = JSON.parse(fs.readFileSync('./owner.json', 'utf-8'));
   } catch (e) {
-    console.error("Errore nella lettura di owner.json:", e)
+    console.error("Errore nella lettura di owner.json:", e);
   }
 } else {
-  fs.writeFileSync('./owner.json', JSON.stringify(ownerData, null, 2))
+  fs.writeFileSync('./owner.json', JSON.stringify(ownerData, null, 2));
 }
 
 global.owner = normalizeOwnerList(ownerData)
 
-// Branding 888
+
 global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.nomebot = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.wm = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.autore = 'The punisher'
 global.dev = 'Elixir'
-global.testobot = '𝟴𝟴𝟴 𝗕𝗢𝗧'
+global.testobot = `𝟴𝟴𝟴 𝗕𝗢𝗧`
 global.versione = pkg.version
 global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala` per avvisare gli owner.'
 
-// Link
-global.repobot = 'https://wa.me/393206032199'
+global.repobot = 'https//wa.me/393206032199'
 global.canale = 'https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h'
 global.gruppo = 'https://chat.whatsapp.com/KqBeKHgrc53BNdvuPTKLTL'
 
-// Moduli globali
 global.cheerio = cheerio
 global.fs = fs
 global.fetch = fetch
 global.axios = axios
 global.moment = moment
 
-// API Keys
 global.APIKeys = { 
-  spotifyclientid: '333',
-  spotifysecret: '333',
-  browserless: '333',
-  screenshotone: '333',
-  screenshotone_default: '333',
-  tmdb: '333',
-  gemini: '333',
-  ocrspace: '333',
-  assemblyai: '333',
-  google: '333',
-  googlex: '333',
-  googleCX: '333',
-  genius: '333',
-  unsplash: '333',
-  removebg: 'FEx4CYmYN1QRQWD1mbZp87jV',
-  openrouter: '333',
-  lastfm: '36f859a1fc4121e7f0e931806507d5f9',
+    spotifyclientid: '333',
+    spotifysecret: '333',
+    browserless: '333',
+    screenshotone: '333',
+    screenshotone_default: '333',
+    tmdb: '333',
+    gemini:'333',
+    ocrspace: '333',
+    assemblyai: '333',
+    google: '333',
+    googlex: '333',
+    googleCX: '333',
+    genius: '333',
+    unsplash: '333',
+    removebg: 'FEx4CYmYN1QRQWD1mbZp87jV',
+    openrouter: '333',
+    lastfm: '36f859a1fc4121e7f0e931806507d5f9',
 }
 
-// Hot reload
+/* ============================================================
+   HOT RELOAD CONFIG
+   ============================================================ */
+
 let filePath = fileURLToPath(import.meta.url)
 let fileUrl = pathToFileURL(filePath).href
 
 const reloadConfig = async () => {
-  const cached = moduleCache.get(fileUrl)
-  if (cached) return cached
+  const cached = moduleCache.get(fileUrl);
+  if (cached) return cached;
   unwatchFile(filePath)
   console.log(chalk.bgHex('#ff0000')(chalk.white.bold("File: 'config.js' Aggiornato")))
   const module = await import(`${fileUrl}?update=${Date.now()}`)
-  moduleCache.set(fileUrl, module, { ttl: 300 })
-  return module
+  moduleCache.set(fileUrl, module, { ttl: 300 });
+  return module;
 }
 
 watchFile(filePath, reloadConfig)

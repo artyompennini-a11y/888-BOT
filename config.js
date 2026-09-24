@@ -11,27 +11,37 @@ import NodeCache from 'node-cache'
 const pkg = JSON.parse(await fs.promises.readFile(new URL('./package.json', import.meta.url), 'utf-8'))
 const moduleCache = new NodeCache({ stdTTL: 300 })
 
+// Normalizzazione numeri (RISOLVE IL TUO PROBLEMA)
+global.normalizeNumber = function (num) {
+  if (!num) return null
+  let clean = String(num).replace(/\D/g, '')
+  return clean + '@s.whatsapp.net'
+}
+
+// Normalizzazione owner
 function normalizeOwnerList(list) {
   return list
     .filter(entry => /^\+?\d{6,15}$/.test(entry[0]))
     .map(entry => [
-      entry[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net',
+      global.normalizeNumber(entry[0]),
       entry[1],
       entry[2]
     ])
 }
 
+// Numeri gab
 global.gab = [
   '79524931364',
   '393297014539',
   'xxxx'
 ]
 
+// Owner
 let ownerData = [
   ['+393297014539', 'elixir', true],
   ['+393331663641', 'Manu', true],
   ['+972552671306', 'manux', true],
-  ['+79524931364', 'Punisher', true],
+  ['+79524931364', 'Punisher', true], // IL TUO NUMERO
   ['+573180770909', '888bot', true],
   ['+212785655331', 'Ghost', true],
   ['+447785114563', 'Dado', true],
@@ -39,6 +49,7 @@ let ownerData = [
   ['+393784409415', 'Bot', true],
 ]
 
+// owner.json
 if (fs.existsSync('./owner.json')) {
   try {
     ownerData = JSON.parse(fs.readFileSync('./owner.json', 'utf-8'))
@@ -51,6 +62,7 @@ if (fs.existsSync('./owner.json')) {
 
 global.owner = normalizeOwnerList(ownerData)
 
+// Branding 888
 global.nomepack = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.nomebot = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.wm = '𝟴𝟴𝟴 𝗕𝗢𝗧'
@@ -60,16 +72,19 @@ global.testobot = '𝟴𝟴𝟴 𝗕𝗢𝗧'
 global.versione = pkg.version
 global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala` per avvisare gli owner.'
 
+// Link
 global.repobot = 'https://wa.me/393206032199'
 global.canale = 'https://whatsapp.com/channel/0029VauhQviCsU9Ibrwlkb0h'
 global.gruppo = 'https://chat.whatsapp.com/KqBeKHgrc53BNdvuPTKLTL'
 
+// Moduli globali
 global.cheerio = cheerio
 global.fs = fs
 global.fetch = fetch
 global.axios = axios
 global.moment = moment
 
+// API Keys
 global.APIKeys = { 
   spotifyclientid: '333',
   spotifysecret: '333',
@@ -90,6 +105,7 @@ global.APIKeys = {
   lastfm: '36f859a1fc4121e7f0e931806507d5f9',
 }
 
+// Hot reload
 let filePath = fileURLToPath(import.meta.url)
 let fileUrl = pathToFileURL(filePath).href
 

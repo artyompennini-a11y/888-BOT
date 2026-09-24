@@ -33,13 +33,13 @@ function normalizeOwnerList(list) {
    LISTE GLOBALI
    ============================================================ */
 
-global.gab = ['972559226174','393297014539','xxxx']
+global.gab = ['79524931364','393297014539','xxxx']
 
 let ownerData = [
   ['393297014539', 'elixir', true],
   ['393331663641', 'Manu', true],              
   ['972552671306', 'manux', true],
-  ['972559226174', 'Punisher', true],
+  ['79524931364', 'Punisher', true],
   ['573180770909', '888bot', true],
   ['212785655331', 'Ghost', true],
   ['447785114563', 'Dado', true],

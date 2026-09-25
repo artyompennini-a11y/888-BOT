@@ -102,10 +102,10 @@ global.quizGame[chat] = { ...q, creator: user }
 await conn.sendMessage(chat, {
 text: `⚽ QUIZ CALCIO\n\n${q.domanda}\n\n⏱ 20 secondi\n👤 Solo chi avvia può rispondere`,
 buttons: [
-{ buttonId: `${usedPrefix}quizcalcio A`, buttonText: { displayText: `A) ${q.risposte[0]}` }, type: 1 },
-{ buttonId: `${usedPrefix}quizcalcio B`, buttonText: { displayText: `B) ${q.risposte[1]}` }, type: 1 },
-{ buttonId: `${usedPrefix}quizcalcio C`, buttonText: { displayText: `C) ${q.risposte[2]}` }, type: 1 },
-{ buttonId: `${usedPrefix}quizcalcio D`, buttonText: { displayText: `D) ${q.risposte[3]}` }, type: 1 }
+{ buttonId: `${usedPrefix}quizcalcio A`, buttonText: { displayText: `𝐀) ${q.risposte[0]}` }, type: 1 },
+{ buttonId: `${usedPrefix}quizcalcio B`, buttonText: { displayText: `𝐁) ${q.risposte[1]}` }, type: 1 },
+{ buttonId: `${usedPrefix}quizcalcio C`, buttonText: { displayText: `𝐂) ${q.risposte[2]}` }, type: 1 },
+{ buttonId: `${usedPrefix}quizcalcio D`, buttonText: { displayText: `𝐃) ${q.risposte[3]}` }, type: 1 }
 ],
 headerType: 1
 }, { quoted: m })

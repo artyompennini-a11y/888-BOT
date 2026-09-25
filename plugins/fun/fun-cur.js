@@ -887,19 +887,11 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 🎬 Premi un pulsante sotto per ascoltarla o reagire 🔥
 `.trim()
 
-    const rows = [
-      { id: `.like ${m.sender}`, title: '💜 Mi piace' },
-      { id: `.fuoco ${m.sender}`, title: '🔥 Fuoco' },
-      { id: `.scarica ${searchQuery}`, title: '🎵 Scarica audio' }
+    const buttons = [
+      { buttonId: `.like ${m.sender}`, buttonText: { displayText: '💜 𝐌𝐢 𝐩𝐢𝐚𝐜𝐞' }, type: 1 },
+      { buttonId: `.fuoco ${m.sender}`, buttonText: { displayText: '🔥 𝐅𝐮𝐨𝐜𝐨' }, type: 1 },
+      { buttonId: `.scarica ${searchQuery}`, buttonText: { displayText: '🎵 𝐒𝐜𝐚𝐫𝐢𝐜𝐚' }, type: 1 }
     ]
-
-    const interactiveButtons = rows.map(r => ({
-      name: 'quick_reply',
-      buttonParamsJson: JSON.stringify({
-        display_text: r.title,
-        id: r.id
-      })
-    }))
 
     let imageBuffer = null
     let cardError = null
@@ -915,18 +907,23 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       const hint = /Cannot find (module|package)|ERR_MODULE_NOT_FOUND/i.test(cardError?.message || '')
         ? '\n\n⚠️ _Card grafica non disponibile: manca il pacchetto *jimp* (su Termux: `npm i jimp`)._'
         : '\n\n⚠️ _Card grafica non disponibile, ecco i dettagli del brano._'
-      return conn.sendMessage(m.chat, { text: caption + hint, interactiveButtons }, { quoted: m })
+      const buttonMessage = {
+        text: caption + hint,
+        footer: '',
+        buttons: buttons,
+        headerType: 1
+      }
+      return conn.sendMessage(m.chat, buttonMessage, { quoted: m })
     }
 
-    await conn.sendMessage(
-      m.chat,
-      {
-        image: imageBuffer,
-        caption,
-        interactiveButtons
-      },
-      { quoted: m }
-    )
+    const buttonMessage = {
+      image: imageBuffer,
+      caption,
+      buttons: buttons,
+      headerType: 4
+    }
+
+    await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
 
     return
   }

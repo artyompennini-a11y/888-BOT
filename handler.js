@@ -489,6 +489,11 @@ export async function handler(chatUpdate) {
                 if (_btnDispatch(buttonId)) continue;
             } catch {}
         }
+        if (m.message?.listResponseMessage) {
+            const r = m.message.listResponseMessage;
+            if (_btnDispatch(r?.singleSelectReply?.selectedRowId ?? r?.selectedRowId ?? r?.id)) continue;
+        }
+
         if (m.message?.eventResponseMessage) {
             try {
                 const { eventId, response } = m.message.eventResponseMessage;

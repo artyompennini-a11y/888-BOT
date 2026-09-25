@@ -44,29 +44,20 @@ ${usedPrefix + command} <nome canzone>`
 
 👇 *Scegli il formato:*`.trim()
 
-      const rows = [
-        { id: `${usedPrefix}playaud ${url}`, title: "🎧 MP3" },
-        { id: `${usedPrefix}playvid ${url}`, title: "📹 MP4" }
+                              const buttons = [
+        { buttonId: `${usedPrefix}playaud ${url}`, buttonText: { displayText: '🎧 𝐌𝐏𝟑' }, type: 1 },
+        { buttonId: `${usedPrefix}playvid ${url}`, buttonText: { displayText: '📹 𝐌𝐏𝟒' }, type: 1 }
       ]
 
-      const interactiveButtons = rows.map(r => ({
-        name: "quick_reply",
-        buttonParamsJson: JSON.stringify({
-          display_text: r.title,
-          id: r.id
-        })
-      }))
+      const buttonMessage = {
+        image: { url: vid.thumbnail },
+        caption: infoMsg,
+        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧 • Downloader',
+        buttons: buttons,
+        headerType: 4
+      }
 
-      return await conn.sendMessage(
-        m.chat,
-        {
-          image: { url: vid.thumbnail },
-          caption: infoMsg,
-          footer: "𝟴𝟴𝟴 𝗕𝗢𝗧 • Downloader",
-          interactiveButtons
-        },
-        { quoted: m }
-      )
+      return await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
     }
 
     // DOWNLOAD AUDIO/VIDEO

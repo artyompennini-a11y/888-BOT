@@ -1,4 +1,4 @@
-//Plugin Admin — Grafica Premium 888
+// Plugin by elixir & punisher
 import fetch from 'node-fetch'
 
 let handler = async (m, { conn, usedPrefix: prefix }) => {
@@ -56,20 +56,24 @@ Privilegi Amministratore
 • ${prefix}bio  
 
 🛡️ *Controllo & Moderazione*
-• ${prefix}warn / unwarn  
+• ${prefix}warn @user motivo (mod: max 4, 5 solo Admin)  
+• ${prefix}unwarn @user (mod: 1 ogni 5 min)  
+• ${prefix}warnlist (solo utenti con warn)  
+• ${prefix}muta @user [durata] (mod: max 5 min)  
+• ${prefix}smuta @user  
+• ${prefix}banuser @user [durata] (mod: max 15 min)  
+• ${prefix}unbanuser @user (mod: solo temporanei)  
+• ${prefix}denuncia @user motivo  
+• ${prefix}modstats  
 • ${prefix}unwarnlink  
-• ${prefix}muta (@)  
-• ${prefix}smuta (@)  
 • ${prefix}freezegp  
 • ${prefix}addparole  
 • ${prefix}listaparole  
 • ${prefix}delparole  
 
 📢 *Menzioni & Tag*
-• ${prefix}hidetag / tag  
-• ${prefix}tagall  
+• ${prefix}hidetag testo (mod: max 6, salta AFK)
 • ${prefix}admins  
-
 🔧 *Strumenti & Utility*
 • ${prefix}pin  
 • ${prefix}unpin  

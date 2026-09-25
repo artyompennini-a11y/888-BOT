@@ -68,6 +68,7 @@ Intrattenimento & Funzioni Community
 • ${prefix}rigore
 • ${prefix}screenshot
 • ${prefix}screenshotgp
+ • ${prefix}snake
 • ${prefix}canta
 
 🔞 *Hard Interattivi*

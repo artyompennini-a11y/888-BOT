@@ -1,6 +1,5 @@
 const playAgainButtons = () => [{
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({ display_text: '🏳️ Nuova Partita', id: `.bandiera` })
+    buttonId: '.bandiera', buttonText: { displayText: '🏳️ 𝐍𝐮𝐨𝐯𝐚 𝐏𝐚𝐫𝐭𝐢𝐭𝐚' }, type: 1
 }];
 
 let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPrefix, command }) => {
@@ -36,7 +35,8 @@ La bandiera era:
 
         await conn.sendMessage(m.chat, {
             text: skipText,
-            interactiveButtons: playAgainButtons()
+            buttons: playAgainButtons(),
+            headerType: 1
         }, { quoted: m });
 
         delete global.bandieraGame[m.chat];
@@ -132,7 +132,8 @@ Ritenta con una nuova partita!`;
 
                     await conn.sendMessage(m.chat, {
                         text: timeoutText,
-                        interactiveButtons: playAgainButtons()
+                        buttons: playAgainButtons(),
+                        headerType: 1
                     }, { quoted: msg });
 
                     delete global.bandieraGame[m.chat];
@@ -212,7 +213,8 @@ Tempo impiegato: *${timeTaken}s*`;
 
         await conn.sendMessage(chat, {
             text: congratsMessage,
-            interactiveButtons: playAgainButtons()
+            buttons: playAgainButtons(),
+            headerType: 1
         }, { quoted: m });
 
         delete global.bandieraGame[chat];
@@ -239,7 +241,8 @@ Attendi la fine del round.`;
 
         await conn.sendMessage(chat, {
             text: failText,
-            interactiveButtons: playAgainButtons()
+            buttons: playAgainButtons(),
+            headerType: 1
         }, { quoted: m });
 
         delete global.bandieraGame[chat];

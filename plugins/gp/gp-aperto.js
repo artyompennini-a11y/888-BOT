@@ -9,10 +9,10 @@ let handler = async (m, { conn }) => {
   const message = "« 🔓 »  *GRUPPO APERTO*\n\n> *Il silenzio è rotto. La parola torna al popolo. Esprimetevi con saggezza.*"
 
 
-  const buttons = [
+    const buttons = [
     {
       buttonId: '.chiuso',
-      buttonText: { displayText: '🔒 Chiudi Gruppo' },
+      buttonText: { displayText: '🔒 𝐂𝐡𝐢𝐮𝐝𝐢 𝐆𝐫𝐮𝐩𝐩𝐨' },
       type: 1
     }
   ]

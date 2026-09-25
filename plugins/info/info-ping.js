@@ -85,27 +85,21 @@ let handler = async (m, { conn, usedPrefix }) => {
 📂 Apri il pannello dal pulsante sotto.
 `.trim()
 
-  const rows = [
-    { id: `${usedPrefix}ping`, title: "🔄 Ricalcola Ping" },
-    { id: `${usedPrefix}status`, title: "⚙️ Stato Sistema" },
-    { id: `${usedPrefix}menu`, title: "📋 Menu Principale" }
+    const buttons = [
+    { buttonId: `${usedPrefix}ping`, buttonText: { displayText: '🔄 𝐑𝐢𝐜𝐚𝐥𝐜𝐨𝐥𝐚' }, type: 1 },
+    { buttonId: `${usedPrefix}status`, buttonText: { displayText: '⚙️ 𝐒𝐭𝐚𝐭𝐨' }, type: 1 },
+    { buttonId: `${usedPrefix}menu`, buttonText: { displayText: '📋 𝐌𝐞𝐧𝐮' }, type: 1 }
   ]
 
-  const interactiveButtons = rows.map(r => ({
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
-      display_text: r.title,
-      id: r.id
-    })
-  }))
-
-  await conn.sendMessage(m.chat, {
+  const buttonMessage = {
     image: imageBuffer,
     caption,
-    footer: "",
-    headerType: 4,
-    interactiveButtons
-  }, { quoted: m })
+    footer: '',
+    buttons: buttons,
+    headerType: 4
+  }
+
+  await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
 }
 
 handler.help = ['ping']

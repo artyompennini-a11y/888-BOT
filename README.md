@@ -120,7 +120,7 @@ FUN    ████████████████████████�
 RPG    ██████████████████████ 63         │  .daily  .shop  .pay  .inv
 INFO   ████████████████ 41               │  .ping  .meteo  .wiki
 OWNER  ██████████████ 35                 │  .bc  .join  .eval  .off
-GP     ██████████████████████ 58         │  .welcome  .tagall  .group
+GP     █████████████████████ 57          │  .welcome  .hidetag  .group
 MENU   █████████ 22                     │  .menu  .menufun  .menuadmin
 Anti-  █████ 13                         │  anti-link  anti-spam  anti-crash
 UTILITY████████████████████ 52           │  .sticker  .tts  .qr  .ocr
@@ -138,7 +138,7 @@ UTILITY████████████████████ 52          
 <tr><td><code><b>RPG</b></code></td><td>Economia virtuale: portafogli, negozi, lavori, aste, scommesse</td><td align="center"><b>63</b></td><td><code>.daily</code> <code>.shop</code> <code>.pay</code> <code>.inv</code></td></tr>
 <tr><td><code><b>INFO</b></code></td><td>Il mondo a portata di chat: meteo, wiki, orari, notizie</td><td align="center"><b>41</b></td><td><code>.ping</code> <code>.meteo</code> <code>.wiki</code></td></tr>
 <tr><td><code><b>OWNER</b></code></td><td>Controllo totale: broadcast, join/leave, eval, backup</td><td align="center"><b>35</b></td><td><code>.bc</code> <code>.join</code> <code>.eval</code> <code>.off</code></td></tr>
-<tr><td><code><b>GP</b></code></td><td>Benvenuti, regole, tagall, apertura/chiusura gruppi</td><td align="center"><b>58</b></td><td><code>.welcome</code> <code>.tagall</code> <code>.group</code></td></tr>
+<tr><td><code><b>GP</b></code></td><td>Benvenuti, regole, hidetag, apertura/chiusura gruppi</td><td align="center"><b>57</b></td><td><code>.welcome</code> <code>.hidetag</code> <code>.group</code></td></tr>
 <tr><td><code><b>MENU</b></code></td><td>Menu dinamici per categoria con navigazione a pulsanti</td><td align="center"><b>22</b></td><td><code>.menu</code> <code>.menufun</code> <code>.menuadmin</code></td></tr>
 <tr><td><code><b>Anti-</b></code></td><td>I 13 moduli di sicurezza: spam, link, crash, virtex, trojan</td><td align="center"><b>13</b></td><td><code>anti-link</code> <code>anti-spam</code> <code>anti-crash</code></td></tr>
 <tr><td><code><b>UTILITY</b></code></td><td>Strumenti quotidiani: sticker, conversioni, tts, QR, OCR</td><td align="center"><b>52</b></td><td><code>.sticker</code> <code>.tts</code> <code>.qr</code> <code>.ocr</code></td></tr>

@@ -1,145 +1,137 @@
-// Plugin by Elixir & 888 staff
+// Plugin by elixir & punisher
 import fs from 'fs'
+import {
+  ROLES,
+  LIMITS,
+  resolveRole,
+  resolveRoleOfJid,
+  canUse,
+  roleLabel,
+  resolveTarget,
+  parseDuration,
+  formatDuration,
+  isTargetProtected,
+  applyMute,
+  liftMute,
+  getMute,
+  activeMute,
+  recordAction,
+  logModAction
+} from '../../lib/moderation.js'
 
-function normalizeJid(jid = '') {
-  if (!jid) return null
-  if (jid.includes('@s.whatsapp.net')) return jid
-  if (jid.includes('@lid')) return jid
-  const clean = String(jid).replace(/[^0-9]/g, '')
-  return clean.length > 5 ? clean + '@s.whatsapp.net' : null
-}
-
-function cleanJid(jid = '') {
-  return String(jid || '').replace(/[^0-9]/g, '')
-}
-
-function isOwnerJid(jid = '') {
-  const num = cleanJid(jid)
-  return (global.owner || []).some(owner => {
-    const ownerNum = Array.isArray(owner) ? cleanJid(owner[0]) : cleanJid(owner)
-    return ownerNum === num
-  })
-}
-
-function getMentioned(m) {
-  return (
-    m.mentionedJid?.[0] ||
-    m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] ||
-    m.msg?.contextInfo?.mentionedJid?.[0] ||
-    null
-  )
-}
-
-function resolveTarget(m, text = '') {
-  const mentioned = getMentioned(m)
-  if (mentioned) return normalizeJid(mentioned)
-  if (m.quoted?.sender) return normalizeJid(m.quoted.sender)
-  const clean = String(text || '').replace(/[^0-9]/g, '')
-  return clean.length > 5 ? normalizeJid(clean) : null
-}
-
-function resolveAction(m, command = '') {
-  const cmd = String(command || '').toLowerCase().replace(/^[.!/#]/, '')
-  const body = String(m.text || m.body || m.message?.conversation || '').toLowerCase().trim()
-  if (cmd === 'muta') return true
-  if (cmd === 'smuta') return false
-  if (/^[.!/#]smuta(\s|$)/i.test(body)) return false
-  if (/^[.!/#]muta(\s|$)/i.test(body)) return true
-  return null
-}
-
-function ensureChatMuteStore(chat) {
-  if (!global.db.data.chats) global.db.data.chats = {}
-  if (!global.db.data.chats[chat]) global.db.data.chats[chat] = {}
-  if (!global.db.data.chats[chat].mutedUsers) global.db.data.chats[chat].mutedUsers = {}
-  return global.db.data.chats[chat].mutedUsers
-}
-
-function parseDuration(text = '') {
-  const match = String(text)
-    .toLowerCase()
-    .match(/(?:^|\s)(\d+)\s*(m|min|minuti|h|ore|ora|d|giorni|giorno)?(?:\s|$)/)
-
-  if (!match) return null
-
-  const value = Number(match[1])
-  const unit = match[2] || 'm'
-  if (!value || value <= 0) return null
-
-  if (['h', 'ora', 'ore'].includes(unit))
-    return { ms: value * 60 * 60 * 1000, label: `${value} ${value === 1 ? 'ora' : 'ore'}` }
-
-  if (['d', 'giorno', 'giorni'].includes(unit))
-    return { ms: value * 24 * 60 * 60 * 1000, label: `${value} ${value === 1 ? 'giorno' : 'giorni'}` }
-
-  return { ms: value * 60 * 1000, label: `${value} ${value === 1 ? 'minuto' : 'minuti'}` }
-}
-
-let handler = async (m, { conn, text, command, isOwner, isROwner }) => {
+function warnThumb() {
   try {
-    const isMute = resolveAction(m, command)
-    const target = resolveTarget(m, text || '')
-    if (isMute === null) return
+    const buffer = fs.readFileSync('icone/warn.png')
+    return buffer && buffer.length ? buffer : null
+  } catch {
+    return null
+  }
+}
 
+let handler = async (m, { conn, text, command, isOwner, isROwner, isAdmin, isMods, participants }) => {
+  try {
+    const role = resolveRole({ isOwner, isROwner, isAdmin, isMods })
+    if (!canUse(role, ROLES.MOD)) {
+      return conn.reply(m.chat, '⛔ Questo comando è riservato allo staff (Moderatori/Admin/Owner).', m)
+    }
+
+    const action = String(command || '').toLowerCase().includes('smuta') ? 'smuta' : 'muta'
+    const target = resolveTarget(m, text || '')
     if (!target) {
       return conn.reply(m.chat, '⚠️ Devi menzionare o rispondere a un utente.', m)
     }
 
-    const executorIsOwner = !!(isOwner || isROwner || isOwnerJid(m.sender))
-    const targetIsOwner = isOwnerJid(target)
-
-    if (isMute && targetIsOwner) {
-      return conn.reply(m.chat, '⛔ Non puoi mutare un Owner.', m)
-    }
-
-    const mutedUsers = ensureChatMuteStore(m.chat)
-    const oldMuteData = mutedUsers[target]
-
-    if (!isMute && oldMuteData?.mutedByOwner && !executorIsOwner) {
-      return conn.reply(m.chat, '⛔ Solo un Owner può smutare un mute applicato da un Owner.', m)
-    }
-
-    const duration = isMute ? parseDuration(text || '') : null
-    const expiresAt = duration ? Date.now() + duration.ms : null
-
-    if (isMute) {
-      mutedUsers[target] = {
-        active: true,
-        expiresAt,
-        mutedBy: m.sender,
-        mutedByOwner: executorIsOwner
-      }
-    } else {
-      delete mutedUsers[target]
-    }
-
     const targetTag = `@${target.split('@')[0]}`
     const executorTag = `@${m.sender.split('@')[0]}`
-    const label = isMute ? '🔇 Mute applicato' : '🔊 Mute rimosso'
-    const status = isMute ? 'Attivo' : 'Revocato'
-    const durationLabel = duration?.label || 'Permanente'
+    const thumb = warnThumb()
 
-    const body = `
-${label}
+    if (action === 'muta') {
+      const protection = isTargetProtected({
+        target,
+        actorRole: role,
+        participants,
+        conn,
+        chat: m.chat
+      })
+      if (protection.protected) {
+        return conn.reply(m.chat, `⛔ Impossibile mutare questo utente.\n📌 Motivo: ${protection.reason} (${roleLabel(protection.targetRole)})`, m)
+      }
+
+      const requested = parseDuration(text || '')
+      const resolved = applyMute({
+        chat: m.chat,
+        target,
+        actor: m.sender,
+        role,
+        durationMs: requested?.ms ?? null
+      })
+
+      recordAction({
+        chat: m.chat,
+        actor: m.sender,
+        action: 'mute',
+        target,
+        role,
+        detail: formatDuration(resolved.ms)
+      })
+      logModAction({
+        role,
+        actor: m.sender,
+        action: 'mute',
+        target,
+        extra: formatDuration(resolved.ms)
+      })
+
+      const capNote = resolved.capped
+        ? `\n⚠️ Durata ridotta al massimo consentito ai moderatori (${LIMITS.MOD_MUTE_MAX_MS / 60000} minuti).`
+        : ''
+
+      const body = `
+🔇 *MUTE APPLICATO*
 👤 Target: ${targetTag}
-👑 Da: ${executorTag}
-⏳ Durata: ${durationLabel}
-Stato: ${status}
+👑 Da: ${executorTag} ${roleLabel(role)}
+⏳ Durata: ${formatDuration(resolved.ms)}${capNote}
+📊 Stato: Attivo
 `.trim()
 
-    let imgBuffer
-    try {
-      imgBuffer = fs.readFileSync('icone/warn.png')
-    } catch {
-      imgBuffer = Buffer.alloc(0)
+      const payload = { text: body, mentions: [target, m.sender] }
+      if (thumb) payload.jpegThumbnail = thumb
+
+      return conn.sendMessage(m.chat, payload, { quoted: m })
     }
 
-    await conn.sendMessage(m.chat, {
-      text: body,
-      mentions: [target, m.sender],
-      jpegThumbnail: imgBuffer
-    }, { quoted: m })
+    const previous = getMute(m.chat, target)
+    if (previous?.mutedByRole === ROLES.OWNER && role !== ROLES.OWNER) {
+      return conn.reply(m.chat, '⛔ Solo un Owner può rimuovere un mute applicato da un Owner.', m)
+    }
 
+    const { removed } = liftMute({ chat: m.chat, target })
+    if (!removed) {
+      return conn.reply(m.chat, 'ℹ️ Questo utente non ha mute attivi.', m)
+    }
+
+    recordAction({
+      chat: m.chat,
+      actor: m.sender,
+      action: 'smute',
+      target,
+      role,
+      detail: 'mute revocato'
+    })
+    logModAction({ role, actor: m.sender, action: 'smute', target, extra: 'mute revocato' })
+
+    const body = `
+🔊 *MUTE RIMOSSO*
+👤 Target: ${targetTag}
+👑 Da: ${executorTag} ${roleLabel(role)}
+⏳ Durata residua: ${formatDuration(previous?.expiresAt ? previous.expiresAt - Date.now() : 0)}
+📊 Stato: Revocato
+`.trim()
+
+    const payload = { text: body, mentions: [target, m.sender] }
+    if (thumb) payload.jpegThumbnail = thumb
+
+    return conn.sendMessage(m.chat, payload, { quoted: m })
   } catch (e) {
     console.error('[MUTA ERROR]', e)
     conn.reply(m.chat, '❌ Errore durante il comando.', m)
@@ -149,20 +141,8 @@ Stato: ${status}
 handler.before = async function (m, { conn }) {
   if (!m.isGroup || !m.sender || m.fromMe) return
 
-  const sender = normalizeJid(m.sender)
-  if (!sender) return
-
-  const mutedUsers = ensureChatMuteStore(m.chat)
-  const muteData = mutedUsers[sender]
-
+  const muteData = activeMute(m.chat, m.sender)
   if (!muteData) return
-
-  if (muteData.expiresAt && Date.now() >= muteData.expiresAt) {
-    delete mutedUsers[sender]
-    return
-  }
-
-  if (muteData.active !== true) return
 
   try {
     await conn.sendMessage(m.chat, { delete: m.key })
@@ -171,9 +151,10 @@ handler.before = async function (m, { conn }) {
   }
 }
 
+handler.help = ['muta @user 5m', 'smuta @user']
 handler.command = ['muta', 'smuta']
 handler.group = true
-handler.admin = true
+handler.mods = true
 handler.botAdmin = true
 handler.tags = ['admin']
 

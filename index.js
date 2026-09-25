@@ -2,7 +2,7 @@ import { join, dirname } from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { setupMaster, fork } from 'cluster';
-import { watchFile, unwatchFile, existsSync } from 'fs';
+import { watchFile, unwatchFile, existsSync, readFileSync } from 'fs';
 import { createInterface } from 'readline';
 import yargs from 'yargs';
 import { execSync } from 'child_process';
@@ -51,6 +51,16 @@ try {
 const rl = createInterface(process.stdin, process.stdout);
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const loadStaff = () => {
+  try {
+    const staff = JSON.parse(readFileSync(join(__dirname, 'data', 'staff.json'), 'utf8'))
+    return Array.isArray(staff) ? staff : []
+  } catch {
+    return []
+  }
+};
+
+
 
 const glitchText = async (text, times = 3) => {
   const chars = '!@#$%&*()_+-=[]{}|;:,.<>?/';
@@ -222,11 +232,11 @@ async function epicStartup() {
 
   console.clear();
   console.log('\n\n');
-  await typeWriterBig('888\nBOT\n2026\nV1.2', 85);
+  await typeWriterBig('888\nBOT\n2026\nV1.3', 85);
   await sleep(260);
 
   console.log('\n');
-  await rainbowText('                     888 BOT • VERSION 1.2 • STABLE');
+  await rainbowText('                     888 BOT • VERSION 1.3 • STABLE');
   await sleep(160);
 
   console.log('\n');
@@ -244,20 +254,14 @@ async function epicStartup() {
   console.log('\x1b[90m' + '━'.repeat(70) + '\x1b[0m');
   console.log('\n');
 
-  const staff = [
-    'Elixir',
-    'Punisher',
-    'Axtral',
-    'Ghost',
-    'Manu',
-    'Fuma',
-    'Dado',
-    'Mattia'
-  ];
+  const staff = loadStaff()
 
   console.log('\x1b[35m' + 'TEAM 888' + '\x1b[0m');
   for (const member of staff) {
-    await typeWriter(`                     ${member}`, 14, '\x1b[36m');
+    const name = member?.nome || 'Membro staff'
+    const role = member?.ruolo || 'Staff'
+    const emoji = member?.emoji || '👤'
+    await typeWriter(`                     ${emoji} ${name} — ${role}`, 8, '\x1b[36m');
     await sleep(20);
   }
 

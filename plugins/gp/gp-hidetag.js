@@ -1,53 +1,27 @@
-// Plugin by Elixir
-const handler = async (m, { conn, text, participants, isOwner }) => {
+// Plugin by elixir & punisher
+import { ROLES, LIMITS, resolveRole, canUse, logModAction } from '../../lib/moderation.js'
+
+const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin, isMods }) => {
   try {
     if (m.fromMe || m.sender === conn.user.jid) return
 
-    const MAX_TAGS = 6
-    const RESET_INTERVAL = 24 * 60 * 60 * 1000
-
-    if (m.isGroup && !isOwner) {
-      if (!global.db.data) await global.loadDatabase()
-      const chatDb = global.db.data.chats[m.chat]
-
-      if (chatDb) {
-        const now = Date.now()
-
-        if (chatDb.tagCount == null) chatDb.tagCount = 0
-        if (chatDb.tagLastReset == null) chatDb.tagLastReset = now
-
-        if (now - chatDb.tagLastReset >= RESET_INTERVAL) {
-          chatDb.tagCount = 0
-          chatDb.tagLastReset = now
-          if (typeof global.markDbDirty === "function") global.markDbDirty()
-        }
-
-        if (chatDb.tagCount >= MAX_TAGS) {
-          const remainingMs = RESET_INTERVAL - (now - chatDb.tagLastReset)
-          const remainingH = Math.max(1, Math.ceil(remainingMs / 3600000))
-
-          return conn.sendMessage(m.chat, {
-            text: `🚫 Limite tag giornalieri raggiunto.\nReset tra circa ${remainingH} ora/e.`
-          }, { quoted: m })
-        }
-
-        chatDb.tagCount++
-        m.__tagRemaining = MAX_TAGS - chatDb.tagCount
-        if (typeof global.markDbDirty === "function") global.markDbDirty()
-      }
+    const role = resolveRole({ isOwner, isROwner, isAdmin, isMods })
+    if (!canUse(role, ROLES.MOD)) {
+      return conn.reply(m.chat, '⛔ Questo comando è riservato allo staff (Moderatori/Admin/Owner).', m)
     }
+
+    const maxMentions = role === ROLES.MOD ? LIMITS.MOD_HIDETAG_MAX : Infinity
 
     const users = participants.map(u => conn.decodeJid(u.id))
 
-    // Filtra gli utenti AFK — collegamento perfetto con gp-afk.js
     const afkState = global.afkState || {}
     const botJid = conn.user.jid
     let afkSkipped = 0
-    const usersFiltered = users.filter(jid => {
+    let usersFiltered = users.filter(jid => {
       if (jid === botJid) return false
       const afkEntry = afkState[jid]
       if (!afkEntry) return true
-      // Se scope è 'all' o se l'utente AFK è nello stesso gruppo, lo saltiamo
+
       if (afkEntry.scope === 'all' || afkEntry.chat === m.chat) {
         afkSkipped++
         return false
@@ -55,6 +29,21 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
       return true
     })
     m.__afkSkipped = afkSkipped
+
+    let hidetagTrimmed = 0
+    if (Number.isFinite(maxMentions) && usersFiltered.length > maxMentions) {
+      hidetagTrimmed = usersFiltered.length - maxMentions
+      usersFiltered = usersFiltered.slice(0, maxMentions)
+    }
+    m.__hidetagTrimmed = hidetagTrimmed
+    m.__hidetagRole = role
+    logModAction({
+      role,
+      actor: m.sender,
+      action: 'hidetag',
+      target: '',
+      extra: `${usersFiltered.length} menzioni${hidetagTrimmed ? ` (limite moderatori, ${hidetagTrimmed} escluse)` : ''}`
+    })
 
     const quoted = m.quoted
 
@@ -77,7 +66,6 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
         "documentMessage",
         "stickerMessage",
       ]
-
 
       const pollTypes = [
         "pollCreationMessage",
@@ -121,7 +109,6 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
         }
         return
       }
-
 
       let media = null
       if (mediaTypes.includes(type)) {
@@ -196,34 +183,29 @@ const handler = async (m, { conn, text, participants, isOwner }) => {
   }
 }
 
-handler.after = async function (m, { conn, isOwner }) {
-  if (!m.isGroup || isOwner) return
-  if (typeof m.__tagRemaining !== "number") return
+handler.after = async function (m, { conn, isOwner, isROwner, isAdmin, isMods }) {
+  if (!m.isGroup) return
 
-  const remaining = m.__tagRemaining
-  delete m.__tagRemaining
+  const role = m.__hidetagRole || resolveRole({ isOwner, isROwner, isAdmin, isMods })
+  const skipped = typeof m.__afkSkipped === 'number' ? m.__afkSkipped : 0
+  const trimmed = typeof m.__hidetagTrimmed === 'number' ? m.__hidetagTrimmed : 0
+  delete m.__afkSkipped
+  delete m.__hidetagTrimmed
+  delete m.__hidetagRole
 
   try {
-    const skipped = typeof m.__afkSkipped === 'number' ? m.__afkSkipped : 0
-    delete m.__afkSkipped
+    if (trimmed > 0) {
+      await conn.sendMessage(m.chat, {
+        text:
+          `⚠️ *Limite menzioni moderatori*\n` +
+          `👥 Menzioni inviate: ${LIMITS.MOD_HIDETAG_MAX}\n` +
+          `🚫 Menzioni escluse: ${trimmed}\n` +
+          `ℹ️ Solo Admin/Owner possono menzionare tutti i membri.`
+      }, { quoted: m })
+    }
     if (skipped > 0) {
       await conn.sendMessage(m.chat, {
         text: `💤 ${skipped} ${skipped === 1 ? 'utente AFK non è stato taggato' : 'utenti AFK non sono stati taggati'}.`
-      }, { quoted: m })
-    }
-    if (remaining > 0) {
-      await conn.sendMessage(m.chat, {
-        text: `📊 Tag rimanenti: ${remaining}/6`
-      }, { quoted: m })
-    } else {
-      const RESET_INTERVAL = 24 * 60 * 60 * 1000
-      const chatDb = global.db.data.chats[m.chat]
-      const now = Date.now()
-      const remainingMs = RESET_INTERVAL - (now - (chatDb?.tagLastReset ?? now))
-      const remainingH = Math.max(1, Math.ceil(remainingMs / 3600000))
-
-      await conn.sendMessage(m.chat, {
-        text: `⚠️ Ultimo tag disponibile. Reset tra circa ${remainingH} ora/e.`
       }, { quoted: m })
     }
   } catch {}

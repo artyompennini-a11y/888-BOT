@@ -130,9 +130,9 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
 
     await conn.sendMessage(m.chat, {
       text: `❓ Sei sicuro di voler scarcerare @${jailTarget.split('@')[0]}?\n\n💰 Cauzione: ${CAUZIONE} 888COIN\n\nI tuoi soldi: ${adminUser.money || 0} 888COIN`,
-      buttons: [
-        { buttonId: '.confermascarcero', buttonText: { displayText: '✅ SI' }, type: 1 },
-        { buttonId: '.annullascarcero', buttonText: { displayText: '❌ NO' }, type: 1 }
+        buttons: [
+        { buttonId: '.confermascarcero', buttonText: { displayText: '✅ 𝐒𝐈' }, type: 1 },
+        { buttonId: '.annullascarcero', buttonText: { displayText: '❌ 𝐍𝐎' }, type: 1 }
       ],
       headerType: 1,
       mentions: [jailTarget]

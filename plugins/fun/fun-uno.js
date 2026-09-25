@@ -11,17 +11,9 @@ const coloriHex = {
 }
 
 const gameButtons = () => [{
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
-        display_text: '📥 𝐏𝐄𝐒𝐂𝐀',
-        id: 'pesca'
-    })
+    buttonId: 'pesca', buttonText: { displayText: '📥 𝐏𝐄𝐒𝐂𝐀' }, type: 1
 }, {
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
-        display_text: '🛑 𝐀𝐁𝐁𝐀𝐍𝐃𝐎𝐍𝐀',
-        id: 'enduno'
-    })
+    buttonId: 'enduno', buttonText: { displayText: '🛑 𝐀𝐁𝐁𝐀𝐍𝐃𝐎𝐍𝐀' }, type: 1
 }]
 
 async function generaGrafica(s) {
@@ -234,7 +226,8 @@ let handler = async (m, { conn }) => {
 📥 Premi il bottone per pescare
 🛑 Premi il bottone per uscire
 🎴 Oppure scrivi il numero della carta`,
-        interactiveButtons: gameButtons()
+        buttons: gameButtons(),
+        headerType: 1
     }, { quoted: m })
 }
 
@@ -244,7 +237,7 @@ handler.before = async (m, { conn }) => {
 
     if (!s || s.player !== m.sender) return
 
-    let msgText = (m.text || m.body || '').trim().toLowerCase()
+        let msgText = (m.text || m.body || '').trim().toLowerCase()
 
     if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
         try {
@@ -255,6 +248,10 @@ handler.before = async (m, { conn }) => {
 
             msgText = params.id.toLowerCase()
         } catch {}
+    }
+
+    if (m.message?.buttonsResponseMessage?.selectedButtonId) {
+        msgText = m.message.buttonsResponseMessage.selectedButtonId.toLowerCase()
     }
 
     if (msgText === '.uno' || msgText === 'uno') return
@@ -370,7 +367,8 @@ ${report}
 ━━━━━━━━━━━━━━━━━━━━━━
 Premi un bottone oppure
 scrivi il numero della carta.`,
-        interactiveButtons: gameButtons()
+        buttons: gameButtons(),
+        headerType: 1
     }, { quoted: m })
 }
 

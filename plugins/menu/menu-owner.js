@@ -59,6 +59,9 @@ Livello: Sviluppatore / Creatore Core
 • ${prefix}banchat  
 • ${prefix}banuser (@)  
 • ${prefix}unbanuser (@)  
+• ${prefix}addblacklist @user | motivo  
+• ${prefix}delblacklist @user  
+• ${prefix}listblacklist  
 • ${prefix}block (@)  
 • ${prefix}unblock (@)  
 • ${prefix}banlist  
@@ -78,7 +81,7 @@ Livello: Sviluppatore / Creatore Core
 • ${prefix}offusca  
 
 🚪 *Controllo Gruppi & Spostamenti*
-• ${prefix}hidetagall  
+• ${prefix}hidetag testo  
 • ${prefix}ispeziona <link>  
 • ${prefix}join <link>  
 • ${prefix}gruppi  

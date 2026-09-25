@@ -3,8 +3,7 @@
 let bombaInCorso = {};
 
 const playAgainButtons = () => [{
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({ display_text: 'Innesca un\'altra!', id: '.bomba' })
+    buttonId: '.bomba', buttonText: { displayText: '💣 𝐈𝐧𝐧𝐞𝐬𝐜𝐚 𝐮𝐧\'𝐚𝐥𝐭𝐞𝐫𝐚!' }, type: 1
 }];
 
 let handler = async (m, { conn, command }) => {
@@ -133,11 +132,14 @@ async function esplosione(chatId, conn) {
 
     let mentionList = [b.vittima, ...b.passaggi];
 
-    await conn.sendMessage(chatId, { 
-        text: finale, 
+        const buttonMessage = {
+        text: finale,
         mentions: mentionList,
-        interactiveButtons: playAgainButtons()
-    });
+        footer: '',
+        buttons: playAgainButtons(),
+        headerType: 1
+    };
+    await conn.sendMessage(chatId, buttonMessage);
 
     delete bombaInCorso[chatId];
 }

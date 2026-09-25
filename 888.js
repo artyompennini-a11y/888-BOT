@@ -386,7 +386,7 @@ if (!pairingMode && !hasExistingSession) {
   const menu = `
 ${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
 ${chalk.bgBlue.white('┃     888 BOT 2026      ┃')}
-${chalk.bgBlue.white('┃         V1.2          ┃')}
+${chalk.bgBlue.white('┃         V1.3          ┃')}
 ${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
 ${chalk.yellow('Seleziona come collegarti:')}
 

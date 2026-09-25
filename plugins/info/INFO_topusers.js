@@ -66,8 +66,8 @@ let handler = async (m, { conn, participants, args }) => {
         text,
         mentions: top.map(u => u[0]),
         buttons: [
-            { buttonId: '.topgruppi', buttonText: { displayText: '🌍 Top gruppi' }, type: 1 },
-            { buttonId: '.statsgiornaliere', buttonText: { displayText: '📊 Statistiche giornaliere' }, type: 1 }
+            { buttonId: '.topgruppi', buttonText: { displayText: '🌍 𝐓𝐨𝐩 𝐠𝐫𝐮𝐩𝐩𝐢' }, type: 1 },
+            { buttonId: '.statsgiornaliere', buttonText: { displayText: '📊 𝐒𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐡𝐞' }, type: 1 }
         ],
         headerType: 1
     });

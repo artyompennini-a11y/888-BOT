@@ -167,8 +167,8 @@ const handler = async (m, { conn, command, args, isAdmin }) => {
 ┃ 🎤 Artista specifico
 ╰━━━━━━━━━━━━━━━━━━┈`,
                 buttons: [
-                    { buttonId: '.ica generale', buttonText: { displayText: '🎲 Generale' }, type: 1 },
-                    { buttonId: '.ica specifico', buttonText: { displayText: '🎤 Artista specifico' }, type: 1 }
+                                        { buttonId: '.ica generale', buttonText: { displayText: '🎲 𝐆𝐞𝐧𝐞𝐫𝐚𝐥𝐞' }, type: 1 },
+                    { buttonId: '.ica specifico', buttonText: { displayText: '🎤 𝐀𝐫𝐭𝐢𝐬𝐭𝐚' }, type: 1 }
                 ],
                 headerType: 1
             }, { quoted: m });
@@ -249,9 +249,9 @@ const startGame = async (m, conn, chat, artist = null) => {
                 activeGames.delete(chat);
                 await conn.sendMessage(chat, { delete: fullMessage.key }).catch(() => {});
 
-                let buttons = [{ buttonId: '.ica generale', buttonText: { displayText: '🔄 Nuova partita' }, type: 1 }];
+                let buttons = [{ buttonId: '.ica generale', buttonText: { displayText: '🔄 𝐍𝐮𝐨𝐯𝐚 𝐩𝐚𝐫𝐭𝐢𝐭𝐚' }, type: 1 }];
                 if (currentArtist) {
-                    buttons.push({ buttonId: `.ica ${currentArtist}`, buttonText: { displayText: `🎤 Riprova con ${currentArtist}` }, type: 1 });
+                    buttons.push({ buttonId: `.ica ${currentArtist}`, buttonText: { displayText: `🎤 𝐑𝐢𝐩𝐫𝐨𝐯𝐚 𝐜𝐨𝐧 ${currentArtist}` }, type: 1 });
                 }
 
                 await conn.sendMessage(chat, {
@@ -318,9 +318,9 @@ handler.before = async (m, { conn }) => {
             user['888coin'] = (user['888coin'] || 0) + game.album.premio;
         }
 
-        let buttons = [{ buttonId: '.ica generale', buttonText: { displayText: '🎮 Nuova partita' }, type: 1 }];
+        let buttons = [{ buttonId: '.ica generale', buttonText: { displayText: '🎮 𝐍𝐮𝐨𝐯𝐚 𝐩𝐚𝐫𝐭𝐢𝐭𝐚' }, type: 1 }];
         if (game.currentArtist) {
-            buttons.push({ buttonId: `.ica ${game.currentArtist}`, buttonText: { displayText: `🎤 Gioca con ${game.currentArtist}` }, type: 1 });
+            buttons.push({ buttonId: `.ica ${game.currentArtist}`, buttonText: { displayText: `🎤 𝐆𝐢𝐨𝐜𝐚 𝐜𝐨𝐧 ${game.currentArtist}` }, type: 1 });
         }
 
         await conn.sendMessage(chat, {

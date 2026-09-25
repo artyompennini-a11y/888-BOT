@@ -95,7 +95,7 @@ const handler = async (m, { conn, usedPrefix, text }) => {
   }
 
   const botName = global.db?.data?.nomedelbot || global.nomebot || '🤖 888 BOT'
-  const botVersion = global.versione || global.db?.data?.version || '1.2'
+  const botVersion = global.versione || global.db?.data?.version || '1.3'
 
   const menuText = `
 ⚡ *TEAM ${botName.toUpperCase()}*
@@ -104,27 +104,21 @@ const handler = async (m, { conn, usedPrefix, text }) => {
 📂 Scegli una categoria dai bottoni sotto.
 `.trim()
 
-  const rows = [
-    { id: `${usedPrefix}staff tg`, title: '📞 Telegram' },
-    { id: `${usedPrefix}staff ig`, title: '📷 Instagram' },
-    { id: `${usedPrefix}staff lista`, title: '👥 Tutto lo staff' }
+    const buttons = [
+    { buttonId: `${usedPrefix}staff tg`, buttonText: { displayText: '📞 𝐓𝐞𝐥𝐞𝐠𝐫𝐚𝐦' }, type: 1 },
+    { buttonId: `${usedPrefix}staff ig`, buttonText: { displayText: '📷 𝐈𝐧𝐬𝐭𝐚𝐠𝐫𝐚𝐦𝐦' }, type: 1 },
+    { buttonId: `${usedPrefix}staff lista`, buttonText: { displayText: '👥 𝐓𝐮𝐭𝐭𝐨' }, type: 1 }
   ]
 
-  const interactiveButtons = rows.map(r => ({
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
-      display_text: r.title,
-      id: r.id
-    })
-  }))
-
-  await conn.sendMessage(m.chat, {
+  const buttonMessage = {
     image: imageBuffer,
     caption: menuText,
     footer: '',
-    headerType: 4,
-    interactiveButtons
-  }, { quoted: m })
+    buttons: buttons,
+    headerType: 4
+  }
+
+  await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
 
   m.react('📌')
 }

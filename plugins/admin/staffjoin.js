@@ -19,9 +19,9 @@ const notifyOwners = async (conn, req) => {
       `👥 Membri: ${members}\n` +
       `🆔 ID Richiesta: ${id}\n\n` +
       `Seleziona un'azione:`,
-    buttons: [
-      { buttonId: `.staffaccept ${id}`, buttonText: { displayText: '✅ Approva' }, type: 1 },
-      { buttonId: `.staffreject ${id}`, buttonText: { displayText: '❌ Rifiuta' }, type: 1 }
+      buttons: [
+      { buttonId: `.staffaccept ${id}`, buttonText: { displayText: '✅ 𝐀𝐩𝐩𝐫𝐨𝐯𝐚' }, type: 1 },
+      { buttonId: `.staffreject ${id}`, buttonText: { displayText: '❌ 𝐑𝐢𝐟𝐢𝐮𝐭𝐚' }, type: 1 }
     ],
     headerType: 1
   })

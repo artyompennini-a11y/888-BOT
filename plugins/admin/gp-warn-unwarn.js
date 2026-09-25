@@ -1,100 +1,148 @@
-const PROTECTED_USERS = [
-  '393784409415@s.whatsapp.net',
-  '393206032199@s.whatsapp.net'
-];
+// Plugin by elixir & punisher
+import {
+  ROLES,
+  LIMITS,
+  resolveRole,
+  resolveRoleOfJid,
+  canUse,
+  roleLabel,
+  resolveTarget,
+  isTargetProtected,
+  recordAction,
+  logModAction,
+  checkUnwarnCooldown,
+  markUnwarn
+} from '../../lib/moderation.js'
 
-const MAX_WARN = 5;
-
-const handler = async (msg, { conn, command, text, isAdmin }) => {
-  let mentionedJid = msg.mentionedJid?.[0] || msg.quoted?.sender;
-
-  if (!mentionedJid && text) {
-    let number = text.split(' ')[0].replace(/[^0-9]/g, '');
-    if (number.length >= 8 && number.length <= 15) {
-      mentionedJid = number + '@s.whatsapp.net';
-    }
+const handler = async (msg, { conn, command, text, isOwner, isROwner, isAdmin, isMods, participants }) => {
+  const role = resolveRole({ isOwner, isROwner, isAdmin, isMods })
+  if (!canUse(role, ROLES.MOD)) {
+    return conn.reply(msg.chat, '⛔ Questo comando è riservato allo staff (Moderatori/Admin/Owner).', msg)
   }
 
-  const chatId = msg.chat;
-  const botNumber = conn.user.jid;
-  const groupMetadata = await conn.groupMetadata(chatId);
-  const groupOwner = groupMetadata.owner || chatId.split('-')[0] + '@s.whatsapp.net';
-
-  if (!isAdmin) throw '⛔ Accesso negato — servono privilegi admin.';
-
-  if (!mentionedJid) {
-    return conn.reply(chatId, `⚠️ Devi menzionare o rispondere a un utente.`, msg);
+  const target = resolveTarget(msg, text || '')
+  if (!target) {
+    return conn.reply(msg.chat, '⚠️ Devi menzionare o rispondere a un utente.', msg)
   }
 
-  let reason = text ? text.replace(/@\d+|^\d+/, '').trim() : '';
+  const targetTag = `@${target.split('@')[0]}`
+  const executorTag = `@${msg.sender.split('@')[0]}`
+  const targetRole = resolveRoleOfJid(conn, msg.chat, target, participants)
 
-  if (command === 'warn' && (!reason || reason.length < 3)) {
-    return conn.reply(chatId, `ℹ️ Inserisci una motivazione valida per ammonire l’utente.`, msg);
+  const protection = isTargetProtected({
+    target,
+    actorRole: role,
+    participants,
+    conn,
+    chat: msg.chat
+  })
+  if (protection.protected) {
+    return conn.reply(msg.chat, `ⓘ Sanzione non applicabile: ${protection.reason} (${roleLabel(protection.targetRole)}).`, msg)
   }
 
-  if (mentionedJid === groupOwner || PROTECTED_USERS.includes(mentionedJid) || mentionedJid === botNumber) {
-    return conn.reply(chatId, `ⓘ Questo utente è protetto e non può essere sanzionato.`, msg);
-  }
+  const reason = String(text || '').replace(/@\d+/g, '').replace(/^\d+/, '').trim()
 
-  if (!global.db.data.users[mentionedJid]) global.db.data.users[mentionedJid] = { warn: 0 };
-  const user = global.db.data.users[mentionedJid];
-  const tag = '@' + mentionedJid.split('@')[0];
+  global.db.data.users ??= {}
+  global.db.data.users[target] ??= { warn: 0 }
+  const targetUser = global.db.data.users[target]
+  targetUser.warn = Number(targetUser.warn) || 0
 
-  // -------------------------
-  // 🔥 WARN — STILE 888
-  // -------------------------
   if (command === 'warn') {
-    user.warn = (user.warn || 0) + 1;
-
-    if (user.warn >= MAX_WARN) {
-      user.warn = 0;
-
-      let messaggioKick =
-`❌ *Utente Espulso*
-👤 Target: ${tag}
-⚙️ Azione: Rimozione automatica
-⛔ Motivo: Ha raggiunto ${MAX_WARN} avvertimenti`;
-
-      await conn.sendMessage(chatId, { text: messaggioKick, mentions: [mentionedJid] });
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return await conn.groupParticipantsUpdate(chatId, [mentionedJid], 'remove');
+    if (!reason || reason.length < 3) {
+      return conn.reply(msg.chat, 'ℹ️ Inserisci una motivazione valida per ammonire l’utente.', msg)
     }
 
-    let messaggioWarn =
-`⚠️ *Avvertimento*
-👤 Target: ${tag}
-👑 Eseguito da: @${msg.sender.split('@')[0]}
-📊 Sanzioni: [ ${user.warn} / ${MAX_WARN} ]
-📝 Motivo: ${reason}
+    const nextWarn = targetUser.warn + 1
 
-⮕ Al quinto avvertimento verrai espulso dal gruppo.`;
+    if (role === ROLES.MOD && nextWarn > LIMITS.MOD_MAX_WARN) {
+      logModAction({
+        role,
+        actor: msg.sender,
+        action: 'warn BLOCCATO',
+        target,
+        extra: `limite moderatori ${LIMITS.MOD_MAX_WARN}/${LIMITS.MAX_WARN}`
+      })
+      return conn.sendMessage(msg.chat, {
+        text:
+          `⚠️ *Limite moderatori raggiunto*\n` +
+          `👤 Target: ${targetTag}\n` +
+          `📊 Sanzioni attuali: [ ${targetUser.warn}/${LIMITS.MAX_WARN} ]\n\n` +
+          `🛑 I moderatori non possono assegnare il ${LIMITS.MAX_WARN}° avvertimento.\n` +
+          `⏳ Attendi la decisione di un Admin/Owner.`,
+        mentions: [target]
+      }, { quoted: msg })
+    }
 
-    return conn.sendMessage(chatId, { text: messaggioWarn, mentions: [mentionedJid, msg.sender] });
+    targetUser.warn = nextWarn
+    recordAction({ chat: msg.chat, actor: msg.sender, action: 'warn', target, role, detail: reason })
+    logModAction({ role, actor: msg.sender, action: 'warn', target, extra: `${targetUser.warn}/${LIMITS.MAX_WARN}` })
+
+    if (targetUser.warn >= LIMITS.MAX_WARN) {
+      targetUser.warn = 0
+      await conn.sendMessage(msg.chat, {
+        text:
+          `❌ *UTENTE ESPULSO*\n` +
+          `👤 Target: ${targetTag}\n` +
+          `⚙️ Azione: Rimozione automatica\n` +
+          `⛔ Motivo: Ha raggiunto ${LIMITS.MAX_WARN} avvertimenti`,
+        mentions: [target]
+      })
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return conn.groupParticipantsUpdate(msg.chat, [target], 'remove').catch(() => {})
+    }
+
+    const warnLimitLabel = role === ROLES.MOD
+      ? `${targetUser.warn}/${LIMITS.MOD_MAX_WARN} (limite moderatori)`
+      : `${targetUser.warn}/${LIMITS.MAX_WARN}`
+
+    return conn.sendMessage(msg.chat, {
+      text:
+        `⚠️ *AVVERTIMENTO*\n` +
+        `👤 Target: ${targetTag}\n` +
+        `👑 Eseguito da: ${executorTag} ${roleLabel(role)}\n` +
+        `📊 Sanzioni: [ ${warnLimitLabel} ]\n` +
+        `📝 Motivo: ${reason}\n\n` +
+        `⮕ Al ${LIMITS.MAX_WARN}° avvertimento l'utente verrà espulso dal gruppo.`,
+      mentions: [target, msg.sender]
+    }, { quoted: msg })
   }
 
-  // -------------------------
-  // 🔥 UNWARN — STILE 888
-  // -------------------------
   if (command === 'unwarn') {
-    if (!user.warn || user.warn <= 0) throw 'ℹ️ L’utente non ha sanzioni attive.';
-    user.warn -= 1;
+    if (targetUser.warn <= 0) {
+      return conn.reply(msg.chat, 'ℹ️ L’utente non ha sanzioni attive.', msg)
+    }
 
-    let messaggioUnwarn =
-`✅ *Sanzione Revocata*
-👤 Target: ${tag}
-👑 Eseguito da: @${msg.sender.split('@')[0]}
-📊 Sanzioni Rimanenti: [ ${user.warn} / ${MAX_WARN} ]
+    const cooldown = checkUnwarnCooldown(msg.chat, msg.sender, role)
+    if (!cooldown.ok) {
+      logModAction({ role, actor: msg.sender, action: 'unwarn BLOCCATO', target, extra: 'cooldown attivo' })
+      return conn.sendMessage(msg.chat, {
+        text: `${cooldown.message}\n👤 Target: ${targetTag}`,
+        mentions: [target]
+      }, { quoted: msg })
+    }
 
-⮕ Un avvertimento è stato rimosso.`;
+    targetUser.warn -= 1
+    markUnwarn(msg.chat, msg.sender)
+    recordAction({ chat: msg.chat, actor: msg.sender, action: 'unwarn', target, role, detail: 'sanzione revocata' })
+    logModAction({ role, actor: msg.sender, action: 'unwarn', target, extra: `${targetUser.warn}/${LIMITS.MAX_WARN}` })
 
-    return conn.sendMessage(chatId, { text: messaggioUnwarn, mentions: [mentionedJid, msg.sender] });
+    return conn.sendMessage(msg.chat, {
+      text:
+        `✅ *SANZIONE REVOCATA*\n` +
+        `👤 Target: ${targetTag}\n` +
+        `👑 Eseguito da: ${executorTag} ${roleLabel(role)}\n` +
+        `📊 Sanzioni rimanenti: [ ${targetUser.warn}/${LIMITS.MAX_WARN} ]\n\n` +
+        `⮕ Un avvertimento è stato rimosso.`,
+      mentions: [target, msg.sender]
+    }, { quoted: msg })
   }
-};
+}
 
-handler.help = ['warn', 'unwarn'];
-handler.tags = ['admin'];
-handler.command = /^(warn|unwarn)$/i;
-handler.group = true;
-handler.botAdmin = true;
+handler.help = ['warn @user motivo', 'unwarn @user']
+handler.tags = ['admin']
+handler.command = /^(warn|unwarn)$/i
+handler.group = true
+handler.mods = true
+handler.botAdmin = true
 
-export default handler;
+export default handler

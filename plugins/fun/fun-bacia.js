@@ -80,7 +80,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     buttons: [
       {
         buttonId: `${usedPrefix}${command} ${senderNumero}`,
-        buttonText: { displayText: '💞 Ricambia il bacio' },
+        buttonText: { displayText: '💞 𝐑𝐢𝐜𝐚𝐦𝐛𝐢𝐚 𝐢𝐥 𝐛𝐚𝐜𝐢𝐨' },
         type: 1
       }
     ],

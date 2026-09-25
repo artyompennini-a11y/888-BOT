@@ -66,7 +66,7 @@ let handler = async (m, { conn }) => {
       buttons: [
         {
           buttonId: '.statsgiornaliere',
-          buttonText: { displayText: '📊 Statistiche Giornaliere' },
+          buttonText: { displayText: '📊 𝐒𝐭𝐚𝐭𝐢𝐬𝐭𝐢𝐜𝐡𝐞' },
           type: 1
         }
       ]

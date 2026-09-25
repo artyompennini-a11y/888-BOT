@@ -22,10 +22,10 @@ let handler = async (m, { conn, command }) => {
 ┃ 🟡 Medio 
 ┃ 🔴 Forte
 ╚══════════════╝`,
-      buttons: [
-        { buttonId: ".tiro facile", buttonText: { displayText: "🟢 Leggero" }, type: 1 },
-        { buttonId: ".tiro medio", buttonText: { displayText: "🟡 Medio" }, type: 1 },
-        { buttonId: ".tiro tripla", buttonText: { displayText: "🔴 Forte" }, type: 1 }
+            buttons: [
+        { buttonId: ".tiro facile", buttonText: { displayText: "🟢 𝐋𝐞𝐠𝐠𝐞𝐫𝐨" }, type: 1 },
+        { buttonId: ".tiro medio", buttonText: { displayText: "🟡 𝐌𝐞𝐝𝐢𝐨" }, type: 1 },
+        { buttonId: ".tiro tripla", buttonText: { displayText: "🔴 𝐅𝐨𝐫𝐭𝐞" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
@@ -66,9 +66,9 @@ let handler = async (m, { conn, command }) => {
 
     return conn.sendMessage(m.chat, {
       text,
-      buttons: [
-        { buttonId: ".basket", buttonText: { displayText: "🏀 Gioca di nuovo" }, type: 1 },
-        { buttonId: ".topbasket", buttonText: { displayText: "🏆 Classifica" }, type: 1 }
+            buttons: [
+        { buttonId: ".basket", buttonText: { displayText: "🏀 𝐆𝐢𝐨𝐜𝐚 𝐝𝐢 𝐧𝐮𝐨𝐯𝐨" }, type: 1 },
+        { buttonId: ".topbasket", buttonText: { displayText: "🏆 𝐂𝐥𝐚𝐬𝐬𝐢𝐟𝐢𝐜𝐚" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
@@ -97,8 +97,8 @@ let handler = async (m, { conn, command }) => {
     return conn.sendMessage(m.chat, {
       text,
       mentions: users.map(u => u.jid),
-      buttons: [
-        { buttonId: ".basket", buttonText: { displayText: "🏀 Gioca" }, type: 1 }
+            buttons: [
+        { buttonId: ".basket", buttonText: { displayText: "🏀 𝐆𝐢𝐨𝐜𝐚" }, type: 1 }
       ],
       headerType: 1
     }, { quoted: m })

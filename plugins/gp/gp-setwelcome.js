@@ -1,7 +1,7 @@
+// Plugin by elixir & punisher
 let handler = async (m, { conn, text, usedPrefix, command }) => {
   let chat = global.db.data.chats[m.chat];
 
-  // MENU USO — GRAFICA PREMIUM 888
   if (!text) {
     return m.reply(
 `⚙️ *SET WELCOME 888*
@@ -24,7 +24,6 @@ ${chat.sWelcome || '@user ha entrato nel gruppo (predefinito)'}
     );
   }
 
-  // RESET — GRAFICA PREMIUM 888
   if (text.toLowerCase() === 'reset') {
     delete chat.sWelcome;
     return m.reply(
@@ -40,7 +39,6 @@ Il messaggio di benvenuto è stato ripristinato.
     );
   }
 
-  // SETTAGGIO — GRAFICA PREMIUM 888
   chat.sWelcome = text;
 
   m.reply(
@@ -61,7 +59,6 @@ handler.help = ['setwelcome'];
 handler.tags = ['admin'];
 handler.command = /^setwelcome|setbenvenuto$/i;
 handler.admin = true;
-handler.mods = true;
 handler.group = true;
 
 export default handler;

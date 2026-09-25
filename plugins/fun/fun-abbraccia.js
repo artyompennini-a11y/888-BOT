@@ -93,7 +93,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     buttons: [
       {
         buttonId: `${usedPrefix}${command} ${senderNumero}`,
-        buttonText: { displayText: '🫂 Ricambia l\'abbraccio' },
+        buttonText: { displayText: '🫂 𝐑𝐢𝐜𝐚𝐦𝐛𝐢𝐚 𝐥\'𝐚𝐛𝐛𝐫𝐚𝐳𝐳𝐨' },
         type: 1
       }
     ],

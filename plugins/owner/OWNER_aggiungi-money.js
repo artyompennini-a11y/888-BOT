@@ -1,24 +1,28 @@
 //Plugin by Elixir, Punisher & 888 staff
 
-const handler = async (m) => {
-  const mention = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : m.text)
+const handler = async (m, { conn, text }) => {
+  const mention = m.mentionedJid?.[0] || (m.quoted ? m.quoted.sender : null)
+  if (!mention) return m.reply('Inserisci la menzione o rispondi al messaggio dell\'utente!')
+
   const user = global.db.data.users[mention]
+  if (!user) return m.reply('Utente non trovato nel database!')
 
-  if (!user) return conn.reply(m.chat, 'Inserisci la menzione nel comando!')
+  const args = String(text || '').trim().split(/\s+/).filter(Boolean)
+  const numCoin = Number(args.find(arg => /^\d+$/.test(arg)))
+  const account = args.some(arg => /^(banca|bank|carta)$/i.test(arg)) ? 'bank' : 'money'
 
-  const args = m.text.match(/\d+/)
-  const numCoin = args ? parseInt(args[0]) : 0
-
-  if (numCoin <= 0) {
-      return conn.reply(m.chat, 'Inserisci un numero valido di coin da aggiungere!', m)
+  if (!Number.isSafeInteger(numCoin) || numCoin <= 0) {
+    return m.reply('Inserisci un numero valido di coin da aggiungere!')
   }
 
-  user.coin = (user.coin || 0) + numCoin
+  user[account] = (Number(user[account]) || 0) + numCoin
 
-  conn.reply(
+  return conn.reply(
     m.chat,
-    `Ho aggiunto ${numCoin} coin a @${mention.split('@')[0]}`,
-    null,
+    `✅ Ho aggiunto *${numCoin} 888COIN* al ${account === 'bank' ? 'conto bancario' : 'portafoglio'} di @${mention.split('@')[0]}.
+💳 Banca: *${Number(user.bank) || 0} 888COIN*
+💼 Portafoglio: *${Number(user.money) || 0} 888COIN*`,
+    m,
     { mentions: [mention] }
   )
 }

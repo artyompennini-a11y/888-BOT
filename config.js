@@ -18,7 +18,7 @@ global.owner = [
   ['447785114563', 'Dado', true],
   ['393331663641', 'Manu', true],
   ['79524931364', 'Punisher', true],
-  ['573180770909', '888bot', true],
+  ['5564920039928', 'riley', true],
   ['212785655331', 'Ghost', true],
   ['17577575541', 'Axtral', true],        
 

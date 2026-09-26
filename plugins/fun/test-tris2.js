@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   name: 'tris2_nixel',
   command: ['tris2'],
   description: 'Tris2 con FOAIDNixelButtonSheets + embedded_screens',
@@ -39,7 +39,6 @@ module.exports = {
       return buttons;
     }
 
-    // Foglio principale
     const mainSheet = {
       type: 'FOAIDNixelButtonSheets',
       sheet_id: 'tris2_main',
@@ -51,7 +50,6 @@ module.exports = {
       footer_text: 'Tris2 • FOAIDNixelButtonSheets'
     };
 
-    // Screen risultato
     const embeddedScreens = [
       {
         screen_id: 'tris2_result',
@@ -78,7 +76,6 @@ module.exports = {
       }
     ];
 
-    // Payload finale
     const payload = {
       screens: {
         tris2_main: mainSheet,

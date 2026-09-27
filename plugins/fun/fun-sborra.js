@@ -3,7 +3,7 @@ let handler = async (m, { conn }) => {
   let members = metadata.participants.map(p => p.id)
   let randomUser = members[Math.floor(Math.random() * members.length)]
 
-  let msg = `se non risponde sta dormendo, per svegliarlo mandagli foto piedi in dm @${randomUser.split('@')[0]}`
+  let msg = `Oggi eiaculo su quella troietta di @${randomUser.split('@')[0]}`
 
   await conn.sendMessage(
     m.chat,
@@ -13,7 +13,7 @@ let handler = async (m, { conn }) => {
       buttons: [
         {
           buttonId: 'sborra_again',
-          buttonText: { displayText: 'sborra di nuovo' },
+          buttonText: { displayText: 'sborra di nuovo🤤' },
           type: 1
         }
       ]

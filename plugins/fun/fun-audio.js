@@ -3,45 +3,30 @@ import fetch from 'node-fetch'
 
 let handler = async (m, { conn, text }) => {
 
-  // ───────────────────────────────
-  // 🔥 ERRORE: NESSUN TESTO — 888
-  // ───────────────────────────────
   if (!text) {
     return m.reply(
-`╭━━━〔 ❌ *NESSUN TESTO* 〕━━━┈
-┃ Scrivi qualcosa da convertire
-┃ in audio TTS.
-┃━━━━━━━━━━━━━━━━━━
-┃ Esempio:
-┃ ➜ .audio ciao ragazzi
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ Nessun testo rilevato.
+Scrivi qualcosa da convertire in audio TTS.
+
+Esempio:
+.audio ciao ragazzi`
     )
   }
 
-  // ───────────────────────────────
-  // 🔥 AVVIO TTS — 888
-  // ───────────────────────────────
   await m.reply(
-`╭━━━〔 ⏳ *GENERAZIONE AUDIO* 〕━━━┈
-┃ Sto creando il tuo audio...
-┃ Attendere qualche secondo.
-┃━━━━━━━━━━━━━━━━━━
-┃ 🔰 888 BOT TTS Engine
-╰━━━━━━━━━━━━━━━━━━┈`
+`⏳ Generazione audio...
+Attendere qualche secondo...`
   )
 
-  const url =
-    `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=it&client=tw-ob`
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(text)}&tl=it&client=tw-ob`
 
   let res
   try {
     res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } })
   } catch (e) {
     return m.reply(
-`╭━━━〔 ❌ *ERRORE TTS* 〕━━━┈
-┃ Impossibile recuperare l’audio.
-┃ Riprova più tardi.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ Errore TTS.
+Impossibile recuperare l’audio, riprova più tardi.`
     )
   }
 
@@ -49,9 +34,6 @@ let handler = async (m, { conn, text }) => {
   const filePath = `./tmp_${Date.now()}.mp3`
   fs.writeFileSync(filePath, buffer)
 
-  // ───────────────────────────────
-  // 🔥 INVIO AUDIO — 888
-  // ───────────────────────────────
   await conn.sendMessage(
     m.chat,
     {

@@ -67,36 +67,18 @@ const langMap = {
 };
 
 let handler = async (m, { conn, args }) => {
-
-  // ───────────────────────────────
-  // 🔥 TUTORIAL — STILE 888
-  // ───────────────────────────────
   if (!args.length) {
-    let tutorial =
-`╭━━━〔 🌍 *TRADUCI 888* 〕━━━┈
-┃ 📌 Uso: *.traduci <testo> <lingua>*
-┃ Esempio: *.traduci ciao giapponese*
-┃━━━━━━━━━━━━━━━━━━
-┃ 🌐 *Lingue disponibili:*
-╰━━━━━━━━━━━━━━━━━━┈\n`;
-
+    let tutorial = `🌍 *TRADUCI 888*\n📌 Uso: *.traduci <testo> <lingua>*\nEsempio: *.traduci ciao giapponese*\n\n🌐 *Lingue disponibili:*\n\n`;
     for (const [nome, codice] of Object.entries(langMap)) {
       tutorial += `🔹 ${nome} → \`${codice}\`\n`;
     }
-
     return conn.reply(m.chat, tutorial, m);
   }
 
-  // ───────────────────────────────
-  // 🔥 ERRORE PARAMETRI — STILE 888
-  // ───────────────────────────────
   if (args.length < 2) {
     return conn.reply(
       m.chat,
-`╭━━━〔 ⚠️ *USO NON VALIDO* 〕━━━┈
-┃ Usa: *.traduci <testo> <lingua>*
-┃ Esempio: *.traduci ciao cinese*
-╰━━━━━━━━━━━━━━━━━━┈`,
+      `⚠️ Uso corretto: *.traduci <testo> <lingua>*\nEsempio: *.traduci ciao cinese*`,
       m
     );
   }
@@ -113,23 +95,14 @@ let handler = async (m, { conn, args }) => {
           )
         ];
 
-  // ───────────────────────────────
-  // 🔥 LINGUA NON TROVATA — STILE 888
-  // ───────────────────────────────
   if (!targetLang) {
     return conn.reply(
       m.chat,
-`╭━━━〔 ❌ *LINGUA NON RICONOSCIUTA* 〕━━━┈
-┃ Usa *.traduci* per vedere
-┃ la lista completa delle lingue.
-╰━━━━━━━━━━━━━━━━━━┈`,
+      `❌ Lingua non riconosciuta.\nUsa *.traduci* per vedere la lista completa.`,
       m
     );
   }
 
-  // ───────────────────────────────
-  // 🔥 TRADUZIONE — STILE 888
-  // ───────────────────────────────
   try {
     const url =
       `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
@@ -139,29 +112,19 @@ let handler = async (m, { conn, args }) => {
 
     return conn.reply(
       m.chat,
-`╭━━━〔 🌍 *TRADUZIONE 888* 〕━━━┈
-┃ 📝 *Originale:* ${text}
-┃ 🌐 *Lingua:* ${langInput} (${targetLang})
-┃━━━━━━━━━━━━━━━━━━
-┃ 🔹 *Risultato:* ${translatedText}
-╰━━━━━━━━━━━━━━━━━━┈`,
+      `🌍 *TRADUZIONE 888*\n📝 Originale: ${text}\n🌐 Lingua: ${langInput} (${targetLang})\n\n🔹 Risultato: ${translatedText}`,
       m
     );
   } catch (error) {
-    console.error("Errore nella traduzione:", error);
-
     return conn.reply(
       m.chat,
-`╭━━━〔 ❌ *ERRORE TRADUZIONE* 〕━━━┈
-┃ Qualcosa è andato storto.
-┃ Riprova tra qualche secondo.
-╰━━━━━━━━━━━━━━━━━━┈`,
+      `❌ Errore nella traduzione.\nRiprova tra qualche secondo.`,
       m
     );
   }
 };
 
-handler.help = ['𝐭𝐫𝐚𝐝𝐮𝐜𝐢 <𝐭𝐞𝐬𝐭𝐨> <𝐥𝐢𝐧𝐠𝐮𝐚>'];
+handler.help = ['traduci <testo> <lingua>'];
 handler.tags = ['fun'];
 handler.command = /^traduci$/i;
 

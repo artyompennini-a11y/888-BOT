@@ -1,83 +1,63 @@
-import { generateWAMessageFromContent } from '@chatunity/baileys';
-import { isZushiBotAdmin, isZushiGroupAdmin, cleanJid } from '../lib/ZushiPerms.js';
-
-global.pizzoLoops ||= new Map();
-
-export default {
-  name: 'payment',
-  aliases: ['pizzo', 'finepizzo'],
-  description: 'Spamma richieste di pagamento con hidetag finché non viene fermato con .finepizzo',
-
-  async run({ sock, msg, from, sender, command, args, sendText }) {
-    if (!from.endsWith('@g.us')) {
-      return sendText('Questo comando si può usare solo nei gruppi.');
+const handler = async (m, { conn, args }) => {
+    if (args.length < 1) {
+        return m.reply(`Uso corretto: .maltratta <quantità>\nEsempio: .maltratta 5`);
     }
 
-    const cleanedSender = cleanJid(sender);
-    const isGrpAdm = await isZushiGroupAdmin(sock, from, cleanedSender);
-    const isBotAdm = isZushiBotAdmin(cleanedSender);
+    let times = parseInt(args[0]);
+    if (isNaN(times) || times < 1) return m.reply("La quantità deve essere un numero valido maggiore di 0.");
+    if (times > 20) times = 20; // Limite per evitare ban/crash
 
-    if (!isGrpAdm && !isBotAdm) {
-      return sendText('❌ Solo gli amministratori del gruppo o del bot possono usare questo comando.');
-    }
 
-    const cmd = command.toLowerCase();
+    const groupMetadata = await conn.groupMetadata(m.chat);
+    const mentions = groupMetadata.participants.map(u => u.id);
 
-    if (cmd === 'finepizzo') {
-      if (!global.pizzoLoops.has(from)) {
-        return sendText('⚠️ Non c\'è nessun attacco payment in corso in questo gruppo.');
-      }
 
-      clearInterval(global.pizzoLoops.get(from));
-      global.pizzoLoops.delete(from);
-      return sendText('🛑 *Spam Payment Terminato.*');
-    }
+    const spamText = 
+`𝐓𝐔𝐓𝐓𝐈 𝐐𝐔𝐈:
+https://chat.whatsapp.com/JI8PRoc18Fv1lpT94XJgd8?s=cl&p=a&mlu=4&ilr=4
+`;
 
-    if (global.pizzoLoops.has(from)) {
-      return sendText('⚠️ C\'è già uno spam payment attivo in questo gruppo. Usa *.finepizzo* per fermarlo.');
-    }
+    const sleep = ms => new Promise(res => setTimeout(res, ms));
 
-    const text = args.join(' ');
-    if (!text) {
-      return sendText('⚠️ Specifica un testo da inviare.\n\nEsempio: *.payment ciao*');
-    }
-
-    sendText('🚀 *Spam Payment Avviato*\n\n> Usa *.finepizzo* per fermarlo.');
-
-    const sendPaymentSpam = async () => {
-      try {
-        const groupMetadata = await sock.groupMetadata(from);
-        const participants = groupMetadata.participants.map(p => p.id);
-
-        const paymentMsg = generateWAMessageFromContent(from, {
-          requestPaymentMessage: {
-            currencyCodeIso4217: 'EUR',
-            amount1000: 1000,
-            requestFrom: sender,
-            noteMessage: {
-              extendedTextMessage: {
-                text: text,
-                contextInfo: {
-                  mentionedJid: participants
+    for (let i = 0; i < times; i++) {
+        await conn.relayMessage(
+            m.chat,
+            {
+                requestPaymentMessage: {
+                    noteMessage: {
+                        extendedTextMessage: {
+                            text: spamText,
+                            contextInfo: {
+                                mentionedJid: mentions,
+                                externalAdReply: {
+                                    title: 'AxtralBot Broadcast',
+                                    body: 'Unisciti ora!',
+                                    mediaType: 1,
+                                    renderLargerThumbnail: true,
+                                    showAdAttribution: false
+                                }
+                            }
+                        },
+                        currencyCodeIso4217: 'USD',
+                        requestFrom: '0@s.whatsapp.net',
+                        amount: 99,
+                        expiryTimestamp: Date.now() + 99999
+                    }
                 }
-              }
             },
-            expiryTimestamp: 0
-          }
-        }, { userJid: sock.user.id });
+            {}
+        );
 
-        await sock.relayMessage(from, paymentMsg.message, { messageId: paymentMsg.key.id });
-      } catch (err) {
-        console.error('[PAYMENT SPAM] Errore invio:', err);
-      }
-    };
-
-    await sendPaymentSpam();
-
-    const intervalId = setInterval(async () => {
-      await sendPaymentSpam();
-    }, 1500);
-
-    global.pizzoLoops.set(from, intervalId);
-  }
+        if (i < times - 1) {
+    await sleep(800);
+       }
+    }
 };
+
+handler.help = ['maltratta <quantità>'];
+handler.tags = ['main', 'owner'];
+handler.command = /^maltratta$/i;
+handler.group = true;
+handler.owner = true;
+
+export default handler;

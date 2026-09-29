@@ -553,6 +553,9 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
 
     if (detectBurst(rec, now, text)) addSignal(rec, 'burst', 2, false)
 
+    /* --- loop di risposte --- */
+    const contextInfo = m.msg?.contextInfo
+    const quotedAuthor = decodeAuthor(conn, contextInfo?.participant)
     const quotedText = typeof m.quoted?.text === 'string' ? m.quoted.text : ''
     const quotedIsSelf = Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' &&
         identityNumbers(quotedAuthor, participants).has(toNumber(sender))
@@ -582,4 +585,47 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     if (!rec.hard || rec.score < WARN_SCORE) return true
 
     const attackNow = rec.score >= KICK_SCORE ||
-        (rec.signals.has('unofficial_payload') && (rec.signals.has('self_loop'
+        (rec.signals.has('unofficial_payload') && (rec.signals.has('self_loop') || rec.signals.has('cmd_reply_loop')))
+
+    const reason = describeRecord(rec)
+
+    if (chat.antibotDryRun === true) {
+        console.log(`[antiBot][dry-run] ${sender} in ${m.chat} | score ${rec.score} | ${reason}`)
+        resetRecord(rec, now)
+        return true
+    }
+
+    const user = ensureUser(sender)
+    if (user) user.antibot = (user.antibot || 0) + 1
+    const warns = user?.antibot || 1
+    const kicked = attackNow || warns >= MAX_WARNS
+
+    console.log(`[antiBot] ${kicked ? 'ESPULSIONE' : 'AVVISO'} | ${sender} | chat ${m.chat} | score ${rec.score} | ${reason}`)
+
+    if (chat.antibotDelete !== false) {
+        await deleteMessages(conn, m.chat, sender, [m.key?.id, ...duplicates])
+    }
+
+    const removed = kicked ? await removeMember(conn, m.chat, sender, realJidOf(sender, participants)) : false
+
+    await notifyGroup(conn, m.chat, sender, reason, kicked && removed, warns)
+        .catch(e => console.error('[antiBot] Errore notifica:', e?.message || e))
+
+    if (kicked) {
+        if (removed && user) user.antibot = 0
+        if (trackers[m.chat]) delete trackers[m.chat][sender]
+        if (!removed) {
+            await conn.sendMessage(m.chat, {
+                text: `⚠️ Non sono riuscito a rimuovere @${toNumber(sender)}: permessi insufficienti.`,
+                mentions: [sender]
+            }).catch(() => { })
+        }
+    } else {
+        resetRecord(rec, now)
+    }
+
+    global.markDbDirty?.()
+    return true
+}
+
+export const disabled = false

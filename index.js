@@ -1,3 +1,100 @@
+import { join, dirname } from 'path';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { setupMaster, fork } from 'cluster';
+import { watchFile, unwatchFile, existsSync, readFileSync } from 'fs';
+import { createInterface } from 'readline';
+import yargs from 'yargs';
+import { execSync } from 'child_process';
+
+process.env.SUPPRESS_BANNER = 'true';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(__dirname);
+
+/* =========================================================
+   MODULE CHECK
+   ========================================================= */
+
+const checkAndInstallModules = () => {
+  const nodeModulesPath = join(__dirname, 'node_modules');
+
+  if (!existsSync(nodeModulesPath)) {
+    console.clear();
+    console.log('\n\n');
+    console.log('\x1b[31m' + '═'.repeat(70) + '\x1b[0m');
+    console.log('\x1b[33m\n   Bro e senza moduli come avvi il bot?\x1b[0m');
+    console.log('\x1b[36m   Menomale che ci sono io! 😎\x1b[0m\n');
+    console.log('\x1b[31m' + '═'.repeat(70) + '\x1b[0m');
+    console.log('\n\x1b[35m⚡ Installazione moduli in corso...\x1b[0m\n');
+
+    try {
+      execSync('npm install', { stdio: 'inherit' });
+      console.log('\n\x1b[32m✓ Moduli installati con successo!\x1b[0m');
+      console.log('\x1b[36m🚀 Avvio del bot...\x1b[0m\n');
+    } catch (error) {
+      console.error('\n\x1b[31m✖ Errore durante l\'installazione dei moduli\x1b[0m');
+      process.exit(1);
+    }
+  }
+};
+
+checkAndInstallModules();
+
+/* =========================================================
+   PACKAGE INFO
+   ========================================================= */
+
+const { name, author } = require(join(__dirname, './package.json'));
+
+/* =========================================================
+   CFONTS
+   ========================================================= */
+
+let cfonts;
+
+try {
+  cfonts = (await import('cfonts')).default;
+} catch (error) {
+  console.error('Errore caricamento cfonts, reinstallazione...');
+  execSync('npm install', { stdio: 'inherit' });
+  cfonts = (await import('cfonts')).default;
+}
+
+/* =========================================================
+   READLINE
+   ========================================================= */
+
+const rl = createInterface(process.stdin, process.stdout);
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const clearScreen = () => { process.stdout.write('\x1b[2J\x1b[H'); };
+const hideCursor = () => { process.stdout.write('\x1b[?25l'); };
+const showCursor = () => { process.stdout.write('\x1b[?25h'); };
+const resetTerminal = () => { process.stdout.write('\x1b[0m'); };
+
+/* =========================================================
+   STAFF
+   ========================================================= */
+
+const STAFF_ESCLUSO = ['mattia', 'fuma'];
+
+const loadStaff = () => {
+  try {
+    const staff = JSON.parse(
+      readFileSync(join(__dirname, 'data', 'staff.json'), 'utf8')
+    );
+
+    if (!Array.isArray(staff)) return [];
+
+    return staff.filter(m => {
+      const nome = String(m?.nome || '').toLowerCase();
+      return !STAFF_ESCLUSO.some(x => nome.includes(x));
     });
   } catch {
     return [];

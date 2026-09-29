@@ -20,7 +20,7 @@ let handler = async (m, { conn, text, isAdmin }) => {
 
     if (users.length === 0) return;
 
-    // Permesso: owner + admin
+    
     const sender = m.sender;
     const isOwner = global.owner?.some(v => sender.includes(v[0]));
 

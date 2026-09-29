@@ -1,4 +1,4 @@
-let handler = async (m, { conn, command, usedPrefix, args }) => {
+let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
   if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {};
   if (!global.db.data.chats[m.chat].whitelist) global.db.data.chats[m.chat].whitelist = [];
@@ -11,25 +11,61 @@ let handler = async (m, { conn, command, usedPrefix, args }) => {
 
     if (!admins.length) return m.reply("⚠️ Nessun admin trovato.");
 
-    let buttons = admins.map(a => ({
-      buttonId: `${usedPrefix}addwhitelist ${a.id.split('@')[0]}`,
-      buttonText: { displayText: `➕ @${a.id.split('@')[0]}` },
-      type: 1
-    }));
-
-    let text =
-      `📑 *Whitelist Gruppo*\n` +
-      `Seleziona un admin da aggiungere:\n\n` +
-      admins.map(a => `• @${a.id.split('@')[0]}`).join('\n');
+    let adminList = admins.map(a => `• @${a.id.split('@')[0]}`).join('\n');
 
     await conn.sendMessage(
       m.chat,
       {
-        text,
+        text:
+          `📑 *Admin del Gruppo*\n\n` +
+          `${adminList}\n\n` +
+          `Premi il tasto sotto per aggiungerli alla whitelist.`,
         mentions: admins.map(a => a.id),
-        buttons,
+        buttons: [
+          {
+            buttonId: `${usedPrefix}addwhitelist alladmins`,
+            buttonText: { displayText: "➕ Aggiungi nella whitelist" },
+            type: 1
+          }
+        ],
         headerType: 1
       }
+    );
+
+    return;
+  }
+
+  if (command === 'addwhitelist' && args[0] === 'alladmins') {
+    let group = await conn.groupMetadata(m.chat);
+    let admins = group.participants.filter(p => p.admin).map(a => a.id);
+
+    let added = [];
+
+    for (let who of admins) {
+      if (!chat.whitelist.includes(who)) {
+        chat.whitelist.push(who);
+        added.push(who);
+      }
+    }
+
+    await global.db.write();
+
+    if (!added.length) {
+      return m.reply(`✨ Tutti gli admin erano già nella whitelist.`);
+    }
+
+    let mentionText = added.map(j => `@${j.split('@')[0]}`).join(', ');
+
+    await conn.sendMessage(
+      m.chat,
+      {
+        text:
+          `✅ *Admin Aggiunti nella Whitelist*\n` +
+          `${mentionText}\n\n` +
+          `Ora sono esenti dai controlli antinuke.`,
+        contextInfo: { mentionedJid: added }
+      },
+      { quoted: m }
     );
 
     return;

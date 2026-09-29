@@ -5,10 +5,10 @@ const makeImage = (text) => {
   const canvas = createCanvas(600, 300)
   const ctx = canvas.getContext('2d')
 
-  ctx.fillStyle = '#fff'
+  ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, 600, 300)
 
-  ctx.fillStyle = '#000'
+  ctx.fillStyle = '#000000'
   ctx.font = 'bold 40px Arial'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
@@ -47,11 +47,16 @@ let handler = async (m, { conn }) => {
     m.quoted.body ||
     m.quoted.caption ||
     m.quoted.conversation ||
+    m.quoted.msg?.conversation ||
+    m.quoted.msg?.text ||
+    m.quoted.msg?.extendedTextMessage?.text ||
+    m.quoted.extendedTextMessage?.text ||
     ''
 
-  if (!text.trim()) return m.reply('Il messaggio non contiene testo')
+  text = String(text).trim()
+  if (!text) return m.reply('Il messaggio non contiene testo')
 
-  const img = makeImage(text.trim())
+  const img = makeImage(text)
   const st = await sticker(img, false, m.pushName || 'brat', '888 bot')
 
   await conn.sendFile(m.chat, st, 'brat.webp', '', m)

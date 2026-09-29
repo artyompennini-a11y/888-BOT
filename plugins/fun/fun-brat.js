@@ -17,7 +17,7 @@ async function getJimp() {
 }
 
 async function getFont(size) {
-  const { JimpClass, legacy } = await getJimp()
+  const { JimpClass } = await getJimp()
   const sizes = [8, 10, 12, 14, 16, 32, 64, 128]
   const available = sizes.filter(s => JimpClass[`FONT_SANS_${s}_WHITE`])
   if (!available.length) throw new Error('font non disponibili')
@@ -163,7 +163,7 @@ let handler = async (m, { conn, text, command }) => {
   const newText = text || m.quoted?.text
   if (!newText) {
     return m.reply(
-      '📝 *Uso:*\n- .brat <testo>\n- .bratvid <testo>\n💡 Esempio: .brat Hello'
+      "Uso:\n- .brat <testo>\n- .bratvid <testo>\nEsempio: .brat Hello\nPuoi anche rispondere a un messaggio."
     )
   }
 
@@ -237,8 +237,7 @@ let handler = async (m, { conn, text, command }) => {
       await fs.promises.unlink(outPath).catch(() => {})
     }
   } catch (e) {
-    await m.react?.('❌')
-    m.reply(`Errore: ${e.message}`)
+    m.reply("Errore: " + e.message)
   }
 }
 

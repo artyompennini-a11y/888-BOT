@@ -4,10 +4,10 @@ const manually = `𝐆𝐑𝐔𝐏𝐏𝐈 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
 
 ╭───⭓
 │ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟭
-│ https://chat.whatsapp.com/F7kkULKYEeJAsydfNlx1WM?s=cl&p=a&ilr=1
+│ https://chat.whatsapp.com/F7kkULKYEeJAsydfNlx1WM
 │
 │ 🗨️ 𝗚𝗿𝘂𝗽𝗽𝗼 𝟮
-│ https://chat.whatsapp.com/DjDBrPXWZLOCAoHMA1oNND
+│ https://chat.whatsapp.com/JI8PRoc18Fv1lpT94XJgd8
 ╰───⭓`
 import { generateWAMessageFromContent } from '@888-BOT/888baileys'
 const handler = async (m, { args, text }) => {

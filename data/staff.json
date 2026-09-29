@@ -40,15 +40,6 @@
     "telegram": ""
   },
   {
-    "nome": "Fuma",
-    "ruolo": "External Project Support",
-    "emoji": "🌐",
-    "bio": "External collaborations and strategic support.",
-    "instagram": "_.56._fvuma",
-    "telegram": "",
-    "telefono": "+393520216004"
-  },
-  {
     "nome": "Dado",
     "ruolo": "QA & Beta Tester",
     "emoji": "🧪",
@@ -57,11 +48,4 @@
     "telegram": ""
   },
   {
-    "nome": "Mattia",
-    "ruolo": "Community Support",
-    "emoji": "🎧",
-    "bio": "User assistance and database management.",
-    "instagram": "",
-    "telegram": ""
-  }
 ]

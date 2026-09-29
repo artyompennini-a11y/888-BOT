@@ -1,67 +1,22 @@
-import { sticker } from '../../lib/sticker.js'
-import Jimp from 'jimp'
+import uploadImage from '../../lib/uploadImage.js'
 
-let handler = async (m, { conn, text, command }) => {
-  const newText = text || m.quoted?.text
-  if (!newText) {
-    return m.reply(
-      "Uso:\n.brat <testo>\nEsempio: .brat Hello"
-    )
-  }
+let handler = async (m, { conn, command }) => {
+  if (!m.quoted) return m.reply('Rispondi a un messaggio con .brat')
+  let text = m.quoted.text || ''
+  if (!text) return m.reply('Il messaggio non contiene testo')
 
-  try {
-    const sanitized = String(newText)
-      .replace(/[^\x20-\x7e]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
+  let buffer = Buffer.from(text, 'utf-8')
+  let url = await uploadImage(buffer)
 
-    const size = 512
-    const bgColor = 0x7a0dffff   // viola brat
-    const textColor = 0xffffffff
-
-    const img = new Jimp(size, size, bgColor)
-
-    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE)
-
-    const maxWidth = size - 40
-    const lines = []
-    let current = ""
-
-    for (const w of sanitized.split(" ")) {
-      const test = current ? current + " " + w : w
-      if (Jimp.measureText(font, test) > maxWidth) {
-        lines.push(current)
-        current = w
-      } else {
-        current = test
-      }
-    }
-    if (current) lines.push(current)
-
-    const textBlock = lines.join("\n")
-    const textHeight = Jimp.measureTextHeight(font, textBlock, maxWidth)
-
-    const x = (size - maxWidth) / 2
-    const y = (size - textHeight) / 2
-
-    img.print(font, x, y, { text: textBlock, alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER })
-
-    const buffer = await img.getBufferAsync(Jimp.MIME_PNG)
-
-    const senderName = m.pushName || m.sender.split('@')[0]
-    const packname = senderName
-    const author = "888-BOT"
-
-    const st = await sticker(buffer, false, packname, author)
-    await conn.sendFile(m.chat, st, "sticker.webp", "", m)
-
-  } catch (e) {
-    m.reply("Errore: " + e.message)
-  }
+  await conn.sendMessage(
+    m.chat,
+    { sticker: { url } },
+    { quoted: m }
+  )
 }
 
-handler.help = ['brat <testo>']
-handler.tags = ['tools']
 handler.command = /^brat$/i
+handler.tags = ['fun']
+handler.help = ['brat']
 
 export default handler

@@ -1,6 +1,37 @@
-function normalizeJid(jid) {
-  let num = jid.split('@')[0];
-  return '@' + num;
+function normalizeJid(input) {
+  if (!input) return null;
+
+  if (input.includes('@s.whatsapp.net')) return input;
+
+  let num = input.replace(/[^0-9]/g, '');
+  if (num.length < 5) return null;
+
+  return num + '@s.whatsapp.net';
+}
+
+function extractTargets(m, args) {
+  let targets = [];
+
+  if (m.mentionedJid?.length) {
+    targets = m.mentionedJid.map(j => normalizeJid(j)).filter(Boolean);
+    return targets;
+  }
+
+  if (m.quoted) {
+    let jid = normalizeJid(m.quoted.sender);
+    if (jid) targets.push(jid);
+    return targets;
+  }
+
+  let raw = args.join(' ');
+  let nums = raw.split(/\s+/);
+
+  for (let n of nums) {
+    let jid = normalizeJid(n);
+    if (jid) targets.push(jid);
+  }
+
+  return targets;
 }
 
 let handler = async (m, { conn, text, command, usedPrefix, args }) => {
@@ -57,7 +88,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!added.length) return m.reply(`✨ Tutti gli admin erano già nella whitelist.`);
 
-    let mentionText = added.map(j => normalizeJid(j)).join(', ');
+    let mentionText = added.map(j => '@' + j.split('@')[0]).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -75,14 +106,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'addwhitelist') {
-    let targets = [];
-
-    if (m.mentionedJid?.length) {
-      targets = m.mentionedJid;
-    } else {
-      let nums = args.map(v => v.replace(/[^0-9]/g, '')).filter(v => v.length >= 5);
-      targets = nums.map(n => n + '@s.whatsapp.net');
-    }
+    let targets = extractTargets(m, args);
 
     if (!targets.length) return m.reply("⚠️ Nessun numero valido.");
 
@@ -99,7 +123,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!added.length) return m.reply(`✨ Gli utenti indicati erano già nella whitelist.`);
 
-    let mentionText = added.map(j => normalizeJid(j)).join(', ');
+    let mentionText = added.map(j => '@' + j.split('@')[0]).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -121,7 +145,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!list.length) return m.reply("⚠️ Nessun utente nella whitelist.");
 
-    let formatted = list.map(j => `• ${normalizeJid(j)}`).join('\n');
+    let formatted = list.map(j => `• @${j.split('@')[0]}`).join('\n');
 
     await conn.sendMessage(
       m.chat,
@@ -153,7 +177,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!removed.length) return m.reply("⚠️ Nessun utente da rimuovere.");
 
-    let mentionText = removed.map(j => normalizeJid(j)).join(', ');
+    let mentionText = removed.map(j => '@' + j.split('@')[0]).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -171,10 +195,10 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'delwhitelist') {
-    let nums = args.map(v => v.replace(/[^0-9]/g, '')).filter(v => v.length >= 5);
-    if (!nums.length) return m.reply("⚠️ Numero non valido.");
+    let targets = extractTargets(m, args);
+    if (!targets.length) return m.reply("⚠️ Numero non valido.");
 
-    let who = nums[0] + '@s.whatsapp.net';
+    let who = targets[0];
 
     if (!chat.whitelist.includes(who)) return m.reply(`❌ L’utente non è nella whitelist.`);
 
@@ -186,7 +210,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
       {
         text:
           `🗑️ *Utente Rimosso*\n` +
-          `👤 ${normalizeJid(who)}\n\n` +
+          `👤 @${who.split('@')[0]}\n\n` +
           `Rimosso dalla whitelist.`,
         contextInfo: { mentionedJid: [who] }
       },
@@ -197,7 +221,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'whitelist') {
-    let list = chat.whitelist.map(jid => `• ${normalizeJid(jid)}`).join('\n');
+    let list = chat.whitelist.map(jid => `• @${jid.split('@')[0]}`).join('\n');
     let caption =
       `📑 *Whitelist Gruppo*\n` +
       `${list || '⚠️ Nessun utente autorizzato.'}`;

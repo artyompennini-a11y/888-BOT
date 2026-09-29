@@ -70,25 +70,40 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'addwhitelist') {
-    let raw = args.join(' ');
-    let cleaned = raw.replace(/[^0-9]/g, '');
-    if (!cleaned) return m.reply("⚠️ Numero non valido.");
+    let targets = [];
 
-    let who = cleaned + '@s.whatsapp.net';
+    if (m.mentionedJid?.length) {
+      targets = m.mentionedJid;
+    } else {
+      let nums = args.map(v => v.replace(/[^0-9]/g, '')).filter(v => v.length >= 5);
+      targets = nums.map(n => n + '@s.whatsapp.net');
+    }
 
-    if (chat.whitelist.includes(who)) return m.reply(`✨ L’utente è già nella whitelist.`);
+    if (!targets.length) return m.reply("⚠️ Nessun numero valido.");
 
-    chat.whitelist.push(who);
+    let added = [];
+
+    for (let who of targets) {
+      if (!chat.whitelist.includes(who)) {
+        chat.whitelist.push(who);
+        added.push(who);
+      }
+    }
+
     await global.db.write();
+
+    if (!added.length) return m.reply(`✨ Gli utenti indicati erano già nella whitelist.`);
+
+    let mentionText = added.map(j => `@${j.split('@')[0]}`).join(', ');
 
     await conn.sendMessage(
       m.chat,
       {
         text:
-          `✅ *Utente Autorizzato*\n` +
-          `👤 @${who.split('@')[0]}\n\n` +
-          `Ora è esente dai controlli antinuke.`,
-        contextInfo: { mentionedJid: [who] }
+          `✅ *Utenti Autorizzati*\n` +
+          `${mentionText}\n\n` +
+          `Ora sono esenti dai controlli antinuke.`,
+        contextInfo: { mentionedJid: added }
       },
       { quoted: m }
     );
@@ -151,11 +166,10 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'delwhitelist') {
-    let raw = args.join(' ');
-    let cleaned = raw.replace(/[^0-9]/g, '');
-    if (!cleaned) return m.reply("⚠️ Numero non valido.");
+    let nums = args.map(v => v.replace(/[^0-9]/g, '')).filter(v => v.length >= 5);
+    if (!nums.length) return m.reply("⚠️ Numero non valido.");
 
-    let who = cleaned + '@s.whatsapp.net';
+    let who = nums[0] + '@s.whatsapp.net';
 
     if (!chat.whitelist.includes(who)) return m.reply(`❌ L’utente non è nella whitelist.`);
 

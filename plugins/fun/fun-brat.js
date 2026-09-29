@@ -1,18 +1,60 @@
-import uploadImage from '../../lib/uploadImage.js'
+import { createCanvas } from '@napi-rs/canvas'
+import { sticker } from '../../lib/sticker.js'
 
-let handler = async (m, { conn, command }) => {
+const makeImage = (text) => {
+  const canvas = createCanvas(600, 300)
+  const ctx = canvas.getContext('2d')
+
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, 600, 300)
+
+  ctx.fillStyle = '#000'
+  ctx.font = 'bold 40px Arial'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  const maxWidth = 550
+  const lineHeight = 50
+  const words = text.split(' ')
+  const lines = []
+  let line = ''
+
+  for (let w of words) {
+    const test = line ? line + ' ' + w : w
+    if (ctx.measureText(test).width > maxWidth) {
+      lines.push(line)
+      line = w
+    } else line = test
+  }
+  if (line) lines.push(line)
+
+  const totalHeight = lines.length * lineHeight
+  let y = (300 - totalHeight) / 2
+
+  for (let l of lines) {
+    ctx.fillText(l, 300, y)
+    y += lineHeight
+  }
+
+  return canvas.toBuffer('image/png')
+}
+
+let handler = async (m, { conn }) => {
   if (!m.quoted) return m.reply('Rispondi a un messaggio con .brat')
-  let text = m.quoted.text || ''
-  if (!text) return m.reply('Il messaggio non contiene testo')
 
-  let buffer = Buffer.from(text, 'utf-8')
-  let url = await uploadImage(buffer)
+  let text =
+    m.quoted.text ||
+    m.quoted.body ||
+    m.quoted.caption ||
+    m.quoted.conversation ||
+    ''
 
-  await conn.sendMessage(
-    m.chat,
-    { sticker: { url } },
-    { quoted: m }
-  )
+  if (!text.trim()) return m.reply('Il messaggio non contiene testo')
+
+  const img = makeImage(text.trim())
+  const st = await sticker(img, false, m.pushName || 'brat', '888 bot')
+
+  await conn.sendFile(m.chat, st, 'brat.webp', '', m)
 }
 
 handler.command = /^brat$/i

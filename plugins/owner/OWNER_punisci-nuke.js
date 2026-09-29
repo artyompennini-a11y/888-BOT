@@ -1,3 +1,4 @@
+//plugin by the punisher 
 let handler = async (m, { conn, participants, isBotAdmin }) => {
     if (!m.isGroup) return;
 

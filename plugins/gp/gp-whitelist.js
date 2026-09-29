@@ -50,9 +50,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     await global.db.write();
 
-    if (!added.length) {
-      return m.reply(`✨ Tutti gli admin erano già nella whitelist.`);
-    }
+    if (!added.length) return m.reply(`✨ Tutti gli admin erano già nella whitelist.`);
 
     let mentionText = added.map(j => `@${j.split('@')[0]}`).join(', ');
 
@@ -78,9 +76,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     let who = cleaned + '@s.whatsapp.net';
 
-    if (chat.whitelist.includes(who)) {
-      return m.reply(`✨ L’utente è già nella whitelist.`);
-    }
+    if (chat.whitelist.includes(who)) return m.reply(`✨ L’utente è già nella whitelist.`);
 
     chat.whitelist.push(who);
     await global.db.write();
@@ -100,6 +96,60 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
     return;
   }
 
+  if (command === 'delwhitelist' && !args.length) {
+    let list = chat.whitelist;
+
+    if (!list.length) return m.reply("⚠️ Nessun utente nella whitelist.");
+
+    let formatted = list.map(j => `• @${j.split('@')[0]}`).join('\n');
+
+    await conn.sendMessage(
+      m.chat,
+      {
+        text:
+          `🗑️ *Whitelist Attuale*\n\n` +
+          `${formatted}\n\n` +
+          `Premi il tasto sotto per rimuoverli dalla whitelist.`,
+        mentions: list,
+        buttons: [
+          {
+            buttonId: `${usedPrefix}delwhitelist all`,
+            buttonText: { displayText: "🗑️ Rimuovi dalla whitelist" },
+            type: 1
+          }
+        ],
+        headerType: 1
+      }
+    );
+
+    return;
+  }
+
+  if (command === 'delwhitelist' && args[0] === 'all') {
+    let removed = [...chat.whitelist];
+
+    chat.whitelist = [];
+    await global.db.write();
+
+    if (!removed.length) return m.reply("⚠️ Nessun utente da rimuovere.");
+
+    let mentionText = removed.map(j => `@${j.split('@')[0]}`).join(', ');
+
+    await conn.sendMessage(
+      m.chat,
+      {
+        text:
+          `🗑️ *Utenti Rimossi dalla Whitelist*\n` +
+          `${mentionText}\n\n` +
+          `La whitelist è ora vuota.`,
+        contextInfo: { mentionedJid: removed }
+      },
+      { quoted: m }
+    );
+
+    return;
+  }
+
   if (command === 'delwhitelist') {
     let raw = args.join(' ');
     let cleaned = raw.replace(/[^0-9]/g, '');
@@ -107,9 +157,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     let who = cleaned + '@s.whatsapp.net';
 
-    if (!chat.whitelist.includes(who)) {
-      return m.reply(`❌ L’utente non è nella whitelist.`);
-    }
+    if (!chat.whitelist.includes(who)) return m.reply(`❌ L’utente non è nella whitelist.`);
 
     chat.whitelist = chat.whitelist.filter(jid => jid !== who);
     await global.db.write();

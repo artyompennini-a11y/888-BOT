@@ -353,7 +353,7 @@ const giantTitle = async () => {
     () => renderLines(
       '888 BOT',
       'block',
-      0
+      1
     ),
 
     () => [
@@ -374,13 +374,13 @@ const giantTitle = async () => {
       ...renderLines(
         '888',
         'block',
-        0
+        1
       ),
       '',
       ...renderLines(
         'BOT',
         'block',
-        0
+        1
       )
     ],
 

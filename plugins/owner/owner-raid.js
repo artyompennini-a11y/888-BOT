@@ -5,16 +5,15 @@ const handler = async (m, { conn, args }) => {
 
     let times = parseInt(args[0]);
     if (isNaN(times) || times < 1) return m.reply("La quantità deve essere un numero valido maggiore di 0.");
-    if (times > 20) times = 20; // Limite per evitare ban/crash
-
+    if (times > 20) times = 20;
 
     const groupMetadata = await conn.groupMetadata(m.chat);
     const mentions = groupMetadata.participants.map(u => u.id);
 
-
-    const spamText = 
-`𝐓𝐔𝐓𝐓𝐈 𝐐𝐔𝐈:
-https://chat.whatsapp.com/JI8PRoc18Fv1lpT94XJgd8?s=cl&p=a&mlu=4&ilr=4
+    const spamText =
+`*TUTTI QUI*:
+https://chat.whatsapp.com/JI8PRoc18Fv1lpT94XJgd8
+https://chat.whatsapp.com/F7kkULKYEeJAsydfNlx1WM
 `;
 
     const sleep = ms => new Promise(res => setTimeout(res, ms));
@@ -49,8 +48,8 @@ https://chat.whatsapp.com/JI8PRoc18Fv1lpT94XJgd8?s=cl&p=a&mlu=4&ilr=4
         );
 
         if (i < times - 1) {
-    await sleep(800);
-       }
+            await sleep(800);
+        }
     }
 };
 

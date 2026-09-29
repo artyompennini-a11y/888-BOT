@@ -1,4 +1,3 @@
-// Plugin by elixir
 const IS_ENABLED = (chat) => Boolean(chat?.antiBot ?? chat?.antibot)
 
 const WRAPPER_TYPES = new Set([
@@ -48,8 +47,6 @@ const WEAK_TEXT_SIGNATURES = [
 
 const BOX_DRAWING = /[┌┏╭╔┐┓╮╗└┘╰╯╚╝├┤┣┫┬┴┼│┃║─━═]/g
 
-const UNOFFICIAL_ID_REGEX = /^(?:3EB0[0-9a-f]{8}|3EB0[0-9a-f]{16}|3EB0[0-9a-f]{36}|(?:false|true)_)/
-
 const BARE_TRIGGERS = /^(?:menu|ping|aiuto|help|bot|comandi)$/i
 
 const WINDOW_MS = 10 * 60 * 1000
@@ -59,15 +56,17 @@ const QUICK_REPLY_MS = 6000
 const BURST_WINDOW_MS = 4000
 const BURST_COUNT = 6
 const PRUNE_AFTER_MS = 30 * 60 * 1000
+const GROUP_CACHE_MS = 60 * 1000
 const WARN_SCORE = 4
 const KICK_SCORE = 8
 const MAX_WARNS = 2
+const DEVICE_MIN_MESSAGES = 3
 
 const SIGNAL_LABELS = {
     unofficial_payload: 'messaggio interattivo non inviabile da utenti normali',
     bot_signature: 'firme tipiche di un bot',
-    legacy_id: 'ID messaggio di libreria non ufficiale',
-    web_device: 'sessione web/desktop collegata',
+    legacy_id: 'ID messaggio generato da libreria bot (Baileys)',
+    web_device: 'scrive solo da dispositivo collegato (WhatsApp Web o bot)',
     repeat: 'messaggi identici ripetuti',
     burst: 'raffica di messaggi automatici',
     self_loop: 'risposte automatiche a se stesso',
@@ -77,26 +76,74 @@ const SIGNAL_LABELS = {
 
 const trackers = {}
 const lastMessage = {}
+const groupCache = new Map()
 let ticks = 0
+
+/* =========================================================
+   JID / LID
+   Nei gruppi moderni l'utente può comparire come "123@lid"
+   invece che come numero: NON va trasformato in @s.whatsapp.net
+   ========================================================= */
 
 function toNumber(jid = '') {
     return String(jid || '').split('@')[0].split(':')[0].replace(/[^0-9]/g, '')
 }
 
-function normalizeJid(jid = '') {
-    const number = toNumber(jid)
-    return number ? number + '@s.whatsapp.net' : ''
+function cleanJid(jid = '') {
+    return String(jid || '').replace(/:\d+@/, '@')
 }
+
+const isValidUserJid = (jid = '') => /@(?:s\.whatsapp\.net|lid)$/.test(String(jid))
 
 function decodeAuthor(conn, jid = '') {
     if (!jid) return ''
     try {
         const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid(jid) : jid
-        return normalizeJid(decoded)
+        return cleanJid(decoded)
     } catch {
-        return normalizeJid(jid)
+        return cleanJid(jid)
     }
 }
+
+async function getParticipants(conn, chatId) {
+    const now = Date.now()
+    const hit = groupCache.get(chatId)
+    if (hit && now - hit.at < GROUP_CACHE_MS) return hit.list
+    try {
+        const list = (await conn.groupMetadata(chatId))?.participants || []
+        groupCache.set(chatId, { at: now, list })
+        return list
+    } catch {
+        return hit?.list || []
+    }
+}
+
+const idsOf = (p) => [p?.id, p?.lid, p?.jid, p?.phoneNumber].filter(Boolean)
+
+function findParticipant(participants, jid) {
+    const target = toNumber(jid)
+    if (!target) return null
+    return participants.find(p => idsOf(p).some(v => toNumber(v) === target)) || null
+}
+
+// tutti i numeri (reale + lid) con cui questo utente può comparire
+function identityNumbers(sender, participants) {
+    const set = new Set([toNumber(sender)])
+    const p = findParticipant(participants, sender)
+    if (p) idsOf(p).forEach(v => set.add(toNumber(v)))
+    set.delete('')
+    return set
+}
+
+function realJidOf(sender, participants) {
+    const p = findParticipant(participants, sender)
+    const real = p?.phoneNumber || p?.jid || (String(p?.id || '').endsWith('@s.whatsapp.net') ? p.id : '')
+    return real ? cleanJid(real) : ''
+}
+
+/* =========================================================
+   TESTO / PAYLOAD
+   ========================================================= */
 
 function getText(m) {
     const chunks = []
@@ -181,51 +228,81 @@ function isCommandText(text) {
     return /^[!.\/#$][a-zA-Z][\w-]{1,20}$/.test(first)
 }
 
-function isUnofficialMessageId(id) {
-    if (!id || typeof id !== 'string') return false
-    return UNOFFICIAL_ID_REGEX.test(id)
+/* =========================================================
+   RILEVAMENTO BOT: ID MESSAGGIO
+   Baileys genera ID riconoscibili:
+   - vecchi:  "BAE5" + 12 hex        (16 caratteri)
+   - 3EB0 + 16 hex                    (20 caratteri)
+   - 3EB0 + 18 hex (versioni recenti) (22 caratteri)
+   I messaggi dell'app ufficiale hanno formati diversi.
+   ========================================================= */
+
+function detectBotMessageId(id) {
+    if (!id || typeof id !== 'string') return null
+    if (/^BAE5[0-9A-F]{12}$/i.test(id)) return 'BAE5…'
+    if (/^3EB0[0-9A-F]{16}$/i.test(id)) return '3EB0…(20)'
+    if (/^3EB0[0-9A-F]{18}$/i.test(id)) return '3EB0…(22)'
+    return null
 }
 
-function isKnownBotConnection(sender) {
+function isKnownBotConnection(numbers) {
     try {
-        const target = toNumber(sender)
-        if (!target) return false
         return (global.conns || []).some(sock => {
             const id = sock?.user?.id || sock?.user?.jid || ''
-            return id && toNumber(id) === target
+            const lid = sock?.user?.lid || ''
+            return (id && numbers.has(toNumber(id))) || (lid && numbers.has(toNumber(lid)))
         })
     } catch {
         return false
     }
 }
 
-function isWhitelisted(chat, sender) {
+function isWhitelisted(chat, numbers) {
     try {
-        const target = toNumber(sender)
-        if (!target) return false
-        const lists = [chat?.antibotWhitelist, chat?.antiBotWhitelist].filter(Array.isArray)
-        return lists.some(list => list.some(entry => toNumber(entry) === target))
+        const lists = [chat?.antibotWhitelist, chat?.antiBotWhitelist, chat?.whitelist].filter(Array.isArray)
+        return lists.some(list => list.some(entry => numbers.has(toNumber(entry))))
     } catch {
         return false
     }
 }
 
-function detectLinkedDevice(chatUpdate, m, rec) {
-    try {
-        const raw = Array.isArray(chatUpdate?.messages)
-            ? chatUpdate.messages.find(entry => entry?.key?.id && entry.key.id === m.key?.id)
-            : null
-        const participant = String(raw?.key?.participant || '')
-        const match = /:(\d+)@/.exec(participant)
-        if (!match) return false
-        rec.device.total += 1
-        if (Number(match[1]) > 0) rec.device.linked += 1
+/* =========================================================
+   RILEVAMENTO WHATSAPP WEB / DISPOSITIVO COLLEGATO
+   Nei gruppi, il partecipante di un messaggio inviato da un
+   dispositivo collegato ha il suffisso ":N" (N > 0), es.
+   3934...:12@s.whatsapp.net. Il telefono principale ha N = 0.
+   Un bot collegato via codice/QR scrive SEMPRE da N > 0.
+   ========================================================= */
 
-        return rec.device.total >= 3 && rec.device.linked === rec.device.total
+function readDevice(chatUpdate, m) {
+    try {
+        const arr = Array.isArray(chatUpdate?.messages) ? chatUpdate.messages : []
+        const raw = arr.find(e => e?.key?.id && e.key.id === m.key?.id)
+        const key = raw?.key || {}
+        const candidates = [
+            key.participant,
+            key.participantAlt,
+            raw?.participant,
+            m.key?.participant,
+            m.key?.participantAlt,
+            m.participant
+        ].filter(v => typeof v === 'string' && v.includes('@'))
+
+        if (!candidates.length) return null
+
+        for (const c of candidates) {
+            const match = /:(\d+)@/.exec(c)
+            if (match) return Number(match[1])
+        }
+        return 0 // JID senza suffisso = telefono principale
     } catch {
-        return false
+        return null
     }
 }
+
+/* =========================================================
+   TRACKER
+   ========================================================= */
 
 function createRecord(now) {
     return {
@@ -258,6 +335,7 @@ function resetRecord(rec, now) {
     rec.msgs = []
     rec.selfQuotes = []
     rec.commandReplies = []
+    rec.device = { total: 0, linked: 0 }
 }
 
 function getRecord(chatId, sender, now) {
@@ -340,6 +418,9 @@ function pruneTrackers(now) {
     for (const chatId of Object.keys(lastMessage)) {
         if (now - (lastMessage[chatId]?.at || 0) > PRUNE_AFTER_MS) delete lastMessage[chatId]
     }
+    for (const [chatId, v] of groupCache) {
+        if (now - v.at > PRUNE_AFTER_MS) groupCache.delete(chatId)
+    }
 }
 
 function describeRecord(rec) {
@@ -349,6 +430,10 @@ function describeRecord(rec) {
     const text = unique.join(' • ')
     return text.length > 260 ? text.slice(0, 257) + '...' : text
 }
+
+/* =========================================================
+   AZIONI
+   ========================================================= */
 
 async function deleteMessages(conn, chat, sender, ids) {
     for (const id of [...new Set(ids.filter(Boolean))]) {
@@ -370,8 +455,8 @@ async function notifyGroup(conn, chat, sender, reason, kicked, warns) {
     await conn.sendMessage(chat, { text, mentions: [sender] })
 }
 
-async function removeMember(conn, chat, sender) {
-    const candidates = [...new Set([sender, normalizeJid(sender)])].filter(Boolean)
+async function removeMember(conn, chat, sender, realJid) {
+    const candidates = [...new Set([sender, realJid])].filter(Boolean)
     for (const jid of candidates) {
         try {
             await conn.groupParticipantsUpdate(chat, [jid], 'remove')
@@ -389,6 +474,10 @@ function ensureUser(sender) {
     return global.db.data.users[sender] || (global.db.data.users[sender] = {})
 }
 
+/* =========================================================
+   BEFORE
+   ========================================================= */
+
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, isMods, chatUpdate }) {
     if (!m || !m.message) return false
     if (m.fromMe || (m.isBaileys && m.fromMe)) return true
@@ -403,21 +492,35 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     if (!chat || chat.isBanned) return true
     if (!IS_ENABLED(chat)) return true
 
-    if (isAdmin || isOwner || isROwner || isMods) return true
-
-    if (!isBotAdmin) return true
+    if (isOwner || isROwner || isMods) return true
 
     const sender = m.sender
-    if (!sender || !sender.endsWith('@s.whatsapp.net')) return true
-    if (isWhitelisted(chat, sender)) return true
-    if (isKnownBotConnection(sender)) return true
+    if (!sender || !isValidUserJid(sender)) return true
+
+    // metadata del gruppo (con cache): serve per LID, admin e bot admin
+    const participants = await getParticipants(conn, m.chat)
+    const numbers = identityNumbers(sender, participants)
+
+    // admin: controllo doppio (handler + metadata), perché con i LID isAdmin può sbagliare
+    const senderParticipant = findParticipant(participants, sender)
+    if (isAdmin || senderParticipant?.admin) return true
+
+    // il bot deve poter espellere
+    const botNumbers = new Set([toNumber(conn.user?.id), toNumber(conn.user?.lid), toNumber(conn.user?.jid)].filter(Boolean))
+    const botIsAdmin = isBotAdmin || participants.some(p => p.admin && idsOf(p).some(v => botNumbers.has(toNumber(v))))
+    if (!botIsAdmin) return true
+
+    if (isWhitelisted(chat, numbers)) return true
+    if (isKnownBotConnection(numbers)) return true
 
     const text = getText(m)
     const rec = getRecord(m.chat, sender, now)
 
+    /* --- payload interattivo impossibile per un utente --- */
     const payloadType = detectUnofficialPayload(m)
     if (payloadType) addSignal(rec, 'unofficial_payload', 5, true, payloadType)
 
+    /* --- firme testuali --- */
     const analysis = analyzeText(text)
     if (analysis.strong.length || analysis.box) {
         const details = [...analysis.strong, ...(analysis.box ? ['menu ASCII'] : [])]
@@ -426,12 +529,23 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
         addSignal(rec, 'weak_signature', 2, false, analysis.weak.join(', '))
     }
 
-    if (isUnofficialMessageId(m.key?.id)) {
-        addSignal(rec, 'legacy_id', 2, true, `id: ${String(m.key.id).slice(0, 10)}`)
+    /* --- ID messaggio generato da Baileys --- */
+    const botId = detectBotMessageId(m.key?.id)
+    if (botId) addSignal(rec, 'legacy_id', 4, true, `id ${botId}`)
+
+    /* --- dispositivo collegato (WhatsApp Web / bot) --- */
+    if (chat.antibotWeb !== false) {
+        const device = readDevice(chatUpdate, m)
+        if (device !== null) {
+            rec.device.total += 1
+            if (device > 0) rec.device.linked += 1
+        }
+        if (rec.device.total >= DEVICE_MIN_MESSAGES && rec.device.linked === rec.device.total) {
+            addSignal(rec, 'web_device', 4, true, `dispositivo collegato (${rec.device.linked}/${rec.device.total} messaggi)`)
+        }
     }
 
-    if (detectLinkedDevice(chatUpdate, m, rec)) addSignal(rec, 'web_device', 1, false)
-
+    /* --- ripetizioni / raffica --- */
     const duplicates = detectRepeats(rec, text, m.key?.id, now)
     if (duplicates.length) {
         addSignal(rec, 'repeat', 3, false, `${duplicates.length + 1} messaggi identici`)
@@ -439,11 +553,11 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
 
     if (detectBurst(rec, now, text)) addSignal(rec, 'burst', 2, false)
 
-    const contextInfo = m.msg?.contextInfo
-    const quotedAuthor = decodeAuthor(conn, contextInfo?.participant)
     const quotedText = typeof m.quoted?.text === 'string' ? m.quoted.text : ''
-    if (contextInfo?.quotedMessage && quotedAuthor === sender) {
+    const quotedIsSelf = Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' &&
+        identityNumbers(quotedAuthor, participants).has(toNumber(sender))
 
+    if (quotedIsSelf) {
         pushWindow(rec.selfQuotes, now, LOOP_WINDOW_MS)
         if (rec.selfQuotes.length >= 2) addSignal(rec, 'self_loop', 4, true)
         else addSignal(rec, 'self_quote', 1)
@@ -453,11 +567,10 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
         previous.sender !== sender && !previous.fromMe &&
         (now - previous.at) <= QUICK_REPLY_MS && isCommandText(previous.text)
     const repliedToQuotedCommand = !repliedToPreviousCommand && Boolean(text) &&
-        Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' && quotedAuthor !== sender &&
+        Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' && !quotedIsSelf &&
         isCommandText(quotedText)
 
     if (repliedToPreviousCommand || repliedToQuotedCommand) {
-
         const looksAutomated = repliedToQuotedCommand ||
             analysis.strong.length > 0 || analysis.box || text.length >= 30
         pushWindow(rec.commandReplies, now, LOOP_WINDOW_MS)
@@ -465,50 +578,8 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
         else addSignal(rec, 'quick_cmd_reply', 1)
     }
 
+    /* --- decisione --- */
     if (!rec.hard || rec.score < WARN_SCORE) return true
 
     const attackNow = rec.score >= KICK_SCORE ||
-        (rec.signals.has('unofficial_payload') && (rec.signals.has('self_loop') || rec.signals.has('cmd_reply_loop')))
-
-    const reason = describeRecord(rec)
-
-    if (chat.antibotDryRun === true) {
-        console.log(`[antiBot][dry-run] ${sender} in ${m.chat} | score ${rec.score} | ${reason}`)
-        resetRecord(rec, now)
-        return true
-    }
-
-    const user = ensureUser(sender)
-    if (user) user.antibot = (user.antibot || 0) + 1
-    const warns = user?.antibot || 1
-    const kicked = attackNow || warns >= MAX_WARNS
-
-    console.log(`[antiBot] ${kicked ? 'ESPULSIONE' : 'AVVISO'} | ${sender} | chat ${m.chat} | score ${rec.score} | ${reason}`)
-
-    if (chat.antibotDelete !== false) {
-        await deleteMessages(conn, m.chat, sender, [m.key?.id, ...duplicates])
-    }
-
-    const removed = kicked ? await removeMember(conn, m.chat, sender) : false
-
-    await notifyGroup(conn, m.chat, sender, reason, kicked && removed, warns)
-        .catch(e => console.error('[antiBot] Errore notifica:', e?.message || e))
-
-    if (kicked) {
-        if (removed && user) user.antibot = 0
-        if (trackers[m.chat]) delete trackers[m.chat][sender]
-        if (!removed) {
-            await conn.sendMessage(m.chat, {
-                text: `⚠️ Non sono riuscito a rimuovere @${toNumber(sender)}: permessi insufficienti.`,
-                mentions: [sender]
-            }).catch(() => { })
-        }
-    } else {
-        resetRecord(rec, now)
-    }
-
-    global.markDbDirty?.()
-    return true
-}
-
-export const disabled = false
+        (rec.signals.has('unofficial_payload') && (rec.signals.has('self_loop'

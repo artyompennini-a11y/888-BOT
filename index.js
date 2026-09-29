@@ -35,8 +35,6 @@ const checkAndInstallModules = () => {
 
 checkAndInstallModules();
 
-const { name, author } = require(join(__dirname, './package.json'));
-
 let cfonts;
 try {
   cfonts = (await import('cfonts')).default;
@@ -63,7 +61,7 @@ const loadStaff = () => {
 };
 
 // ———————————————————————————————————————————————
-// NUOVA ANIMAZIONE: PHASE‑REVEAL 888
+// NUOVA ANIMAZIONE: PHASE‑REVEAL 888 + SCRITTA ENORME
 // ———————————————————————————————————————————————
 
 async function startupPhaseReveal() {
@@ -74,7 +72,7 @@ async function startupPhaseReveal() {
     { label: "CORE ENGINE ONLINE", color: "\x1b[36m" },
     { label: "SECURITY LAYER ACTIVE", color: "\x1b[34m" },
     { label: "WHATSAPP LINK READY", color: "\x1b[32m" },
-    { label: "888 BOT 2026 ONLINE", color: "\x1b[35m" }
+    { label: "888 BOT SYSTEM READY", color: "\x1b[35m" }
   ];
 
   // Fade-in iniziale
@@ -91,16 +89,35 @@ async function startupPhaseReveal() {
   }
 
   console.log();
+  await sleep(300);
 
-  // Pulse del titolo
-  const title = "888 BOT 2026";
-  for (let i = 0; i < 3; i++) {
-    process.stdout.write(`\r\x1b[35m${title}\x1b[0m`);
-    await sleep(120);
-    process.stdout.write(`\r\x1b[36m${title}\x1b[0m`);
-    await sleep(120);
-  }
-  console.log(`\r\x1b[35m${title}\x1b[0m\n`);
+  // SCRITTA ENORME — 888 BOT v1.3 2K26
+  cfonts.say('888 BOT', {
+    font: 'block',
+    align: 'center',
+    gradient: ['#8b5cf6', '#60a5fa'],
+    transitionGradient: true,
+  });
+
+  await sleep(300);
+
+  cfonts.say('v1.3', {
+    font: 'block',
+    align: 'center',
+    gradient: ['#60a5fa', '#c084fc'],
+    transitionGradient: true,
+  });
+
+  await sleep(300);
+
+  cfonts.say('2K26', {
+    font: 'block',
+    align: 'center',
+    gradient: ['#c084fc', '#8b5cf6'],
+    transitionGradient: true,
+  });
+
+  await sleep(400);
 
   // Mini loading
   const frames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];

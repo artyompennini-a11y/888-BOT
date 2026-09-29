@@ -1,3 +1,8 @@
+function normalizeJid(jid) {
+  let num = jid.split('@')[0];
+  return '@' + num;
+}
+
 let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
   if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {};
@@ -52,7 +57,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!added.length) return m.reply(`✨ Tutti gli admin erano già nella whitelist.`);
 
-    let mentionText = added.map(j => `@${j.split('@')[0]}`).join(', ');
+    let mentionText = added.map(j => normalizeJid(j)).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -94,7 +99,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!added.length) return m.reply(`✨ Gli utenti indicati erano già nella whitelist.`);
 
-    let mentionText = added.map(j => `@${j.split('@')[0]}`).join(', ');
+    let mentionText = added.map(j => normalizeJid(j)).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -116,7 +121,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!list.length) return m.reply("⚠️ Nessun utente nella whitelist.");
 
-    let formatted = list.map(j => `• @${j.split('@')[0]}`).join('\n');
+    let formatted = list.map(j => `• ${normalizeJid(j)}`).join('\n');
 
     await conn.sendMessage(
       m.chat,
@@ -148,7 +153,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
 
     if (!removed.length) return m.reply("⚠️ Nessun utente da rimuovere.");
 
-    let mentionText = removed.map(j => `@${j.split('@')[0]}`).join(', ');
+    let mentionText = removed.map(j => normalizeJid(j)).join(', ');
 
     await conn.sendMessage(
       m.chat,
@@ -181,7 +186,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
       {
         text:
           `🗑️ *Utente Rimosso*\n` +
-          `👤 @${who.split('@')[0]}\n\n` +
+          `👤 ${normalizeJid(who)}\n\n` +
           `Rimosso dalla whitelist.`,
         contextInfo: { mentionedJid: [who] }
       },
@@ -192,7 +197,7 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
   }
 
   if (command === 'whitelist') {
-    let list = chat.whitelist.map(jid => `• @${jid.split('@')[0]}`).join('\n');
+    let list = chat.whitelist.map(jid => `• ${normalizeJid(jid)}`).join('\n');
     let caption =
       `📑 *Whitelist Gruppo*\n` +
       `${list || '⚠️ Nessun utente autorizzato.'}`;

@@ -79,75 +79,6 @@ const showCursor = () => { process.stdout.write('\x1b[?25h'); };
 const resetTerminal = () => { process.stdout.write('\x1b[0m'); };
 
 /* =========================================================
-   STAFF
-   ========================================================= */
-
-const STAFF_ESCLUSO = ['mattia', 'fuma'];
-
-const STAFF_PATHS = [
-  join(__dirname, 'data', 'staff.json'),
-  join(__dirname, 'staff.json'),
-  join(__dirname, 'lib', 'staff.json'),
-  join(__dirname, 'config', 'staff.json')
-];
-
-let staffDebug = '';
-
-const normalizeStaff = (raw) => {
-  let list = raw;
-
-  if (!Array.isArray(list) && list && typeof list === 'object') {
-    const arr = list.staff || list.team || list.members || list.membri;
-    if (Array.isArray(arr)) {
-      list = arr;
-    } else {
-      // formato { "Nome": { ruolo: "..." } } oppure { "Nome": "Ruolo" }
-      list = Object.entries(list).map(([k, v]) =>
-        typeof v === 'string' ? { nome: k, ruolo: v } : { nome: k, ...v }
-      );
-    }
-  }
-
-  if (!Array.isArray(list)) return [];
-
-  return list
-    .map(m => {
-      if (typeof m === 'string') return { nome: m, ruolo: 'Staff', emoji: '👤' };
-      return {
-        nome:  m?.nome || m?.name || m?.nickname || m?.user || m?.username,
-        ruolo: m?.ruolo || m?.role || m?.rank || m?.grado || 'Staff',
-        emoji: m?.emoji || m?.icon || '👤'
-      };
-    })
-    .filter(m => m.nome);
-};
-
-const loadStaff = () => {
-  staffDebug = '';
-
-  for (const p of STAFF_PATHS) {
-    if (!existsSync(p)) continue;
-
-    try {
-      const staff = normalizeStaff(JSON.parse(readFileSync(p, 'utf8')));
-
-      const filtered = staff.filter(m => {
-        const nome = String(m.nome).toLowerCase();
-        return !STAFF_ESCLUSO.some(x => nome.includes(x));
-      });
-
-      if (filtered.length) return filtered;
-      staffDebug = `${p} trovato ma vuoto/non valido`;
-    } catch (e) {
-      staffDebug = `${p}: ${e.message}`;
-    }
-  }
-
-  if (!staffDebug) staffDebug = 'data/staff.json non trovato';
-  return [];
-};
-
-/* =========================================================
    TERMINAL HELPERS
    ========================================================= */
 
@@ -347,71 +278,6 @@ const systemScan = async (text, color = '\x1b[96m') => {
 };
 
 /* =========================================================
-   STAFF CINEMATIC
-   ========================================================= */
-
-const roleStyle = (role = '') => {
-  const r = role.toLowerCase();
-  if (/owner|founder|fondatore|creat/.test(r)) return { c: '\x1b[93m', icon: '♛' };
-  if (/dev|svilupp|coder/.test(r))             return { c: '\x1b[96m', icon: '⌬' };
-  if (/admin|amministr/.test(r))               return { c: '\x1b[91m', icon: '✦' };
-  if (/mod/.test(r))                           return { c: '\x1b[92m', icon: '✧' };
-  if (/help|support|assist/.test(r))           return { c: '\x1b[94m', icon: '❖' };
-  return { c: '\x1b[95m', icon: '◆' };
-};
-
-const spaced = (t) =>
-  t.toUpperCase().split(' ').map(w => w.split('').join(' ')).join('   ');
-
-const showStaffCinematic = async () => {
-  const staff = loadStaff();
-
-  if (!staff.length) {
-    clearScreen();
-    console.log('\n\n\n');
-    console.log(centerText('\x1b[90mNessun membro dello staff\x1b[0m'));
-    console.log(centerText(`\x1b[31m${staffDebug}\x1b[0m`));
-    await sleep(2500);
-    return;
-  }
-
-  for (let i = 0; i < staff.length; i++) {
-    const m = staff[i];
-    const nome  = String(m?.nome  || 'Membro staff');
-    const ruolo = String(m?.ruolo || 'Staff');
-    const emoji = m?.emoji || '👤';
-    const { c, icon } = roleStyle(ruolo);
-
-    const label = `${icon}  ${spaced(ruolo)}  ${icon}`;
-    const inner = Math.max(nome.length, label.length) + 8;
-    const pad = (t) => {
-      const total = inner - t.length;
-      const l = Math.floor(total / 2);
-      return ' '.repeat(l) + t + ' '.repeat(total - l);
-    };
-
-    clearScreen();
-    console.log('\n\n');
-    console.log(centerText('\x1b[95mT E A M   8 8 8\x1b[0m'));
-    console.log(centerText(`\x1b[90m${String(i + 1).padStart(2, '0')} / ${String(staff.length).padStart(2, '0')}\x1b[0m`));
-    console.log('\n');
-    console.log(centerText(emoji));
-    console.log('');
-    console.log(centerText(`${c}╭${'─'.repeat(inner)}╮\x1b[0m`));
-    console.log(centerText(`${c}│\x1b[0m${' '.repeat(inner)}${c}│\x1b[0m`));
-    console.log(centerText(`${c}│\x1b[1m\x1b[97m${pad(nome)}${c}\x1b[0m${c}│\x1b[0m`));
-    console.log(centerText(`${c}│\x1b[0m${' '.repeat(inner)}${c}│\x1b[0m`));
-    console.log(centerText(`${c}│${pad(label)}│\x1b[0m`));
-    console.log(centerText(`${c}│\x1b[0m${' '.repeat(inner)}${c}│\x1b[0m`));
-    console.log(centerText(`${c}╰${'─'.repeat(inner)}╯\x1b[0m`));
-
-    await sleep(1100);
-  }
-
-  await sleep(300);
-};
-
-/* =========================================================
    EPIC CINEMATIC STARTUP
    ========================================================= */
 
@@ -468,10 +334,7 @@ async function epicStartup() {
     await systemScan('WHATSAPP ENGINE ......... ONLINE', '\x1b[92m');
     await systemScan('PLUGIN SYSTEM ........... ONLINE', '\x1b[92m');
 
-    /* ACT VII - TEAM 888 */
-    await showStaffCinematic();
-
-    /* ACT VIII - FINAL SYSTEM STATUS */
+    /* ACT VII - FINAL SYSTEM STATUS */
     clearScreen();
     await sleep(700);
     console.log('\n\n\n');

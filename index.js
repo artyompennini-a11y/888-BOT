@@ -84,21 +84,67 @@ const resetTerminal = () => { process.stdout.write('\x1b[0m'); };
 
 const STAFF_ESCLUSO = ['mattia', 'fuma'];
 
-const loadStaff = () => {
-  try {
-    const staff = JSON.parse(
-      readFileSync(join(__dirname, 'data', 'staff.json'), 'utf8')
-    );
+const STAFF_PATHS = [
+  join(__dirname, 'data', 'staff.json'),
+  join(__dirname, 'staff.json'),
+  join(__dirname, 'lib', 'staff.json'),
+  join(__dirname, 'config', 'staff.json')
+];
 
-    if (!Array.isArray(staff)) return [];
+let staffDebug = '';
 
-    return staff.filter(m => {
-      const nome = String(m?.nome || '').toLowerCase();
-      return !STAFF_ESCLUSO.some(x => nome.includes(x));
-    });
-  } catch {
-    return [];
+const normalizeStaff = (raw) => {
+  let list = raw;
+
+  if (!Array.isArray(list) && list && typeof list === 'object') {
+    const arr = list.staff || list.team || list.members || list.membri;
+    if (Array.isArray(arr)) {
+      list = arr;
+    } else {
+      // formato { "Nome": { ruolo: "..." } } oppure { "Nome": "Ruolo" }
+      list = Object.entries(list).map(([k, v]) =>
+        typeof v === 'string' ? { nome: k, ruolo: v } : { nome: k, ...v }
+      );
+    }
   }
+
+  if (!Array.isArray(list)) return [];
+
+  return list
+    .map(m => {
+      if (typeof m === 'string') return { nome: m, ruolo: 'Staff', emoji: '👤' };
+      return {
+        nome:  m?.nome || m?.name || m?.nickname || m?.user || m?.username,
+        ruolo: m?.ruolo || m?.role || m?.rank || m?.grado || 'Staff',
+        emoji: m?.emoji || m?.icon || '👤'
+      };
+    })
+    .filter(m => m.nome);
+};
+
+const loadStaff = () => {
+  staffDebug = '';
+
+  for (const p of STAFF_PATHS) {
+    if (!existsSync(p)) continue;
+
+    try {
+      const staff = normalizeStaff(JSON.parse(readFileSync(p, 'utf8')));
+
+      const filtered = staff.filter(m => {
+        const nome = String(m.nome).toLowerCase();
+        return !STAFF_ESCLUSO.some(x => nome.includes(x));
+      });
+
+      if (filtered.length) return filtered;
+      staffDebug = `${p} trovato ma vuoto/non valido`;
+    } catch (e) {
+      staffDebug = `${p}: ${e.message}`;
+    }
+  }
+
+  if (!staffDebug) staffDebug = 'data/staff.json non trovato';
+  return [];
 };
 
 /* =========================================================
@@ -190,19 +236,41 @@ const cinematicFlash = async () => {
    GIANT TITLE (888 BOT v1.3 2K26)
    ========================================================= */
 
-const giantTitle = async () => {
-  const width = getTerminalWidth();
-  const font = width >= 66 ? 'block' : 'tiny';
-
-  const { array } = cfonts.render('888 BOT', {
+const renderLines = (text, font, letterSpacing = 1) =>
+  cfonts.render(text, {
     font,
     gradient: ['#ff2bd6', '#00e5ff'],
     transitionGradient: true,
-    letterSpacing: 1,
-    space: false
-  });
+    letterSpacing,
+    space: false,
+    maxLength: '0' // niente wrap automatico di cfonts
+  }).array.filter((l, i, a) => stripAnsi(l).trim() || (i > 0 && i < a.length - 1));
 
-  for (const line of array) {
+const maxWidth = (lines) =>
+  Math.max(0, ...lines.map(l => stripAnsi(l).length));
+
+const giantTitle = async () => {
+  const avail = getTerminalWidth() - 2;
+
+  // Dal più grande al più piccolo: il primo che ci sta viene usato
+  const candidates = [
+    () => renderLines('888 BOT', 'block', 1),
+    () => renderLines('888 BOT', 'block', 0),
+    () => [...renderLines('888', 'block', 1), '', ...renderLines('BOT', 'block', 1)],
+    () => [...renderLines('888', 'block', 0), '', ...renderLines('BOT', 'block', 0)],
+    () => renderLines('888 BOT', 'tiny', 1),
+    () => ['\x1b[1m\x1b[95m8 8 8   B O T\x1b[0m']
+  ];
+
+  let lines = [];
+  for (const build of candidates) {
+    try {
+      lines = build();
+      if (maxWidth(lines) <= avail) break;
+    } catch {}
+  }
+
+  for (const line of lines) {
     console.log(centerText(line));
     await sleep(70);
   }
@@ -302,7 +370,8 @@ const showStaffCinematic = async () => {
     clearScreen();
     console.log('\n\n\n');
     console.log(centerText('\x1b[90mNessun membro dello staff\x1b[0m'));
-    await sleep(600);
+    console.log(centerText(`\x1b[31m${staffDebug}\x1b[0m`));
+    await sleep(2500);
     return;
   }
 

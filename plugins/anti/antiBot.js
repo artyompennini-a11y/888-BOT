@@ -1,3 +1,4 @@
+// Plugin by elixir
 const IS_ENABLED = (chat) => Boolean(chat?.antiBot ?? chat?.antibot)
 
 const WRAPPER_TYPES = new Set([

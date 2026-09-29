@@ -1,5 +1,4 @@
 global.richiesteAntiSpam = global.richiesteAntiSpam || {}
-
 const pluginName = 'info-logrichieste.js'
 
 const attachListener = () => {
@@ -13,7 +12,9 @@ const attachListener = () => {
 
             let plugin = global.plugins?.[pluginName]
             if (!plugin && global.plugins) {
-                const match = Object.keys(global.plugins).find(name => name.replace(/^.*[\/]/, '').replace(/\.js$/, '').toLowerCase() === 'info-logrichieste')
+                const match = Object.keys(global.plugins).find(name =>
+                    name.replace(/^.*[\/]/, '').replace(/\.js$/, '').toLowerCase() === 'info-logrichieste'
+                )
                 if (match) plugin = global.plugins[match]
             }
             if (plugin?.disabled) return
@@ -23,17 +24,27 @@ const attachListener = () => {
             }
 
             const chatSettings = global.db?.data?.chats?.[chatId] || {}
-            if (chatSettings.logrichieste === false) return
+
+            if (!chatSettings.logrichieste) return
 
             if (action === 'add') {
                 const admin = actor || author
                 if (!admin) return
 
-                const botJid = (conn.user && (conn.user.jid || conn.user.id)) ? ((typeof conn.decodeJid === 'function') ? conn.decodeJid(conn.user.jid || conn.user.id) : (conn.user.jid || conn.user.id)) : ''
-                const addedJids = Array.isArray(participants) ? participants.filter(p => p && p !== admin && p !== botJid) : []
+                const botJid = (conn.user && (conn.user.jid || conn.user.id))
+                    ? ((typeof conn.decodeJid === 'function')
+                        ? conn.decodeJid(conn.user.jid || conn.user.id)
+                        : (conn.user.jid || conn.user.id))
+                    : ''
+
+                const addedJids = Array.isArray(participants)
+                    ? participants.filter(p => p && p !== admin && p !== botJid)
+                    : []
+
                 if (addedJids.length === 0) return
 
                 const chiaveUnica = `${chatId}_${admin}`
+
                 if (!global.richiesteAntiSpam[chiaveUnica]) {
                     global.richiesteAntiSpam[chiaveUnica] = { jids: new Set(), timer: null }
                 } else if (global.richiesteAntiSpam[chiaveUnica].timer) {
@@ -46,24 +57,24 @@ const attachListener = () => {
                 global.richiesteAntiSpam[chiaveUnica].timer = setTimeout(async () => {
                     try {
                         const adminNumero = admin.split('@')[0]
-                        const totaleAccettati = global.richiesteAntiSpam[chiaveUnica].jids.size || 0
-                        const testoMessaggio = totaleAccettati === 1
-                            ? `*📢 Richiesta accettata dall’admin @${adminNumero}*\n> *Se non vuoi questa funzione ti basta fare ''.disattiva logrichieste''*`
-                            : `*📢 ${totaleAccettati} richieste accettate dall’admin @${adminNumero}*\n> *Se non vuoi questa funzione ti basta fare ''.disattiva logrichieste''* `
+                        const totale = global.richiesteAntiSpam[chiaveUnica].jids.size || 0
+
+                        const testo =
+                            totale === 1
+                                ? `🟦 *LOG RICHIESTE — 888*\n\n👤 *Admin:* @${adminNumero}\n📥 Ha accettato *1 richiesta*.\n\n🔧 Per disattivare: *.disattiva logrichieste*`
+                                : `🟦 *LOG RICHIESTE — 888*\n\n👤 *Admin:* @${adminNumero}\n📥 Ha accettato *${totale} richieste*.\n\n🔧 Per disattivare: *.disattiva logrichieste*`
 
                         await conn.sendMessage(chatId, {
-                            text: testoMessaggio,
+                            text: testo,
                             contextInfo: { mentionedJid: [admin] },
                             mentions: [admin]
                         })
-                    } catch (e) {
-                    }
+                    } catch (e) {}
 
                     delete global.richiesteAntiSpam[chiaveUnica]
                 }, 10000)
             }
-        } catch (e) {
-        }
+        } catch (e) {}
     })
 
     return true

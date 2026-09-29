@@ -4,7 +4,6 @@ import webp from 'node-webpmux'
 let inviteCache = {}
 let lastCheck = {}
 
-
 const WHATSAPP_LINK_REGEX = /(?:https?:\/\/)?(?:www\.|chat\.|api\.|business\.)?whatsapp\.com(?:\/channel)?\/[0-9A-Za-z_-]+/
 const WA_ME_REGEX = /(?:https?:\/\/)?(?:www\.)?wa\.me\/[0-9+]+/
 const WHATSAPP_DOMAIN_REGEX = /(?:chat\.|www\.)?whatsapp\.com|wa\.me/i
@@ -37,9 +36,9 @@ function extractLinkText(m) {
     }
   }
 
-  try {
-    if (m.quoted) add(m.quoted.text)
-  } catch {}
+  // ❌ NON leggere il testo del messaggio citato
+  // perché causerebbe kick a chi risponde a un link
+  // if (m.quoted) add(m.quoted.text)
 
   return chunks.length ? chunks.join('\n') : ''
 }
@@ -70,7 +69,6 @@ async function decodeQrFromWebpBuffer(buffer) {
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
 
-  
   if (m.fromMe) {
     console.log('🤖 Il bot ha inviato un link → bypass totale')
     return true
@@ -81,13 +79,18 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
- 
   if (isAdmin || isOwner || isROwner) {
     console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
     return true
   }
 
   if (!isBotAdmin) return true
+
+  // 🛡️ Ignora risposte, citazioni e tag
+  if (m.quoted || m.mentionedJid?.length) {
+    console.log('🔎 Messaggio è una risposta/tag → ignorato per anti-link')
+    return true
+  }
 
   const text = extractLinkText(m)
   const isWhatsAppLink =
@@ -97,7 +100,6 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
- 
   if (isWhatsAppLink) {
 
     lastCheck[m.chat] = Date.now()
@@ -117,7 +119,6 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
 
     if (thisGroupCode && text.toLowerCase().includes(thisGroupCode.toLowerCase())) return true
 
-    
     await conn.sendMessage(m.chat, {
       delete: {
         remoteJid: m.chat,
@@ -154,7 +155,6 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     return false
   }
 
-  
   async function handleQrMedia(m, buffer, isSticker = false) {
     let qrText = null
 

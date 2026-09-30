@@ -277,3 +277,4 @@ function generaPDFBuffer(data) {
   out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`
 
   return Buffer.from(out, 'latin1')
+}

@@ -1,4 +1,4 @@
-// Plugin DOX — 888 Premium Edition (con fix PDF)
+// Plugin DOX — 888 Premium Edition (PDF fix)
 const providerISP = ['TIM SpA', 'Vodafone Italia', 'Wind Tre S.p.A', 'Fastweb S.p.A', 'Iliad Italia', 'Tiscali Italia', 'Eolo S.p.A']
 const sistemiOp = ['Windows 11 Pro', 'macOS Sonoma 14.5', 'Ubuntu 24.04 LTS', 'Android 14', 'iOS 17.5', 'ChromeOS 128']
 const browserUA = ['Chrome 125.0.6422.60', 'Safari 17.5', 'Firefox 127.0', 'Edge 125.0.2535.51', 'Opera 111.0']
@@ -155,116 +155,125 @@ function generaCF(nome) {
   return cf
 }
 
-function generaPDFBuffer(data) {
-  const ora = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })
+// ---------- PDF ----------
 
-  const text = `
-888 BOT — DOX REPORT
-
-────────────────────────────────────
-
-IDENTITÀ
-Nome: ${data.nomeCompleto}
-Telefono: ${data.telefonoFormattato}
-Email: ${data.email}
-Codice Fiscale: ${data.cf}
-IP: ${data.ip}
-
-────────────────────────────────────
-
-DISPOSITIVO
-Modello: ${data.dispositivo}
-Sistema: ${data.os}
-Browser: ${data.browser}
-Batteria: ${data.batteria}
-Storage: ${data.storage}
-WhatsApp: v${data.whVer}
-MAC: ${data.mac}
-
-────────────────────────────────────
-
-RETE & GEOLOCALIZZAZIONE
-ISP: ${data.isp}
-Città: ${data.citta}
-Coordinate: ${data.lat}, ${data.lon}
-Piano Mobile: ${data.telefonoInfo}
-
-────────────────────────────────────
-
-SICUREZZA
-Porte Aperte: ${data.porte}
-Vulnerabilità: ${data.vuln}
-Livello Sicurezza: ${data.punteggioSicurezza}/100 (${data.passProb})
-Data Breach: ${data.dataBreach}
-
-────────────────────────────────────
-
-SOCIAL
-${data.socialProfili.split('\n').join(' | ')}
-
-────────────────────────────────────
-
-Report generato il ${ora}
-Dati simulati — uso ricreativo
-888 BOT
-`.trim()
-
-  const pdf = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842]
-/Contents 4 0 R
-/Resources << /Font << /F1 5 0 R >> >>
->>
-endobj
-
-4 0 obj
-<< /Length 6 0 R >>
-stream
-BT
-/F1 12 Tf
-50 780 Td
-(${escapePDF(text).replace(/\n/g, ') Tj\n0 -18 Td (')}) Tj
-ET
-endstream
-endobj
-
-5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
-endobj
-
-6 0 obj
-${(text.length * 1.8).toFixed(0)}
-endobj
-
-xref
-0 7
-0000000000 65535 f 
-0000000010 00000 n 
-0000000060 00000 n 
-0000000115 00000 n 
-0000000270 00000 n 
-0000000900 00000 n 
-0000000950 00000 n 
-
-trailer
-<< /Size 7 /Root 1 0 R >>
-startxref
-1000
-%%EOF`
-
-  return Buffer.from(pdf, 'latin1') // FIX CODIFICA
+// Rende il testo compatibile con WinAnsi/latin1 (accenti ok, simboli strani -> equivalenti)
+function pdfSafe(str) {
+  return String(str)
+    .replace(/[—–]/g, '-')
+    .replace(/[─━]/g, '-')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/•/g, '-')
+    .replace(/[^\x20-\x7E\xA0-\xFF]/g, '')
 }
 
 function escapePDF(str) {
-  return String(str)
-    .replace(/[\\()]/g, '\\$&')
-    .replace(/\n/g, ' | ')
+  return pdfSafe(str).replace(/[\\()]/g, '\\$&')
 }
+
+// A capo automatico
+function wrapLine(line, max = 82) {
+  const out = []
+  let cur = ''
+  for (const word of String(line).split(' ')) {
+    if ((cur + ' ' + word).trim().length > max) {
+      if (cur) out.push(cur)
+      cur = word
+    } else {
+      cur = (cur + ' ' + word).trim()
+    }
+  }
+  out.push(cur)
+  return out
+}
+
+function generaPDFBuffer(data) {
+  const ora = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })
+
+  // Ogni riga: { t: testo, b: grassetto, s: dimensione }
+  const righe = []
+  const titolo = t => righe.push({ t, b: true, s: 20 })
+  const sezione = t => { righe.push({ t: '', s: 11 }); righe.push({ t, b: true, s: 13 }) }
+  const voce = (k, v) => wrapLine(`${k}: ${v}`).forEach(t => righe.push({ t, s: 11 }))
+
+  titolo('888 BOT - DOX REPORT')
+
+  sezione('IDENTITA')
+  voce('Nome', data.nomeCompleto)
+  voce('Telefono', data.telefonoFormattato)
+  voce('Email', data.email)
+  voce('Codice Fiscale', data.cf)
+  voce('IP', data.ip)
+
+  sezione('DISPOSITIVO')
+  voce('Modello', data.dispositivo)
+  voce('Sistema', data.os)
+  voce('Browser', data.browser)
+  voce('Batteria', data.batteria)
+  voce('Storage', data.storage)
+  voce('WhatsApp', 'v' + data.whVer)
+  voce('MAC', data.mac)
+
+  sezione('RETE & GEOLOCALIZZAZIONE')
+  voce('ISP', data.isp)
+  voce('Città', data.citta)
+  voce('Coordinate', `${data.lat}, ${data.lon}`)
+  voce('Piano Mobile', data.telefonoInfo)
+
+  sezione('SICUREZZA')
+  voce('Porte Aperte', data.porte)
+  voce('Vulnerabilità', data.vuln)
+  voce('Livello Sicurezza', `${data.punteggioSicurezza}/100 (${data.passProb})`)
+  voce('Data Breach', data.dataBreach)
+
+  sezione('SOCIAL')
+  data.socialProfili.split('\n').forEach(l => voce(l.split(': ')[0], l.split(': ').slice(1).join(': ')))
+
+  righe.push({ t: '', s: 11 })
+  righe.push({ t: `Report generato il ${ora}`, s: 9 })
+  righe.push({ t: 'Dati simulati - uso ricreativo', s: 9 })
+
+  // Impaginazione
+  const PAGE_W = 595, PAGE_H = 842, MARGIN_X = 50, TOP = 790, BOTTOM = 50
+  const pagine = [[]]
+  let y = TOP
+  for (const r of righe) {
+    const lh = r.s + 6
+    if (y - lh < BOTTOM) { pagine.push([]); y = TOP }
+    pagine[pagine.length - 1].push({ ...r, y })
+    y -= lh
+  }
+
+  // Oggetti PDF: 1 catalog, 2 pages, 3 Helvetica, 4 Helvetica-Bold, poi (page, content) per ogni pagina
+  const n = pagine.length
+  const objs = []
+  const kids = pagine.map((_, i) => `${5 + i * 2} 0 R`).join(' ')
+  objs.push('<< /Type /Catalog /Pages 2 0 R >>')
+  objs.push(`<< /Type /Pages /Kids [${kids}] /Count ${n} >>`)
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>')
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>')
+
+  pagine.forEach((righePag, i) => {
+    const contentNum = 6 + i * 2
+    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentNum} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`)
+    const stream = righePag
+      .filter(r => r.t)
+      .map(r => `BT /${r.b ? 'F2' : 'F1'} ${r.s} Tf ${MARGIN_X} ${r.y} Td (${escapePDF(r.t)}) Tj ET`)
+      .join('\n')
+    objs.push(`<< /Length ${Buffer.byteLength(stream, 'latin1')} >>\nstream\n${stream}\nendstream`)
+  })
+
+  // Costruzione file con offset reali
+  let out = '%PDF-1.4\n'
+  const offsets = []
+  objs.forEach((body, i) => {
+    offsets.push(Buffer.byteLength(out, 'latin1'))
+    out += `${i + 1} 0 obj\n${body}\nendobj\n`
+  })
+  const xrefPos = Buffer.byteLength(out, 'latin1')
+  out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`
+  offsets.forEach(o => { out += `${String(o).padStart(10, '0')} 00000 n \n` })
+  out += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`
+
+  return Buffer.from(out, 'latin1')

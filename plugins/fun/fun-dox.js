@@ -1,4 +1,4 @@
-//Plugin by 888 BOT
+// Plugin DOX — 888 Premium Edition
 const providerISP = ['TIM SpA', 'Vodafone Italia', 'Wind Tre S.p.A', 'Fastweb S.p.A', 'Iliad Italia', 'Tiscali Italia', 'Eolo S.p.A']
 const sistemiOp = ['Windows 11 Pro', 'macOS Sonoma 14.5', 'Ubuntu 24.04 LTS', 'Android 14', 'iOS 17.5', 'ChromeOS 128']
 const browserUA = ['Chrome 125.0.6422.60', 'Safari 17.5', 'Firefox 127.0', 'Edge 125.0.2535.51', 'Opera 111.0']
@@ -12,9 +12,9 @@ const coordCitta = {
 const porteAperte = ['21 (FTP)', '22 (SSH)', '80 (HTTP)', '443 (HTTPS)', '3306 (MySQL)', '8080 (HTTP-Alt)', '8443 (HTTPS-Alt)']
 const vulnerabilita = ['CVE-2024-3094 (XZ Utils)', 'CVE-2023-44487 (HTTP/2 Rapid Reset)', 'CVE-2024-27198 (JetBrains)', 'CVE-2024-6387 (OpenSSH regreSSHion)']
 
-const handler = async (m, { conn, text, usedPrefix, command }) => {
+const handler = async (m, { conn, text }) => {
   let target;
-  
+
   if (m.mentionedJid && m.mentionedJid[0]) {
     target = { type: 'jid', value: m.mentionedJid[0], name: await conn.getName(m.mentionedJid[0]) || 'Sconosciuto' }
   } else if (m.quoted) {
@@ -24,20 +24,22 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
   } else {
     target = { type: 'jid', value: m.sender, name: await conn.getName(m.sender) || 'Sconosciuto' }
   }
-  let key = await conn.reply(m.chat, `╔══════════════════════════╗
-║  ⚡ *888 BOT DOX ENGINE v4.0* ⚡
-╚══════════════════════════╝
 
-🔍 *Avvio scansione OSINT...*
-📡 *Bypassando nodi di rete...*
-🛡️ *Eludendo firewall target...*
+  let key = await conn.reply(m.chat,
+`⚡ 888 BOT DOX ENGINE v4.0
 
-_La scansione richiede qualche secondo..._`, m)
+Avvio scansione OSINT...
+Fingerprinting dispositivo...
+Analisi rete e geolocalizzazione...
+
+Attendere qualche secondo...`, m)
 
   await new Promise(resolve => setTimeout(resolve, 3500))
 
-  // Genera dati
-  const numero = target.type === 'jid' ? target.value.split('@')[0] : '39' + Math.floor(Math.random() * 1000000000).toString().padStart(10, '0')
+  const numero = target.type === 'jid'
+    ? target.value.split('@')[0]
+    : '39' + Math.floor(Math.random() * 1000000000).toString().padStart(10, '0')
+
   const telefonoFormattato = `+${numero.substring(0, 2)} ${numero.substring(2, 5)} ${numero.substring(5, 8)} ${numero.substring(8)}`
   const nomeCompleto = target.name
   const citta = pickRandom(cittaItaliane)
@@ -60,70 +62,62 @@ _La scansione richiede qualche secondo..._`, m)
   const vuln = pickRandomSet(vulnerabilita, randomInt(1, 3)).join(', ')
   const punteggioSicurezza = randomInt(23, 89)
   const passProb = pickRandom(['ALTA', 'MEDIA', 'BASSA', 'CRITICA'])
-  const dataBreach = Math.random() > 0.5 ? `Sì - ${randomInt(1, 8)} database compromessi` : 'Nessun breach rilevato'
+  const dataBreach = Math.random() > 0.5 ? `Sì — ${randomInt(1, 8)} database compromessi` : 'Nessun breach rilevato'
   const socialProfili = `Instagram: @${nomeCompleto.toLowerCase().replace(/[^a-z0-9]/g, '_')}\nFacebook: ${nomeCompleto.replace(/ /g, '.')}\nTikTok: @${nomeCompleto.split(' ')[0].toLowerCase()}_${randomInt(100, 999)}`
 
-  const reportText = `╔══════════════════════════╗
-║    ☢️ *888 BOT DOX REPORT* ☢️
-╚══════════════════════════╝
+  const reportText = `
+⚡ 888 BOT DOX REPORT
 
-━━━━━━━━━━━━━━━━━━━
-*🎯 DATI ANAGRAFICI*
-━━━━━━━━━━━━━━━━━━━
+🎯 DATI ANAGRAFICI
 • Nome: ${nomeCompleto}
 • Telefono: ${telefonoFormattato}
 • Email: ${email}
-• CF: ${cf}
+• Codice Fiscale: ${cf}
 • IP: ${ip}
 
-━━━━━━━━━━━━━━━━━━━
-*📱 DISPOSITIVO*
-━━━━━━━━━━━━━━━━━━━
+📱 DISPOSITIVO
 • Modello: ${dispositivo}
-• OS: ${os}
+• Sistema: ${os}
 • Browser: ${browser}
 • Batteria: ${batteria}
 • Storage: ${storage}
 • WhatsApp: v${whVer}
 • MAC: ${mac}
 
-━━━━━━━━━━━━━━━━━━━
-*🌐 RETE & GEOLOC*
-━━━━━━━━━━━━━━━━━━━
+🌐 RETE & GEOLOCALIZZAZIONE
 • ISP: ${isp}
 • Città: ${citta}
 • Coordinate: ${lat}, ${lon}
-• Piano: ${telefonoInfo}
+• Piano Mobile: ${telefonoInfo}
 
-━━━━━━━━━━━━━━━━━━━
-*🔓 VULNERABILITÀ*
-━━━━━━━━━━━━━━━━━━━
-• Porte: ${porte}
-• Vuln: ${vuln}
-• Score: ${punteggioSicurezza}/100 (${passProb})
-• Breach: ${dataBreach}
+🔓 VULNERABILITÀ
+• Porte Aperte: ${porte}
+• Vulnerabilità: ${vuln}
+• Sicurezza: ${punteggioSicurezza}/100 (${passProb})
+• Data Breach: ${dataBreach}
 
-━━━━━━━━━━━━━━━━━━━
-*📡 SOCIAL*
-━━━━━━━━━━━━━━━━━━━
+📡 PROFILI SOCIAL
 ${socialProfili}
 
-━━━━━━━━━━━━━━━━━━━
-⚠️ Report simulato a scopo ricreativo
-${new Date().toLocaleString('it-IT')} | 888 BOT`.trim()
+Report generato il ${new Date().toLocaleString('it-IT')}
+(Dati simulati a scopo ricreativo)
+`.trim()
 
   const mentions = target.type === 'jid' ? [target.value] : []
-  
   await conn.sendMessage(m.chat, { text: reportText, edit: key, mentions })
 
   try {
-    const pdfBuffer = generaPDFBuffer({ nomeCompleto, telefonoFormattato, email, cf, ip, dispositivo, os, browser, batteria, storage, whVer, mac, isp, citta, lat, lon, telefonoInfo, porte, vuln, punteggioSicurezza, passProb, dataBreach, socialProfili })
-    
+    const pdfBuffer = generaPDFBuffer({
+      nomeCompleto, telefonoFormattato, email, cf, ip, dispositivo, os, browser,
+      batteria, storage, whVer, mac, isp, citta, lat, lon, telefonoInfo,
+      porte, vuln, punteggioSicurezza, passProb, dataBreach, socialProfili
+    })
+
     await conn.sendMessage(m.chat, {
       document: pdfBuffer,
       mimetype: 'application/pdf',
       fileName: `Dox_Report_${nomeCompleto.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`,
-      caption: `📄 *Report DOX* — ${nomeCompleto}`
+      caption: `📄 Report DOX — ${nomeCompleto}`
     }, { quoted: m })
   } catch (e) {
     console.error('[DOX PDF] Errore:', e)
@@ -140,7 +134,7 @@ export default handler
 function pickRandom(list) { return list[Math.floor(Math.random() * list.length)] }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min }
 function randomHex() { return Math.floor(Math.random() * 255).toString(16).toUpperCase().padStart(2, '0') }
-function pickRandomSet(arr, count) { const s = [...arr].sort(() => Math.random() - 0.5); return s.slice(0, count) }
+function pickRandomSet(arr, count) { return [...arr].sort(() => Math.random() - 0.5).slice(0, count) }
 
 function generaCF(nome) {
   const cons = 'BCDFGHJKLMNPQRSTVWXYZ'
@@ -157,106 +151,120 @@ function generaCF(nome) {
   for (let c of nomePart.toUpperCase()) if (cons.includes(c) && ncf.length < 3) ncf += c
   for (let c of nomePart.toUpperCase()) if (vows.includes(c) && ncf.length < 3) ncf += c
   while (ncf.length < 3) ncf += 'X'
-  cf += ncf + randomInt(50, 99).toString() + pickRandom(['A','B','C','D','E','H','L','M','P','R','S','T']) + randomInt(1, 30).toString().padStart(2, '0') + 'H501' + pickRandom(chars)
+  cf += ncf + randomInt(50, 99) + pickRandom(['A','B','C','D','E','H','L','M','P','R','S','T']) + randomInt(1, 30).toString().padStart(2, '0') + 'H501' + pickRandom(chars)
   return cf
 }
 
 function generaPDFBuffer(data) {
   const ora = new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' })
+
+  const text = `
+888 BOT — DOX REPORT
+
+────────────────────────────────────
+
+IDENTITÀ
+Nome: ${data.nomeCompleto}
+Telefono: ${data.telefonoFormattato}
+Email: ${data.email}
+Codice Fiscale: ${data.cf}
+IP: ${data.ip}
+
+────────────────────────────────────
+
+DISPOSITIVO
+Modello: ${data.dispositivo}
+Sistema: ${data.os}
+Browser: ${data.browser}
+Batteria: ${data.batteria}
+Storage: ${data.storage}
+WhatsApp: v${data.whVer}
+MAC: ${data.mac}
+
+────────────────────────────────────
+
+RETE & GEOLOCALIZZAZIONE
+ISP: ${data.isp}
+Città: ${data.citta}
+Coordinate: ${data.lat}, ${data.lon}
+Piano Mobile: ${data.telefonoInfo}
+
+────────────────────────────────────
+
+SICUREZZA
+Porte Aperte: ${data.porte}
+Vulnerabilità: ${data.vuln}
+Livello Sicurezza: ${data.punteggioSicurezza}/100 (${data.passProb})
+Data Breach: ${data.dataBreach}
+
+────────────────────────────────────
+
+SOCIAL
+${data.socialProfili.split('\n').join(' | ')}
+
+────────────────────────────────────
+
+Report generato il ${ora}
+Dati simulati — uso ricreativo
+888 BOT
+`.trim()
+
   const pdf = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
+
 2 0 obj
 << /Type /Pages /Kids [3 0 R] /Count 1 >>
 endobj
+
 3 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842]
-/Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+/Contents 4 0 R
+/Resources << /Font << /F1 5 0 R >> >>
+>>
 endobj
+
 4 0 obj
-<< /Length 5 0 R >>
+<< /Length 6 0 R >>
 stream
 BT
-/F1 18 Tf
-0 800 Td
-(888 BOT DOX REPORT) Tj
-/F2 10 Tf
-0 -20 Td
-(================================) Tj
-0 -30 Td
-(CLIENTE: ${escapePDF(data.nomeCompleto)}) Tj
-0 -15 Td
-(TELEFONO: ${escapePDF(data.telefonoFormattato)}) Tj
-0 -15 Td
-(EMAIL: ${escapePDF(data.email)}) Tj
-0 -15 Td
-(CF: ${escapePDF(data.cf)}) Tj
-0 -15 Td
-(IP: ${escapePDF(data.ip)}) Tj
-0 -25 Td
-(DISPOSITIVO: ${escapePDF(data.dispositivo)}) Tj
-0 -15 Td
-(OS: ${escapePDF(data.os)}) Tj
-0 -15 Td
-(BROWSER: ${escapePDF(data.browser)}) Tj
-0 -15 Td
-(BATTERIA: ${escapePDF(data.batteria)}) Tj
-0 -15 Td
-(STORAGE: ${escapePDF(data.storage)}) Tj
-0 -15 Td
-(WHATSAPP: v${escapePDF(data.whVer)}) Tj
-0 -15 Td
-(MAC: ${escapePDF(data.mac)}) Tj
-0 -25 Td
-(ISP: ${escapePDF(data.isp)}) Tj
-0 -15 Td
-(CITTA: ${escapePDF(data.citta)}) Tj
-0 -15 Td
-(COORDINATE: ${escapePDF(data.lat)}, ${escapePDF(data.lon)}) Tj
-0 -15 Td
-(PIANO TEL: ${escapePDF(data.telefonoInfo)}) Tj
-0 -25 Td
-(PORTE: ${escapePDF(data.porte)}) Tj
-0 -15 Td
-(VULN: ${escapePDF(data.vuln)}) Tj
-0 -15 Td
-(SICUREZZA: ${escapePDF(data.punteggioSicurezza)}/100 - ${escapePDF(data.passProb)}) Tj
-0 -15 Td
-(BREACH: ${escapePDF(data.dataBreach)}) Tj
-0 -25 Td
-(SOCIAL: ${escapePDF(data.socialProfili.split('\n').join(' | '))}) Tj
-0 -30 Td
-(Report generato il: ${escapePDF(ora)} | 888 BOT) Tj
-0 -15 Td
-(DATI SIMULATI - SOLO A SCOPO RICREATIVO) Tj
+/F1 12 Tf
+50 780 Td
+(${escapePDF(text).replace(/\n/g, ') Tj\n0 -18 Td (')}) Tj
 ET
 endstream
 endobj
+
 5 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
-endobj
-6 0 obj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
+
+6 0 obj
+${(text.length * 1.8).toFixed(0)}
+endobj
+
 xref
 0 7
 0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
+0000000010 00000 n 
+0000000060 00000 n 
 0000000115 00000 n 
-0000000266 00000 n 
-0000000800 00000 n 
-0000000865 00000 n 
+0000000270 00000 n 
+0000000900 00000 n 
+0000000950 00000 n 
+
 trailer
 << /Size 7 /Root 1 0 R >>
 startxref
-930
+1000
 %%EOF`
 
   return Buffer.from(pdf, 'utf-8')
 }
 
 function escapePDF(str) {
-  return String(str).replace(/[\\()]/g, '\\$&').replace(/\n/g, ' | ')
+  return String(str)
+    .replace(/[\\()]/g, '\\$&')
+    .replace(/\n/g, ' | ')
 }

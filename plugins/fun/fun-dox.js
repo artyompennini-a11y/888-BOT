@@ -1,4 +1,4 @@
-// Plugin DOX — 888 Premium Edition
+// Plugin DOX — 888 Premium Edition (con fix PDF)
 const providerISP = ['TIM SpA', 'Vodafone Italia', 'Wind Tre S.p.A', 'Fastweb S.p.A', 'Iliad Italia', 'Tiscali Italia', 'Eolo S.p.A']
 const sistemiOp = ['Windows 11 Pro', 'macOS Sonoma 14.5', 'Ubuntu 24.04 LTS', 'Android 14', 'iOS 17.5', 'ChromeOS 128']
 const browserUA = ['Chrome 125.0.6422.60', 'Safari 17.5', 'Firefox 127.0', 'Edge 125.0.2535.51', 'Opera 111.0']
@@ -260,7 +260,7 @@ startxref
 1000
 %%EOF`
 
-  return Buffer.from(pdf, 'utf-8')
+  return Buffer.from(pdf, 'latin1') // FIX CODIFICA
 }
 
 function escapePDF(str) {

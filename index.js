@@ -284,26 +284,26 @@ const giantTitle = async () => {
   const candidates = [
     () => renderLines(
       '888 BOT',
-      'block',
+      'simple',
       1
     ),
 
     () => renderLines(
       '888 BOT',
-      'block',
+      'simple',
       0
     ),
 
     () => [
       ...renderLines(
         '888',
-        'block',
+        'simple',
         1
       ),
       '',
       ...renderLines(
         'BOT',
-        'block',
+        'simple',
         1
       )
     ],
@@ -311,13 +311,13 @@ const giantTitle = async () => {
     () => [
       ...renderLines(
         '888',
-        'block',
+        'simple',
         0
       ),
       '',
       ...renderLines(
         'BOT',
-        'block',
+        'simple',
         0
       )
     ],

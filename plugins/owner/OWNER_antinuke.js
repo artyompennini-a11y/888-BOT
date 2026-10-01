@@ -1,3 +1,5 @@
+import { readWhitelist, isWhitelistedJid } from '../../lib/whitelist.js';
+
 const handler = m => m;
 
 handler.before = async function (m, { conn, participants, isBotAdmin }) {
@@ -31,7 +33,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
   }
 
   const botOwners = (global.owner || []).filter(o => o[0]).map(o => o[0].replace(/[^0-9]/g, '') + '@s.whatsapp.net');
-  const whitelist = chatData.whitelist || [];
+  const whitelist = readWhitelist('antinuke', m.chat);
   
   let groupMetadata = participants ? { participants } : null;
   if (!groupMetadata) {
@@ -46,6 +48,8 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
   const allowed = new Set([botJid, ownerJid, ...botOwners, ...whitelist]);
 
   if (allowed.has(sender)) return;
+
+  if (isWhitelistedJid('antinuke', m.chat, sender)) return;
 
   if (m.messageStubType === 28 && target === sender) return;
 

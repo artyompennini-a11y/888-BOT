@@ -29,6 +29,7 @@ const BAILEYS_TTL_MS = 6 * 60 * 60 * 1000
 
 let handler = async (m, { conn, usedPrefix }) => {
 
+  // Baileys version cache
   const nowB = Date.now()
   if (!baileysCache.value || nowB - baileysCache.at > BAILEYS_TTL_MS) {
     try {
@@ -40,6 +41,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
   const baileys = baileysCache.value
 
+  // DNS ping
   const dnsPing = await (async () => {
     try {
       const t = speed()
@@ -53,12 +55,15 @@ let handler = async (m, { conn, usedPrefix }) => {
     }
   })()
 
+  // Latency
   const start = speed()
   try { await conn.readMessages([m.key]) } catch {}
   const latency = (speed() - start).toFixed(2)
 
+  // Uptime
   const uptime = uptimeFmt(process.uptime() * 1000)
 
+  // Connection state
   const state = conn?.ev?.connectionState
   const status =
     state === 'open' ? '🟢 Connesso' :
@@ -66,11 +71,13 @@ let handler = async (m, { conn, usedPrefix }) => {
     state === 'close' ? '🔴 Disconnesso' :
     `⚪ ${state || 'N/D'}`
 
+  // RAM
   const ramtot = os.totalmem()
   const ramusata = ramtot - os.freemem()
   const ramBot = process.memoryUsage().rss
   const perc = ((ramusata / ramtot) * 100).toFixed(1)
 
+  // CPU
   const cpu = os.cpus()?.[0]
   const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
   const cpuCount = os.cpus()?.length || 'N/D'
@@ -102,8 +109,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     {
       caption,
       footer: '',
-      buttons,
-      headerType: 4
+      buttons
     },
     { quoted: m }
   )

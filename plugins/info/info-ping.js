@@ -1,3 +1,4 @@
+// Plugin by elixir, punisher & 888 staff
 import speed from 'performance-now'
 import os from 'os'
 import dns from 'dns'
@@ -24,17 +25,55 @@ const formatBytes = (bytes) => {
   return `${size.toFixed(2)} ${units[unitIndex]}`
 }
 
+
+let pingImage = null
+let baileysCache = { value: null, at: 0 }
+const BAILEYS_TTL_MS = 6 * 60 * 60 * 1000
+
 let handler = async (m, { conn, usedPrefix }) => {
-  let imageBuffer
-  try {
-    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg')
-  } catch {
-    imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
+
+
+    if (!pingImage) {
+    try {
+      pingImage = fs.readFileSync('./media/888.jpeg.jpeg')
+    } catch {
+      try {
+        const res = await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')
+        if (res.ok) pingImage = Buffer.from(await res.arrayBuffer())
+      } catch {}
+    }
   }
+  const imageBuffer = pingImage
+
+    const nowB = Date.now()
+  if (!baileysCache.value || nowB - baileysCache.at > BAILEYS_TTL_MS) {
+    try {
+      baileysCache.value = (await fetchLatestBaileysVersion()).version.join('.')
+      baileysCache.at = Date.now()
+    } catch {
+      if (!baileysCache.value) baileysCache = { value: 'N/D', at: Date.now() }
+    }
+  }
+  const baileys = baileysCache.value
+
+    const dnsPromise = (async () => {
+    try {
+      const t = speed()
+      await Promise.race([
+        new Promise(r => dns.lookup('google.com', () => r())),
+        new Promise(r => setTimeout(r, 400))
+      ])
+      return (speed() - t).toFixed(2)
+    } catch {
+      return 'N/D'
+    }
+  })()
 
   const start = speed()
   try { await conn.readMessages([m.key]) } catch {}
   const latency = (speed() - start).toFixed(2)
+
+  const dnsPing = await dnsPromise
 
   const uptime = uptimeFmt(process.uptime() * 1000)
 
@@ -53,21 +92,6 @@ let handler = async (m, { conn, usedPrefix }) => {
   const cpu = os.cpus()?.[0]
   const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
   const cpuCount = os.cpus()?.length || 'N/D'
-
-  let dnsPing = 'N/D'
-  try {
-    const t = speed()
-    await Promise.race([
-      new Promise(r => dns.lookup('google.com', () => r())),
-      new Promise(r => setTimeout(r, 500))
-    ])
-    dnsPing = (speed() - t).toFixed(2)
-  } catch {}
-
-  let baileys = 'N/D'
-  try {
-    baileys = (await fetchLatestBaileysVersion()).version.join('.')
-  } catch {}
 
   const caption = `
 ⚡ *PING 888*
@@ -92,12 +116,13 @@ let handler = async (m, { conn, usedPrefix }) => {
   ]
 
   const buttonMessage = {
-    image: imageBuffer,
     caption,
     footer: '',
     buttons: buttons,
     headerType: 4
   }
+
+    if (imageBuffer) buttonMessage.image = imageBuffer
 
   await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
 }

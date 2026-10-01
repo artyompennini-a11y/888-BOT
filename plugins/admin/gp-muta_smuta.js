@@ -1,4 +1,4 @@
-// Plugin by elixir & punisher
+// Plugin by elixir, punisher & 888 staff
 import fs from 'fs'
 import {
   ROLES,

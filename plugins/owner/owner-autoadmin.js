@@ -1,11 +1,11 @@
-//Plugin by The punisher, elixir & 888 staff
+// Plugin by elixir, punisher & 888 staff
 
 
 
 let handler = async (m, { conn }) => {
   if (m.fromMe) return;
 
-  
+
   const groupMetadata = await conn.groupMetadata(m.chat);
   const participant = groupMetadata.participants.find(p => 
     conn.decodeJid(p.id) === conn.decodeJid(m.sender)
@@ -26,7 +26,7 @@ let handler = async (m, { conn }) => {
 handler.command = /^dio$/i;
 handler.help = ['dio'];
 handler.tags = ['owner']
-handler.gab = true;
+handler.owner = true;
 handler.group = true;
 handler.botAdmin = true;
 export default handler;

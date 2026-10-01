@@ -1,5 +1,4 @@
-// Plugin by Elixir & 888 staff
-
+// Plugin by elixir, punisher & 888 staff
 import fetch from 'node-fetch';
 import fs from 'fs';
 
@@ -34,15 +33,18 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   let bot = global.db.data.settings[conn.user.jid] || {};
 
   const catalogs = {
-    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antibot','antivoip','antioneview','antitrava','slowmode','antinuke'],
-    protezione: ['antispam','antitoxic','antibot','antivoip','antioneview','antitrava'],
+    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antitrava','slowmode','antinuke'],
+    protezione: ['antispam','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antitrava'],
     media: ['antimedia','antiporno','antigore'],
-    full: ['antilink','antiporno','antigore','antispam','antitoxic','antibot','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
+    full: ['antilink','antiporno','antigore','antispam','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
   };
 
   const adminFeatures = [
     { key: 'welcome', name: 'Welcome', desc: 'Messaggio di benvenuto' },
     { key: 'antinuke', name: 'AntiNuke', desc: 'Protezione totale del gruppo' },
+    { key: 'antiraid', name: 'AntiRaid', desc: 'Blocca ingressi massicci' },
+    { key: 'antiraidlink', name: 'AntiRaidLink', desc: 'Blocca QR promo nelle immagini' },
+    { key: 'antiflood', name: 'AntiFlood', desc: 'Blocca raffica di comandi' },
     { key: 'antimedia', name: 'AntiMedia', desc: 'Blocca media a rischio' },
     { key: 'goodbye', name: 'Addio', desc: 'Messaggio di addio' },
     { key: 'antispam', name: 'Antispam', desc: 'Blocca spam' },
@@ -126,6 +128,18 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
         if (adminCheck) return adminGuard();
       },
       antinuke: () => {
+        if (!m.isGroup && !isOwner) return groupGuard();
+        if (adminCheck) return adminGuard();
+      },
+      antiraid: () => {
+        if (!m.isGroup && !isOwner) return groupGuard();
+        if (adminCheck) return adminGuard();
+      },
+      antiraidlink: () => {
+        if (!m.isGroup && !isOwner) return groupGuard();
+        if (adminCheck) return adminGuard();
+      },
+      antiflood: () => {
         if (!m.isGroup && !isOwner) return groupGuard();
         if (adminCheck) return adminGuard();
       },
@@ -227,6 +241,9 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
       goodbye: () => setChatField('goodbye'),
       addio: () => setChatField('goodbye'),
       antinuke: () => setChatField('antinuke'),
+      antiraid: () => setChatField('antiraid'),
+      antiraidlink: () => setChatField('antiraidlink'),
+      antiflood: () => setChatField('antiflood'),
       antiprivato: () => setBotField('antiprivato'),
       antilinkig: () => setChatField('antilinkig'),
       antilinktg: () => setChatField('antilinktg'),

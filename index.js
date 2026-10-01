@@ -1,3 +1,4 @@
+// Plugin by elixir, punisher & 888 staff
 import { join, dirname } from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
@@ -12,9 +13,7 @@ process.env.SUPPRESS_BANNER = 'true';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(__dirname);
 
-/* =========================================================
-   MODULE CHECK
-   ========================================================= */
+
 
 const checkAndInstallModules = () => {
   const nodeModulesPath = join(__dirname, 'node_modules');
@@ -41,15 +40,11 @@ const checkAndInstallModules = () => {
 
 checkAndInstallModules();
 
-/* =========================================================
-   PACKAGE INFO
-   ========================================================= */
+
 
 const { name, author } = require(join(__dirname, './package.json'));
 
-/* =========================================================
-   CFONTS
-   ========================================================= */
+
 
 let cfonts;
 
@@ -61,15 +56,11 @@ try {
   cfonts = (await import('cfonts')).default;
 }
 
-/* =========================================================
-   READLINE
-   ========================================================= */
+
 
 const rl = createInterface(process.stdin, process.stdout);
 
-/* =========================================================
-   UTILITIES
-   ========================================================= */
+
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -89,9 +80,7 @@ const resetTerminal = () => {
   process.stdout.write('\x1b[0m');
 };
 
-/* =========================================================
-   TERMINAL HELPERS
-   ========================================================= */
+
 
 const getTerminalWidth = () => process.stdout.columns || 80;
 
@@ -101,18 +90,13 @@ const stripAnsi = (text) =>
     ''
   );
 
-/*
- * Restituisce la larghezza visibile reale della riga.
- * Vengono rimossi i codici ANSI senza modificare il testo
- * che viene effettivamente stampato.
- */
+
 const visibleLength = (text) => {
-  return stripAnsi(text).replace(/\r/g, '').length;
+
+  return [...stripAnsi(String(text ?? '')).replace(/\r/g, '')].length;
 };
 
-/*
- * Centra una singola riga.
- */
+
 const centerText = (text) => {
   const width = getTerminalWidth();
   const visible = visibleLength(text);
@@ -121,25 +105,7 @@ const centerText = (text) => {
   return ' '.repeat(padding) + text;
 };
 
-/*
- * =========================================================
- * NUOVA FUNZIONE:
- * CENTRATURA DEL BLOCCO ASCII
- * =========================================================
- *
- * Il logo cfonts è composto da più righe.
- *
- * Il problema precedente era che ogni riga veniva centrata
- * individualmente. Poiché alcune righe del font hanno una
- * larghezza diversa, la parte superiore poteva apparire
- * spostata rispetto al resto.
- *
- * Ora:
- *
- * 1. troviamo la riga più larga;
- * 2. allineiamo tutte le righe rispetto a quella larghezza;
- * 3. centriamo l'intero blocco nella console.
- */
+
 
 const centerAsciiBlock = (lines) => {
   const terminalWidth = getTerminalWidth();
@@ -148,51 +114,37 @@ const centerAsciiBlock = (lines) => {
     return [];
   }
 
-  /*
-   * Eliminiamo eventuali \r ma NON tocchiamo gli spazi
-   * interni necessari alla grafica ASCII.
-   */
+
   const cleanedLines = lines.map(line =>
     String(line).replace(/\r/g, '')
   );
 
-  /*
-   * Larghezza massima del blocco.
-   */
+
   const blockWidth = Math.max(
     0,
     ...cleanedLines.map(line => visibleLength(line))
   );
 
-  /*
-   * Padding generale del blocco rispetto al terminale.
-   */
+
   const blockPadding = Math.max(
     0,
     Math.floor((terminalWidth - blockWidth) / 2)
   );
 
-  /*
-   * Ogni riga viene centrata rispetto alla riga più larga.
-   */
+
   return cleanedLines.map(line => {
     const lineWidth = visibleLength(line);
-
-    const internalPadding = Math.max(
-      0,
-      Math.floor((blockWidth - lineWidth) / 2)
-    );
+    const rightPadding = Math.max(0, blockWidth - lineWidth);
 
     return (
-      ' '.repeat(blockPadding + internalPadding) +
-      line
+      ' '.repeat(blockPadding) +
+      line +
+      ' '.repeat(rightPadding)
     );
   });
 };
 
-/* =========================================================
-   CINEMATIC TEXT
-   ========================================================= */
+
 
 const cinematicText = async (
   text,
@@ -225,9 +177,7 @@ const cinematicText = async (
   await sleep(hold);
 };
 
-/* =========================================================
-   FADE EFFECT
-   ========================================================= */
+
 
 const fadeText = async (
   text,
@@ -263,9 +213,7 @@ const fadeText = async (
   await sleep(300);
 };
 
-/* =========================================================
-   CINEMATIC FLASH
-   ========================================================= */
+
 
 const cinematicFlash = async () => {
   for (let i = 0; i < 3; i++) {
@@ -297,9 +245,7 @@ const cinematicFlash = async () => {
   }
 };
 
-/* =========================================================
-   GIANT TITLE (888 BOT v1.3 2K26)
-   ========================================================= */
+
 
 const renderLines = (
   text,
@@ -312,37 +258,29 @@ const renderLines = (
       gradient: ['#ff2bd6', '#00e5ff'],
       transitionGradient: true,
       letterSpacing,
-      space: false,
-      maxLength: '0'
+      space: false
     })
     .array
+
     .filter(
       (l, i, a) =>
         stripAnsi(l).trim() ||
         (i > 0 && i < a.length - 1)
     );
 
-/*
- * Larghezza massima del blocco ASCII.
- */
+
 const maxWidth = (lines) =>
   Math.max(
     0,
     ...lines.map(line => visibleLength(line))
   );
 
-/* =========================================================
-   GIANT TITLE — FIX CENTRATURA
-   ========================================================= */
+
 
 const giantTitle = async () => {
   const avail = getTerminalWidth() - 2;
 
-  /*
-   * Dal più grande al più piccolo:
-   * viene utilizzato il primo formato che entra
-   * nella larghezza del terminale.
-   */
+
   const candidates = [
     () => renderLines(
       '888 BOT',
@@ -408,16 +346,7 @@ const giantTitle = async () => {
     } catch {}
   }
 
-  /*
-   * =======================================================
-   * FIX PRINCIPALE
-   * =======================================================
-   *
-   * Non centriamo più ogni riga singolarmente.
-   *
-   * Prima costruiamo l'intero blocco e poi lo centriamo
-   * rispetto alla sua larghezza massima.
-   */
+
   const centeredLines = centerAsciiBlock(lines);
 
   for (const line of centeredLines) {
@@ -452,9 +381,7 @@ const giantTitle = async () => {
   );
 };
 
-/* =========================================================
-   CINEMATIC LOGO
-   ========================================================= */
+
 
 const cinematicLogo = async () => {
   clearScreen();
@@ -466,9 +393,7 @@ const cinematicLogo = async () => {
   await sleep(1500);
 };
 
-/* =========================================================
-   FINAL LOGO
-   ========================================================= */
+
 
 const finalLogo = async () => {
   clearScreen();
@@ -498,9 +423,7 @@ const finalLogo = async () => {
   await sleep(1800);
 };
 
-/* =========================================================
-   CINEMATIC PROGRESS BAR
-   ========================================================= */
+
 
 const cinematicBar = async (
   label,
@@ -554,9 +477,7 @@ const cinematicBar = async (
   await sleep(200);
 };
 
-/* =========================================================
-   SYSTEM SCAN
-   ========================================================= */
+
 
 const systemScan = async (
   text,
@@ -587,15 +508,13 @@ const systemScan = async (
   await sleep(550);
 };
 
-/* =========================================================
-   EPIC CINEMATIC STARTUP
-   ========================================================= */
+
 
 async function epicStartup() {
   try {
     hideCursor();
 
-    /* ACT I - THE AWAKENING */
+
 
     clearScreen();
 
@@ -619,7 +538,7 @@ async function epicStartup() {
       }
     );
 
-    /* ACT II - POWER / PRECISION / SPEED */
+
 
     clearScreen();
 
@@ -651,7 +570,7 @@ async function epicStartup() {
       850
     );
 
-    /* ACT III - IMPACT */
+
 
     clearScreen();
 
@@ -661,7 +580,7 @@ async function epicStartup() {
 
     await cinematicLogo();
 
-    /* ACT IV - VERSION */
+
 
     clearScreen();
 
@@ -691,7 +610,7 @@ async function epicStartup() {
 
     await sleep(700);
 
-    /* ACT V - BOOT SEQUENCE */
+
 
     await cinematicBar(
       'INITIALIZING CORE',
@@ -713,7 +632,7 @@ async function epicStartup() {
       750
     );
 
-    /* ACT VI - SYSTEM CHECK */
+
 
     await systemScan(
       'CPU CORE ................ ONLINE',
@@ -740,7 +659,7 @@ async function epicStartup() {
       '\x1b[92m'
     );
 
-    /* ACT VII - FINAL SYSTEM STATUS */
+
 
     clearScreen();
 
@@ -766,11 +685,11 @@ async function epicStartup() {
 
     await sleep(650);
 
-    /* FINAL REVEAL */
+
 
     await finalLogo();
 
-    /* FINAL CLEAN STATUS */
+
 
     clearScreen();
 
@@ -814,9 +733,7 @@ async function epicStartup() {
   }
 }
 
-/* =========================================================
-   BOT PROCESS
-   ========================================================= */
+
 
 let isRunning = false;
 
@@ -844,7 +761,7 @@ async function start(file) {
     '\x1b[32m✓ Tutti i sistemi operativi\x1b[0m\n'
   );
 
-  /* CLUSTER MASTER */
+
 
   setupMaster({
     exec: args[0],
@@ -853,7 +770,7 @@ async function start(file) {
 
   let processInstance = fork();
 
-  /* IPC MESSAGE */
+
 
   processInstance.on(
     'message',
@@ -887,7 +804,7 @@ async function start(file) {
     }
   );
 
-  /* RESTART SYSTEM */
+
 
   let restartAttempts = 0;
 
@@ -904,7 +821,7 @@ async function start(file) {
         ']\x1b[0m\n'
       );
 
-      /* Voluntary restart */
+
 
       if (code === 42) {
         console.log(
@@ -919,12 +836,12 @@ async function start(file) {
         return;
       }
 
-      /* Crash */
+
 
       if (code !== 0) {
         restartAttempts++;
 
-        /* Too many attempts */
+
 
         if (
           restartAttempts >
@@ -953,7 +870,7 @@ async function start(file) {
           return;
         }
 
-        /* Progressive restart delay */
+
 
         const delay = Math.min(
           3000 * restartAttempts,
@@ -978,7 +895,7 @@ async function start(file) {
     }
   );
 
-  /* YARGS */
+
 
   let opts = new Object(
     yargs(
@@ -988,7 +905,7 @@ async function start(file) {
       .parse()
   );
 
-  /* TERMINAL INPUT */
+
 
   if (!opts['test']) {
     rl.removeAllListeners('line');
@@ -1010,8 +927,6 @@ async function start(file) {
   }
 }
 
-/* =========================================================
-   START
-   ========================================================= */
+
 
 start('888.js');

@@ -1,5 +1,8 @@
-// Plugin by elixir
-const IS_ENABLED = (chat) => Boolean(chat?.antiBot ?? chat?.antibot)
+// Plugin by elixir, punisher & 888 staff
+import fs from 'fs'
+import { isWhitelistedNumber } from '../../lib/whitelist.js'
+
+const IS_ENABLED = (chat) => chat?.antibot !== false
 
 const WRAPPER_TYPES = new Set([
     'viewOnceMessage',
@@ -20,7 +23,12 @@ const BOT_ONLY_PAYLOAD_TYPES = new Set([
     'hydratedTemplateMessage',
     'hydratedFourRowTemplate',
     'interactiveMessage',
-    'nativeFlowMessage'
+    'nativeFlowMessage',
+    'requestPaymentMessage',
+    'sendPaymentMessage',
+    'declinePaymentRequestMessage',
+    'cancelPaymentRequestMessage',
+    'paymentInviteMessage'
 ])
 
 const USER_RESPONSE_TYPES = new Set([
@@ -30,49 +38,29 @@ const USER_RESPONSE_TYPES = new Set([
     'interactiveResponseMessage'
 ])
 
-const STRONG_TEXT_SIGNATURES = [
-    { tag: 'baileys', re: /baileys/i },
-    { tag: 'powered_by', re: /powered\s*by/i },
-    { tag: 'whatsapp_bot', re: /whats?app[\s._-]*bot/i },
-    { tag: 'bot_whatsapp', re: /\bbot[\s._-]*(?:whats?app|wa)\b/i },
-    { tag: 'clona_888', re: /888[\s._-]*(?:bot|community)/i },
-    { tag: 'script_by', re: /(?:script|plugin|sorgente)\s+(?:by|di)\s*[:@]/i },
-    { tag: 'copyright', re: /(?:©|copyright)\s*(?:19|20)\d{2}/i },
-    { tag: 'prefix_info', re: /(?:prefisso|prefissi|prefix)\s*[:=]\s*[!.\/#$]/i }
-]
-
-const WEAK_TEXT_SIGNATURES = [
-    { tag: 'jid_esposto', re: /@s\.whatsapp\.net/i },
-    { tag: 'menu', re: /(?:^|\n)\s*(?:menu|comandi|lista\s+comandi|help)\s*(?:[:⤵↓➜]|\.\.\.)/i }
-]
-
-const BOX_DRAWING = /[┌┏╭╔┐┓╮╗└┘╰╯╚╝├┤┣┫┬┴┼│┃║─━═]/g
-
 const BARE_TRIGGERS = /^(?:menu|ping|aiuto|help|bot|comandi)$/i
 
-const WINDOW_MS = 10 * 60 * 1000
-const LOOP_WINDOW_MS = 90 * 1000
-const REPEAT_WINDOW_MS = 8 * 1000
-const QUICK_REPLY_MS = 6000
-const BURST_WINDOW_MS = 4000
-const BURST_COUNT = 6
+const REPEAT_WINDOW_MS = 5 * 1000
+const BURST_WINDOW_MS = 3000
+const BURST_COUNT = 8
 const PRUNE_AFTER_MS = 30 * 60 * 1000
 const GROUP_CACHE_MS = 60 * 1000
+const WINDOW_MS = 10 * 60 * 1000
 const WARN_SCORE = 4
 const KICK_SCORE = 8
-const MAX_WARNS = 2
+const MAX_WARNS = 4
+const WARN_RESET_MS = 24 * 60 * 60 * 1000
 const DEVICE_MIN_MESSAGES = 3
+
+const AUTORIZZATI_FILE = '/storage/autorizzati-antinuke.json'
+const AUTORIZZATI_CACHE_MS = 30 * 1000
 
 const SIGNAL_LABELS = {
     unofficial_payload: 'messaggio interattivo non inviabile da utenti normali',
-    bot_signature: 'firme tipiche di un bot',
     legacy_id: 'ID messaggio generato da libreria bot (Baileys)',
     web_device: 'scrive solo da dispositivo collegato (WhatsApp Web o bot)',
     repeat: 'messaggi identici ripetuti',
-    burst: 'raffica di messaggi automatici',
-    self_loop: 'risposte automatiche a se stesso',
-    cmd_reply_loop: 'risposte automatiche ai comandi',
-    weak_signature: 'indizi generici di bot'
+    burst: 'raffica di messaggi automatici'
 }
 
 const trackers = {}
@@ -80,11 +68,7 @@ const lastMessage = {}
 const groupCache = new Map()
 let ticks = 0
 
-/* =========================================================
-   JID / LID
-   Nei gruppi moderni l'utente può comparire come "123@lid"
-   invece che come numero: NON va trasformato in @s.whatsapp.net
-   ========================================================= */
+let autorizzatiCache = { at: 0, list: [] }
 
 function toNumber(jid = '') {
     return String(jid || '').split('@')[0].split(':')[0].replace(/[^0-9]/g, '')
@@ -95,16 +79,6 @@ function cleanJid(jid = '') {
 }
 
 const isValidUserJid = (jid = '') => /@(?:s\.whatsapp\.net|lid)$/.test(String(jid))
-
-function decodeAuthor(conn, jid = '') {
-    if (!jid) return ''
-    try {
-        const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid(jid) : jid
-        return cleanJid(decoded)
-    } catch {
-        return cleanJid(jid)
-    }
-}
 
 async function getParticipants(conn, chatId) {
     const now = Date.now()
@@ -127,7 +101,6 @@ function findParticipant(participants, jid) {
     return participants.find(p => idsOf(p).some(v => toNumber(v) === target)) || null
 }
 
-// tutti i numeri (reale + lid) con cui questo utente può comparire
 function identityNumbers(sender, participants) {
     const set = new Set([toNumber(sender)])
     const p = findParticipant(participants, sender)
@@ -142,9 +115,24 @@ function realJidOf(sender, participants) {
     return real ? cleanJid(real) : ''
 }
 
-/* =========================================================
-   TESTO / PAYLOAD
-   ========================================================= */
+function isAutorizzato(numbers) {
+    const now = Date.now()
+    if (now - autorizzatiCache.at > AUTORIZZATI_CACHE_MS) {
+        try {
+            const raw = fs.readFileSync(AUTORIZZATI_FILE, 'utf-8')
+            const parsed = JSON.parse(raw)
+            autorizzatiCache = {
+                at: now,
+                list: Array.isArray(parsed)
+                    ? parsed
+                    : (Array.isArray(parsed?.autorizzati) ? parsed.autorizzati : [])
+            }
+        } catch {
+            autorizzatiCache = { at: now, list: [] }
+        }
+    }
+    return autorizzatiCache.list.some(entry => numbers.has(toNumber(entry)))
+}
 
 function getText(m) {
     const chunks = []
@@ -198,46 +186,6 @@ function detectUnofficialPayload(m) {
     return null
 }
 
-function analyzeText(text) {
-    const strong = []
-    const weak = []
-    if (!text || text.length < 2) return { strong, weak, box: false }
-    for (const { tag, re } of STRONG_TEXT_SIGNATURES) {
-        if (re.test(text)) strong.push(tag)
-    }
-    const boxCount = (text.match(BOX_DRAWING) || []).length
-    const box = boxCount >= 6 && text.length >= 15
-    if (!strong.length) {
-        for (const { tag, re } of WEAK_TEXT_SIGNATURES) {
-            if (re.test(text)) weak.push(tag)
-        }
-    }
-    return { strong, weak, box }
-}
-
-function isCommandText(text) {
-    const line = String(text || '').trim().split('\n')[0].trim()
-    if (line.length < 2 || line.length > 60) return false
-    if (BARE_TRIGGERS.test(line)) return true
-    try {
-        if (global.prefix instanceof RegExp) {
-            global.prefix.lastIndex = 0
-            if (global.prefix.test(line)) return true
-        }
-    } catch { }
-    const first = line.split(/\s+/)[0]
-    return /^[!.\/#$][a-zA-Z][\w-]{1,20}$/.test(first)
-}
-
-/* =========================================================
-   RILEVAMENTO BOT: ID MESSAGGIO
-   Baileys genera ID riconoscibili:
-   - vecchi:  "BAE5" + 12 hex        (16 caratteri)
-   - 3EB0 + 16 hex                    (20 caratteri)
-   - 3EB0 + 18 hex (versioni recenti) (22 caratteri)
-   I messaggi dell'app ufficiale hanno formati diversi.
-   ========================================================= */
-
 function detectBotMessageId(id) {
     if (!id || typeof id !== 'string') return null
     if (/^BAE5[0-9A-F]{12}$/i.test(id)) return 'BAE5…'
@@ -257,23 +205,6 @@ function isKnownBotConnection(numbers) {
         return false
     }
 }
-
-function isWhitelisted(chat, numbers) {
-    try {
-        const lists = [chat?.antibotWhitelist, chat?.antiBotWhitelist, chat?.whitelist].filter(Array.isArray)
-        return lists.some(list => list.some(entry => numbers.has(toNumber(entry))))
-    } catch {
-        return false
-    }
-}
-
-/* =========================================================
-   RILEVAMENTO WHATSAPP WEB / DISPOSITIVO COLLEGATO
-   Nei gruppi, il partecipante di un messaggio inviato da un
-   dispositivo collegato ha il suffisso ":N" (N > 0), es.
-   3934...:12@s.whatsapp.net. Il telefono principale ha N = 0.
-   Un bot collegato via codice/QR scrive SEMPRE da N > 0.
-   ========================================================= */
 
 function readDevice(chatUpdate, m) {
     try {
@@ -295,15 +226,11 @@ function readDevice(chatUpdate, m) {
             const match = /:(\d+)@/.exec(c)
             if (match) return Number(match[1])
         }
-        return 0 // JID senza suffisso = telefono principale
+        return 0
     } catch {
         return null
     }
 }
-
-/* =========================================================
-   TRACKER
-   ========================================================= */
 
 function createRecord(now) {
     return {
@@ -317,8 +244,6 @@ function createRecord(now) {
         textIds: [],
         repeats: 0,
         msgs: [],
-        selfQuotes: [],
-        commandReplies: [],
         device: { total: 0, linked: 0 }
     }
 }
@@ -334,8 +259,6 @@ function resetRecord(rec, now) {
     rec.textIds = []
     rec.repeats = 0
     rec.msgs = []
-    rec.selfQuotes = []
-    rec.commandReplies = []
     rec.device = { total: 0, linked: 0 }
 }
 
@@ -367,6 +290,11 @@ function pushWindow(list, now, size) {
 
 function detectRepeats(rec, text, id, now) {
     const normalized = normalizeText(text)
+    if (normalized.length < 15 || normalized.split(' ').length < 3) {
+        rec.lastTextNorm = normalized
+        rec.lastTextAt = now
+        return []
+    }
     const duplicates = []
     if (normalized && normalized === rec.lastTextNorm && now - rec.lastTextAt <= REPEAT_WINDOW_MS) {
         rec.repeats += 1
@@ -390,7 +318,7 @@ function detectRepeats(rec, text, id, now) {
 }
 
 function detectBurst(rec, now, text) {
-    if (!text || text.length < 6) return false
+    if (!text || text.length < 10) return false
     pushWindow(rec.msgs, now, BURST_WINDOW_MS)
     return rec.msgs.length >= BURST_COUNT
 }
@@ -432,10 +360,6 @@ function describeRecord(rec) {
     return text.length > 260 ? text.slice(0, 257) + '...' : text
 }
 
-/* =========================================================
-   AZIONI
-   ========================================================= */
-
 async function deleteMessages(conn, chat, sender, ids) {
     for (const id of [...new Set(ids.filter(Boolean))]) {
         try {
@@ -475,10 +399,6 @@ function ensureUser(sender) {
     return global.db.data.users[sender] || (global.db.data.users[sender] = {})
 }
 
-/* =========================================================
-   BEFORE
-   ========================================================= */
-
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, isMods, chatUpdate }) {
     if (!m || !m.message) return false
     if (m.fromMe || (m.isBaileys && m.fromMe)) return true
@@ -487,7 +407,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     const now = Date.now()
     if (++ticks % 100 === 0) pruneTrackers(now)
 
-    const previous = rememberLastMessage(m, now)
+    rememberLastMessage(m, now)
 
     const chat = global.db?.data?.chats?.[m.chat]
     if (!chat || chat.isBanned) return true
@@ -498,43 +418,58 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     const sender = m.sender
     if (!sender || !isValidUserJid(sender)) return true
 
-    // metadata del gruppo (con cache): serve per LID, admin e bot admin
     const participants = await getParticipants(conn, m.chat)
     const numbers = identityNumbers(sender, participants)
 
-    // admin: controllo doppio (handler + metadata), perché con i LID isAdmin può sbagliare
     const senderParticipant = findParticipant(participants, sender)
     if (isAdmin || senderParticipant?.admin) return true
 
-    // il bot deve poter espellere
     const botNumbers = new Set([toNumber(conn.user?.id), toNumber(conn.user?.lid), toNumber(conn.user?.jid)].filter(Boolean))
     const botIsAdmin = isBotAdmin || participants.some(p => p.admin && idsOf(p).some(v => botNumbers.has(toNumber(v))))
     if (!botIsAdmin) return true
 
-    if (isWhitelisted(chat, numbers)) return true
+    if (isAutorizzato(numbers)) return true
     if (isKnownBotConnection(numbers)) return true
+    if (isWhitelistedNumber('antibot', m.chat, numbers)) return true
 
     const text = getText(m)
     const rec = getRecord(m.chat, sender, now)
 
-    /* --- payload interattivo impossibile per un utente --- */
     const payloadType = detectUnofficialPayload(m)
-    if (payloadType) addSignal(rec, 'unofficial_payload', 5, true, payloadType)
 
-    /* --- firme testuali --- */
-    const analysis = analyzeText(text)
-    if (analysis.strong.length || analysis.box) {
-        const details = [...analysis.strong, ...(analysis.box ? ['menu ASCII'] : [])]
-        addSignal(rec, 'bot_signature', Math.min(6, details.length * 2), true, details.join(', '))
-    } else if (analysis.weak.length) {
-        addSignal(rec, 'weak_signature', 2, false, analysis.weak.join(', '))
+    if (payloadType && chat.antibotDryRun !== true) {
+        console.log(`[antiBot] ESPULSIONE IMMEDIATA | ${sender} | chat ${m.chat} | payload: ${payloadType}`)
+
+        if (chat.antibotDelete !== false) {
+            await deleteMessages(conn, m.chat, sender, [m.key?.id])
+        }
+
+        const removed = await removeMember(conn, m.chat, sender, realJidOf(sender, participants))
+
+        await notifyGroup(conn, m.chat, sender, `${SIGNAL_LABELS.unofficial_payload}: ${payloadType}`, removed, 1)
+            .catch(e => console.error('[antiBot] Errore notifica:', e?.message || e))
+
+        if (trackers[m.chat]) delete trackers[m.chat][sender]
+
+        if (!removed) {
+            await conn.sendMessage(m.chat, {
+                text: `⚠️ Non sono riuscito a rimuovere @${toNumber(sender)}: permessi insufficienti.`,
+                mentions: [sender]
+            }).catch(() => { })
+        }
+
+        global.markDbDirty?.()
+        return true
     }
 
-    /* --- ID messaggio generato da Baileys --- */
-    const botId = detectBotMessageId(m.key?.id)
-    if (botId) addSignal(rec, 'legacy_id', 4, true, `id ${botId}`)
+    if (payloadType) addSignal(rec, 'unofficial_payload', 5, true, payloadType)
 
-    /* --- dispositivo collegato (WhatsApp Web / bot) --- */
+    const botId = detectBotMessageId(m.key?.id)
+    if (botId) {
+        const combined = Boolean(payloadType)
+        addSignal(rec, 'legacy_id', 2, combined, `id ${botId}${combined ? ' + payload interattivo' : ''}`)
+    }
+
     if (chat.antibotWeb !== false) {
         const device = readDevice(chatUpdate, m)
         if (device !== null) {
@@ -546,47 +481,16 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
         }
     }
 
-    /* --- ripetizioni / raffica --- */
     const duplicates = detectRepeats(rec, text, m.key?.id, now)
     if (duplicates.length) {
-        addSignal(rec, 'repeat', 3, false, `${duplicates.length + 1} messaggi identici`)
+        addSignal(rec, 'repeat', 2, false, `${duplicates.length + 1} messaggi identici`)
     }
 
-    if (detectBurst(rec, now, text)) addSignal(rec, 'burst', 2, false)
+    if (detectBurst(rec, now, text)) addSignal(rec, 'burst', 1, false)
 
-    /* --- loop di risposte --- */
-    const contextInfo = m.msg?.contextInfo
-    const quotedAuthor = decodeAuthor(conn, contextInfo?.participant)
-    const quotedText = typeof m.quoted?.text === 'string' ? m.quoted.text : ''
-    const quotedIsSelf = Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' &&
-        identityNumbers(quotedAuthor, participants).has(toNumber(sender))
-
-    if (quotedIsSelf) {
-        pushWindow(rec.selfQuotes, now, LOOP_WINDOW_MS)
-        if (rec.selfQuotes.length >= 2) addSignal(rec, 'self_loop', 4, true)
-        else addSignal(rec, 'self_quote', 1)
-    }
-
-    const repliedToPreviousCommand = Boolean(text) && Boolean(previous) &&
-        previous.sender !== sender && !previous.fromMe &&
-        (now - previous.at) <= QUICK_REPLY_MS && isCommandText(previous.text)
-    const repliedToQuotedCommand = !repliedToPreviousCommand && Boolean(text) &&
-        Boolean(contextInfo?.quotedMessage) && quotedAuthor !== '' && !quotedIsSelf &&
-        isCommandText(quotedText)
-
-    if (repliedToPreviousCommand || repliedToQuotedCommand) {
-        const looksAutomated = repliedToQuotedCommand ||
-            analysis.strong.length > 0 || analysis.box || text.length >= 30
-        pushWindow(rec.commandReplies, now, LOOP_WINDOW_MS)
-        if (rec.commandReplies.length >= 3 && looksAutomated) addSignal(rec, 'cmd_reply_loop', 4, true)
-        else addSignal(rec, 'quick_cmd_reply', 1)
-    }
-
-    /* --- decisione --- */
     if (!rec.hard || rec.score < WARN_SCORE) return true
 
-    const attackNow = rec.score >= KICK_SCORE ||
-        (rec.signals.has('unofficial_payload') && (rec.signals.has('self_loop') || rec.signals.has('cmd_reply_loop')))
+    const attackNow = rec.score >= KICK_SCORE
 
     const reason = describeRecord(rec)
 
@@ -597,7 +501,13 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
     }
 
     const user = ensureUser(sender)
-    if (user) user.antibot = (user.antibot || 0) + 1
+    if (user) {
+        if (user.antibotAt && now - user.antibotAt > WARN_RESET_MS) {
+            user.antibot = 0
+        }
+        user.antibot = (user.antibot || 0) + 1
+        user.antibotAt = now
+    }
     const warns = user?.antibot || 1
     const kicked = attackNow || warns >= MAX_WARNS
 
@@ -613,7 +523,10 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner, 
         .catch(e => console.error('[antiBot] Errore notifica:', e?.message || e))
 
     if (kicked) {
-        if (removed && user) user.antibot = 0
+        if (removed && user) {
+            user.antibot = 0
+            user.antibotAt = 0
+        }
         if (trackers[m.chat]) delete trackers[m.chat][sender]
         if (!removed) {
             await conn.sendMessage(m.chat, {

@@ -120,13 +120,27 @@ const centerAsciiBlock = (lines) => {
   );
 
 
-  return cleanedLines.map(line => {
-    const linePadding = Math.max(
-      0,
-      Math.floor((terminalWidth - visibleLength(line)) / 2)
-    );
+  const blockWidth = Math.max(
+    0,
+    ...cleanedLines.map(line => visibleLength(line))
+  );
 
-    return ' '.repeat(linePadding) + line;
+
+  const blockPadding = Math.max(
+    0,
+    Math.floor((terminalWidth - blockWidth) / 2)
+  );
+
+
+  return cleanedLines.map(line => {
+    const lineWidth = visibleLength(line);
+    const rightPadding = Math.max(0, blockWidth - lineWidth);
+
+    return (
+      ' '.repeat(blockPadding) +
+      line +
+      ' '.repeat(rightPadding)
+    );
   });
 };
 
@@ -270,26 +284,26 @@ const giantTitle = async () => {
   const candidates = [
     () => renderLines(
       '888 BOT',
-      'simple',
+      'block',
       1
     ),
 
     () => renderLines(
       '888 BOT',
-      'simple',
+      'block',
       0
     ),
 
     () => [
       ...renderLines(
         '888',
-        'simple',
+        'block',
         1
       ),
       '',
       ...renderLines(
         'BOT',
-        'simple',
+        'block',
         1
       )
     ],
@@ -297,13 +311,13 @@ const giantTitle = async () => {
     () => [
       ...renderLines(
         '888',
-        'simple',
+        'block',
         0
       ),
       '',
       ...renderLines(
         'BOT',
-        'simple',
+        'block',
         0
       )
     ],

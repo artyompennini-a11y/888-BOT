@@ -1,7 +1,10 @@
+// Plugin by elixir, punisher & 888 staff
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
 import { smsg } from './lib/simple.js';
+import { runBeforeAll, runGuarded } from './lib/bus.js';
+import state from './lib/state.js';
 import { format } from 'util';
 import { fileURLToPath } from 'url';
 import path, { join } from 'path';
@@ -25,6 +28,14 @@ const str2Regex = str => str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 const pickRandom = list => list[Math.floor(Math.random() * list.length)];
 const normalizeNumber = num => num.replace(/\D/g, '') + '@s.whatsapp.net';
 const normalizeJidKey = jid => jid.replace(/[^0-9]/g, '');
+const isBotOwnerNumber = (jid = '') => {
+    const digits = normalizeJidKey(jid);
+    if (!digits) return false;
+    return (global.owner || []).some(entry => {
+        const raw = Array.isArray(entry) ? entry[0] : entry;
+        return normalizeJidKey(String(raw ?? '')) === digits;
+    });
+};
 
 const DUPLICATE_WINDOW = 3000;
 const ___dirname = join(path.dirname(fileURLToPath(import.meta.url)), './plugins');
@@ -213,10 +224,9 @@ if (global.conn?.ws) {
     global.conn.ws.on('CB:call', async (json) => {
         try {
             if (json?.tag !== 'call' || !json.attrs?.from) return;
+
             const callerId = global.conn.decodeJid(json.attrs.from);
-            const normalizedOwnerList = global.owner.map(([num]) => normalizeNumber(num));
-            const isOwner = normalizedOwnerList.includes(callerId);
-            if (isOwner) return;
+            if (isBotOwnerNumber(callerId)) return;
 
             const eventId = json.attrs.id;
             let actualCallId = null;
@@ -233,51 +243,62 @@ if (global.conn?.ws) {
                 global.processedCalls.delete(uniqueId);
                 return;
             }
-            if (!tags.includes('relaylatency')) return;
-            if (global.processedCalls.has(uniqueId)) return;
 
-            global.processedCalls.set(uniqueId, true);
-
-            let nome = global.nameCache.get(callerId);
-            if (!nome) {
-                nome = global.conn.getName(callerId) ?? 'Sconosciuto';
-                global.nameCache.set(callerId, nome);
-            }
-
-            if (!global.db.data) await global.loadDatabase();
-            const settings = global.db.data?.settings?.[global.conn.user.jid] ??
-                (global.db.data.settings[global.conn.user.jid] = {
+            if (!global.db?.data) return;
+            if (!global.db.data.settings) global.db.data.settings = {};
+            const botJid = global.conn.user.jid;
+            if (!global.db.data.settings[botJid]) {
+                global.db.data.settings[botJid] = {
                     jadibotmd: false,
                     antiPrivate: true,
                     soloCreatore: false,
-                    anticall: true,
+                                        anticall: false,
                     status: 0
-                });
-            if (!settings.anticall) return;
+                };
+            }
 
-            // Block contact immediately when anticall is active (silent block)
-            if (typeof global.db.data.users !== 'undefined') {
-                global.db.data.users[callerId] = global.db.data.users[callerId] || {};
-                global.db.data.users[callerId].banned = true;
-                global.db.data.users[callerId].bannedReason = 'Chiamata bloccata - anticall attivo';
-                
-                // Attempt to block at WhatsApp level if method exists
+            const settings = global.db.data.settings[botJid];
+                        if (settings.anticall !== true) return;
+
+            if (!tags.includes('offer') && !tags.includes('relaylatency')) return;
+            if (global.processedCalls.has(uniqueId)) return;
+            global.processedCalls.set(uniqueId, true);
+
+                        try {
+                await global.conn.rejectCall(uniqueId, callerId);
+            } catch (e) {
+                console.error('[anticall] rejectCall failed:', e?.message || e);
+                global.processedCalls.delete(uniqueId);
+                return;
+            }
+
+                        try {
+                await global.conn.sendMessage(callerId, {
+                    text: `📵 *Chiamata rifiutata*\n━━━━━━━━━━━━━━━\n⛔ Le chiamate vocali e video sono disabilitate su questo bot.\n━━━━━━━━━━━━━━━\n_888 BOT_`
+                });
+            } catch {}
+
+                        if (settings.anticallBlock === true) {
+                try {
+                    global.db.data.users[callerId] = global.db.data.users[callerId] || {};
+                    global.db.data.users[callerId].banned = true;
+                    global.db.data.users[callerId].bannedReason = 'Chiamata bloccata - anticall attivo';
+                    global.markDbDirty?.();
+                } catch {}
+
                 if (typeof global.conn.blockUser === 'function') {
                     try {
                         await global.conn.blockUser(callerId);
                     } catch (e) {
-                        console.error('[anticall] blockUser failed:', e.message);
+                        console.error('[anticall] blockUser failed:', e?.message || e);
                     }
                 }
             }
 
-            // Reject call silently
-            try {
-                await global.conn.rejectCall(uniqueId, callerId);
-            } catch {
-                global.processedCalls.delete(uniqueId);
-            }
-        } catch {}
+            console.log(`[anticall] chiamata rifiutata da ${callerId} (id ${uniqueId})`);
+        } catch (e) {
+            console.error('[anticall] errore handler:', e?.message || e);
+        }
     });
 }
 
@@ -297,8 +318,7 @@ function matchIds(conn, u, target) {
 function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, normalizedBot) {
     const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid);
 
-    // Normalizza owner e ownerLid
-    const rawOwner = groupMetadata.owner || groupMetadata.ownerLid || null;
+        const rawOwner = groupMetadata.owner || groupMetadata.ownerLid || null;
     const nOwner = rawOwner ? normalizeNumber(decoded(rawOwner)) : null;
 
     const isAdmin =
@@ -312,8 +332,7 @@ function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, nor
             return matchesSender && (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true);
         });
 
-    // Controllo bot admin più robusto
-    const isBotAdmin =
+        const isBotAdmin =
         normalizedBot === nOwner ||
         participants.some(u => {
             const match = [u.id, u.jid, u.lid].filter(Boolean).some(id => {
@@ -323,8 +342,7 @@ function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, nor
             return match && (u.admin === 'admin' || u.admin === 'superadmin' || u.admin === true);
         });
 
-    // Controllo owner reale
-    const isRAdmin = normalizedSender === nOwner;
+        const isRAdmin = normalizedSender === nOwner;
 
     return {
         isAdmin,
@@ -582,8 +600,7 @@ export async function handler(chatUpdate) {
             level: 0
         })) user[k] ??= v;
 
-        // 🪙 Migrazione: vecchio campo euro → 888coin
-        if (user['888coin'] == null && typeof user.euro === 'number') {
+                if (user['888coin'] == null && typeof user.euro === 'number') {
             user['888coin'] = user.euro;
         }
         if (user.euro !== undefined) delete user.euro;
@@ -636,7 +653,8 @@ export async function handler(chatUpdate) {
             antiPrivate: true,
             soloCreatore: false,
             status: 0,
-            anticall: true
+                        anticall: false,
+                        anticallBlock: false
         };
         const settings = global.db.data.settings[this.user.jid] ??= settingsDefaults;
 
@@ -664,8 +682,8 @@ export async function handler(chatUpdate) {
             isGroupAdmin = false,
             isRAdmin = false;
         const normalizedOwnerList = global.owner.map(([num]) => normalizeNumber(num));
-        const isGab = normalizedOwnerList.includes(normalizedSender);
-        const isROwner = isGab;
+        const isElixir = normalizedOwnerList.includes(normalizedSender);
+        const isROwner = isElixir;
         const isOwner = isROwner;
 
         const isMods = isOwner ||
@@ -812,7 +830,7 @@ export async function handler(chatUpdate) {
         try {
             let usedPrefix = null;
 
-            for (const [name, plugin] of activePlugins) {
+            const pluginEntries = activePlugins.map(([name, plugin]) => {
                 const __filename = join(___dirname, name);
 
                 const _prefix = plugin.customPrefix ?? global.prefix ?? '.';
@@ -830,38 +848,51 @@ export async function handler(chatUpdate) {
                     ]
                 ).find(([p]) => p);
 
-                if (typeof plugin.before === 'function') {
-                    try {
-                        const stop = await plugin.before.call(this, m, {
-                            match,
-                            conn: this,
-                            participants: normalizedParticipants,
-                            groupMetadata,
-                            user: {
-                                admin: isAdmin ? 'admin' : null
-                            },
-                            bot: {
-                                admin: isBotAdmin ? 'admin' : null
-                            },
-                            isGab,
-                            isROwner,
-                            isOwner,
-                            isRAdmin,
-                            isAdmin,
-                            isBotAdmin,
-                            isPrems,
-                            isMods,
-                            chatUpdate,
-                            __dirname: ___dirname,
-                            __filename
-                        });
-                        if (stop) continue;
-                    } catch (e) {
-                        console.error(`[ERRORE] plugin.before (${name}):`, e);
-                    }
-                }
+                return { name, plugin, __filename, match };
+            });
 
-                if (typeof plugin !== 'function') continue;
+            const beforeHooks = pluginEntries
+                .filter(e => typeof e.plugin.before === 'function')
+                .map(e => [e.name, () => e.plugin.before.call(this, m, {
+                    match: e.match,
+                    conn: this,
+                    participants: normalizedParticipants,
+                    groupMetadata,
+                    user: {
+                        admin: isAdmin ? 'admin' : null
+                    },
+                    bot: {
+                        admin: isBotAdmin ? 'admin' : null
+                    },
+                    isElixir,
+                    isROwner,
+                    isOwner,
+                    isRAdmin,
+                    isAdmin,
+                    isBotAdmin,
+                    isPrems,
+                    isMods,
+                    chatUpdate,
+                    __dirname: ___dirname,
+                    __filename: e.__filename
+                })]);
+
+            const skip = new Set();
+
+            if (beforeHooks.length) {
+                const { results } = await runBeforeAll(beforeHooks, {
+                    timeout: global.busTimeout ?? 500
+                });
+                // return truthy da before() = "ignora SOLO questo plugin"
+                for (let i = 0; i < results.length; i++) {
+                    const r = results[i];
+                    if (r.status === 'ok' && r.value) skip.add(beforeHooks[i][0]);
+                }
+            }
+
+            for (const { name, plugin, __filename, match } of pluginEntries) {
+                if (skip.has(name)) continue;
+if (typeof plugin !== 'function') continue;
                 if (!match?.[0]) continue;
 
                 usedPrefix = (match[0] || '')[0];
@@ -903,8 +934,7 @@ export async function handler(chatUpdate) {
                             };
                         });
 
-                        // Controllo bot admin diretto
-                        const botParticipant = normalizedParticipants.find(u =>
+                                                const botParticipant = normalizedParticipants.find(u =>
                             u.id === normalizedBot ||
                             (typeof u.jid === 'string' && u.jid === normalizedBot) ||
                             (typeof u.lid === 'string' && u.lid === normalizedBot)
@@ -960,7 +990,7 @@ export async function handler(chatUpdate) {
                 }
 
                 if (m.isGroup) {
-                    const isAntispamOwner = isROwner || isOwner || isGab;
+                    const isAntispamOwner = isROwner || isOwner || isElixir;
                     const gSpam = global.groupSpam[m.chat] ??= {
                         count: 0,
                         firstCommandTimestamp: 0,
@@ -971,8 +1001,7 @@ export async function handler(chatUpdate) {
 
                     if (gSpam.isSuspended) {
                         if (now - gSpam.suspendedAt < 20_000) {
-                            // Gli owner sono esclusi: possono usare i comandi anche durante la sospensione
-                            if (!isAntispamOwner) {
+                                                        if (!isAntispamOwner) {
                                 break;
                             }
                         } else {
@@ -992,8 +1021,7 @@ export async function handler(chatUpdate) {
                         }
                     }
 
-                    // Gli owner non contano verso l'antispam e non vengono contati se il gruppo è sospeso
-                    if (!gSpam.isSuspended && !isAntispamOwner) {
+                                        if (!gSpam.isSuspended && !isAntispamOwner) {
                         if (now - gSpam.firstCommandTimestamp > 10_000) {
                             gSpam.count = 1;
                             gSpam.firstCommandTimestamp = now;
@@ -1029,8 +1057,8 @@ export async function handler(chatUpdate) {
                     continue;
                 }
                 if (settings.soloCreatore && !isROwner) break;
-                if (plugin.gab && !isGab) {
-                    fail('gab', m, this);
+                if (plugin.elixir && !isElixir) {
+                    fail('elixir', m, this);
                     continue;
                 }
 
@@ -1104,7 +1132,7 @@ export async function handler(chatUpdate) {
                     bot: {
                         admin: isBotAdmin ? 'admin' : null
                     },
-                    isGab,
+                    isElixir,
                     isROwner,
                     isOwner,
                     isRAdmin,
@@ -1119,8 +1147,24 @@ export async function handler(chatUpdate) {
                 };
 
                 try {
-                    await plugin.call(this, m, extra);
-                    if (!isPrems) m['888coin'] = plugin['888coin'] || false;
+                    const cmdName = m.plugin || plugin.command || 'plugin';
+                    const outcome = await runGuarded(
+                        `${cmdName}`,
+                        () => plugin.call(this, m, extra),
+                        { timeout: global.busCommandTimeout ?? 30000 }
+                    );
+                    if (outcome.status === 'ok') {
+                        if (!isPrems) m['888coin'] = plugin['888coin'] || false;
+                    } else if (outcome.status === 'timeout') {
+                        m.error = outcome.error;
+                        await this.reply(
+                            m.chat,
+                            '⚠️ Il comando sta impiegando troppo, ho interrotto l\'operazione.',
+                            m
+                        ).catch(() => {});
+                    } else {
+                        throw outcome.error;
+                    }
                 } catch (e) {
                     m.error = e;
                     console.error(`[ERRORE] Plugin ${m.plugin}:`, e);
@@ -1271,10 +1315,10 @@ export async function deleteUpdate(message) {
 }
 
 global.dfail = async (type, m, conn) => {
-    const nome = m.pushName ?? 'gab';
+    const nome = m.pushName ?? 'elixir';
     const etarandom = Math.floor(Math.random() * 21) + 13;
     const msg = {
-        gab: '𝐐𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐞̀ 𝐝𝐢𝐬𝐩𝐨𝐧𝐢𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐩𝐞𝐫 𝐎𝐰𝐧𝐞𝐫 🕵🏻‍♂️',
+        elixir:'𝐐𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐞̀ 𝐝𝐢𝐬𝐩𝐨𝐧𝐢𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐩𝐞𝐫 𝐎𝐰𝐧𝐞𝐫 🕵🏻‍♂️',
         rowner: '𝐐𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐞̀ 𝐝𝐢𝐬𝐩𝐨𝐧𝐢𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐩𝐞𝐫 𝐎𝐰𝐧𝐞𝐫 𝐞 𝐂𝐨-𝐎𝐰𝐧𝐞𝐫',
         owner: '𝐐𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐞̀ 𝐝𝐢𝐬𝐩𝐨𝐧𝐢𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐩𝐞𝐫 𝐎𝐰𝐧𝐞𝐫 𝐞 𝐂𝐨-𝐎𝐰𝐧𝐞𝐫',
         mods: '𝐐𝐮𝐞𝐬𝐭𝐨 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐞̀ 𝐝𝐢𝐬𝐩𝐨𝐧𝐢𝐛𝐢𝐥𝐞 𝐬𝐨𝐥𝐨 𝐩𝐞𝐫 𝐢 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫𝐢',
@@ -1291,15 +1335,23 @@ global.dfail = async (type, m, conn) => {
 };
 
 export async function callUpdate(calls) {
+
+    if (global.db?.data?.settings?.[global.conn?.user?.jid]?.anticall !== true) return;
+
     for (const call of (Array.isArray(calls) ? calls : [calls])) {
         if (!call) continue;
         const { from, status, id } = call;
-        if (status === 'offer') {
-            try {
-                await global.conn.rejectCall(id, from);
-            } catch (e) {
-                console.error('[callUpdate] Errore rifiuto:', e.message);
-            }
+        if (status !== 'offer') continue;
+
+        const callerId = global.conn.decodeJid(from);
+        if (isBotOwnerNumber(callerId)) continue;
+
+        global.processedCalls.set(`callUpdate:${id}`, true);
+
+        try {
+            await global.conn.rejectCall(id, from);
+        } catch (e) {
+            console.error('[anticall] Errore rifiuto:', e.message);
         }
     }
 }

@@ -1,5 +1,5 @@
 // Plugin by elixir, punisher & 888 staff
-import Mutex from 'async-mutex'
+import { Mutex } from 'async-mutex'
 
 const CONFIG = {
   window: 10000,
@@ -38,7 +38,6 @@ const configOf = (chat) => {
   }
 }
 
-const extractCommand = (m) => {
   const text = String(m?.text || '')
   if (!text.startsWith('.')) return null
   return text.split(/\s+/)[0].slice(1).toLowerCase() || null

@@ -1,5 +1,5 @@
 // Plugin by elixir, punisher & 888 staff
-import { ROLES, LIMITS, resolveRole, canUse, logModAction } from '../../lib/moderation.js'
+import { ROLES, resolveRole, canUse, logModAction } from '../../lib/moderation.js'
 import { isAfk, isParticipantAfk } from '../../lib/afk.js'
 
 const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin, isMods }) => {
@@ -11,7 +11,13 @@ const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin
       return conn.reply(m.chat, '⛔ Questo comando è riservato allo staff (Moderatori/Admin/Owner).', m)
     }
 
-    const maxMentions = role === ROLES.MOD ? LIMITS.MOD_HIDETAG_MAX : Infinity
+    const chatData = global.db?.data?.chats?.[m.chat] || {}
+    let maxMentions = Infinity
+    if (role === ROLES.MOD) {
+      const custom = Number(chatData.hidetagMaxMentions)
+      maxMentions = Number.isFinite(custom) && custom > 0 ? custom : Infinity
+    }
+    m.__hidetagMax = maxMentions
 
     const botJid = conn.user.jid
     const botNumber = String(conn.user.jid || '').split('@')[0].split(':')[0].replace(/\D+/g, '')
@@ -44,6 +50,7 @@ const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin
       usersFiltered = usersFiltered.slice(0, maxMentions)
     }
     m.__hidetagTrimmed = hidetagTrimmed
+    m.__hidetagSent = usersFiltered.length
     m.__hidetagRole = role
     logModAction({
       role,
@@ -201,22 +208,27 @@ handler.after = async function (m, { conn, isOwner, isROwner, isAdmin, isMods })
   delete m.__hidetagTrimmed
   delete m.__hidetagRole
 
-  try {
-    if (trimmed > 0) {
-      await conn.sendMessage(m.chat, {
-        text:
-          `⚠️ *Limite menzioni moderatori*\n` +
-          `👥 Menzioni inviate: ${LIMITS.MOD_HIDETAG_MAX}\n` +
-          `🚫 Menzioni escluse: ${trimmed}\n` +
-          `ℹ️ Solo Admin/Owner possono menzionare tutti i membri.`
-      }, { quoted: m })
-    }
-    if (skipped > 0) {
-      await conn.sendMessage(m.chat, {
-        text: `💤 ${skipped} ${skipped === 1 ? 'utente AFK non è stato taggato' : 'utenti AFK non sono stati taggati'}.`
-      }, { quoted: m })
-    }
-  } catch {}
+  const sentCount = typeof m.__hidetagSent === 'number' ? m.__hidetagSent : 0
+    delete m.__hidetagSent
+
+    try {
+      if (trimmed > 0) {
+        await conn.sendMessage(m.chat, {
+          text:
+            `⚠️ *Limite menzioni per moderatori*
+` +
+            `👥 Menzioni inviate: ${sentCount}\n` +
+            `🚫 Non taggati per limite: ${trimmed}\n` +
+            `ℹ️ Nessuno è stato escluso per AFK.\n` +
+            `⚙️ L'admin può cambiare il limite con \`hidetagMaxMentions\` nelle impostazioni del gruppo.`
+        }, { quoted: m })
+      }
+      if (skipped > 0) {
+        await conn.sendMessage(m.chat, {
+          text: `💤 Esclusi perché AFK: ${skipped} ${skipped === 1 ? 'utente' : 'utenti'}.`
+        }, { quoted: m })
+      }
+    } catch {}
 }
 
 handler.help = ["hidetag", "totag", "tag"]

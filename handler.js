@@ -250,7 +250,7 @@ if (global.conn?.ws) {
             if (!global.db.data.settings[botJid]) {
                 global.db.data.settings[botJid] = {
                     jadibotmd: false,
-                    antiPrivate: true,
+                    antiprivato: true,
                     soloCreatore: false,
                                         anticall: false,
                     status: 0
@@ -650,11 +650,11 @@ export async function handler(chatUpdate) {
         const settingsDefaults = {
             autoread: false,
             jadibotmd: false,
-            antiPrivate: true,
+            antiprivato: true,
             soloCreatore: false,
             status: 0,
-                        anticall: false,
-                        anticallBlock: false
+                        anticall: true,
+                        anticallBlock: true
         };
         const settings = global.db.data.settings[this.user.jid] ??= settingsDefaults;
 
@@ -691,7 +691,10 @@ export async function handler(chatUpdate) {
             global.db.data.chats?.[m.chat]?.moderatori?.includes(normalizedSender) || false;
         const isPrems = isROwner ||
             global.prems?.map(v => v.replace(/\D/g, '') + '@s.whatsapp.net').includes(normalizedSender) || false;
-
+       //antiprivato by axtral
+if (!m.isGroup && global.db.data.settings[this.user.jid]?.antiprivato && !isOwner && !isROwner) {
+    continue;
+}
         let groupMetadata = null;
         let participants = [];
         let normalizedParticipants = [];
@@ -1147,7 +1150,8 @@ if (typeof plugin !== 'function') continue;
                 };
 
                 try {
-                    const cmdName = m.plugin || plugin.command || 'plugin';
+                    // nome univoco: __filename distingue plugin con command identici
+                    const cmdName = m.plugin || __filename || 'plugin';
                     const outcome = await runGuarded(
                         `${cmdName}`,
                         () => plugin.call(this, m, extra),
@@ -1294,7 +1298,6 @@ export async function groupsUpdate(groupsUpdate) {
         const chats = global.db.data.chats[update.id] ?? {};
         let text = '';
         if (update.icon) text = (chats.sIcon ?? this.sIcon ?? '`immagine modificata`').replace('@icon', update.icon);
-        if (update.revoke) text = (chats.sRevoke ?? this.sRevoke ?? '`link reimpostato:\n@revoke`').replace('@revoke', update.revoke);
         if (!text) continue;
         await this.sendMessage(update.id, {
             text,

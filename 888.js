@@ -5,6 +5,7 @@ process.env.SUPPRESS_BANNER = 'true';
 
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
 import './config.js';
+import persistentState from './lib/state.js';
 import { createRequire } from 'module';
 import path, { join } from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
@@ -184,6 +185,14 @@ async function purgeSession(sessionDir, cleanPreKeys = false, maxPreKeyAgeDays =
 }
 
 global.dbDirty = false;
+
+// flush periodico dello stato di sicurezza (raid, blocchi, contatori)
+persistentState.setInterval?.(async () => {
+  try {
+    await persistentState.flush()
+  } catch {}
+}, 30000)?.unref?.();
+
 global.markDbDirty = function markDbDirty() {
   global.dbDirty = true;
 };
@@ -539,7 +548,7 @@ if (global.db) setInterval(async () => {
   if (global.db.data) await flushDatabase({ force: true }).catch(console.error);
 }, 5 * 60 * 1000);
 
-if (opts['server']) (await import('./server.js')).default(global.conn, PORT);
+
 
 async function connectionUpdate(update) {
   const { connection, lastDisconnect, isNewLogin, qr } = update;
@@ -797,7 +806,7 @@ global.reload = async (_ev, filename) => {
     return;
   }
 
-  const err = syntaxerror(source, pluginKey, { sourceType: 'module', allowAwaitOutsideFunction: true });
+  const err = syntaxerror(source, pluginKey, { sourceType: 'module', allowAwaitOutsideFunction: true, ecmaVersion: 12 });
   if (err) conn.logger.error(`❌ ERRORE SINTASSI: '${pluginKey}'\n${format(err)}`);
   else {
     try {

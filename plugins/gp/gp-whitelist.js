@@ -1,98 +1,156 @@
-const cleanJid = (jid = '') => String(jid).replace(/:\d+@/, '@');
-const isReal = (jid = '') => jid.endsWith('@s.whatsapp.net');
-const isLid  = (jid = '') => jid.endsWith('@lid');
-const tag = (jid) => '@' + String(jid).split('@')[0];
+import { readWhitelist, writeWhitelist, clearWhitelist } from '../../lib/whitelist.js'
+
+const ADD_WORDS = new Set(['add', 'aggiungi', 'inserisci'])
+const REMOVE_WORDS = new Set(['remove', 'del', 'delete', 'rimuovi', 'togli'])
+
+const cleanJid = (jid = '') => String(jid).replace(/:\d+@/, '@')
+const isReal = (jid = '') => String(jid).endsWith('@s.whatsapp.net')
+const isLid = (jid = '') => String(jid).endsWith('@lid')
+const tag = (jid) => '@' + String(jid).split('@')[0]
+const digitsOf = (jid = '') => String(jid).split('@')[0].split(':')[0].replace(/[^0-9]/g, '')
 
 function normalizeJid(input) {
-  if (!input) return null;
-  input = String(input).trim();
-  if (input.includes('@')) return cleanJid(input);
-  const num = input.replace(/[^0-9]/g, '');
-  if (num.length < 5) return null;
-  return num + '@s.whatsapp.net';
+  if (!input) return null
+  input = String(input).trim()
+  if (input.includes('@')) return cleanJid(input)
+  const num = input.replace(/[^0-9]/g, '')
+  if (num.length < 5) return null
+  return num + '@s.whatsapp.net'
 }
 
 async function getParticipants(conn, chatId) {
   try {
-    return (await conn.groupMetadata(chatId)).participants || [];
+    return (await conn.groupMetadata(chatId)).participants || []
   } catch {
-    return [];
+    return []
   }
 }
 
 const realOf = (p) => {
-  const cand = p.phoneNumber || p.jid || (isReal(p.id) ? p.id : null);
-  return cand ? cleanJid(cand) : null;
-};
+  const cand = p.phoneNumber || p.jid || (isReal(p.id) ? p.id : null)
+  return cand ? cleanJid(cand) : null
+}
 
 function resolveJid(jid, participants) {
-  jid = normalizeJid(jid);
-  if (!jid) return null;
+  jid = normalizeJid(jid)
+  if (!jid) return null
   if (isReal(jid) && !participants.some(p => p.id === jid && isLid(p.id))) {
-    return jid;
+    return jid
   }
   const p = participants.find(x =>
     cleanJid(x.id) === jid || x.lid === jid || cleanJid(x.jid || '') === jid
-  );
-  if (p) return realOf(p) || cleanJid(p.id);
-  return jid;
+  )
+  if (p) return realOf(p) || cleanJid(p.id)
+  return jid
 }
 
 function repairWhitelist(list, participants) {
-  const out = [];
+  const out = []
   for (let jid of list) {
-    let fixed = cleanJid(jid);
+    let fixed = cleanJid(jid)
     if (isReal(fixed)) {
-      const digits = fixed.split('@')[0];
-      const okReal = participants.some(p => realOf(p) === fixed);
+      const digits = fixed.split('@')[0]
+      const okReal = participants.some(p => realOf(p) === fixed)
       if (!okReal) {
-        const asLid = `${digits}@lid`;
-        const p = participants.find(x => cleanJid(x.id) === asLid || x.lid === asLid);
-        if (p) fixed = realOf(p) || asLid;
+        const asLid = `${digits}@lid`
+        const p = participants.find(x => cleanJid(x.id) === asLid || x.lid === asLid)
+        if (p) fixed = realOf(p) || asLid
       }
     } else if (isLid(fixed)) {
-      const p = participants.find(x => cleanJid(x.id) === fixed || x.lid === fixed);
-      if (p) fixed = realOf(p) || fixed;
+      const p = participants.find(x => cleanJid(x.id) === fixed || x.lid === fixed)
+      if (p) fixed = realOf(p) || fixed
     }
-    if (!out.includes(fixed)) out.push(fixed);
+    if (!out.includes(fixed)) out.push(fixed)
   }
-  return out;
+  return out
 }
 
 function extractTargets(m, args, participants) {
-  let targets = [];
+  let targets = []
   if (m.mentionedJid?.length) {
-    targets = m.mentionedJid.map(j => resolveJid(j, participants)).filter(Boolean);
-    return [...new Set(targets)];
+    targets = m.mentionedJid.map(j => resolveJid(j, participants)).filter(Boolean)
+    return [...new Set(targets)]
   }
   if (m.quoted) {
-    const jid = resolveJid(m.quoted.sender, participants);
-    if (jid) targets.push(jid);
-    return targets;
+    const jid = resolveJid(m.quoted.sender, participants)
+    if (jid) targets.push(jid)
+    return targets
   }
   for (const n of args.join(' ').split(/\s+/)) {
-    const jid = resolveJid(n, participants);
-    if (jid) targets.push(jid);
+    const jid = resolveJid(n, participants)
+    if (jid) targets.push(jid)
   }
-  return [...new Set(targets)];
+  return [...new Set(targets)]
 }
 
-let handler = async (m, { conn, text, command, usedPrefix, args }) => {
+function diffAdded(current, candidates) {
+  const known = new Set(current.map(digitsOf).filter(Boolean))
+  const out = []
+  for (const who of candidates) {
+    const digits = digitsOf(who)
+    if (!digits || known.has(digits)) continue
+    known.add(digits)
+    out.push(who)
+  }
+  return out
+}
 
-  if (!global.db.data.chats[m.chat]) global.db.data.chats[m.chat] = {};
-  if (!global.db.data.chats[m.chat].whitelist) global.db.data.chats[m.chat].whitelist = [];
+let handler = async (m, { conn, command, usedPrefix, args }) => {
+  const cmd = String(command || '').toLowerCase()
+  const participants = await getParticipants(conn, m.chat)
 
-  let chat = global.db.data.chats[m.chat];
-  const participants = await getParticipants(conn, m.chat);
+  const stored = readWhitelist('antinuke', m.chat)
+  let list = repairWhitelist(stored, participants)
+  if (JSON.stringify(list) !== JSON.stringify(stored)) {
+    list = writeWhitelist('antinuke', m.chat, list)
+  }
 
-  const before = JSON.stringify(chat.whitelist);
-  chat.whitelist = repairWhitelist(chat.whitelist, participants);
-  if (JSON.stringify(chat.whitelist) !== before) await global.db.write();
+  const tokens = (args || []).map(v => String(v))
+  let action = null
+  let rest = []
 
-  if (command === 'addwhitelist' && !args.length && !m.quoted && !m.mentionedJid?.length) {
-    let admins = participants.filter(p => p.admin);
-    if (!admins.length) return m.reply('⚠️ Nessun admin trovato.');
-    let adminList = admins.map(a => `• ${tag(realOf(a) || a.id)}`).join('\n');
+  if (cmd === 'whitelist') {
+    const first = (tokens[0] || '').toLowerCase()
+    if (ADD_WORDS.has(first)) {
+      action = 'add'
+      rest = tokens.slice(1)
+    } else if (REMOVE_WORDS.has(first)) {
+      action = 'remove'
+      rest = tokens.slice(1)
+    }
+  } else if (cmd === 'addwhitelist') {
+    action = 'add'
+    rest = tokens
+  } else if (cmd === 'delwhitelist') {
+    action = 'remove'
+    rest = tokens
+  }
+
+  const keyword = (rest[0] || '').toLowerCase()
+  const noTarget = !rest.length && !m.quoted && !m.mentionedJid?.length
+
+  if (action === 'add' && keyword === 'alladmins') {
+    const admins = participants.filter(p => p.admin).map(a => realOf(a) || cleanJid(a.id))
+    const added = diffAdded(list, admins)
+    if (!added.length) return m.reply('✨ Tutti gli admin erano già nella whitelist.')
+
+    writeWhitelist('antinuke', m.chat, [...list, ...added])
+
+    await conn.sendMessage(m.chat, {
+      text:
+        `✅ *Admin Aggiunti nella Whitelist*\n` +
+        `${added.map(tag).join(', ')}\n\n` +
+        `Ora sono esenti dai controlli antinuke.`,
+      contextInfo: { mentionedJid: added }
+    }, { quoted: m })
+    return
+  }
+
+  if (action === 'add' && noTarget) {
+    let admins = participants.filter(p => p.admin)
+    if (!admins.length) return m.reply('⚠️ Nessun admin trovato.')
+    let adminList = admins.map(a => `• ${tag(realOf(a) || a.id)}`).join('\n')
+
     await conn.sendMessage(m.chat, {
       text:
         `📑 *Admin del Gruppo*\n\n` +
@@ -107,58 +165,47 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
         }
       ],
       headerType: 1
-    });
-    return;
+    })
+    return
   }
 
-  if (command === 'addwhitelist' && args[0] === 'alladmins') {
-    let admins = participants
-      .filter(p => p.admin)
-      .map(a => realOf(a) || cleanJid(a.id));
-    let added = [];
-    for (let who of admins) {
-      if (!chat.whitelist.includes(who)) {
-        chat.whitelist.push(who);
-        added.push(who);
-      }
-    }
-    await global.db.write();
-    if (!added.length) return m.reply('✨ Tutti gli admin erano già nella whitelist.');
-    await conn.sendMessage(m.chat, {
-      text:
-        `✅ *Admin Aggiunti nella Whitelist*\n` +
-        `${added.map(tag).join(', ')}\n\n` +
-        `Ora sono esenti dai controlli antinuke.`,
-      contextInfo: { mentionedJid: added }
-    }, { quoted: m });
-    return;
-  }
+  if (action === 'add') {
+    const targets = extractTargets(m, rest, participants)
+    if (!targets.length) return m.reply('⚠️ Nessun numero valido.')
 
-  if (command === 'addwhitelist') {
-    let targets = extractTargets(m, args, participants);
-    if (!targets.length) return m.reply('⚠️ Nessun numero valido.');
-    let added = [];
-    for (let who of targets) {
-      if (!chat.whitelist.includes(who)) {
-        chat.whitelist.push(who);
-        added.push(who);
-      }
-    }
-    await global.db.write();
-    if (!added.length) return m.reply('✨ Gli utenti indicati erano già nella whitelist.');
+    const added = diffAdded(list, targets)
+    if (!added.length) return m.reply('✨ Gli utenti indicati erano già nella whitelist.')
+
+    writeWhitelist('antinuke', m.chat, [...list, ...added])
+
     await conn.sendMessage(m.chat, {
       text:
         `✅ *Utenti Autorizzati*\n` +
         `${added.map(tag).join(', ')}\n\n` +
         `Ora sono esenti dai controlli antinuke.`,
       contextInfo: { mentionedJid: added }
-    }, { quoted: m });
-    return;
+    }, { quoted: m })
+    return
   }
 
-  if (command === 'delwhitelist' && !args.length && !m.quoted && !m.mentionedJid?.length) {
-    let list = chat.whitelist;
-    if (!list.length) return m.reply('⚠️ Nessun utente nella whitelist.');
+  if (action === 'remove' && keyword === 'all') {
+    if (!list.length) return m.reply('⚠️ Nessun utente da rimuovere.')
+    const removed = [...list]
+    clearWhitelist('antinuke', m.chat)
+
+    await conn.sendMessage(m.chat, {
+      text:
+        `🗑️ *Utenti Rimossi dalla Whitelist*\n` +
+        `${removed.map(tag).join(', ')}\n\n` +
+        `La whitelist è ora vuota.`,
+      contextInfo: { mentionedJid: removed }
+    }, { quoted: m })
+    return
+  }
+
+  if (action === 'remove' && noTarget) {
+    if (!list.length) return m.reply('⚠️ Nessun utente nella whitelist.')
+
     await conn.sendMessage(m.chat, {
       text:
         `🗑️ *Whitelist Attuale*\n\n` +
@@ -173,55 +220,45 @@ let handler = async (m, { conn, text, command, usedPrefix, args }) => {
         }
       ],
       headerType: 1
-    });
-    return;
+    })
+    return
   }
 
-  if (command === 'delwhitelist' && args[0] === 'all') {
-    let removed = [...chat.whitelist];
-    chat.whitelist = [];
-    await global.db.write();
-    if (!removed.length) return m.reply('⚠️ Nessun utente da rimuovere.');
-    await conn.sendMessage(m.chat, {
-      text:
-        `🗑️ *Utenti Rimossi dalla Whitelist*\n` +
-        `${removed.map(tag).join(', ')}\n\n` +
-        `La whitelist è ora vuota.`,
-      contextInfo: { mentionedJid: removed }
-    }, { quoted: m });
-    return;
-  }
+  if (action === 'remove') {
+    const targets = extractTargets(m, rest, participants)
+    if (!targets.length) return m.reply('⚠️ Numero non valido.')
 
-  if (command === 'delwhitelist') {
-    let targets = extractTargets(m, args, participants);
-    if (!targets.length) return m.reply('⚠️ Numero non valido.');
-    let who = targets[0];
-    if (!chat.whitelist.includes(who)) return m.reply('❌ L’utente non è nella whitelist.');
-    chat.whitelist = chat.whitelist.filter(jid => jid !== who);
-    await global.db.write();
+    const wanted = new Set(targets.map(digitsOf).filter(Boolean))
+    const removed = list.filter(j => wanted.has(digitsOf(j)))
+    if (!removed.length) return m.reply('❌ L’utente non è nella whitelist.')
+
+    writeWhitelist('antinuke', m.chat, list.filter(j => !wanted.has(digitsOf(j))))
+
     await conn.sendMessage(m.chat, {
       text:
         `🗑️ *Utente Rimosso*\n` +
-        `👤 ${tag(who)}\n\n` +
+        `👤 ${removed.map(tag).join(', ')}\n\n` +
         `Rimosso dalla whitelist.`,
-      contextInfo: { mentionedJid: [who] }
-    }, { quoted: m });
-    return;
+      contextInfo: { mentionedJid: removed }
+    }, { quoted: m })
+    return
   }
 
-  if (command === 'whitelist') {
-    let list = chat.whitelist.map(jid => `• ${tag(jid)}`).join('\n');
-    let caption =
-      `📑 *Whitelist Gruppo*\n` +
-      `${list || '⚠️ Nessun utente autorizzato.'}`;
-    return m.reply(caption, null, { mentions: chat.whitelist });
-  }
-};
+  const elenco = list.map(jid => `• ${tag(jid)}`).join('\n')
+  const caption =
+    `📑 *Whitelist Gruppo*\n` +
+    `Utenti autorizzati:\n\n` +
+    `${elenco || '⚠️ Nessun utente autorizzato.'}`
 
-handler.help = ['addwhitelist', 'delwhitelist', 'whitelist'];
-handler.tags = ['owner', 'group'];
-handler.command = /^(addwhitelist|delwhitelist|whitelist)$/i;
-handler.owner = true;
-handler.group = true;
+  return m.reply(caption, null, { mentions: list })
+}
 
-export default handler;
+handler.help = ['addwhitelist', 'delwhitelist', 'whitelist']
+handler.tags = ['owner', 'group']
+handler.command = /^(addwhitelist|delwhitelist|whitelist)$/i
+
+handler.owner = true
+handler.group = true
+
+export default handler
+

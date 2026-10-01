@@ -278,73 +278,22 @@ const maxWidth = (lines) =>
 
 
 const giantTitle = async () => {
-  const avail = getTerminalWidth() - 2;
-
-
-  const candidates = [
-    () => renderLines(
-      '888 BOT',
-      'block',
-      1
-    ),
-
-    () => renderLines(
-      '888 BOT',
-      'block',
-      0
-    ),
-
-    () => [
-      ...renderLines(
-        '888',
-        'block',
-        1
-      ),
-      '',
-      ...renderLines(
-        'BOT',
-        'block',
-        1
-      )
-    ],
-
-    () => [
-      ...renderLines(
-        '888',
-        'block',
-        0
-      ),
-      '',
-      ...renderLines(
-        'BOT',
-        'block',
-        0
-      )
-    ],
-
-    () => renderLines(
-      '888 BOT',
-      'tiny',
-      1
-    ),
-
-    () => [
-      '\x1b[1m\x1b[95m8 8 8   B O T\x1b[0m'
-    ]
-  ];
-
-  let lines = [];
-
-  for (const build of candidates) {
-    try {
-      const candidate = build();
-
-      if (maxWidth(candidate) <= avail) {
-        lines = candidate;
-        break;
-      }
-    } catch {}
-  }
+  const glyphs = {
+    '8': ['█████', '██ ██', '██ ██', '█████', '██ ██', '██ ██', '█████'],
+    B: ['████ ', '██ ██', '██ ██', '████ ', '██ ██', '██ ██', '████ '],
+    O: ['█████', '██ ██', '██ ██', '██ ██', '██ ██', '██ ██', '█████'],
+    T: ['█████', '  ██ ', '  ██ ', '  ██ ', '  ██ ', '  ██ ', '  ██ ']
+  };
+  const title = ['8', '8', '8', 'B', 'O', 'T'];
+  const colors = ['\x1b[95m', '\x1b[35m', '\x1b[94m', '\x1b[96m'];
+  const spacing = [' ', ' ', '   ', ' ', ' '];
+  const lines = Array.from({ length: 7 }, (_, row) => {
+    let colorIndex = 0;
+    return title.map((character, index) => {
+      const segment = `${colors[colorIndex++ % colors.length]}${glyphs[character][row]}\x1b[0m`;
+      return index < spacing.length ? segment + spacing[index] : segment;
+    }).join('');
+  });
 
 
   const centeredLines = centerAsciiBlock(lines);

@@ -3,7 +3,6 @@ import speed from 'performance-now'
 import os from 'os'
 import dns from 'dns'
 import fetch from 'node-fetch'
-import fs from 'fs'
 import process from 'process'
 import { fetchLatestBaileysVersion } from '@888-BOT/888baileys'
 
@@ -14,7 +13,7 @@ const uptimeFmt = ms => {
   return `${d}g ${h}o ${m}m`
 }
 
-const formatBytes = (bytes) => {
+const formatBytes = bytes => {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   let size = bytes
   let unitIndex = 0
@@ -25,27 +24,12 @@ const formatBytes = (bytes) => {
   return `${size.toFixed(2)} ${units[unitIndex]}`
 }
 
-
-let pingImage = null
 let baileysCache = { value: null, at: 0 }
 const BAILEYS_TTL_MS = 6 * 60 * 60 * 1000
 
 let handler = async (m, { conn, usedPrefix }) => {
 
-
-    if (!pingImage) {
-    try {
-      pingImage = fs.readFileSync('./media/888.jpeg.jpeg')
-    } catch {
-      try {
-        const res = await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')
-        if (res.ok) pingImage = Buffer.from(await res.arrayBuffer())
-      } catch {}
-    }
-  }
-  const imageBuffer = pingImage
-
-    const nowB = Date.now()
+  const nowB = Date.now()
   if (!baileysCache.value || nowB - baileysCache.at > BAILEYS_TTL_MS) {
     try {
       baileysCache.value = (await fetchLatestBaileysVersion()).version.join('.')
@@ -56,7 +40,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   }
   const baileys = baileysCache.value
 
-    const dnsPromise = (async () => {
+  const dnsPing = await (async () => {
     try {
       const t = speed()
       await Promise.race([
@@ -72,8 +56,6 @@ let handler = async (m, { conn, usedPrefix }) => {
   const start = speed()
   try { await conn.readMessages([m.key]) } catch {}
   const latency = (speed() - start).toFixed(2)
-
-  const dnsPing = await dnsPromise
 
   const uptime = uptimeFmt(process.uptime() * 1000)
 
@@ -109,22 +91,22 @@ let handler = async (m, { conn, usedPrefix }) => {
 📂 Apri il pannello dal pulsante sotto.
 `.trim()
 
-    const buttons = [
+  const buttons = [
     { buttonId: `${usedPrefix}ping`, buttonText: { displayText: '🔄 𝐑𝐢𝐜𝐚𝐥𝐜𝐨𝐥𝐚' }, type: 1 },
     { buttonId: `${usedPrefix}status`, buttonText: { displayText: '⚙️ 𝐒𝐭𝐚𝐭𝐨' }, type: 1 },
     { buttonId: `${usedPrefix}menu`, buttonText: { displayText: '📋 𝐌𝐞𝐧𝐮' }, type: 1 }
   ]
 
-  const buttonMessage = {
-    caption,
-    footer: '',
-    buttons: buttons,
-    headerType: 4
-  }
-
-    if (imageBuffer) buttonMessage.image = imageBuffer
-
-  await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
+  await conn.sendMessage(
+    m.chat,
+    {
+      caption,
+      footer: '',
+      buttons,
+      headerType: 4
+    },
+    { quoted: m }
+  )
 }
 
 handler.help = ['ping']

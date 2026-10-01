@@ -50,21 +50,44 @@ function isWebP(buffer) {
 }
 
 async function decodeQrFromWebpBuffer(buffer) {
-  await webp.Image.initLib()
-  const image = new webp.Image()
-  await image.load(buffer)
+  try {
+    if (!isWebP(buffer)) return null
 
-  let rgba
-  const width = image.width
-  const height = image.height
+    await webp.Image.initLib()
+    const image = new webp.Image()
+    await image.load(buffer)
 
-  rgba = image.hasAnim
-    ? await image.getFrameData(0)
-    : await image.getImageData()
+    if (!image.loaded) return null
 
-  if (!rgba || !width || !height) return null
-  const qr = jsQR(rgba, width, height)
-  return qr?.data || null
+    let rgba, width, height
+
+    if (image.hasAnim) {
+      // ⚠️ Nelle sticker animate il frame può avere dimensioni diverse
+      // dalla tela (VP8X): jsQR richiede esattamente width * height * 4 byte.
+      const frames = image.frames || []
+      if (!frames.length) return null
+      width = frames[0].width
+      height = frames[0].height
+      rgba = await image.getFrameData(0)
+    } else {
+      width = image.width
+      height = image.height
+      rgba = await image.getImageData()
+    }
+
+    if (!rgba || !width || !height) return null
+
+    const expected = width * height * 4
+    if (rgba.length < expected) return null
+
+    const pixels = new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, expected)
+    const qr = jsQR(pixels, width, height)
+    return qr?.data || null
+  } catch (err) {
+    // Nessun QR leggibile: si passa al fallback con canvas
+    console.log('Errore lettura sticker QR WebP:', err?.message || err)
+    return null
+  }
 }
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {

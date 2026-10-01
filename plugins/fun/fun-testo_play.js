@@ -1,5 +1,3 @@
-//Plugin by Gab, Lucifero & 888 staff
-
 import fetch from 'node-fetch'
 import { parse } from 'node-html-parser'
 
@@ -8,7 +6,7 @@ let handler = async (m, { conn }) => {
   const titoloOriginale = global.lyricsRequest?.[sender]
 
   if (!titoloOriginale)
-    return m.reply("⏱️ 𝐒𝐨𝐧𝐨 𝐩𝐚𝐬𝐬𝐚𝐭𝐢 𝟏𝟓 𝐬𝐞𝐜𝐨𝐧𝐝𝐢 𝐝𝐚𝐥𝐥𝐚 𝐠𝐞𝐧𝐞𝐫𝐚𝐳𝐢𝐨𝐧𝐞 𝐝𝐞𝐥𝐥𝐚 𝐜𝐚𝐧𝐳𝐨𝐧𝐞! 𝐏𝐞𝐫 𝐚𝐯𝐞𝐫𝐞 𝐢𝐥 𝐭𝐞𝐬𝐭𝐨 𝐟𝐚𝐫𝐞 ’’.𝐩𝐥𝐚𝐲 (𝐜𝐚𝐧𝐳𝐨𝐧𝐞)’’ 𝐞 𝐬𝐜𝐡𝐢𝐚𝐜𝐜𝐢𝐚𝐫𝐞 ’’𝐬𝐢’’ 𝐞𝐧𝐭𝐫𝐨 𝟏𝟓 𝐬𝐞𝐜𝐨𝐧𝐝𝐢.")
+    return m.reply("⏱️ 𝐒𝐨𝐧𝐨 𝐩𝐚𝐬𝐬𝐚𝐭𝐢 𝟏𝟓 𝐬𝐞𝐜𝐨𝐧𝐝𝐢. 𝐑𝐢𝐟𝐚𝐢 ’’.𝐩𝐥𝐚𝐲 (𝐜𝐚𝐧𝐳𝐨𝐧𝐞)’’ 𝐞 𝐜𝐨𝐧𝐟𝐞𝐫𝐦𝐚 𝐞𝐧𝐭𝐫𝐨 𝟏𝟓 𝐬𝐞𝐜𝐨𝐧𝐝𝐢.")
 
   if (global.pendingLyrics?.[sender]) {
     clearTimeout(global.pendingLyrics[sender])
@@ -17,19 +15,17 @@ let handler = async (m, { conn }) => {
 
   try {
     const lyrics = await trovaTesto(titoloOriginale)
-
-    if (!lyrics)
-      throw "Non trovato"
+    if (!lyrics) throw "Non trovato"
 
     await conn.sendMessage(
       m.chat,
       {
         text:
-`📜 𝐓𝐄𝐒𝐓𝐎 𝐃𝐈 *${titoloOriginale}*
-━━━━━━━━━━━━━━
+`📜 𝐓𝐞𝐬𝐭𝐨 𝐝𝐢 *${titoloOriginale}*
+
 ${lyrics}
-━━━━━━━━━━━━━━
-> 𝟴𝟴𝟴 𝗕𝗢𝗧 𝐝𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐞𝐫 𝐥𝐲𝐫𝐢𝐜𝐬`
+
+> 𝟴𝟴𝟴 𝐁𝐎𝐓 • 𝐋𝐲𝐫𝐢𝐜𝐬 𝐌𝐨𝐝𝐮𝐥𝐞`
       },
       { quoted: m }
     )
@@ -49,7 +45,6 @@ export default handler
 
 
 async function trovaTesto(titolo) {
-
   let cleanTitle = titolo
 
   if (cleanTitle.includes('–')) cleanTitle = cleanTitle.split('–')[1]

@@ -1,5 +1,6 @@
-// Plugin by elixir & punisher
+// Plugin by elixir, punisher & 888 staff
 import { ROLES, LIMITS, resolveRole, canUse, logModAction } from '../../lib/moderation.js'
+import { isAfk, isParticipantAfk } from '../../lib/afk.js'
 
 const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin, isMods }) => {
   try {
@@ -12,22 +13,29 @@ const handler = async (m, { conn, text, participants, isOwner, isROwner, isAdmin
 
     const maxMentions = role === ROLES.MOD ? LIMITS.MOD_HIDETAG_MAX : Infinity
 
-    const users = participants.map(u => conn.decodeJid(u.id))
-
-    const afkState = global.afkState || {}
     const botJid = conn.user.jid
-    let afkSkipped = 0
-    let usersFiltered = users.filter(jid => {
-      if (jid === botJid) return false
-      const afkEntry = afkState[jid]
-      if (!afkEntry) return true
+    const botNumber = String(conn.user.jid || '').split('@')[0].split(':')[0].replace(/\D+/g, '')
 
-      if (afkEntry.scope === 'all' || afkEntry.chat === m.chat) {
-        afkSkipped++
-        return false
-      }
-      return true
-    })
+
+    let afkSkipped = 0
+    let usersFiltered = participants
+      .filter(Boolean)
+      .filter(u => {
+                const ids = [u.id, u.jid, u.phoneNumber].filter(Boolean).map(v => String(v).split('@')[0].split(':')[0].replace(/\D+/g, ''))
+        if (botNumber && ids.includes(botNumber)) return false
+                if (isParticipantAfk(u, m.chat)) {
+          afkSkipped++
+          return false
+        }
+        return true
+      })
+      .map(u => conn.decodeJid(u.id ?? u.jid ?? u.phoneNumber ?? ''))
+      .filter(Boolean)
+
+    if (!usersFiltered.length) {
+      return m.reply('⚠️ Nessun utente da taggare: tutti i partecipanti sono AFK o il bot è solo nel gruppo.')
+    }
+
     m.__afkSkipped = afkSkipped
 
     let hidetagTrimmed = 0

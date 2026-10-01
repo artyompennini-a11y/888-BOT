@@ -1,5 +1,20 @@
-import { importCanvas } from '../../lib/canvas-fallback.js'
+// Plugin by elixir, punisher & 888 staff
+import Jimp from 'jimp'
+import fetch from 'node-fetch'
+import axios from 'axios'
+import twemoji from 'twemoji'
 import SUBJECTS from './subjects.js'
+
+const BROWSERLESS_KEY = global.browserless
+
+const WIDTH = 480
+const HEIGHT = 480
+
+const COLOR_BG_TOP = 0x1a1520ff
+const COLOR_BG_BOTTOM = 0x08070aff
+const COLOR_GOLD = 0xffd24aff
+const COLOR_WHITE = 0xffffffff
+const COLOR_LABEL = 0x9a9aaaff
 
 const CONFIG = {
   MAX_REVEALS: 8,
@@ -13,6 +28,138 @@ const CONFIG = {
 }
 
 const games = {}
+
+
+
+function buildHtml(emoji, step) {
+  const prog = Math.max(0, Math.min(1, step / CONFIG.MAX_REVEALS))
+  const blur = Math.round((1 - prog) * 14)
+  const maskSize = Math.round(18 + prog * 82)
+  const safeEmoji = escapeHtml(emoji)
+
+  return `
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: ${WIDTH}px; height: ${HEIGHT}px;
+        background: #0a0810; overflow: hidden;
+        font-family: 'Segoe UI Emoji', 'Apple Color Emoji', Arial, sans-serif;
+      }
+      .stage {
+        position: relative;
+        width: ${WIDTH}px; height: ${HEIGHT}px;
+        display: flex; align-items: center; justify-content: center;
+        background: radial-gradient(circle at 50% 40%, #241a2e 0%, #0a0810 70%);
+      }
+      .emoji {
+        position: absolute; font-size: 320px; line-height: 1;
+        filter: blur(${blur}px);
+        transform: scale(${1 + (1 - prog) * 0.06});
+        user-select: none;
+      }
+      .reveal {
+        position: absolute;
+        width: ${maskSize}%; height: ${maskSize}%;
+        border-radius: 50%; overflow: hidden;
+        box-shadow: 0 0 60px 10px rgba(255, 210, 74, 0.18);
+      }
+      .reveal .inner {
+        position: absolute;
+        width: ${WIDTH}px; height: ${HEIGHT}px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 320px; line-height: 1; filter: blur(0px);
+      }
+      .frame {
+        position: absolute; inset: 0;
+        border: 6px solid #ffd24a;
+        box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.75);
+        pointer-events: none;
+      }
+      .hud {
+        position: absolute; left: 0; right: 0; bottom: 30px;
+        text-align: center; color: #fff;
+        font-weight: 800; font-size: 30px; letter-spacing: 3px;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+      }
+      .hud small {
+        display: block; font-size: 16px; font-weight: 600;
+        letter-spacing: 2px; color: #9a9aaa; margin-top: 6px;
+      }
+      .bar {
+        position: absolute; left: 50%; bottom: 14px;
+        transform: translateX(-50%);
+        width: 300px; height: 8px;
+        background: rgba(255, 255, 255, 0.14);
+        border-radius: 99px; overflow: hidden;
+      }
+      .bar i {
+        display: block; height: 100%; width: ${Math.round(prog * 100)}%;
+        background: linear-gradient(90deg, #ffd24a, #ff2bd6);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="emoji">${safeEmoji}</div>
+      <div class="reveal"><div class="inner">${safeEmoji}</div></div>
+      <div class="frame"></div>
+      <div class="hud">
+        RIVELAZIONE ${step}/${CONFIG.MAX_REVEALS}
+        <small>LO SCATTO PROIBITO</small>
+      </div>
+      <div class="bar"><i></i></div>
+    </div>
+  </body>
+  </html>`
+}
+
+async function renderBrowserless(emoji, step) {
+  const html = buildHtml(emoji, step)
+  for (let i = 0; i < 3; i++) {
+    try {
+      const response = await axios.post(
+        `https://chrome.browserless.io/screenshot?token=${BROWSERLESS_KEY}`,
+        { html, options: { type: 'jpeg', quality: 92 }, viewport: { width: WIDTH, height: HEIGHT } },
+        { responseType: 'arraybuffer', timeout: 15000 }
+      )
+      return Buffer.from(response.data)
+    } catch (e) {
+      if (i === 2) throw e
+      await new Promise(r => setTimeout(r, 1200))
+    }
+  }
+}
+
+const emojiCache = new Map()
+const EMOJI_CACHE_MAX = 80
+
+async function getEmojiImage(emoji) {
+  if (emojiCache.has(emoji)) return emojiCache.get(emoji)
+  try {
+    const code = twemoji.convert.toCodePoint(emoji)
+    const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/${code}.png`
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const img = await Jimp.read(Buffer.from(await res.arrayBuffer()))
+    if (emojiCache.size >= EMOJI_CACHE_MAX) {
+      emojiCache.delete(emojiCache.keys().next().value)
+    }
+    emojiCache.set(emoji, img)
+    return img
+  } catch {
+    return null
+  }
+}
+
+const escapeHtml = (str) => String(str ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;')
 
 const norm = (t = '') =>
   String(t)
@@ -40,40 +187,130 @@ function findSubject(txt) {
   return null
 }
 
-async function renderImage(emoji, step) {
-  const { createCanvas } = await importCanvas()
-  const BIG = 640
+
+async function renderJimp(emoji, step) {
   const prog = Math.max(0, Math.min(1, step / CONFIG.MAX_REVEALS))
+  const canvas = verticalGradient(WIDTH, HEIGHT, COLOR_BG_TOP, COLOR_BG_BOTTOM)
 
-  const big = createCanvas(BIG, BIG)
-  const bctx = big.getContext('2d')
-  bctx.clearRect(0, 0, BIG, BIG)
-  bctx.textAlign = 'center'
-  bctx.textBaseline = 'middle'
-  bctx.shadowColor = 'rgba(0,0,0,0.30)'
-  bctx.shadowBlur = 16
-  bctx.font = `${Math.round(BIG * 0.82)}px NotoColorEmoji, sans-serif`
-  bctx.fillText(emoji, BIG / 2, BIG / 2)
-  bctx.shadowBlur = 0
+  const src = await getEmojiImage(emoji)
+  const BIG = 400
+  const originX = Math.round((WIDTH - BIG) / 2)
+  const originY = Math.round((HEIGHT - BIG) / 2 - 12)
 
-  const cropW = Math.round(150 + (BIG - 150) * prog)
-  const cropX = (BIG - cropW) / 2
-  const cropY = (BIG - cropW) / 2
+  if (src) {
+        const blurred = src.clone().resize(BIG, BIG)
+    blurred.blur(Math.max(1, Math.round((1 - prog) * 10)))
+    canvas.composite(blurred, originX, originY)
 
-  const out = createCanvas(CONFIG.SIZE, CONFIG.SIZE)
-  const ctx = out.getContext('2d')
-  ctx.fillStyle = '#131318'
-  ctx.fillRect(0, 0, CONFIG.SIZE, CONFIG.SIZE)
+        if (prog > 0) {
+      const maskR = (BIG / 2) * (0.2 + prog * 0.8)
+      const sharp = src.clone().resize(BIG, BIG)
+      const cx = BIG / 2
+      const r2 = maskR * maskR
+      sharp.scan(0, 0, BIG, BIG, function (px, py, idx) {
+        const dx = px - cx
+        const dy = py - cx
+        if (dx * dx + dy * dy > r2) this.bitmap.data[idx + 3] = 0
+      })
+      canvas.composite(sharp, originX, originY)
+    }
+  } else {
+    const font = await getBaseFont()
+    const textW = Jimp.measureText(font, '?')
+    const tmp = new Jimp(textW + 10, 56, 0x00000000)
+    tmp.print(font, 0, 0, '?', { color: COLOR_WHITE })
+    canvas.composite(tmp, Math.round((WIDTH - tmp.bitmap.width) / 2), Math.round(HEIGHT / 2 - 50))
+  }
 
-  try { ctx.filter = `blur(${Math.round((1 - prog) * 6)}px)` } catch {}
-  try { ctx.drawImage(big, cropX, cropY, cropW, cropW, 0, 0, CONFIG.SIZE, CONFIG.SIZE) } catch {}
-  try { ctx.filter = 'none' } catch {}
+  drawRectOutline(canvas, 3, 3, WIDTH - 6, HEIGHT - 6, 6, COLOR_GOLD)
 
-  ctx.strokeStyle = '#ffd24a'
-  ctx.lineWidth = 5
-  ctx.strokeRect(3, 3, CONFIG.SIZE - 6, CONFIG.SIZE - 6)
+  const [base, small] = await Promise.all([getBaseFont(), getSmallFont()])
 
-  return out.toBuffer('image/jpeg', 92)
+  const hud = `RIVELAZIONE ${step}/${CONFIG.MAX_REVEALS}`
+  const hudW = Jimp.measureText(base, hud)
+  const hudImg = new Jimp(hudW + 8, 46, 0x00000000)
+  hudImg.print(base, 0, 0, hud, { color: COLOR_WHITE })
+  canvas.composite(hudImg, Math.round((WIDTH - hudW) / 2), HEIGHT - 116)
+
+  const sub = 'LO SCATTO PROIBITO'
+  const subW = Jimp.measureText(small, sub)
+  const subImg = new Jimp(subW + 8, 28, 0x00000000)
+  subImg.print(small, 0, 0, sub, { color: COLOR_LABEL })
+  canvas.composite(subImg, Math.round((WIDTH - subW) / 2), HEIGHT - 66)
+
+  drawProgressBar(canvas, Math.round((WIDTH - 300) / 2), HEIGHT - 30, 300, 8, prog)
+
+  return canvas.getBufferAsync(Jimp.MIME_JPEG, { quality: 92 })
+}
+
+
+async function renderImage(emoji, step) {
+  if (BROWSERLESS_KEY) {
+    try {
+      return await renderBrowserless(emoji, step)
+    } catch (e) {
+      console.error('[scatto] Browserless fallito, uso Jimp:', e?.message || e)
+    }
+  }
+  return renderJimp(emoji, step)
+}
+
+
+
+let baseFont = null
+let smallFont = null
+
+const getBaseFont = async () => {
+  if (!baseFont) baseFont = await Jimp.loadFont(Jimp.FONT_SANS_32_WHITE)
+  return baseFont
+}
+
+const getSmallFont = async () => {
+  if (!smallFont) smallFont = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE)
+  return smallFont
+}
+
+function verticalGradient(w, h, top, bottom) {
+  const img = new Jimp(w, h)
+  const tr = (top >>> 24) & 0xff, tg = (top >>> 16) & 0xff, tb = (top >>> 8) & 0xff
+  const br = (bottom >>> 24) & 0xff, bg = (bottom >>> 16) & 0xff, bb = (bottom >>> 8) & 0xff
+  img.scan(0, 0, w, h, function (x, y, idx) {
+    const t = y / Math.max(1, h - 1)
+    this.bitmap.data[idx]     = Math.round(tr + (br - tr) * t)
+    this.bitmap.data[idx + 1] = Math.round(tg + (bg - tg) * t)
+    this.bitmap.data[idx + 2] = Math.round(tb + (bb - tb) * t)
+    this.bitmap.data[idx + 3] = 255
+  })
+  return img
+}
+
+function drawRectOutline(img, x, y, w, h, thickness, color) {
+  for (let t = 0; t < thickness; t++) {
+    for (let px = x + t; px < x + w - t; px++) {
+      img.setPixelColor(color, px, y + t)
+      img.setPixelColor(color, px, y + h - 1 - t)
+    }
+    for (let py = y + t; py < y + h - t; py++) {
+      img.setPixelColor(color, x + t, py)
+      img.setPixelColor(color, x + w - 1 - t, py)
+    }
+  }
+}
+
+function drawProgressBar(img, x, y, w, h, prog) {
+  for (let py = y; py < y + h; py++) {
+    for (let px = x; px < x + w; px++) img.setPixelColor(0x3a3a46ff, px, py)
+  }
+  const filled = Math.round(w * prog)
+  for (let py = y; py < y + h; py++) {
+    for (let px = x; px < x + filled; px++) {
+      const t = (px - x) / Math.max(1, filled)
+      const r = Math.round(255 + (43 - 255) * t)
+      const g = Math.round(210 + (189 - 210) * t)
+      const b = Math.round(74 + (214 - 74) * t)
+      img.setPixelColor((r << 16) | (g << 8) | b, px, py)
+    }
+  }
 }
 
 async function sendBoard(conn, chat, g, extraText) {

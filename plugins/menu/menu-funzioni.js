@@ -1,4 +1,4 @@
-//Plugin by Elixir, Punisher & 888 staff
+// Plugin by elixir, punisher & 888 staff
 import fs from 'fs'
 
 let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
@@ -13,7 +13,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktiktok,
     antilinktg, antimedia, antispam, antitoxic, antiBot, antioneview,
     antigore, reaction, bestemmiometro, ai, vocali, logrichieste,
-    slowmode, antinuke
+    slowmode, antinuke, antiraid, antiraidlink, antiflood
   } = chat
 
   const { antiprivato, soloCreatore, read, anticall } = bot
@@ -45,15 +45,15 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   const catalogs = `
 📦 *Cataloghi Rapidi*
-• ${p}attiva security  
+• ${p}attiva security
   _(antilink + antiporno + modoadmin)_
-• ${p}attiva protezione  
+• ${p}attiva protezione
   _(antispam + antitoxic + antibot + antivoip)_
-• ${p}attiva media  
+• ${p}attiva media
   _(antimedia + antiporno + antigore)_
-• ${p}attiva antilink  
+• ${p}attiva antilink
   _(antilink + tg + ig + tiktok)_
-• ${p}attiva full  
+• ${p}attiva full
   _(attiva tutti i moduli sopra)_`
 
   const ownerSection = (isOwner || isROwner) ? `
@@ -82,6 +82,9 @@ Stato pannello: Moduli di Sicurezza
 
 🚫 *Moduli di Protezione (ANTI)*
 • [${s(antinuke)}] ${p}antinuke
+• [${s(antiraid)}] ${p}antiraid
+• [${s(antiraidlink)}] ${p}antiraidlink
+• [${s(antiflood)}] ${p}antiflood
 • [${s(antiporno)}] ${p}antiporno
 • [${s(antigore)}] ${p}antigore
 • [${s(antispam)}] ${p}antispam
@@ -97,11 +100,11 @@ Stato pannello: Moduli di Sicurezza
 ${catalogs}
 ${ownerSection}
 
-🟩 = Attivato  
+🟩 = Attivato
 🟥 = Disattivato
 
 ℹ️ *Guida Rapida*
-• Attivare: ${p}attiva [modulo]  
+• Attivare: ${p}attiva [modulo]
 • Disattivare: ${p}disattiva [modulo]
 `.trim()
 

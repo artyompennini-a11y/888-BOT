@@ -2,12 +2,11 @@ let handler = async (m, { text }) => {
 
   if (!text)
     return m.reply(
-`╭━━━〔 📱 *INSERISCI TELEFONO* 〕━━━┈
-┃ Scrivi il modello del tuo telefono.
-┃━━━━━━━━━━━━━━━━━━
-┃ Esempio:
-┃ ➜ .telefono iphone 13
-╰━━━━━━━━━━━━━━━━━━┈`
+`📱 *INSERISCI TELEFONO*
+Scrivi il modello del tuo telefono.
+
+Esempio:
+➜ .telefono iphone 13`
     )
 
   let t = text.toLowerCase()
@@ -17,9 +16,8 @@ let handler = async (m, { text }) => {
 
   if (!valido) {
     return m.reply(
-`╭━━━〔 ❌ *NON È UN TELEFONO* 〕━━━┈
-┃ Inserisci un modello reale.
-╰━━━━━━━━━━━━━━━━━━┈`
+`❌ *NON È UN TELEFONO*
+Inserisci un modello reale.`
     )
   }
 
@@ -103,7 +101,7 @@ let handler = async (m, { text }) => {
   let voto = Math.floor(Math.random() * 10) + 1
 
   let risposta =
-`╭━━━〔 📱 *ANALISI TELEFONO* 〕━━━┈
+`📱 *ANALISI TELEFONO*
 
 📲 *Dispositivo*
 ➜ ${text}
@@ -114,7 +112,6 @@ let handler = async (m, { text }) => {
 📊 *Valutazione*
 ➜ ${voto}/10
 
-╰━━━━━━━━━━━━━━━━━━┈
 > 𝟴𝟴𝟴 𝗕𝗢𝗧`
 
   m.reply(risposta.trim())

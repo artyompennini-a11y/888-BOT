@@ -1,11 +1,13 @@
+// Plugin by elixir, punisher & 888 staff
+import { isAfk, isParticipantAfk } from '../../lib/afk.js'
+
 const handler = async (m, { conn, text, participants }) => {
   try {
 
     if (!m.isGroup)
       return m.reply("❌ Solo nei gruppi.")
 
-    // CONTROLLO OWNER UNIVERSALE
-    const senderNumber = m.sender.split('@')[0]
+        const senderNumber = m.sender.split('@')[0]
     const owners = global.owner || []
 
     const isOwner = owners.some(v => {
@@ -19,23 +21,47 @@ const handler = async (m, { conn, text, participants }) => {
     if (!participants || participants.length === 0)
       return m.reply("❌ Nessun partecipante trovato.")
 
-    const users = participants.map(u => conn.decodeJid(u.id))
-
     if (!text && !m.quoted)
       return m.reply("❌ Inserisci numero + testo oppure rispondi a un messaggio.")
 
-    // 📌 Estrazione numero
-    let args = text ? text.split(" ") : []
+        let args = text ? text.split(" ") : []
     let count = parseInt(args[0])
 
     if (isNaN(count)) {
-      count = 10 // default se non metti numero
+      count = 10
     }
 
     if (count > 30)
       return m.reply("⚠️ Massimo 30 volte per sicurezza.")
 
     let messageText = args.slice(1).join(" ")
+
+
+    const botNumber = String(conn.user?.jid || '').split('@')[0].split(':')[0].replace(/\D+/g, '')
+    let afkSkipped = 0
+
+    const users = participants
+      .filter(Boolean)
+      .filter(u => {
+                const ids = [u.id, u.jid, u.phoneNumber].filter(Boolean).map(v => String(v).split('@')[0].split(':')[0].replace(/\D+/g, ''))
+        if (botNumber && ids.includes(botNumber)) return false
+                if (isParticipantAfk(u, m.chat)) {
+          afkSkipped++
+          return false
+        }
+        return true
+      })
+      .map(u => conn.decodeJid(u.id ?? u.jid ?? u.phoneNumber ?? ''))
+      .filter(Boolean)
+
+    if (!users.length)
+      return m.reply("❌ Nessun utente da taggare (tutti AFK o il bot e solo nel gruppo).")
+
+    if (afkSkipped > 0) {
+      await conn.sendMessage(m.chat, {
+        text: `💤 ${afkSkipped} ${afkSkipped === 1 ? 'utente AFK escluso' : 'utenti AFK esclusi'} dal bigtag.`
+      })
+    }
 
     const sendTag = async () => {
 
@@ -81,8 +107,7 @@ const handler = async (m, { conn, text, participants }) => {
       }
     }
 
-    // 🔥 RIPETE count VOLTE
-    for (let i = 0; i < count; i++) {
+        for (let i = 0; i < count; i++) {
       await sendTag()
     }
 

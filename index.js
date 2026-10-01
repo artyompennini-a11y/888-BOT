@@ -279,18 +279,32 @@ const maxWidth = (lines) =>
 
 const giantTitle = async () => {
   const glyphs = {
-    '8': ['█████', '██ ██', '██ ██', '█████', '██ ██', '██ ██', '█████'],
-    B: ['████ ', '██ ██', '██ ██', '████ ', '██ ██', '██ ██', '████ '],
-    O: ['█████', '██ ██', '██ ██', '██ ██', '██ ██', '██ ██', '█████'],
-    T: ['█████', '  ██ ', '  ██ ', '  ██ ', '  ██ ', '  ██ ', '  ██ ']
+    '8': [' █████ ', '██   ██', '██   ██', ' █████ ', '██   ██', '██   ██', ' █████ '],
+    B: ['██████ ', '██   ██', '██   ██', '██████ ', '██   ██', '██   ██', '██████ '],
+    O: [' █████ ', '██   ██', '██   ██', '██   ██', '██   ██', '██   ██', ' █████ '],
+    T: ['███████', '   ██  ', '   ██  ', '   ██  ', '   ██  ', '   ██  ', '   ██  ']
   };
   const title = ['8', '8', '8', 'B', 'O', 'T'];
-  const colors = ['\x1b[95m', '\x1b[35m', '\x1b[94m', '\x1b[96m'];
+  const colors = [201, 165, 129, 93, 69, 51];
   const spacing = [' ', ' ', '   ', ' ', ' '];
-  const lines = Array.from({ length: 7 }, (_, row) => {
-    let colorIndex = 0;
+  const lines = Array.from({ length: 8 }, (_, row) => {
     return title.map((character, index) => {
-      const segment = `${colors[colorIndex++ % colors.length]}${glyphs[character][row]}\x1b[0m`;
+      const glyph = glyphs[character];
+      const front = glyph[row] ?? '       ';
+      const shadow = row > 0 ? ` ${glyph[row - 1].slice(0, -1)}` : '       ';
+      let segment = '';
+
+      for (let column = 0; column < front.length; column += 1) {
+        if (front[column] !== ' ') {
+          segment += `\x1b[38;5;${colors[index]}m█`;
+        } else if (shadow[column] !== ' ') {
+          segment += `\x1b[2;38;5;${colors[index]}m░`;
+        } else {
+          segment += ' ';
+        }
+      }
+
+      segment += '\x1b[0m';
       return index < spacing.length ? segment + spacing[index] : segment;
     }).join('');
   });

@@ -2,7 +2,6 @@
 import speed from 'performance-now'
 import os from 'os'
 import dns from 'dns'
-import fetch from 'node-fetch'
 import process from 'process'
 import { fetchLatestBaileysVersion } from '@888-BOT/888baileys'
 
@@ -63,14 +62,6 @@ let handler = async (m, { conn, usedPrefix }) => {
   // Uptime
   const uptime = uptimeFmt(process.uptime() * 1000)
 
-  // Connection state
-  const state = conn?.ev?.connectionState
-  const status =
-    state === 'open' ? '🟢 Connesso' :
-    state === 'connecting' ? '🟡 Connessione…' :
-    state === 'close' ? '🔴 Disconnesso' :
-    `⚪ ${state || 'N/D'}`
-
   // RAM
   const ramtot = os.totalmem()
   const ramusata = ramtot - os.freemem()
@@ -82,7 +73,7 @@ let handler = async (m, { conn, usedPrefix }) => {
   const cpuInfo = cpu?.model?.trim() || `CPU @ ${cpu?.speed || 'N/D'}MHz`
   const cpuCount = os.cpus()?.length || 'N/D'
 
-  const caption = `
+  const text = `
 ⚡ *PING 888*
 📡 Ping: *${latency}ms*
 🌐 DNS: *${dnsPing}ms*
@@ -107,9 +98,10 @@ let handler = async (m, { conn, usedPrefix }) => {
   await conn.sendMessage(
     m.chat,
     {
-      caption,
-      footer: '',
-      buttons
+      text,
+      footer: '888 BOT',
+      buttons,
+      headerType: 1
     },
     { quoted: m }
   )

@@ -120,27 +120,13 @@ const centerAsciiBlock = (lines) => {
   );
 
 
-  const blockWidth = Math.max(
-    0,
-    ...cleanedLines.map(line => visibleLength(line))
-  );
-
-
-  const blockPadding = Math.max(
-    0,
-    Math.floor((terminalWidth - blockWidth) / 2)
-  );
-
-
   return cleanedLines.map(line => {
-    const lineWidth = visibleLength(line);
-    const rightPadding = Math.max(0, blockWidth - lineWidth);
-
-    return (
-      ' '.repeat(blockPadding) +
-      line +
-      ' '.repeat(rightPadding)
+    const linePadding = Math.max(
+      0,
+      Math.floor((terminalWidth - visibleLength(line)) / 2)
     );
+
+    return ' '.repeat(linePadding) + line;
   });
 };
 

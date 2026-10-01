@@ -27,7 +27,21 @@ const isNumber = x => typeof x === 'number' && !isNaN(x);
 const delay = ms => isNumber(ms) && new Promise(r => setTimeout(r, ms));
 const str2Regex = str => str.replace(/[|\\{}()[\]^$+*?.]/g, '\\$&');
 const pickRandom = list => list[Math.floor(Math.random() * list.length)];
-const normalizeNumber = num => num.replace(/\D/g, '') + '@s.whatsapp.net';
+const normalizeNumber = num => {
+    const clean = String(num).replace(/\D/g, '');
+    return clean + '@s.whatsapp.net';
+};
+
+//inizio controllo lid per owner by axtral
+const isOwnerJid = (senderJid, ownerEntry) => {
+    const ownerClean = String(ownerEntry).replace(/\D/g, '');
+    if (!ownerClean) return false;
+    const senderClean = String(senderJid).replace(/\D/g, '');
+    
+    return senderClean === ownerClean;
+};
+//fine controllo lid per owner by axtral
+
 const normalizeJidKey = jid => jid.replace(/[^0-9]/g, '');
 const isBotOwnerNumber = (jid = '') => {
     const digits = normalizeJidKey(jid);
@@ -529,7 +543,7 @@ export async function handler(chatUpdate) {
 
         if (!normalizedSender?.includes('@')) continue;
         if (normalizedSender.endsWith('@broadcast') || normalizedSender.endsWith('@newsletter')) continue;
-        if (!normalizedSender.endsWith('@s.whatsapp.net')) continue;
+        if (!normalizedSender.endsWith('@s.whatsapp.net') && !normalizedSender.endsWith('@lid')) continue;
 
         try {
             Object.defineProperty(m, 'sender', {
@@ -672,13 +686,19 @@ export async function handler(chatUpdate) {
         }
 
         let isBotAdmin = false,
-            isAdmin = false,
-            isGroupAdmin = false,
-            isRAdmin = false;
-        const normalizedOwnerList = global.owner.map(([num]) => normalizeNumber(num));
-        const isElixir = normalizedOwnerList.includes(normalizedSender);
-        const isROwner = isElixir;
-        const isOwner = isROwner;
+        isAdmin = false,
+        isGroupAdmin = false,
+        isRAdmin = false;
+
+// --- PATCH LID OWNER BY AXTRAL
+
+const isElixir = (global.owner || []).some(entry => {
+    const raw = Array.isArray(entry) ? entry[0] : entry;
+    return isOwnerJid(normalizedSender, raw);
+});
+const isROwner = isElixir;
+const isOwner = isROwner;
+// --- FINE PATCH ---
 
         const isMods = isOwner ||
             global.mods?.map(v => v.replace(/\D/g, '') + '@s.whatsapp.net').includes(normalizedSender) ||

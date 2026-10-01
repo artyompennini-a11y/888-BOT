@@ -1,9 +1,10 @@
-// Plugin by elixir, punisher & 888 staff
+// Handler by elixir, punisher & 888 staff
 import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
 import { smsg } from './lib/simple.js';
 import { runBeforeAll, runGuarded } from './lib/bus.js';
+import { pluginIndex, candidates } from './lib/plugin-index.js';
 import state from './lib/state.js';
 import { format } from 'util';
 import { fileURLToPath } from 'url';
@@ -305,15 +306,6 @@ if (global.conn?.ws) {
 setInterval(() => {
     if (global.processedCalls.size > 10) global.processedCalls.clear();
 }, 180_000);
-
-function matchIds(conn, u, target) {
-    const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid);
-    return [
-        decoded(u.id),
-        u.jid ? decoded(u.jid) : null,
-        u.lid ? decoded(u.lid) : null,
-    ].filter(Boolean).includes(target);
-}
 
 function calcAdminFlags(conn, participants, groupMetadata, normalizedSender, normalizedBot) {
     const decoded = typeof conn?.decodeJid === 'function' ? conn.decodeJid : (jid => jid);
@@ -653,8 +645,10 @@ export async function handler(chatUpdate) {
             antiprivato: true,
             soloCreatore: false,
             status: 0,
-                        anticall: true,
-                        anticallBlock: true
+            //anticall disattivato di default: deve essere attivato esplicitamente
+            anticall: false,
+            //blocco del numero solo se richiesto esplicitamente
+            anticallBlock: false
         };
         const settings = global.db.data.settings[this.user.jid] ??= settingsDefaults;
 
@@ -816,9 +810,10 @@ if (!m.isGroup && global.db.data.settings[this.user.jid]?.antiprivato && !isOwne
 
         if (chat.isBanned && !isOwner) continue;
 
-        const activePlugins = Object.entries(global.plugins).filter(([, p]) => p && !p.disabled);
+        const pluginMap = pluginIndex(global.plugins, global.prefix ?? '.');
+        const allPlugins = Object.entries(global.plugins).filter(([, p]) => p && !p.disabled);
         await Promise.allSettled(
-            activePlugins
+            allPlugins
                 .filter(([, p]) => typeof p.all === 'function')
                 .map(([name, p]) =>
                     p.all.call(this, m, {
@@ -833,7 +828,8 @@ if (!m.isGroup && global.db.data.settings[this.user.jid]?.antiprivato && !isOwne
         try {
             let usedPrefix = null;
 
-            const pluginEntries = activePlugins.map(([name, plugin]) => {
+            const commandCandidates = candidates(m.text, { index: pluginMap });
+            const pluginEntries = commandCandidates.map(([name, plugin]) => {
                 const __filename = join(___dirname, name);
 
                 const _prefix = plugin.customPrefix ?? global.prefix ?? '.';

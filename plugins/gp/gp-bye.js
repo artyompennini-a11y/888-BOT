@@ -1,4 +1,5 @@
 import fetch from 'node-fetch'
+import { removeWhitelistEntry } from '../../lib/whitelist.js'
 
 export async function before(m, { conn }) {
   if (!m.isGroup) return
@@ -27,7 +28,8 @@ export async function before(m, { conn }) {
     if (m.messageStubType === 28) {
       if (chat.topBlasphemy && chat.topBlasphemy[user]) delete chat.topBlasphemy[user]
       if (chat.topUsers && chat.topUsers[user]) delete chat.topUsers[user]
-      if (chat.whitelist && chat.whitelist.includes(user)) chat.whitelist = chat.whitelist.filter(u => u !== user)
+      removeWhitelistEntry('antinuke', m.chat, user)
+      removeWhitelistEntry('antibot', m.chat, user)
     }
 
     let profilePic

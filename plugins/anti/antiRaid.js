@@ -46,6 +46,22 @@ const isOwnerOfBot = (jid) => {
 const positive = (value, fallback) =>
   Number.isFinite(value) && value > 0 ? value : fallback
 
+// FIX: "Connection Closed" (status 428 / socket chiuso da Baileys) è transitorio:
+// non deve intasare la console a ogni poll sui gruppi. Lo silenziamo,
+// gli altri errori restano visibili ma throttlati per non spammare.
+const isConnClosed = (e) =>
+  e?.output?.statusCode === 428 || /connection closed/i.test(e?.message || '')
+
+const _errThrottle = {}
+const logAntiRaidError = (tag, chat, e) => {
+  if (isConnClosed(e)) return
+  const key = `${tag}:${chat || ''}`
+  const nowTs = Date.now()
+  if (nowTs - (_errThrottle[key] || 0) < 60000) return
+  _errThrottle[key] = nowTs
+  console.error(`[antiRaid] ${tag}${chat ? ` in ${chat}` : ''}:`, e?.message || e)
+}
+
 const configOf = (chat = '') => {
   const chatData = global.db?.data?.chats?.[chat] || {}
   return {
@@ -70,7 +86,9 @@ async function punishMember(conn, chat, jid, action) {
     await conn.groupParticipantsUpdate(chat, [jid], action)
     return true
   } catch (e) {
-    console.error(`[antiRaid] ${action} fallito per ${jid}:`, e?.message || e)
+    // Connection Closed = socket occupato/riconnessione: non spammare, riprova al prossimo giro
+    if (isConnClosed(e)) return false
+    logAntiRaidError(`${action} fallito per ${jid}`, '', e)
     return false
   }
 }
@@ -108,10 +126,14 @@ const canHandleRequests = (conn) =>
 
 async function listRequests(conn, chat) {
   try {
-    const pending = await conn.groupRequestParticipantsList(chat)
+    const pending = await Promise.race([
+      conn.groupRequestParticipantsList(chat),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('listRequests timeout')), 8000))
+    ])
     return Array.isArray(pending) ? pending : []
   } catch (e) {
-    console.error(`[antiRaid] list richieste fallito in ${chat}:`, e?.message || e)
+    if (isConnClosed(e)) return []
+    logAntiRaidError('list richieste fallito', chat, e)
     return []
   }
 }
@@ -128,7 +150,8 @@ async function rejectRequests(conn, chat, jids) {
     )
     return jids.filter(j => !list.length || ok.has(j))
   } catch (e) {
-    console.error(`[antiRaid] reject fallito in ${chat}:`, e?.message || e)
+    if (isConnClosed(e)) return []
+    logAntiRaidError('reject fallito', chat, e)
     return []
   }
 }
@@ -155,7 +178,8 @@ ${lines}${extra}
       mentions: refused.map(r => r.jid)
     })
   } catch (e) {
-    console.error('[antiRaid] notifica non riuscita:', e?.message || e)
+    // notifica fallita (es. Connection Closed): rientra nel throttling, non spammare
+    logAntiRaidError('notifica non riuscita', '', e)
   }
 }
 
@@ -196,7 +220,6 @@ export async function scanRequests(conn, chat) {
       const ok = await rejectRequests(conn, chat, refused.map(r => r.jid))
 
       if (!ok.length) {
-        console.log(`[antiRaid] 0/${refused.length} richieste rifiutate in ${chat}`)
         return
       }
 
@@ -211,13 +234,16 @@ export async function scanRequests(conn, chat) {
         .map(jid => refused.find(r => r.jid === jid))
         .filter(Boolean)
 
-      console.log(`[antiRaid] ${done.length} richieste rifiutate in ${chat}`)
+      if (global.opts?.debugAntiRaid)
+        console.log(`[antiRaid] ${done.length} richieste rifiutate in ${chat}`)
       await notifyRejected(conn, chat, done, cfg)
     } finally {
       scanning[chat] = false
     }
   } catch (e) {
-    console.error('[antiRaid] scanRequests:', e?.message || e)
+    // Transitori (Connection Closed) silenziati: riprova al prossimo poll.
+    // Altri errori throttlati 60s per non intasare i log.
+    logAntiRaidError('scanRequests', chat, e)
     scanning[chat] = false
   }
 }
@@ -264,7 +290,8 @@ export async function onParticipantUpdate(conn, update) {
     if (!suspect.length) return
     if (log.length < cfg.max) return
 
-    console.log(`[antiRaid] RAID in ${chat}: ${log.length} ingressi in ${cfg.window}ms -> ${cfg.punish}`)
+    if (global.opts?.debugAntiRaid)
+      console.log(`[antiRaid] RAID in ${chat}: ${log.length} ingressi in ${cfg.window}ms -> ${cfg.punish}`)
 
     const toRemove = [...new Set(log.map(e => e.jid))]
     const action = cfg.punish === 'ban' ? 'ban' : 'kick'
@@ -300,7 +327,7 @@ Gli account sospetti sono stati rimossi.
       }).catch(() => {})
     }
   } catch (e) {
-    console.error('[antiRaid] errore:', e?.message || e)
+    logAntiRaidError('errore', '', e)
   }
 }
 
@@ -311,7 +338,7 @@ const startPolling = (conn) => {
   if (pollTimer) return
   pollTimer = setInterval(() => {
     for (const chat of protectedChats()) {
-      scanRequests(conn, chat).catch(e => console.error('[antiRaid] poll:', e?.message || e))
+      scanRequests(conn, chat).catch(e => logAntiRaidError('poll', chat, e))
     }
   }, DEFAULTS.pollMs)
   pollTimer.unref?.()
@@ -328,7 +355,7 @@ if (global.conn?.ev && !global.antiRaidListenerSet) {
 
   conn.ev.on('group-participants.update', (update) => {
     onParticipantUpdate(conn, update).catch(e =>
-      console.error('[antiRaid] listener:', e?.message || e)
+      logAntiRaidError('listener', '', e)
     )
   })
 
@@ -336,7 +363,7 @@ if (global.conn?.ev && !global.antiRaidListenerSet) {
     if (!update?.id) return
     if (update.action === 'reject') return
     scanRequests(conn, update.id).catch(e =>
-      console.error('[antiRaid] richieste:', e?.message || e)
+      logAntiRaidError('richieste', update.id, e)
     )
   })
 

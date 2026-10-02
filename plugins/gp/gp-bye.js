@@ -4,11 +4,23 @@ import { removeWhitelistEntry } from '../../lib/whitelist.js'
 export async function before(m, { conn }) {
   if (!m.isGroup) return
 
-  let chat = global.db.data.chats[m.chat]
-  if (!chat || chat.bye !== true) return
+  // FIX bye: stesso problema del welcome — deve girare SOLO su evento uscita (28),
+  // mai su ogni messaggio, altrimenti groupMetadata/fetch dentro un before()
+  // superano i 500ms del bus -> 3 errori -> CIRCUITO APERTO.
+  if (m.messageStubType !== 28) return
+  const participants_new = Array.isArray(m.messageStubParameters) ? m.messageStubParameters : []
+  if (!participants_new.length) return
 
-  let groupMetadata = await conn.groupMetadata(m.chat) || (conn.chats[m.chat] || {}).metadata
-  let participants_new = m.messageStubParameters || []
+  try {
+    let chat = global.db.data.chats[m.chat]
+    if (!chat || chat.bye !== true) return
+
+    let groupMetadata = null
+    try {
+      groupMetadata = await conn.groupMetadata(m.chat)
+    } catch {}
+    groupMetadata = groupMetadata || (conn.chats?.[m.chat] || {}).metadata
+    if (!groupMetadata) return
 
   let groupPic
   try {
@@ -79,5 +91,7 @@ export async function before(m, { conn }) {
       }, { quoted: fakeBye })
     }
   }
+  } catch {
+    // mai far aprire il circuito al bus per un bye: ignora silenziosamente
+  }
 }
-

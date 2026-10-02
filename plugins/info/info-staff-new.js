@@ -91,7 +91,7 @@ let handler = async (m, { conn, usedPrefix, text }) => {
 
   let imageBuffer
   try {
-    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg')
+    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg.jpg')
   } catch {
     imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
   }

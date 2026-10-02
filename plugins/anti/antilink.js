@@ -92,28 +92,19 @@ async function decodeQrFromWebpBuffer(buffer) {
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
 
-  if (m.fromMe) {
-    console.log('🤖 Il bot ha inviato un link → bypass totale')
-    return true
-  }
+  if (m.fromMe) return true
 
   if (!m.isGroup) return false
 
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
-  if (isAdmin || isOwner || isROwner) {
-    console.log('🔒 Admin/Owner ha inviato un messaggio con link → bypass')
-    return true
-  }
+  if (isAdmin || isOwner || isROwner) return true
 
   if (!isBotAdmin) return true
 
   // 🛡️ Ignora risposte, citazioni e tag
-  if (m.quoted || m.mentionedJid?.length) {
-    console.log('🔎 Messaggio è una risposta/tag → ignorato per anti-link')
-    return true
-  }
+  if (m.quoted || m.mentionedJid?.length) return true
 
   const text = extractLinkText(m)
   const isWhatsAppLink =

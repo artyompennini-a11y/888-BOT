@@ -9,7 +9,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
     return m.reply("⛔ Non hai abbastanza aura per usare questo comando.")
   }
 
-  const imgBuffer = fs.readFileSync('icone/888.jpg')
+  const imgBuffer = fs.readFileSync('icone/888.jpeg.jpeg.jpg')
 
   const fake = {
     key: {

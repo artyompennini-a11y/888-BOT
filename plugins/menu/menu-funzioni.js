@@ -20,7 +20,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   let imgBuffer
   try {
-    imgBuffer = fs.readFileSync('icone/888.jpg')
+    imgBuffer = fs.readFileSync('media/888.jpeg.jpeg.jpg')
   } catch {
     imgBuffer = Buffer.alloc(0)
   }

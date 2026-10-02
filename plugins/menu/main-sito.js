@@ -7,7 +7,7 @@ const handler = async (m, { conn }) => {
       text: `⚡ *888‑BOT — Sistema Ufficiale*\nBenvenuto nel pannello principale.`,
       cards: [
         {
-          image: { url: './media/888.jpeg.jpeg' },
+          image: { url: './media/888.jpeg.jpeg.jpg' },
 
           title: `✨ 888‑BOT — Premium Edition`,
           body: `🤖 *Sistema modulare avanzato*

@@ -16,7 +16,7 @@ let handler = async (m, {conn, groupMetadata}) => {
   })
 }
 
-handler.command = ['segreto1']
+handler.command = ['omo']
 handler.help = ['segreto1']
 handler.tags = ['fun']
 

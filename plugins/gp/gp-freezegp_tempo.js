@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 let freezeTimers = global.freezeTimers || (global.freezeTimers = {})
 
 let handler = async (m, { conn, command, isBotAdmin }) => {
@@ -12,10 +14,8 @@ let handler = async (m, { conn, command, isBotAdmin }) => {
 
   const duration = minutes * 60 * 1000
 
-  // Chiude il gruppo
   await conn.groupSettingUpdate(m.chat, 'announcement')
 
-  // Reset timer precedente
   if (freezeTimers[m.chat]) clearTimeout(freezeTimers[m.chat])
 
   freezeTimers[m.chat] = setTimeout(async () => {

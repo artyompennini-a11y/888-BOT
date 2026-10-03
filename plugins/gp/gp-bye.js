@@ -3,11 +3,8 @@ import { removeWhitelistEntry } from '../../lib/whitelist.js'
 
 export async function before(m, { conn }) {
   if (!m.isGroup) return
-
-  // FIX bye: stesso problema del welcome — deve girare SOLO su evento uscita (28),
-  // mai su ogni messaggio, altrimenti groupMetadata/fetch dentro un before()
-  // superano i 500ms del bus -> 3 errori -> CIRCUITO APERTO.
   if (m.messageStubType !== 28) return
+
   const participants_new = Array.isArray(m.messageStubParameters) ? m.messageStubParameters : []
   if (!participants_new.length) return
 
@@ -22,45 +19,41 @@ export async function before(m, { conn }) {
     groupMetadata = groupMetadata || (conn.chats?.[m.chat] || {}).metadata
     if (!groupMetadata) return
 
-  let groupPic
-  try {
-    groupPic = await conn.profilePictureUrl(m.chat, 'image')
-  } catch {
-    groupPic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg'
-  }
+    let groupPic
+    try {
+      groupPic = await conn.profilePictureUrl(m.chat, 'image')
+    } catch {
+      groupPic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg'
+    }
 
-  let groupPicBuffer
-  try {
-    groupPicBuffer = await (await fetch(groupPic)).buffer()
-  } catch {
-    groupPicBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer()
-  }
+    let groupPicBuffer
+    try {
+      groupPicBuffer = await (await fetch(groupPic)).buffer()
+    } catch {
+      groupPicBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer()
+    }
 
-  for (let user of participants_new) {
-    if (m.messageStubType === 28) {
+    for (let user of participants_new) {
       if (chat.topBlasphemy && chat.topBlasphemy[user]) delete chat.topBlasphemy[user]
       if (chat.topUsers && chat.topUsers[user]) delete chat.topUsers[user]
       removeWhitelistEntry('antinuke', m.chat, user)
       removeWhitelistEntry('antibot', m.chat, user)
-    }
 
-    let profilePic
-    try {
-      profilePic = await conn.profilePictureUrl(user, 'image')
-    } catch {
-      profilePic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg'
-    }
+      let profilePic
+      try {
+        profilePic = await conn.profilePictureUrl(user, 'image')
+      } catch {
+        profilePic = 'https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg'
+      }
 
-    let ppBuffer
-    try {
-      ppBuffer = await (await fetch(profilePic)).buffer()
-    } catch {
-      ppBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer()
-    }
+      let ppBuffer
+      try {
+        ppBuffer = await (await fetch(profilePic)).buffer()
+      } catch {
+        ppBuffer = await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer()
+      }
 
-    if (m.messageStubType === 28) {
       let byeText = chat.sBye || `@${user.split('@')[0]} 𝐡𝐚 𝐥𝐚𝐬𝐜𝐢𝐚𝐭𝐨 𝐢𝐥 𝐠𝐫𝐮𝐩𝐩𝐨`
-
       byeText = byeText
         .replace(/@user/g, `@${user.split('@')[0]}`)
         .replace(/@group/g, groupMetadata.subject)
@@ -84,14 +77,15 @@ export async function before(m, { conn }) {
         participant: '0@s.whatsapp.net'
       }
 
-      await conn.sendMessage(m.chat, {
-        image: groupPicBuffer,
-        caption: byeText,
-        mentions: [user]
-      }, { quoted: fakeBye })
+      await conn.sendMessage(
+        m.chat,
+        {
+          image: groupPicBuffer,
+          caption: byeText,
+          mentions: [user]
+        },
+        { quoted: fakeBye }
+      )
     }
-  }
-  } catch {
-    // mai far aprire il circuito al bus per un bye: ignora silenziosamente
-  }
+  } catch {}
 }

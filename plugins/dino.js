@@ -1,15 +1,15 @@
-'use strict'
-
 import htmlApp from '../lib/htmlApp.js'
 
 const handler = async (m, { conn, command, args, text, usedPrefix }) => {
-  if (!/^(myapp|htmlapp)$/i.test(command)) return
+  const cmd = command.toLowerCase()
+  if (cmd !== 'myapp' && cmd !== 'htmlapp') return
   
   const jid = m.chat
   const senderJid = m.sender
   
   try {
-    const lifeValue = args[0] ? parseInt(args[0]) : 5
+    let lifeValue = args[0] ? parseInt(args[0]) : 5
+    if (isNaN(lifeValue)) lifeValue = 5
     
     const htmlContent = `
       <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
@@ -27,7 +27,7 @@ const handler = async (m, { conn, command, args, text, usedPrefix }) => {
       body: 'Gioco in esecuzione',
       text: 'Testo di fallback',
       footer: 'Usa i pulsanti per controllare',
-      url: 'https://example.com/dino',
+      url: 'https://example.com',
       trustedSources: ['example.com'],
       buttons: [
         { buttonId: 'jump', text: 'Salta' },
@@ -46,5 +46,5 @@ const handler = async (m, { conn, command, args, text, usedPrefix }) => {
   }
 }
 
-handler.command = ["myapp"]
-export default handler 
+handler.command = ["myapp", "htmlapp"]
+export default handler

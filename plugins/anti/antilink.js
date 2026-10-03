@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 import jsQR from 'jsqr'
 import webp from 'node-webpmux'
 
@@ -36,10 +38,6 @@ function extractLinkText(m) {
     }
   }
 
-  // ❌ NON leggere il testo del messaggio citato
-  // perché causerebbe kick a chi risponde a un link
-  // if (m.quoted) add(m.quoted.text)
-
   return chunks.length ? chunks.join('\n') : ''
 }
 
@@ -62,8 +60,6 @@ async function decodeQrFromWebpBuffer(buffer) {
     let rgba, width, height
 
     if (image.hasAnim) {
-      // ⚠️ Nelle sticker animate il frame può avere dimensioni diverse
-      // dalla tela (VP8X): jsQR richiede esattamente width * height * 4 byte.
       const frames = image.frames || []
       if (!frames.length) return null
       width = frames[0].width
@@ -83,27 +79,20 @@ async function decodeQrFromWebpBuffer(buffer) {
     const pixels = new Uint8ClampedArray(rgba.buffer, rgba.byteOffset, expected)
     const qr = jsQR(pixels, width, height)
     return qr?.data || null
-  } catch (err) {
-    // Nessun QR leggibile: si passa al fallback con canvas
-    console.log('Errore lettura sticker QR WebP:', err?.message || err)
+  } catch {
     return null
   }
 }
 
 export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }) {
-
   if (m.fromMe) return true
-
   if (!m.isGroup) return false
 
   const chat = global.db.data.chats[m.chat]
   if (!chat.antiLink || chat.isBanned) return true
 
   if (isAdmin || isOwner || isROwner) return true
-
   if (!isBotAdmin) return true
-
-  // 🛡️ Ignora risposte, citazioni e tag
   if (m.quoted || m.mentionedJid?.length) return true
 
   const text = extractLinkText(m)
@@ -115,18 +104,15 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
   if (lastCheck[m.chat] && Date.now() - lastCheck[m.chat] < 3000) return true
 
   if (isWhatsAppLink) {
-
     lastCheck[m.chat] = Date.now()
 
     let thisGroupCode = inviteCache[m.chat]
-
     if (!thisGroupCode) {
       try {
         thisGroupCode = await conn.groupInviteCode(m.chat)
         inviteCache[m.chat] = thisGroupCode
         setTimeout(() => delete inviteCache[m.chat], 10 * 60 * 1000)
-      } catch (e) {
-        console.log('Errore invite:', e)
+      } catch {
         return true
       }
     }
@@ -142,10 +128,11 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
       }
     })
 
-    let warningMessage = `🚫 𝐔𝐓𝐄𝐍𝐓𝐄 𝐄𝐒𝐏𝐔𝐋𝐒𝐎 𝐏𝐄𝐑 𝐋𝐈𝐍𝐊!\n\n`
-    warningMessage += `👤 Utente: @${m.sender.split('@')[0]}\n`
-    warningMessage += `📝 Motivo: Link whatsapp non consentito\n`
-    warningMessage += `⚠️ Azione: Messaggio eliminato e utente espulso`
+    let warningMessage =
+      `🚫 𝐔𝐓𝐄𝐍𝐓𝐄 𝐄𝐒𝐏𝐔𝐋𝐒𝐎 𝐏𝐄𝐑 𝐋𝐈𝐍𝐊!\n\n` +
+      `👤 Utente: @${m.sender.split('@')[0]}\n` +
+      `📝 Motivo: Link whatsapp non consentito\n` +
+      `⚠️ Azione: Messaggio eliminato e utente espulso`
 
     await conn.sendMessage(m.chat, {
       text: warningMessage,
@@ -153,17 +140,12 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     })
 
     try {
-      const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
-      console.log(`✅ Utente ${m.sender} rimosso per link`, res ?? '')
-    } catch (e) {
-      console.error('❌ Errore durante espulsione:', e)
+      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+    } catch {
       try {
         const plainJid = m.sender.split('@')[0] + '@s.whatsapp.net'
         await conn.groupParticipantsUpdate(m.chat, [plainJid], 'remove')
-        console.log(`✅ Utente rimosso con jid alternativo ${plainJid}`)
-      } catch (e2) {
-        console.error('❌ Espulsione fallita anche con jid alternativo:', e2)
-      }
+      } catch {}
     }
 
     return false
@@ -175,9 +157,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     if (isSticker || isWebP(buffer)) {
       try {
         qrText = await decodeQrFromWebpBuffer(buffer)
-      } catch (err) {
-        console.log('Errore lettura sticker QR WebP:', err)
-      }
+      } catch {}
     }
 
     if (!qrText) {
@@ -197,9 +177,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
         const qr = jsQR(imageData.data, canvas.width, canvas.height)
         qrText = qr?.data || null
-      } catch (e) {
-        console.log('Errore lettura QR con canvas:', e)
-      }
+      } catch {}
     }
 
     if (!qrText) return true
@@ -216,8 +194,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
         thisGroupCode = await conn.groupInviteCode(m.chat)
         inviteCache[m.chat] = thisGroupCode
         setTimeout(() => delete inviteCache[m.chat], 10 * 60 * 1000)
-      } catch (e) {
-        console.log('Errore invite QR:', e)
+      } catch {
         return true
       }
     }
@@ -233,10 +210,11 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
       }
     })
 
-    let warningMessage = `🚫 𝐔𝐓𝐄𝐍𝐓𝐄 𝐄𝐒𝐏𝐔𝐋𝐒𝐎 𝐏𝐄𝐑 𝐐𝐑 𝐂𝐎𝐍 𝐋𝐈𝐍𝐊!\n\n`
-    warningMessage += `👤 Utente: @${m.sender.split('@')[0]}\n`
-    warningMessage += `📝 Motivo: QR con link whatsapp\n`
-    warningMessage += `⚠️ Azione: Messaggio eliminato e utente espulso`
+    let warningMessage =
+      `🚫 𝐔𝐓𝐄𝐍𝐓𝐄 𝐄𝐒𝐏𝐔𝐋𝐒𝐎 𝐏𝐄𝐑 𝐐𝐑 𝐂𝐎𝐍 𝐋𝐈𝐍𝐊!\n\n` +
+      `👤 Utente: @${m.sender.split('@')[0]}\n` +
+      `📝 Motivo: QR con link whatsapp\n` +
+      `⚠️ Azione: Messaggio eliminato e utente espulso`
 
     await conn.sendMessage(m.chat, {
       text: warningMessage,
@@ -244,17 +222,12 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     })
 
     try {
-      const res = await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
-      console.log(`✅ Utente ${m.sender} rimosso per QR con link`, res ?? '')
-    } catch (e) {
-      console.error('❌ Errore espulsione QR:', e)
+      await conn.groupParticipantsUpdate(m.chat, [m.sender], 'remove')
+    } catch {
       try {
         const plainJid = m.sender.split('@')[0] + '@s.whatsapp.net'
         await conn.groupParticipantsUpdate(m.chat, [plainJid], 'remove')
-        console.log(`✅ Utente rimosso con jid alternativo ${plainJid}`)
-      } catch (e2) {
-        console.error('❌ Espulsione QR fallita anche con jid alternativo:', e2)
-      }
+      } catch {}
     }
 
     return false
@@ -264,9 +237,7 @@ export async function before(m, { conn, isAdmin, isBotAdmin, isOwner, isROwner }
     try {
       let buffer = await m.download()
       return await handleQrMedia(m, buffer, m.mtype === 'stickerMessage')
-    } catch (e) {
-      console.log('Errore QR:', e)
-    }
+    } catch {}
   }
 
   return true

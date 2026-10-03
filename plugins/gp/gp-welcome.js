@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 import fetch from 'node-fetch'
 import fs from 'fs'
 
@@ -23,12 +25,12 @@ const downloadImage = async (url) => {
 export async function before(m, { conn }) {
   try {
     if (!m.isGroup) return
-
-    // FIX: esegui solo su eventi di ingresso (27 = add, 31 = add-invite).
-    // Prima girava su OGNI messaggio: participants_new era undefined -> throw
-    // -> 3 errori -> bus apriva il circuito per 60s.
     if (m.messageStubType !== 27 && m.messageStubType !== 31) return
-    const participants_new = Array.isArray(m.messageStubParameters) ? m.messageStubParameters : []
+
+    const participants_new = Array.isArray(m.messageStubParameters)
+      ? m.messageStubParameters
+      : []
+
     if (!participants_new.length) return
 
     let chat = global.db.data.chats[m.chat] || {}
@@ -61,7 +63,9 @@ export async function before(m, { conn }) {
       const ppBuffer = await downloadImage(profilePic)
 
       if (m.messageStubType === 27) {
-        let welcomeText = chat.sWelcome || `@${user.split('@')[0]} 𝐞̀ 𝐞𝐧𝐭𝐫𝐚𝐭𝐨 𝐧𝐞𝐥 𝐠𝐫𝐮𝐩𝐩𝐨`
+        let welcomeText =
+          chat.sWelcome ||
+          `@${user.split('@')[0]} 𝐞̀ 𝐞𝐧𝐭𝐫𝐚𝐭𝐨 𝐧𝐞𝐥 𝐠𝐫𝐮𝐩𝐩𝐨`
 
         welcomeText = welcomeText
           .replace(/@user/g, `@${user.split('@')[0]}`)
@@ -81,20 +85,23 @@ export async function before(m, { conn }) {
             locationMessage: {
               name: '𝐁𝐞𝐧𝐯𝐞𝐧𝐮𝐭𝐨 👋',
               jpegThumbnail: ppBuffer.toString('base64'),
-              vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Welcome;;;\nFN:Welcome\nEND:VCARD'
+              vcard:
+                'BEGIN:VCARD\nVERSION:3.0\nN:;Welcome;;;\nFN:Welcome\nEND:VCARD'
             }
           },
           participant: '0@s.whatsapp.net'
         }
 
-        await conn.sendMessage(m.chat, {
-          image: groupPicBuffer,
-          caption: welcomeText,
-          mentions: [user]
-        }, { quoted: fakeWelcome })
+        await conn.sendMessage(
+          m.chat,
+          {
+            image: groupPicBuffer,
+            caption: welcomeText,
+            mentions: [user]
+          },
+          { quoted: fakeWelcome }
+        )
       }
     }
-  } catch {
-    // mai far aprire il circuito al bus per un welcome: ignora silenziosamente
-  }
+  } catch {}
 }

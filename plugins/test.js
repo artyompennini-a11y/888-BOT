@@ -31,7 +31,7 @@ let handler = async (m, { conn, groupMetadata }) => {
   }, { quoted: m });
 };
 
-handler.customPrefix = /segreto/i;
+handler.customPrefix = /segreto1/i;
 handler.command = new RegExp();
 handler.help = ['.𝐬𝐞𝐠𝐫𝐞𝐭𝐨'];
 handler.tags = ['fun'];

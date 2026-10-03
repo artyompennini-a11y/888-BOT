@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 import fetch from 'node-fetch'
 import { parse } from 'node-html-parser'
 
@@ -30,7 +32,7 @@ ${lyrics}
       { quoted: m }
     )
 
-  } catch (e) {
+  } catch {
     m.reply(`❌ 𝐍𝐨𝐧 𝐡𝐨 𝐭𝐫𝐨𝐯𝐚𝐭𝐨 𝐢𝐥 𝐭𝐞𝐬𝐭𝐨 𝐝𝐢 "${titoloOriginale}".`)
   }
 
@@ -42,7 +44,6 @@ handler.tags = ['fun']
 handler.help = ['lyrics_yes']
 
 export default handler
-
 
 async function trovaTesto(titolo) {
   let cleanTitle = titolo

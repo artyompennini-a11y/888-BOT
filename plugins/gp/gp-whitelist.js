@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 import { readWhitelist, writeWhitelist, clearWhitelist } from '../../lib/whitelist.js'
 
 const ADD_WORDS = new Set(['add', 'aggiungi', 'inserisci'])
@@ -256,9 +258,7 @@ let handler = async (m, { conn, command, usedPrefix, args }) => {
 handler.help = ['addwhitelist', 'delwhitelist', 'whitelist']
 handler.tags = ['owner', 'group']
 handler.command = /^(addwhitelist|delwhitelist|whitelist)$/i
-
 handler.owner = true
 handler.group = true
 
 export default handler
-

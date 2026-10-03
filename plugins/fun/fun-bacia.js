@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 const tag = (jid = '') => '@' + String(jid).split('@')[0].split(':')[0]
 
 function buildContextMsg(title) {

@@ -23,17 +23,17 @@ let handler = async (m, { conn, groupMetadata }) => {
   if (!targets.length) throw '';
 
   const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-  const formatNumber = randomTarget.split('@')[0];
+  const cleanNumber = randomTarget.split('@')[0];
 
   await conn.sendMessage(m.chat, {
-    text: `@${formatNumber} ${SECRETS[Math.floor(Math.random() * SECRETS.length)]}`,
+    text: `@${cleanNumber} ${SECRETS[Math.floor(Math.random() * SECRETS.length)]}`,
     mentions: [randomTarget]
   }, { quoted: m });
 };
 
 handler.customPrefix = /segreto1/i;
 handler.command = new RegExp();
-handler.help = ['.  𝐬𝐞𝐠𝐫𝐞𝐭𝐨'];
+handler.help = ['.𝐬𝐞𝐠𝐫𝐞𝐭𝐨'];
 handler.tags = ['fun'];
 
 export default handler;

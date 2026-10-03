@@ -1,16 +1,13 @@
-// Plugin "guardami" — mostra i messaggi del bot in attesa
-// Versione premium 888
+//Plugin by Elixir, Punisher & 888 staff
 
 let handler = async (m, { conn }) => {
   try {
-    // Store compatibile con tutte le versioni
     let store = conn.msgStore || conn.ev?.msgStore || conn.sentMessages || [];
 
     if (!Array.isArray(store)) {
       return m.reply("⚠️ Nessun registro dei messaggi disponibile.");
     }
 
-    // Filtra solo messaggi validi e con stato pending/server_ack
     let pending = store.filter(msg =>
       msg &&
       msg.status &&
@@ -38,7 +35,6 @@ let handler = async (m, { conn }) => {
     await m.reply(txt.trim());
 
   } catch (err) {
-    console.error("[guardami] Errore:", err);
     await m.reply("❌ Errore interno durante la scansione dei messaggi.");
   }
 };

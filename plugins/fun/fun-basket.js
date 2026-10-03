@@ -1,28 +1,25 @@
-//Plugin by Gab, Lucifero & 888 staff
+//Plugin by Elixir, Punisher & 888 staff
 
 global.basket = global.basket || {}
 
 let handler = async (m, { conn, command }) => {
-
   let user = global.db.data.users[m.sender]
   if (!user) return
 
   user.basket = user.basket || { score: 0 }
 
   if (command === "basket") {
-
     global.basket[m.sender] = true
 
     return conn.sendMessage(m.chat, {
       text:
-`╔═🏀 𝐁𝐀𝐒𝐊𝐄𝐓 ═╗
-┃ Scegli il tiro
-┃
-┃ 🟢 Leggero
-┃ 🟡 Medio 
-┃ 🔴 Forte
-╚══════════════╝`,
-            buttons: [
+`🏀 𝐁𝐀𝐒𝐊𝐄𝐓
+Scegli il tiro:
+
+🟢 Leggero
+🟡 Medio
+🔴 Forte`,
+      buttons: [
         { buttonId: ".tiro facile", buttonText: { displayText: "🟢 𝐋𝐞𝐠𝐠𝐞𝐫𝐨" }, type: 1 },
         { buttonId: ".tiro medio", buttonText: { displayText: "🟡 𝐌𝐞𝐝𝐢𝐨" }, type: 1 },
         { buttonId: ".tiro tripla", buttonText: { displayText: "🔴 𝐅𝐨𝐫𝐭𝐞" }, type: 1 }
@@ -32,7 +29,6 @@ let handler = async (m, { conn, command }) => {
   }
 
   if (command === "tiro") {
-
     if (!global.basket[m.sender])
       return m.reply("❌ Usa prima .basket")
 
@@ -48,25 +44,22 @@ let handler = async (m, { conn, command }) => {
 
     if (canestro) {
       user.basket.score += 1
-
       text =
-`╔═🏀 𝐂𝐀𝐍𝐄𝐒𝐓𝐑𝐎 ═╗
-┃ 🏀 SWISH!
-┃ Totale canestri: *${user.basket.score}*
-╚══════════════╝`
+`🏀 𝐂𝐀𝐍𝐄𝐒𝐓𝐑𝐎!
+SWISH!
+Totale canestri: *${user.basket.score}*`
     } else {
       text =
-`╔═🧱 𝐄𝐑𝐑𝐎𝐑𝐄 ═╗
-┃ 🧱 Ferro pieno
-┃ Riprova campione
-╚══════════════╝`
+`🧱 𝐄𝐑𝐑𝐎𝐑𝐄
+Ferro pieno!
+Riprova campione.`
     }
 
     delete global.basket[m.sender]
 
     return conn.sendMessage(m.chat, {
       text,
-            buttons: [
+      buttons: [
         { buttonId: ".basket", buttonText: { displayText: "🏀 𝐆𝐢𝐨𝐜𝐚 𝐝𝐢 𝐧𝐮𝐨𝐯𝐨" }, type: 1 },
         { buttonId: ".topbasket", buttonText: { displayText: "🏆 𝐂𝐥𝐚𝐬𝐬𝐢𝐟𝐢𝐜𝐚" }, type: 1 }
       ],
@@ -75,7 +68,6 @@ let handler = async (m, { conn, command }) => {
   }
 
   if (command === "topbasket") {
-
     let users = Object.entries(global.db.data.users)
       .map(([jid, data]) => ({
         jid,
@@ -97,7 +89,7 @@ let handler = async (m, { conn, command }) => {
     return conn.sendMessage(m.chat, {
       text,
       mentions: users.map(u => u.jid),
-            buttons: [
+      buttons: [
         { buttonId: ".basket", buttonText: { displayText: "🏀 𝐆𝐢𝐨𝐜𝐚" }, type: 1 }
       ],
       headerType: 1

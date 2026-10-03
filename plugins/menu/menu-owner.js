@@ -54,8 +54,7 @@ Livello: Sviluppatore / Creatore Core
 • ${prefix}prefisso  
 • ${prefix}resettaprefisso  
 
-🛡️ *Sicurezza & Protezione*
-• ${prefix}antinuke  
+🛡️ *Sicurezza & Protezione*  
 • ${prefix}banchat  
 • ${prefix}banuser (@)  
 • ${prefix}unbanuser (@)  

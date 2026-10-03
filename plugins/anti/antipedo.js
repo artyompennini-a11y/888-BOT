@@ -1,3 +1,4 @@
+//plugin by fuma
 import fetch from 'node-fetch'
 
 const logAdminAction = async (chatId, adminJid, actionKey, amount = 1) => {

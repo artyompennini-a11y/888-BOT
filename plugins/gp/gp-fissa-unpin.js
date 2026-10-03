@@ -1,8 +1,4 @@
-//Plugin by Gab, Lucifero & 888 staff
-
-
-
-
+//Plugin by Elixir, Punisher & 888 staff
 
 import { Buffer } from 'buffer';
 
@@ -17,18 +13,6 @@ const handler = async (m, { conn, args, command }) => {
   const isUnpinAll = ['unpinall', 'defissatutti'].includes(command.toLowerCase());
   const isFinalPin = command === 'pinfinal';
   const isPin = !isUnpin && !isFinalPin && !isUnpinAll;
-
-  /*
-  if (isUnpinAll) {
-    try {
-      await conn.sendMessage(m.chat, { pin: { type: 3 } });
-      return m.reply('𝐓𝐮𝐭𝐭𝐢 𝐢 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢 𝐬𝐨𝐧𝐨 𝐬𝐭𝐚𝐭𝐢 𝐝𝐞𝐟𝐢𝐬𝐬𝐚𝐭𝐢');
-    } catch (e) {
-      console.error('Errore durante lo sblocco di tutti i messaggi:', e);
-      return m.reply(`${global.errore}`);
-    }
-  }
-  */
 
   if (isUnpin) {
     if (!m.quoted) return m.reply('𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚𝐥 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨 𝐝𝐚 𝐝𝐞𝐟𝐢𝐬𝐬𝐚𝐫𝐞');
@@ -45,9 +29,7 @@ const handler = async (m, { conn, args, command }) => {
       };
     }
 
-    if (!key) {
-      return m.reply(`${global.errore}`);
-    }
+    if (!key) return m.reply(`${global.errore}`);
 
     try {
       await conn.sendMessage(m.chat, { pin: { type: 2, key } });
@@ -85,6 +67,7 @@ const handler = async (m, { conn, args, command }) => {
 
   if (isPin) {
     const text = args.join(' ');
+
     if (m.quoted && !text) {
       let quotedKey = null;
 
@@ -105,13 +88,12 @@ const handler = async (m, { conn, args, command }) => {
         };
       }
 
-      if (!quotedKey) {
-        return m.reply(`${global.errore}`);
-      }
+      if (!quotedKey) return m.reply(`${global.errore}`);
 
       return await inviaBottoniDurata(conn, m.chat, quotedKey);
     }
-    else if (text) {
+
+    if (text) {
       try {
         const sent = await conn.sendMessage(m.chat, { text }, { quoted: m });
         if (!sent || !sent.key) throw new Error('Impossibile ottenere la chiave del messaggio inviato.');
@@ -120,17 +102,14 @@ const handler = async (m, { conn, args, command }) => {
         console.error('Errore durante l\'invio del messaggio:', e);
         return m.reply(`${global.errore}`);
       }
-    } else {
-      return m.reply('𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚𝐝 𝐮𝐧 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨 𝐨 𝐬𝐜𝐫𝐢𝐯𝐢𝐥𝐨 𝐩𝐞𝐫 𝐟𝐢𝐬𝐬𝐚𝐫𝐥𝐨');
     }
+
+    return m.reply('𝐑𝐢𝐬𝐩𝐨𝐧𝐝𝐢 𝐚𝐝 𝐮𝐧 𝐦𝐞𝐬𝐬𝐚𝐠𝐠𝐢𝐨 𝐨 𝐬𝐜𝐫𝐢𝐯𝐢𝐥𝐨 𝐩𝐞𝐫 𝐟𝐢𝐬𝐬𝐚𝐫𝐥𝐨');
   }
 };
 
 async function inviaBottoniDurata(conn, chat, key) {
-  if (!key) {
-    console.error('Errore: Chiave del messaggio non valida in inviaBottoniDurata.');
-    return;
-  }
+  if (!key) return;
 
   const keyString = JSON.stringify(key);
   const base64Key = Buffer.from(keyString).toString('base64');

@@ -1,30 +1,39 @@
-import fs from 'fs';
-import path from 'path';
-import { performance } from 'perf_hooks';
+//Plugin by Elixir, Punisher & 888 staff
 
-const BASE_PATH = path.join(process.cwd(), 'media');
+import fs from 'fs'
+import path from 'path'
+import { performance } from 'perf_hooks'
+
+const BASE_PATH = path.join(process.cwd(), 'media')
 
 function pickRandom(list) {
-  return list[Math.floor(Math.random() * list.length)];
+  return list[Math.floor(Math.random() * list.length)]
 }
 
 function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 let handler = async (m, { conn, text }) => {
   try {
-    let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : m.sender;
-    let userId = who.split('@')[0];
+    let who = m.mentionedJid?.[0] || m.quoted?.sender || m.sender
+    let userId = who.split('@')[0]
 
-    const start = performance.now();
+    const start = performance.now()
 
-    let loading = await conn.sendMessage(m.chat, { text: '⏳ *Inizio processo di TRASFORMAZIONE...*', mentions: [who] }, { quoted: m });
+    let loading = await conn.sendMessage(
+      m.chat,
+      { text: `⏳ Trasformazione in corso...`, mentions: [who] },
+      { quoted: m }
+    )
 
-    const progresses = ['30%', '50%', '70%', '100%'];
+    const progresses = ['30%', '50%', '70%', '100%']
     for (const p of progresses) {
-      await wait(500);
-      await conn.sendMessage(m.chat, { text: `⏳ *Caricamento energia... ${p}*`, edit: loading.key, mentions: [who] });
+      await wait(500)
+      await conn.sendMessage(
+        m.chat,
+        { text: `⏳ Energia caricata: ${p}`, edit: loading.key, mentions: [who] }
+      )
     }
 
     const localVideos = {
@@ -56,55 +65,59 @@ let handler = async (m, { conn, text }) => {
       'Ultra Ego': 'ultra_ego.mp4',
       'Ultra Istinto Mastered': 'ultra_istinto_mastered.mp4',
       'Ultra Istinto Omen': 'ultra_istinto_omen.mp4'
-    };
-
-    const keys = Object.keys(localVideos);
-    const chosen = pickRandom(keys);
-    const videoFile = localVideos[chosen];
-   
-    const videoPath = path.join(BASE_PATH, videoFile);
-
-    if (!fs.existsSync(videoPath)) {
-      await conn.sendMessage(m.chat, { text: `⚠️ Errore: Il file *${videoFile}* non esiste nella cartella.` }, { quoted: m });
-      return;
     }
 
-    const end = performance.now();
-    const timeTaken = ((end - start) / 1000).toFixed(2);
+    const keys = Object.keys(localVideos)
+    const chosen = pickRandom(keys)
+    const videoFile = localVideos[chosen]
+    const videoPath = path.join(BASE_PATH, videoFile)
 
-    const finalMsg = `*✔️ TRASFORMAZIONE COMPLETATA* ━━━━━━━━━━━━━━━━━━━━━  
-👤 *Guerriero:* @${userId}  
-🪐 *Forma:* ${chosen}  
-🕒 *Tempo:* ${timeTaken}s  
-━━━━━━━━━━━━━━━━━━━━━  
- 
-   [*888-BOT*]`;
+    if (!fs.existsSync(videoPath)) {
+      await conn.sendMessage(
+        m.chat,
+        { text: `⚠️ File mancante: ${videoFile}` },
+        { quoted: m }
+      )
+      return
+    }
+
+    const end = performance.now()
+    const timeTaken = ((end - start) / 1000).toFixed(2)
+
+    const finalMsg =
+      `✔️ Trasformazione completata\n` +
+      `👤 Guerriero: @${userId}\n` +
+      `🪐 Forma: ${chosen}\n` +
+      `🕒 Tempo: ${timeTaken}s\n\n` +
+      `[888-BOT]`
 
     try {
-      await conn.sendMessage(m.chat, { 
-        delete: { 
-          remoteJid: m.chat, 
-          fromMe: loading.key.fromMe, 
-          id: loading.key.id, 
-          participant: loading.key.participant 
-        } 
-      });
-    } catch (e) {}
+      await conn.sendMessage(m.chat, {
+        delete: {
+          remoteJid: m.chat,
+          fromMe: loading.key.fromMe,
+          id: loading.key.id,
+          participant: loading.key.participant
+        }
+      })
+    } catch {}
 
-    await conn.sendMessage(m.chat, {
+    await conn.sendMessage(
+      m.chat,
+      {
         video: { url: videoPath },
         caption: finalMsg,
         mentions: [who]
-    }, { quoted: m });
-
-  } catch (err) {
-    console.error(err);
-    await m.reply('⚠️ Errore durante la trasformazione.');
+      },
+      { quoted: m }
+    )
+  } catch {
+    await m.reply('⚠️ Errore durante la trasformazione.')
   }
-};
+}
 
-handler.help = ['saiyan'];
-handler.tags = ['fun'];
-handler.command = /^(saiyan)$/i;
+handler.help = ['saiyan']
+handler.tags = ['fun']
+handler.command = /^(saiyan)$/i
 
-export default handler;
+export default handler

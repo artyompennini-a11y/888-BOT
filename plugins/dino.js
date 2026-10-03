@@ -46,7 +46,5 @@ const handler = async (m, { conn, command, args, text, usedPrefix }) => {
   }
 }
 
-export default {
-  command: /^(myapp|htmlapp)$/i,
-  operate: handler
-}
+handler.command = ["myapp"]
+export default handler 

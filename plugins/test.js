@@ -1,40 +1,37 @@
+const SECRETS = [
+  'ha paura del buio ma non lo ammette a nessuno',
+  'lascia sempre i piatti da lavare nel lavandino per giorni',
+  'è segretamente innamorato/a di un personaggio dei cartoni animati',
+  'canta a squarciagola sotto la doccia quando pensa di essere solo/a',
+  'ha finto di stare male per evitare un impegno importante',
+  'spende troppi soldi in oggetti completamente inutili online',
+  'guarda ancora i vecchi video nostalgici su YouTube alle tre di notte',
+  'ha paura dei ragni anche se sono minuscoli',
+  'usa ancora password ridicole e facilmente indovinabili',
+  'fa finta di lasciar vincere gli altri ai videogiochi ma in realtà è una sega',
+  'mangia abbinamenti di cibo improponibili di nascosto',
+  'ascolta playlist musicali imbarazzanti quando nessuno può sentirlo/a',
+  'ha provato a fare una ricetta da chef fallendo miseramente',
+  'non si ricorda mai dove lascia le chiavi o il telefono',
+  'crede ancora a metà delle notizie palesemente false che vede online',
+  'ha inviato un messaggio nella chat sbagliata parlando male del destinatario'
+];
+
 let handler = async (m, { conn, groupMetadata }) => {
-  if (!m.isGroup) throw '';
-  
-  let gruppi = global.db.data.chats[m.chat];
-  if (gruppi?.spacobot === false) throw '';
-  
-  let ps = groupMetadata.participants.map(v => v.id);
-  let a = ps[Math.floor(Math.random() * ps.length)];
-  
-  let frasi = [
-    'ha paura del buio ma non lo ammette a nessuno',
-    'lascia sempre i piatti da lavare nel lavandino per giorni',
-    'è segretamente innamorato/a di un personaggio dei cartoni animati',
-    'canta a squarciagola sotto la doccia quando pensa di essere solo/a',
-    'ha finto di stare male per evitare una chiamata di lavoro o di scuola',
-    'spende metà del suo stipendio in oggetti inutili online',
-    'guarda ancora i vecchi video nostalgici su YouTube alle tre di notte',
-    'ha paura dei ragni anche se sono minuscoli',
-    'usa ancora password facilmente indovinabili come 123456',
-    'fa finta di lasciar vincere i cugini più piccoli alla PlayStation ma in realtà perde davvero',
-    'mangia la pizza con l\'ananas e dichiara che è buonissima',
-    'ascolta playlist musicali imbarazzanti quando va in palestra',
-    'ha provato a fare una ricetta da internet fallendo miseramente',
-    'non si ricorda mai dove ha parcheggiato l\'auto o lasciato le chiavi',
-    'crede ancora alle catene di Sant\'Antonio su WhatsApp',
-    'ha inviato un messaggio al gruppo sbagliato parlando male di qualcuno del gruppo stesso'
-  ];
+  if (!m.isGroup || global.db?.data?.chats?.[m.chat]?.spacobot === false) throw '';
 
-  let fraseCasuale = frasi[Math.floor(Math.random() * frasi.length)];
+  const list = groupMetadata?.participants || [];
+  if (!list.length) throw '';
 
-  m.reply(`@${a.split('@')[0]} ${fraseCasuale}`, null, {
-    mentions: [a],
-    contextInfo: { mentionedJid: [a] }
-  });
+  const target = list[Math.floor(Math.random() * list.length)].id;
+
+  await conn.sendMessage(m.chat, {
+    text: `@${target.split('@')[0]} ${SECRETS[Math.floor(Math.random() * SECRETS.length)]}`,
+    mentions: [target]
+  }, { quoted: m });
 };
 
-handler.customPrefix = /segreto1/i;
+handler.customPrefix = /segreto/i;
 handler.command = new RegExp();
 handler.help = ['.𝐬𝐞𝐠𝐫𝐞𝐭𝐨'];
 handler.tags = ['fun'];

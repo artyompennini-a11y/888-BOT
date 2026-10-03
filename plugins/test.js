@@ -1,39 +1,52 @@
-const SECRETS = [
-  'ha dimenticato le chiavi di casa ieri',
-  'beve il caffè senza zucchero',
-  'adora guardare le serie TV fino a tarda notte',
-  'ha paura dei film horror',
-  'legge sempre l\'ultima pagina di un libro prima di iniziare',
-  'non riesce a svegliarsi senza tre sveglie',
-  'preferisce la pizza all\'ananas',
-  'ascolta musica ad alto volume mentre pulisce casa',
-  'ha una collezione di fumetti rari',
-  'usa ancora Internet Explorer',
-  'crede ancora ai fantasmi',
-  'ha cantato a squarciagola sotto la doccia stamattina'
-];
-
-let handler = async (m, { conn, groupMetadata }) => {
-  if (!m.isGroup || global.db?.data?.chats?.[m.chat]?.spacobot === false) throw '';
-
-  const botJid = conn.user.jid;
-  const participants = groupMetadata?.participants?.map(p => p.id) || [];
+let handler = async (m, {conn, groupMetadata}) => {
+  if (!m.isGroup || global.db?.data?.chats?.[m.chat]?.spacobot === false) throw ''
   
-  const targets = participants.filter(id => id !== botJid);
-  if (!targets.length) throw '';
+  const botJid = conn.user.jid
+  const participants = groupMetadata?.participants?.map(p => p.id) || []
+  const targets = participants.filter(id => id !== botJid)
+  
+  if (!targets.length) throw ''
+  
+  const randomUser = targets[Math.floor(Math.random() * targets.length)]
+  const randomInsult = insults[Math.floor(Math.random() * insults.length)]
+  
+  await m.reply(`@${randomUser.split('@')[0]} ${randomInsult}`, null, {
+    mentions: [randomUser],
+    contextInfo: {mentionedJid: [randomUser]}
+  })
+}
 
-  const randomTarget = targets[Math.floor(Math.random() * targets.length)];
-  const cleanNumber = randomTarget.split('@')[0];
+handler.command = ['segreto1']
+handler.help = ['segreto1']
+handler.tags = ['fun']
 
-  await conn.sendMessage(m.chat, {
-    text: `@${cleanNumber} ${SECRETS[Math.floor(Math.random() * SECRETS.length)]}`,
-    mentions: [randomTarget]
-  }, { quoted: m });
-};
+export default handler
 
-handler.customPrefix = /segreto1/i;
-handler.command = new RegExp();
-handler.help = ['.𝐬𝐞𝐠𝐫𝐞𝐭𝐨'];
-handler.tags = ['fun'];
-
-export default handler;
+const insults = [
+  'ha fatto bestemmiare un prete lanciandoli un petardo addosso',
+  'mi usa solo per masturbarsi sulle foto zozze che invio',
+  'è innamorato/a di un membro del gruppo',
+  'non si fa il bidet',
+  'adora vestirsi del sesso opposto, fotografarsi per poi masturbarsi',
+  'adora le donne grasse',
+  'ha i piedi puzzolenti',
+  'dopo che fa la cacca guarda con orgoglio il suo capolavoro e poi tira lo sciaqquone',
+  'masturba il suo cane',
+  'ha iniziato a mangiare il calippo per imparare a fare i bocchini',
+  'ha preso più cazzi che forchette in bocca',
+  'ha una collezione di 1 TB di porno trans',
+  'si fa leccare il suo organo genitale dal suo cane',
+  'spende 1000 888COIN al mese in escorts e mente al suo compagno sullo stipendio',
+  'sa che uno del gruppo è gay',
+  'è più ignorante di miss Italia per quello non parla tanto',
+  'è vergine',
+  'vuole più bene alla sua cagna che alla cagna della sorella',
+  'usa Internet Explorer',
+  'fa finta finta di lasciar vincere il cugino di 12 anni alla PlayStation ma la realtà è una sega mortale',
+  'la scorsa notte si è pisciato/a addosso',
+  'ha il culo sporco di merda',
+  'scoreggia in discoteca, tanto non lo sente nessuno',
+  'lo eccita la fantasia di farsi trombare da un cane',
+  'non si lava i denti il fine settimana',
+  'a 10 anni andò a un funerale e invece di dire condoglianze disse tanti auguri alla vedova'
+]

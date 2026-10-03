@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 import { fileURLToPath } from 'url'
 import path from 'path'
 
@@ -19,7 +21,7 @@ const notifyOwners = async (conn, req) => {
       `👥 Membri: ${members}\n` +
       `🆔 ID Richiesta: ${id}\n\n` +
       `Seleziona un'azione:`,
-      buttons: [
+    buttons: [
       { buttonId: `.staffaccept ${id}`, buttonText: { displayText: '✅ 𝐀𝐩𝐩𝐫𝐨𝐯𝐚' }, type: 1 },
       { buttonId: `.staffreject ${id}`, buttonText: { displayText: '❌ 𝐑𝐢𝐟𝐢𝐮𝐭𝐚' }, type: 1 }
     ],
@@ -30,7 +32,6 @@ const notifyOwners = async (conn, req) => {
 let handler = async (m, { conn, text, command }) => {
   const cmd = command?.toLowerCase()
 
-  // APPROVA / RIFIUTA
   if (cmd === 'staffaccept' || cmd === 'staffreject') {
     const id = text?.trim()
     if (!id) return m.reply('❌ ID mancante')
@@ -38,7 +39,6 @@ let handler = async (m, { conn, text, command }) => {
     const req = pendingStaffJoin[id]
     if (!req) return m.reply('❌ Richiesta non trovata')
 
-    // APPROVA
     if (cmd === 'staffaccept') {
       try {
         let res = await conn.groupAcceptInvite(req.code)
@@ -57,7 +57,6 @@ let handler = async (m, { conn, text, command }) => {
       return
     }
 
-    // RIFIUTA
     if (cmd === 'staffreject') {
       await conn.sendMessage(req.staff, {
         text:
@@ -70,7 +69,6 @@ let handler = async (m, { conn, text, command }) => {
     }
   }
 
-  // STAFFJOIN
   if (cmd !== 'staffjoin') return
 
   if (!isStaff(m.sender)) {

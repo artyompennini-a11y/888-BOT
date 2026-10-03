@@ -1,17 +1,19 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 const handler = async (m, { conn, participants, groupMetadata, args }) => {
-  const groupAdmins = participants.filter(p => p.admin);
-  const mentionList = groupAdmins.map(p => p.id);
+  const groupAdmins = participants.filter(p => p.admin)
+  const mentionList = groupAdmins.map(p => p.id)
 
   const owner =
     groupMetadata.owner ||
     groupAdmins.find(p => p.admin === 'superadmin')?.id ||
-    `${m.chat.split('-')[0]}@s.whatsapp.net`;
+    `${m.chat.split('-')[0]}@s.whatsapp.net`
 
-  const message = args.join(' ') || 'Nessun messaggio fornito';
+  const message = args.join(' ') || 'Nessun messaggio fornito'
 
   const listAdmin = groupAdmins
     .map(v => `• @${v.id.split('@')[0]}`)
-    .join('\n');
+    .join('\n')
 
   const text = `
 ⚠️ *RICHIAMO ADMIN 888*
@@ -25,7 +27,7 @@ ${listAdmin}
 
 ━━━━━━━━━━━━━━━━━━━━━━
 Tutti gli admin sono stati menzionati.
-`.trim();
+`.trim()
 
   await conn.sendMessage(
     m.chat,
@@ -45,13 +47,13 @@ Tutti gli admin sono stati menzionati.
       }
     },
     { quoted: m }
-  );
-};
+  )
+}
 
-handler.command = ['admins', '@admins', 'dmins'];
-handler.tags = ['admin'];
-handler.help = ['admins <messaggio>'];
-handler.group = true;
-handler.mods = true;
+handler.command = ['admins', '@admins', 'dmins']
+handler.tags = ['admin']
+handler.help = ['admins <messaggio>']
+handler.group = true
+handler.mods = true
 
-export default handler;
+export default handler

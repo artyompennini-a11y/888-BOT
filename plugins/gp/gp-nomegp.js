@@ -1,3 +1,5 @@
+//Plugin by Elixir, Punisher & 888 staff
+
 const handler = async (m, { conn, args }) => {
   if (!args[0]) {
     return conn.reply(

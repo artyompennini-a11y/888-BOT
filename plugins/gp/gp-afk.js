@@ -93,7 +93,6 @@ handler.before = async (m, { conn }) => {
   const cleanCmd = (m.text || '').replace(/^[.!/#]/, '').split(/\s+/)[0] || ''
   const isAfkRelated = /^(afk|afk_scope)$/i.test(cleanCmd)
 
-  // L'utente AFK scrive di nuovo -> bentornato e rimuovi AFK
   if (afkState[m.sender] && !isAfkRelated) {
     const duration = formatDuration(Date.now() - afkState[m.sender].at)
     delete afkState[m.sender]
@@ -112,9 +111,6 @@ Spero tu abbia ricaricato le energie ⚡
     return false
   }
 
-  // NIENTE SPAM: nessuna notifica quando qualcuno menziona un utente AFK.
-  // L'esclusione avviene in silenzio dentro gp-hidetag.js
-  // che filtra global.afkState prima di taggare.
   return false
 }
 

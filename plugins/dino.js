@@ -8,7 +8,7 @@ const handler = async (m, { conn, command, args, text, usedPrefix }) => {
   const senderJid = m.sender
   
   try {
-    let lifeValue = args[0] ? parseInt(args[0]) : 5
+    let lifeValue = args ? parseInt(args) : 5
     if (isNaN(lifeValue)) lifeValue = 5
     
     const htmlContent = `

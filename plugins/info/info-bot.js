@@ -29,38 +29,36 @@ Benvenuto nel pannello principale.
 }
 
 const numero = (jid) => String(jid || '').split('@')[0].split(':')[0]
-
-const registra = (conn) => {
-  if (!conn?.ev || conn.__benvenutoGruppo) return
-  conn.__benvenutoGruppo = true
-
-  conn.ev.on('group-participants.update', async (ev) => {
-    try {
-      if (ev.action !== 'add') return
-      const mio = numero(conn.user?.id)
-      const mioLid = numero(conn.user?.lid)
-      const entrato = (ev.participants || []).some(p => {
-        const n = numero(typeof p === 'string' ? p : p?.id)
-        return n === mio || (mioLid && n === mioLid)
-      })
-      if (!entrato) return
-      await new Promise(r => setTimeout(r, 2000))
-      await conn.sendMessage(ev.id, { text: await costruisci(conn) })
-    } catch (e) {
-      console.error('Errore messaggio nuovo gruppo:', e)
-    }
-  })
-}
-
-registra(global.conn)
+const inviati = new Set()
 
 let handler = async (m, { conn }) => {
   await conn.sendMessage(m.chat, { text: await costruisci(conn) }, { quoted: m })
 }
 
 handler.before = async function (m, { conn }) {
-  registra(conn)
-  return false
+  try {
+    if (!m.isGroup) return
+    if (![27, 31].includes(m.messageStubType)) return
+
+    const mio = numero(conn.user?.id)
+    const mioLid = numero(conn.user?.lid)
+    const params = m.messageStubParameters || []
+    const entrato = params.some(p => {
+      const n = numero(p)
+      return n === mio || (mioLid && n === mioLid)
+    })
+    if (!entrato) return
+
+    const chiave = m.chat + ':' + (m.messageTimestamp || Date.now())
+    if (inviati.has(m.chat)) return
+    inviati.add(m.chat)
+    setTimeout(() => inviati.delete(m.chat), 60000)
+
+    await new Promise(r => setTimeout(r, 2000))
+    await conn.sendMessage(m.chat, { text: await costruisci(conn) })
+  } catch (e) {
+    console.error('Errore messaggio nuovo gruppo:', e)
+  }
 }
 
 handler.help = ['infobot']

@@ -4,46 +4,52 @@ let handler = async (m, { conn }) => {
 `⚡ *888 BOT — Sistema Ufficiale*
 Benvenuto nel pannello principale.
 
-🤖 *Info 888* 🤖
+✨ *Pannello Informazioni 888* ✨
 
-➤ *Creatori:*  
-https://wa.me/393297014539
-https://wa.me/79524931364
+👑 *Creatori:*  
+• https://wa.me/393297014539  
+• https://wa.me/79524931364  
 
-➤ *Nome Bot:* *888 BOT*
+🤖 *Nome Bot:* 888 BOT  
+📦 *Versione:* 1.3  
+🌐 *Sito:* https://888bot.netlify.app  
+💻 *Repository:* https://github.com/artyompennini-a11y/888-BOT  
 
-➤ *Versione:* 1.3
+📡 *Stato:* Online  
+👥 *Gruppi:* ${Object.keys(global.db.data.chats).length}  
+🧩 *Plugins:* ${Object.keys(global.plugins).length}  
 
-➤ *Sito Ufficiale:* https://888bot.netlify.app
+📜 *Comandi:* Usa .menu per vedere la lista completa
 
-➤ *Repo Ufficiale:* https://github.com/artyompennini-a11y/888-BOT
-
-➤ *Stato:* *Online*
-
-➤ *Gruppi:* ${Object.keys(global.db.data.chats).length}
-➤ *Plugins:* ${Object.keys(global.plugins).length}
-
-➤ *Comandi:*  
-Usa .menu per vedere i comandi
-
-Premi un pulsante qui sotto.`
+Seleziona un’opzione qui sotto.`
 
   await conn.sendMessage(m.chat, {
     text: txt,
     buttons: [
       {
-        buttonId: '.menu',
-        buttonText: { displayText: '🟢 Menu Comandi' },
-        type: 1
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🌐 Sito Ufficiale',
+          url: 'https://888bot.netlify.app'
+        })
       },
       {
-        buttonId: '.sito',
-        buttonText: { displayText: '🌐 Sito Ufficiale' },
-        type: 1
+        name: 'cta_url',
+        buttonParamsJson: JSON.stringify({
+          display_text: '💻 Repository GitHub',
+          url: 'https://github.com/artyompennini-a11y/888-BOT'
+        })
+      },
+      {
+        name: 'quick_reply',
+        buttonParamsJson: JSON.stringify({
+          display_text: '🟢 Menu Comandi',
+          id: '.menu'
+        })
       }
     ]
   })
 }
 
-handler.command = /^(infobot)$/i
+handler.command = /^(infobot|info888)$/i
 export default handler

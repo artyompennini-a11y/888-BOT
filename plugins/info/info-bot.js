@@ -1,25 +1,24 @@
 let handler = async (m, { conn }) => {
 
   const txt =
-`⚡ *InfoPanel — Sistema Ufficiale*
+`⚡ *888 BOT — Sistema Ufficiale*
 Benvenuto nel pannello principale.
 
-🤖 *InfoPanel* 🤖
+🤖 *Info 888* 🤖
 
-➤ *Creatore:*  
-https://wa.me/00000000000
+➤ *Creatori:*  
+https://wa.me/393297014539
+https://wa.me/79524931364
 
-➤ *Nome Bot:* 
+➤ *Nome Bot:* *888 BOT*
 
 ➤ *Versione:* 1.3
 
-➤ *Sito Ufficiale:* https://example.site
+➤ *Sito Ufficiale:* https://888bot.netlify.app
 
-➤ *Instagram:* https://instagram.com/example
+➤ *Repo Ufficiale:* https://github.com/artyompennini-a11y/888-BOT
 
 ➤ *Stato:* *Online*
-
-➤ *Creato il:* 04/10/2026
 
 ➤ *Gruppi:* ${Object.keys(global.db.data.chats).length}
 ➤ *Plugins:* ${Object.keys(global.plugins).length}
@@ -46,5 +45,5 @@ Premi un pulsante qui sotto.`
   })
 }
 
-handler.command = /^(infopanel|info)$/i
+handler.command = /^(infobot)$/i
 export default handler

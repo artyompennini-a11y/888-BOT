@@ -1,6 +1,13 @@
 let handler = async (m, { conn }) => {
-  const gruppi = Object.keys(global.db?.data?.chats || {}).length
-  const plugins = Object.keys(global.plugins || {}).length
+  let gruppi = 0
+  try {
+    const all = await conn.groupFetchAllParticipating()
+    gruppi = Object.keys(all).length
+  } catch {
+    gruppi = Object.keys(global.db?.data?.chats || {}).filter(j => j.endsWith('@g.us')).length
+  }
+
+  const plugins = Object.values(global.plugins || {}).filter(p => p && p.command && !p.disabled).length
 
   const txt =
 `⚡ *888 BOT — Sistema Ufficiale*

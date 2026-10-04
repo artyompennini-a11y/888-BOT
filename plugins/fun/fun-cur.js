@@ -1,5 +1,4 @@
-// Plugin by 888
-// Card Last.fm generata con JIMP (nessuna dipendenza nativa: funziona su Termux)
+// Plugin by elixir, punisher & 888 staff
 
 import fetch from 'node-fetch'
 import fs from 'fs'
@@ -7,17 +6,23 @@ import path from 'path'
 import os from 'os'
 import { exec } from 'child_process'
 import yts from 'yt-search'
+import axios from 'axios'
+import { fileTypeFromBuffer } from 'file-type'
+
+const BROWSERLESS_KEY = global.browserless
 
 const DB_PATH = path.join(process.cwd(), 'db.json')
 
-let db = { users: {}, likes: {}, favorites: {} }
+let db = { users: {}, likes: {}, favorites: {}, sessions: {}, durations: {} }
 if (fs.existsSync(DB_PATH)) {
   try {
     const fileData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'))
     db = {
       users: fileData.users || {},
       likes: fileData.likes || {},
-      favorites: fileData.favorites || {}
+      favorites: fileData.favorites || {},
+      sessions: fileData.sessions || {},
+      durations: fileData.durations || {}
     }
   } catch (e) {
     console.error('Errore nel caricamento del database Last.fm, resetto...', e)
@@ -109,14 +114,144 @@ async function downloadAudioFromQuery(query) {
   }
 }
 
-async function getRecentTrack(username) {
+async function getRecentTracks(username, limit = 1) {
   try {
-    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&limit=1`
+    const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(username)}&api_key=${LASTFM_API_KEY}&format=json&limit=${limit}`
     const res = await fetch(url)
-    if (!res.ok) return null
+    if (!res.ok) return []
     const json = await res.json()
-    return json?.recenttracks?.track?.[0] || null
+    const tracks = json?.recenttracks?.track
+    return Array.isArray(tracks) ? tracks : (tracks ? [tracks] : [])
   } catch {
+    return []
+  }
+}
+
+async function getRecentTrack(username) {
+  const tracks = await getRecentTracks(username, 1)
+  return tracks[0] || null
+}
+
+// La durata non viene piu' mostrata: niente barra di avanzamento ne' orari.
+
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(0, Math.round(Number(totalSeconds) || 0))
+  const minutes = Math.floor(seconds / 60)
+  const rest = seconds % 60
+  return `${minutes}:${String(rest).padStart(2, '0')}`
+}
+
+// Endpoint e header forniti nell'incaricato. Sono placeholder: l'host
+// 'rapidapi.com' e' il sito di RapidAPI (restituisce HTML, non JSON) e
+// '://rapidapi.com' come X-RapidAPI-Host non e' un host valido.
+// Basta correggere le due costanti qui sotto con i valori reali della
+// tua sottoscrizione: il resto del codice non cambia.
+const RAPIDAPI_SPOTIFY_HOST = 'rapidapi.com'
+const RAPIDAPI_SPOTIFY_KEY = '20ff7f2cd1mshb51fc2fb29c558dp161e8cjsnd0140aaacfb0'
+
+function cleanWhatsAppText(value) {
+  return String(value ?? '').replace(/[*_~]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function formatMillisToClock(totalMs) {
+  const ms = Number(totalMs)
+  if (!Number.isFinite(ms) || ms <= 0) return ''
+  return formatDuration(ms / 1000)
+}
+
+function readSpotifyTrack(json) {
+  const item = json?.tracks?.items?.[0]?.data
+  if (!item) return null
+
+  const totalMs = Number(item?.duration?.totalMilliseconds)
+  if (!Number.isFinite(totalMs) || totalMs <= 0) return null
+
+  const title = cleanWhatsAppText(item.name || item.title || '')
+  const artist = cleanWhatsAppText(
+    item?.artists?.[0]?.name ||
+    item?.artist?.name ||
+    item?.artists?.name ||
+    item?.subtitle ||
+    ''
+  )
+
+  return { title, artist, totalMs }
+}
+
+async function searchSpotifyTrack(query) {
+  const q = String(query || '').trim()
+  if (!q) return null
+
+  try {
+    const url = `https://${RAPIDAPI_SPOTIFY_HOST}/search/?q=${encodeURIComponent(q)}&type=tracks&limit=1`
+    const res = await fetch(url, {
+      timeout: 12000,
+      headers: {
+        'X-RapidAPI-Host': RAPIDAPI_SPOTIFY_HOST,
+        'X-RapidAPI-Key': RAPIDAPI_SPOTIFY_KEY,
+        Accept: 'application/json'
+      }
+    })
+
+    if (!res || !res.ok) {
+      console.warn('[cur-spotify] HTTP ' + (res ? res.status : 'nessuna risposta'))
+      return null
+    }
+
+    const raw = await res.text()
+    let json = null
+    try { json = JSON.parse(raw) } catch { json = null }
+
+    if (!json) {
+      console.warn('[cur-spotify] risposta non JSON: endpoint non configurato come API')
+      return null
+    }
+
+    const parsed = readSpotifyTrack(json)
+    if (!parsed) return null
+    return { ...parsed, source: 'Spotify23' }
+  } catch (e) {
+    console.warn('[cur-spotify] errore:', e.message)
+    return null
+  }
+}
+
+function tidyChannelName(channel) {
+  return cleanWhatsAppText(
+    String(channel || '')
+      .replace(/\s*-\s*topic$/i, '')
+      .replace(/\s*vevo$/i, '')
+      .replace(/\s*official\s*(music\s*)?video$/i, '')
+  )
+}
+
+async function findTrackBySearch(query) {
+  const q = String(query || '').trim()
+  if (!q) return null
+
+  if (!db.durations || typeof db.durations !== 'object') db.durations = {}
+  const cacheKey = `q_${q.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')}`
+  const cached = db.durations[cacheKey]
+  if (cached) {
+    return { title: cleanWhatsAppText(q), artist: '', totalMs: cached * 1000, source: 'yt-search' }
+  }
+
+  try {
+    const vid = (await yts(q))?.videos?.[0]
+    const seconds = Math.round(vid?.duration?.seconds || 0)
+    if (seconds <= 0) return null
+
+    db.durations[cacheKey] = seconds
+    saveDB()
+
+    return {
+      title: cleanWhatsAppText(String(vid.title || q).split(/\s+-\s+/)[0]),
+      artist: tidyChannelName(vid.channel),
+      totalMs: seconds * 1000,
+      source: 'yt-search'
+    }
+  } catch (e) {
+    console.warn('[cur-search] errore:', e.message)
     return null
   }
 }
@@ -164,13 +299,6 @@ const formatCount = (n) => {
   return String(num)
 }
 
-// ────────────────────────────────────────────────────────────────
-//  Card Last.fm generata con JIMP
-//  Serve solo il pacchetto jimp (`npm i jimp`): nessuna dipendenza
-//  nativa, quindi il rendering funziona anche su Termux/Android.
-//  Canvas e puppeteer non vengono più usati.
-// ────────────────────────────────────────────────────────────────
-
 const CARD_W = 800
 const CARD_H = 400
 const COVER_BOX = { x: 30, y: 30, size: 340, radius: 14 }
@@ -184,15 +312,13 @@ const ACCENT_IDLE = [136, 136, 136]
 const COL_TITLE = [255, 255, 255]
 const COL_ARTIST = [206, 206, 206]
 const COL_ALBUM = [128, 128, 128]
-const COL_USER = [155, 155, 155]
-const COL_LOGO = [224, 0, 0]
+const COL_USER = [200, 200, 200]
+const FALLBACK_LOGO_COLOR = [224, 0, 0]
+const BOTTOM_Y = 344
 
 let jimpCtx = null
 const jimpFontCache = new Map()
 
-// Carica jimp una sola volta. È compatibile sia con la v0.x (API
-// statica "legacy": Jimp.loadFont, Jimp.MIME_PNG, ...) sia con la
-// v1.x (API modulare: mod.Jimp, mod.loadFont, 'jimp/fonts').
 async function getJimp () {
   if (jimpCtx) return jimpCtx
 
@@ -206,11 +332,119 @@ async function getJimp () {
   return jimpCtx
 }
 
-// A parità di distanza preferisce il font più grande (più leggibile).
 function nearestFontSize (sizes, wanted) {
   return sizes
     .slice()
     .sort((a, b) => Math.abs(a - wanted) - Math.abs(b - wanted) || b - a)[0]
+}
+
+function hashString (value) {
+  const str = String(value ?? '')
+  let hash = 2166136261
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+
+function hslToRgb (h, s, l) {
+  const hue = ((h % 360) + 360) % 360
+  const c = (1 - Math.abs((2 * l) - 1)) * s
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1))
+  const m = l - (c / 2)
+
+  let rgb
+  if (hue < 60) rgb = [c, x, 0]
+  else if (hue < 120) rgb = [x, c, 0]
+  else if (hue < 180) rgb = [0, c, x]
+  else if (hue < 240) rgb = [0, x, c]
+  else if (hue < 300) rgb = [x, 0, c]
+  else rgb = [c, 0, x]
+
+  return rgb.map((v) => Math.max(0, Math.min(255, Math.round((v + m) * 255))))
+}
+
+function rgbToHsl (r, g, b) {
+  const rn = r / 255
+  const gn = g / 255
+  const bn = b / 255
+  const max = Math.max(rn, gn, bn)
+  const min = Math.min(rn, gn, bn)
+  const delta = max - min
+  const l = (max + min) / 2
+
+  if (delta === 0) return { h: 0, s: 0, l }
+
+  const s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min)
+  let h
+  if (max === rn) h = ((gn - bn) / delta) % 6
+  else if (max === gn) h = (bn - rn) / delta + 2
+  else h = (rn - gn) / delta + 4
+
+  h *= 60
+  if (h < 0) h += 360
+  return { h, s, l }
+}
+
+// Colore stabile derivato dal testo: stesso brano -> stesso colore.
+function colorFromSeed (seed) {
+  const hue = hashString(seed) % 360
+  return hslToRgb(hue, 0.68, 0.58)
+}
+
+// Colore dominante della copertina, pesato per saturazione.
+function dominantColorFromBitmap (image) {
+  const { data } = bitmapOf(image)
+
+  const bins = new Array(24).fill(null).map(() => ({ weight: 0, r: 0, g: 0, b: 0 }))
+  const step = Math.max(1, Math.floor(Math.sqrt(data.length / 4 / 4000)))
+
+  for (let i = 0; i < data.length; i += 4 * step) {
+    if (data[i + 3] < 128) continue
+
+    const { h, s, l } = rgbToHsl(data[i], data[i + 1], data[i + 2])
+    if (s < 0.15 || l < 0.12 || l > 0.92) continue
+
+    const bin = bins[Math.floor(h / 15) % 24]
+    bin.weight += s
+    bin.r += data[i]
+    bin.g += data[i + 1]
+    bin.b += data[i + 2]
+  }
+
+  let best = null
+  for (const bin of bins) {
+    if (bin.weight > 0 && (!best || bin.weight > best.weight)) best = bin
+  }
+  if (!best) return null
+
+  const n = best.weight
+  const avg = [best.r / n, best.g / n, best.b / n]
+
+  // Riporta il colore a una luminosita' leggibile sullo sfondo scuro.
+  const { h, s } = rgbToHsl(avg[0], avg[1], avg[2])
+  return hslToRgb(h, Math.max(s, 0.5), 0.6)
+}
+
+let artColorUnavailable = false
+
+async function resolveAccentColor (art, track) {
+  const seed = `${track?.name || ''}|${track?.artist?.['#text'] || ''}`
+
+  if (art?.buffer && !artColorUnavailable) {
+    try {
+      const ctx = await getJimp()
+      const decoded = await ctx.JimpClass.read(art.buffer)
+      const color = dominantColorFromBitmap(decoded)
+      if (color) return color
+    } catch (e) {
+      artColorUnavailable = true
+      console.warn('[cur] colore copertina non calcolabile:', e.message)
+    }
+  }
+
+  return colorFromSeed(seed || '888')
 }
 
 async function getFont (size) {
@@ -232,7 +466,6 @@ async function getFont (size) {
       .filter((k) => /^SANS_\d+_WHITE$/.test(k))
       .map((k) => parseInt(k.slice(5), 10))
     if (!sizes.length) throw new Error('font bitmap di jimp non disponibili')
-    // In jimp v1 loadFont restituisce una Promise
     font = await mod.loadFont(fonts[`SANS_${nearestFontSize(sizes, size)}_WHITE`])
   }
 
@@ -275,8 +508,6 @@ function bitmapOf (image) {
   }
 }
 
-// Ridimensiona mantenendo le proporzioni e ritaglia al centro
-// (equivalente di object-fit: cover del CSS).
 function coverResize (ctx, image, width, height) {
   const { width: sourceW, height: sourceH } = bitmapOf(image)
   const scale = Math.max(width / sourceW, height / sourceH)
@@ -300,8 +531,6 @@ async function toPngBuffer (ctx, image) {
   return image.getBuffer('image/png')
 }
 
-// ── Disegno a basso livello: lavoro diretto sui pixel del bitmap ──
-
 function blendPixel (data, index, rgb, alpha) {
   if (alpha <= 0) return
 
@@ -320,8 +549,6 @@ function blendPixel (data, index, rgb, alpha) {
   data[index + 3] = Math.round(outAlpha * 255)
 }
 
-// Copertura (0..1) del pixel per un rettangolo con angoli arrotondati,
-// con anti-aliasing sul bordo.
 function roundRectCoverage (x, y, width, height, radius) {
   if (radius <= 0) return 1
 
@@ -377,7 +604,6 @@ function fillCircle (image, centerX, centerY, radius, rgba) {
   return image
 }
 
-// Angoli arrotondati applicati alla maschera alpha (usato per la cover).
 function applyRoundedCorners (image, radius) {
   const { data, width, height } = bitmapOf(image)
 
@@ -394,8 +620,6 @@ function applyRoundedCorners (image, radius) {
   return image
 }
 
-// Sfumatura scura in basso: mantiene leggibili il nome utente e il logo
-// anche quando la copertina di sfondo è chiara.
 function fillBottomShadow (image, height, maxAlpha) {
   const { data, width, height: imgH } = bitmapOf(image)
   const startY = Math.max(0, imgH - height)
@@ -414,8 +638,6 @@ function fillBottomShadow (image, height, maxAlpha) {
   return image
 }
 
-// Sfumatura scura da sinistra a destra: dà contrasto costante alla
-// colonna con titolo, artista, album e statistiche.
 function fillRightShadow (image, startX, maxAlpha) {
   const { data, width, height } = bitmapOf(image)
   const span = Math.max(1, width - startX - 1)
@@ -446,8 +668,6 @@ function darkenBitmap (image, factor) {
   return image
 }
 
-// I font bitmap di jimp sono bianchi: moltiplicando i canali RGB si
-// ottiene il colore scelto mantenendo l'anti-aliasing del glifo.
 function tintBitmap (image, rgb) {
   const { data } = bitmapOf(image)
 
@@ -460,8 +680,6 @@ function tintBitmap (image, rgb) {
 
   return image
 }
-
-// ── Testo ──
 
 function truncateText (ctx, font, text, maxWidth) {
   const value = String(text ?? '')
@@ -511,7 +729,6 @@ function wrapText (ctx, font, text, maxWidth, maxLines) {
   return lines.length ? lines : ['']
 }
 
-// Riquadro (bounding box) dei pixel visibili di un'immagine.
 function alphaBounds (image) {
   const { data, width, height } = bitmapOf(image)
   let minX = width
@@ -533,8 +750,6 @@ function alphaBounds (image) {
   return { x: minX, y: minY, width: (maxX - minX) + 1, height: (maxY - minY) + 1 }
 }
 
-// Disegna il testo su un layer trasparente e lo ritaglia sul riquadro
-// visibile: così la posizione non dipende dalle metriche interne del font.
 function makeTextLayer (ctx, font, text, color, fontSize) {
   const value = String(text ?? '')
   if (!value) return null
@@ -546,7 +761,6 @@ function makeTextLayer (ctx, font, text, color, fontSize) {
     0x00000000
   )
 
-  // v0.x: print(font, x, y, text) — v1.x: print({ font, x, y, text })
   if (ctx.legacy) layer.print(font, 1, 1, value)
   else layer.print({ font, x: 1, y: 1, text: value })
 
@@ -566,7 +780,10 @@ function drawText (ctx, image, font, text, x, y, color, options = {}) {
   if (!layer) return image
 
   const size = bitmapOf(layer)
-  const drawX = options.align === 'right' ? Math.round(x - size.width) : Math.round(x)
+  let drawX = Math.round(x)
+  if (options.align === 'right') drawX = Math.round(x - size.width)
+  else if (options.align === 'center') drawX = Math.round(x - (size.width / 2))
+
   const drawY = options.centerY === undefined
     ? Math.round(y)
     : Math.round(options.centerY - (size.height / 2))
@@ -575,11 +792,6 @@ function drawText (ctx, image, font, text, x, y, color, options = {}) {
 
   return image
 }
-
-// ── Normalizzazione del testo ──
-// I font bitmap di jimp coprono ASCII + Latin-1, quindi gli accenti si
-// possono usare. Emoji e altri alfabeti vengono sostituiti con uno spazio
-// (il testo completo resta comunque nel messaggio WhatsApp).
 
 const CHAR_MAP = {
   'œ': 'oe',
@@ -619,31 +831,389 @@ function sanitizeCardText (value) {
     .trim()
 }
 
-// ── Recupero cover ──
+
+const LASTFM_PLACEHOLDER_HASH = '2a96cbd8b46e442fc41c2b86b821562f'
+const MAX_ART_BYTES = 3 * 1024 * 1024
+
+function isPlaceholderUrl (url) {
+  const raw = String(url || '').trim()
+  if (!raw) return true
+  if (raw === ART_PLACEHOLDER) return true
+  if (raw.includes(LASTFM_PLACEHOLDER_HASH)) return true
+  
+  if (/avatar\d*x\d*\.(png|jpe?g|gif|webp)$/i.test(raw)) return true
+  return false
+}
 
 function albumArtUrl (track) {
   const images = Array.isArray(track?.image) ? track.image : []
-  const find = (size) => images.find((i) => i && i.size === size && i['#text'])?.['#text']
+  const find = (size) => images
+    .find((i) => i && i.size === size && i['#text'] && !isPlaceholderUrl(i['#text']))?.['#text']
   return find('extralarge') || find('large') || find('medium') || ART_PLACEHOLDER
 }
 
-async function fetchArtBuffer (url) {
-  if (!url) return null
+const MUSICBRAINZ_UA = '888BOT/1.3 ( https://github.com/artyompennini-a11y/888-BOT )'
+
+function normalizeForSearch(value) {
+  return String(value ?? '')
+    .toLowerCase()
+    .replace(/\(.*?\)/g, ' ')
+    .replace(/\[.*?\]/g, ' ')
+    .replace(/\b(feat|ft|with)\b.*$/i, ' ')
+    .replace(/\b(remaster|remastered|version|edit|mix|live)\b.*$/i, ' ')
+    .replace(/[^\p{L}\p{N} ]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function looksLikeMatch(trackName, candidate) {
+  const wanted = normalizeForSearch(trackName)
+  const found = normalizeForSearch(candidate)
+  if (!wanted || !found) return false
+  if (wanted === found) return true
+  return wanted.length >= 4 && (found.includes(wanted) || wanted.includes(found))
+}
+
+async function downloadArt(url) {
+  if (!url || isPlaceholderUrl(url)) return null
 
   try {
-    const res = await fetch(url, { timeout: 15000 })
+    const res = await fetch(url, {
+      timeout: 15000,
+      size: MAX_ART_BYTES,
+      redirect: 'follow',
+      headers: { 'User-Agent': MUSICBRAINZ_UA, Accept: 'image/*,*/*;q=0.8' }
+    })
+    if (!res || !res.ok) return null
+
+    const buffer = Buffer.from(await res.arrayBuffer())
+    if (buffer.length < 1024) return null
+
+    const type = await fileTypeFromBuffer(buffer)
+    if (!type?.mime || !type.mime.startsWith('image/')) return null
+
+    return { buffer, mime: type.mime }
+  } catch {
+    return null
+  }
+}
+
+async function findArtOnItunes(songTitle, artistName) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(`${songTitle} ${artistName}`)}&entity=song&limit=5`
+    const res = await fetch(url, { timeout: 10000 })
+    if (!res.ok) return null
+    const json = await res.json()
+    const hits = Array.isArray(json?.results) ? json.results : []
+    const match = hits.find((r) => r?.artworkUrl100 && looksLikeMatch(songTitle, r.trackName))
+    if (!match) return null
+
+    const art = String(match.artworkUrl100).replace(/\/\d+x\d+bb\.(jpg|png)$/i, '/600x600bb.$1')
+    const downloaded = await downloadArt(art)
+    return downloaded ? { ...downloaded, url: art, source: 'iTunes' } : null
+  } catch {
+    return null
+  }
+}
+
+async function findArtOnDeezer(songTitle, artistName) {
+  try {
+    const url = `https://api.deezer.com/search?q=${encodeURIComponent(`${songTitle} ${artistName}`)}&limit=5`
+    const res = await fetch(url, { timeout: 10000 })
+    if (!res.ok) return null
+    const json = await res.json()
+    const hits = Array.isArray(json?.data) ? json.data : []
+    const match = hits.find((d) => d?.album?.cover_xl && looksLikeMatch(songTitle, d.title))
+    if (!match) return null
+
+    const art = String(match.album.cover_xl)
+    const downloaded = await downloadArt(art)
+    return downloaded ? { ...downloaded, url: art, source: 'Deezer' } : null
+  } catch {
+    return null
+  }
+}
+
+async function findArtOnMusicBrainz(songTitle, artistName, albumName) {
+  const album = String(albumName || '').trim()
+  const queries = album
+    ? [`release:"${album}" AND artist:"${artistName}"`, `release:"${album}"`]
+    : [`release:"${albumName || songTitle}"`, `release:"${artistName} ${songTitle}"`]
+
+  for (const query of queries) {
+    try {
+      const url = `https://musicbrainz.org/ws/2/release/?query=${encodeURIComponent(query)}&fmt=json&limit=5`
+      const res = await fetch(url, {
+        timeout: 12000,
+        headers: { 'User-Agent': MUSICBRAINZ_UA, Accept: 'application/json' }
+      })
+      if (!res.ok) continue
+      const json = await res.json()
+      const releases = Array.isArray(json?.releases) ? json.releases : []
+      if (!releases.length) continue
+
+      for (const release of releases) {
+        if (!release?.id) continue
+        const art = `https://coverartarchive.org/release/${release.id}/front-500`
+        const downloaded = await downloadArt(art)
+        if (downloaded) return { ...downloaded, url: art, source: 'MusicBrainz' }
+      }
+    } catch {
+      break
+    }
+  }
+
+  return null
+}
+
+async function resolveCoverArt(track) {
+  const songTitle = String(track?.name || '')
+  const artistName = String(track?.artist?.['#text'] || '')
+  const albumName = String(track?.album?.['#text'] || '')
+
+  const lastfm = albumArtUrl(track)
+  if (!isPlaceholderUrl(lastfm)) {
+    const downloaded = await downloadArt(lastfm)
+    if (downloaded) return { ...downloaded, url: lastfm, source: 'Last.fm' }
+    console.warn('[cur] copertina Last.fm non valida, provo le altre API')
+  }
+
+  const providers = [
+    () => findArtOnItunes(songTitle, artistName),
+    () => findArtOnDeezer(songTitle, artistName),
+    () => findArtOnMusicBrainz(songTitle, artistName, albumName)
+  ]
+
+  for (const provider of providers) {
+    try {
+      const found = await provider()
+      if (found?.buffer) return found
+    } catch (e) {
+      console.warn('[cur] ricerca copertina fallita:', e?.message || e)
+    }
+  }
+
+  return { url: null, source: null, buffer: null, mime: null }
+}
+
+async function fetchArtBuffer (art, track) {
+  if (art?.buffer) return art.buffer
+
+  const fallback = albumArtUrl(track)
+  if (isPlaceholderUrl(fallback)) return null
+
+  try {
+    const res = await fetch(fallback, {
+      timeout: 15000,
+      size: MAX_ART_BYTES,
+      redirect: 'follow',
+      headers: { 'User-Agent': MUSICBRAINZ_UA }
+    })
     if (!res || !res.ok) return null
     const buffer = Buffer.from(await res.arrayBuffer())
-    return buffer.length > 100 ? buffer : null
+    return buffer.length > 1024 ? buffer : null
   } catch (e) {
     console.warn('[cur] cover non scaricata:', e.message)
     return null
   }
 }
 
-// ── Card 800x400: cover a sinistra, informazioni a destra (solo jimp) ──
+function cardHtmlTemplate(v) {
+  return `
+  <html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: ${CARD_W}px; height: ${CARD_H}px;
+        background: #111111;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        overflow: hidden;
+      }
+      .bg {
+        position: absolute; inset: 0;
+        background-image: url('${v.safeArt}');
+        background-size: cover; background-position: center;
+        filter: blur(6px) brightness(0.28);
+        transform: scale(1.06);
+      }
+      .shade-right {
+        position: absolute; top: 0; right: 0; width: 420px; height: ${CARD_H}px;
+        background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.53) 100%);
+      }
+      .shade-bottom {
+        position: absolute; left: 0; bottom: 0; width: ${CARD_W}px; height: 140px;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.59) 100%);
+      }
+      .cover {
+        position: absolute; left: ${COVER_BOX.x}px; top: ${COVER_BOX.y}px;
+        width: ${COVER_BOX.size}px; height: ${COVER_BOX.size}px;
+        border-radius: ${COVER_BOX.radius}px;
+        ${v.coverStyle}
+        background-size: cover; background-position: center;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      }
+      .info {
+        position: absolute;
+        left: ${INFO_X}px; top: 0;
+        width: ${INFO_W}px; height: ${CARD_H}px;
+        padding: 40px 16px 0 0;
+        display: flex; flex-direction: column;
+        align-items: center; text-align: center;
+      }
+      .pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        align-self: center;
+        height: 28px; padding: 0 14px;
+        border-radius: 14px;
+        background: ${v.isPlaying ? 'rgba(29, 185, 84, 0.19)' : 'rgba(255, 255, 255, 0.086)'};
+        font-size: 12px; font-weight: 700; letter-spacing: 0.6px;
+        color: ${v.accentCss};
+      }
+      .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: ${v.accentCss}; }
+      .title {
+        margin-top: 16px;
+        color: #ffffff;
+        font-size: 32px; font-weight: 700; line-height: 1.28;
+        max-width: 100%;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden; word-break: break-word;
+      }
+      .artist {
+        margin-top: 12px;
+        color: rgb(${COL_ARTIST.join(',')});
+        font-size: 16px; font-weight: 500;
+        max-width: 100%;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .album {
+        margin-top: 10px;
+        color: rgb(${COL_ALBUM.join(',')});
+        font-size: 13px; font-weight: 500;
+        max-width: 100%;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .bottom {
+        margin-top: auto;
+        margin-bottom: 30px;
+        width: 100%;
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 12px; font-weight: 500;
+      }
+      .logo { color: ${v.logoCss}; font-weight: 700; letter-spacing: 0.5px; }
+      .user {
+        color: rgb(${COL_USER.join(',')});
+        max-width: 250px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg"></div>
+    <div class="shade-right"></div>
+    <div class="shade-bottom"></div>
+    <div class="cover"></div>
+    <div class="info">
+      <div class="pill"><span class="dot"></span>${v.statusText}</div>
+      <div class="title">${v.title}</div>
+      <div class="artist">${v.artist}</div>
+      <div class="album">${v.album}</div>
+      <div class="bottom">
+        <span class="logo">LAST.FM</span>
+        <span class="user">${v.user}</span>
+      </div>
+    </div>
+  </body>
+  </html>`
+}
 
-async function renderCardWithJimp (track, username) {
+function rgbToCss(rgb, alpha = 1) {
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`
+}
+
+function escapeHtmlText(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function buildCardHtml(track, username, logoColor, art = null) {
+  const songName = String(track?.name || 'Traccia sconosciuta')
+  const artistName = String(track?.artist?.['#text'] || 'Artista sconosciuto')
+  const albumName = String(track?.album?.['#text'] || 'Album sconosciuto')
+  const userLabel = String(username || 'utente')
+  const isPlaying = track?.['@attr']?.nowplaying === 'true'
+  const accent = isPlaying ? ACCENT_PLAYING : ACCENT_IDLE
+  const accentCss = rgbToCss(accent)
+  const logoCss = rgbToCss(logoColor || FALLBACK_LOGO_COLOR)
+  const statusText = isPlaying ? 'IN RIPRODUZIONE' : 'ULTIMO BRANO'
+
+  const artUri = art?.buffer
+    ? `data:${art.mime || 'image/jpeg'};base64,${art.buffer.toString('base64')}`
+    : ''
+  const artUrl = artUri || (art?.url && !isPlaceholderUrl(art.url) ? escapeHtmlText(art.url) : '')
+  const safeArt = artUrl
+  const coverStyle = safeArt
+    ? `background-image: url('${safeArt}');`
+    : 'background: linear-gradient(135deg, #2a2a2a, #151515);'
+
+  return cardHtmlTemplate({
+    safeArt,
+    coverStyle,
+    accentCss,
+    logoCss,
+    isPlaying,
+    statusText: escapeHtmlText(statusText),
+    title: escapeHtmlText(songName),
+    artist: escapeHtmlText(artistName),
+    album: escapeHtmlText(albumName),
+    user: escapeHtmlText(userLabel)
+  })
+}
+
+async function renderCardWithBrowserless(track, username, logoColor, art = null) {
+  const html = buildCardHtml(track, username, logoColor, art)
+
+  for (let i = 0; i < 3; i++) {
+    try {
+      const response = await axios.post(
+        `https://chrome.browserless.io/screenshot?token=${BROWSERLESS_KEY}`,
+        {
+          html,
+          options: { type: 'jpeg', quality: 92 },
+          viewport: { width: CARD_W, height: CARD_H }
+        },
+        { responseType: 'arraybuffer', timeout: 20000 }
+      )
+      const buffer = Buffer.from(response.data)
+      if (!buffer.length) throw new Error('risposta vuota da browserless')
+      return buffer
+    } catch (e) {
+      if (i === 2) throw e
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+    }
+  }
+}
+
+async function renderCard(track, username, art = null) {
+  const logoColor = await resolveAccentColor(art, track)
+
+  if (BROWSERLESS_KEY) {
+    try {
+      return await renderCardWithBrowserless(track, username, logoColor, art)
+    } catch (e) {
+      console.error('[cur] Browserless fallito, uso Jimp:', e?.message || e)
+    }
+  }
+  return renderCardWithJimp(track, username, logoColor, art)
+}
+
+async function renderCardWithJimp (track, username, logoColor, art = null) {
   const ctx = await getJimp()
 
   const songName = sanitizeCardText(track?.name) || 'Traccia sconosciuta'
@@ -654,10 +1224,9 @@ async function renderCardWithJimp (track, username) {
   const accent = isPlaying ? ACCENT_PLAYING : ACCENT_IDLE
   const statusText = isPlaying ? 'IN RIPRODUZIONE' : 'ULTIMO BRANO'
 
-  const artBuffer = await fetchArtBuffer(albumArtUrl(track))
+  const artBuffer = await fetchArtBuffer(art, track)
   const card = newImage(ctx, CARD_W, CARD_H, 0x111111ff)
 
-  // Sfondo: cover sfocata e scurita
   if (artBuffer) {
     try {
       const background = await ctx.JimpClass.read(artBuffer)
@@ -675,11 +1244,9 @@ async function renderCardWithJimp (track, username) {
     }
   }
 
-  // Sfumature scure: colonna info + fondo card (testi sempre leggibili)
   fillRightShadow(card, 380, 135)
   fillBottomShadow(card, 140, 150)
 
-  // Cover con angoli arrotondati
   let coverDrawn = false
 
   if (artBuffer) {
@@ -712,32 +1279,35 @@ async function renderCardWithJimp (track, username) {
   const albumFont = await getFont(12)
   const smallFont = await getFont(12)
 
+  // Il blocco centrale e' allineato al centro della colonna info.
+  const centerX = INFO_X + Math.round(INFO_W / 2)
+
   const titleLines = wrapText(ctx, titleFont, songName, INFO_W, 2)
   let y = titleLines.length > 1 ? 96 : 118
 
-  // Pill di stato (pallino + testo colorato)
   const pillHeight = 28
   const pillPadding = 14
   const dotRadius = 4
   const statusWidth = textWidth(ctx, pillFont, statusText)
   const pillWidth = Math.round((pillPadding * 2) + (dotRadius * 2) + 10 + statusWidth)
+  const pillX = Math.round(centerX - (pillWidth / 2))
 
   fillRoundRect(
     card,
-    INFO_X,
+    pillX,
     y,
     pillWidth,
     pillHeight,
     pillHeight / 2,
     isPlaying ? [29, 185, 84, 48] : [255, 255, 255, 22]
   )
-  fillCircle(card, INFO_X + pillPadding + dotRadius, y + (pillHeight / 2), dotRadius, [...accent, 255])
+  fillCircle(card, pillX + pillPadding + dotRadius, y + (pillHeight / 2), dotRadius, [...accent, 255])
   drawText(
     ctx,
     card,
     pillFont,
     statusText,
-    INFO_X + pillPadding + (dotRadius * 2) + 10,
+    pillX + pillPadding + (dotRadius * 2) + 10,
     0,
     accent,
     { fontSize: 16, centerY: y + (pillHeight / 2) }
@@ -745,46 +1315,50 @@ async function renderCardWithJimp (track, username) {
 
   y += pillHeight + 12
 
-  // Titolo (max 2 righe)
   for (const line of titleLines) {
-    drawText(ctx, card, titleFont, line, INFO_X, y, COL_TITLE, { fontSize: 32 })
+    drawText(ctx, card, titleFont, line, centerX, y, COL_TITLE, { fontSize: 32, align: 'center' })
     y += 42
   }
 
   y += 4
 
-  // Artista
   drawText(
     ctx,
     card,
     artistFont,
     truncateText(ctx, artistFont, artistName, INFO_W),
-    INFO_X,
+    centerX,
     y,
     COL_ARTIST,
-    { fontSize: 16 }
+    { fontSize: 16, align: 'center' }
   )
   y += 30
 
-  // Album
   drawText(
     ctx,
     card,
     albumFont,
     truncateText(ctx, albumFont, albumName, INFO_W),
-    INFO_X,
+    centerX,
     y,
     COL_ALBUM,
-    { fontSize: 12 }
+    { fontSize: 12, align: 'center' }
   )
-  y += 30
 
-  // Divider
-  fillRect(card, INFO_X, y, 40, 2, [...accent, 255])
+  // Logo colorato con il dominante della copertina (fallback: colore del brano).
+  const logo = logoColor || FALLBACK_LOGO_COLOR
 
-  // Utente in basso a sinistra, logo Last.fm in basso a destra
-  drawText(ctx, card, smallFont, userLabel, INFO_X, 344, COL_USER, { fontSize: 12 })
-  drawText(ctx, card, smallFont, 'LAST.FM', CARD_W - 20, 344, COL_LOGO, { fontSize: 12, align: 'right' })
+  drawText(ctx, card, smallFont, 'LAST.FM', INFO_X, BOTTOM_Y, logo, { fontSize: 12 })
+  drawText(
+    ctx,
+    card,
+    smallFont,
+    truncateText(ctx, smallFont, userLabel, INFO_W - 90),
+    CARD_W - 20,
+    BOTTOM_Y,
+    COL_USER,
+    { fontSize: 12, align: 'right' }
+  )
 
   return toPngBuffer(ctx, card)
 }
@@ -841,6 +1415,28 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     }, { quoted: m })
   }
 
+  if (command === 'cur' && (text || '').trim()) {
+    const query = text.trim()
+    await conn.sendMessage(m.chat, { react: { text: '🔎', key: m.key } })
+
+    const found = (await searchSpotifyTrack(query)) || (await findTrackBySearch(query))
+    if (!found) {
+      await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } })
+      return conn.sendMessage(m.chat, {
+        text: `❌ Nessun brano trovato per *${cleanWhatsAppText(query)}*.\n\n💡 Prova con titolo e artista, es. \`${usedPrefix}cur Battiato Centro di gravità\``
+      }, { quoted: m })
+    }
+
+    const title = found.title || cleanWhatsAppText(query)
+    const artistLine = found.artist ? ` - _${found.artist}_` : ''
+    const duration = formatMillisToClock(found.totalMs)
+
+    await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } })
+    return conn.sendMessage(m.chat, {
+      text: `🎵 *${title}*${artistLine}\n⏱️ Durata: *${duration}*`
+    }, { quoted: m })
+  }
+
   const user = db.users[m.sender]
   if (!user) {
     return conn.sendMessage(m.chat, {
@@ -849,7 +1445,8 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
   }
 
   if (command === 'profilo' || command === 'cur') {
-    const track = await getRecentTrack(user)
+    const tracks = await getRecentTracks(user, 2)
+    const track = tracks[0]
     if (!track) {
       return conn.sendMessage(m.chat, {
         text: '❌ Nessun brano trovato o utente inesistente su Last.fm.'
@@ -858,11 +1455,13 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
     const songTitle = track.name || 'Traccia sconosciuta'
     const artistName = track.artist?.['#text'] || 'Artista sconosciuto'
+    const albumName = track.album?.['#text'] || 'Album sconosciuto'
     const searchQuery = `${songTitle} ${artistName}`
 
-    const [trackInfo, artistInfo] = await Promise.all([
+    const [trackInfo, artistInfo, art] = await Promise.all([
       getTrackInfo(artistName, songTitle, user),
-      getArtistInfo(artistName)
+      getArtistInfo(artistName),
+      resolveCoverArt(track)
     ])
 
     const playCount      = trackInfo?.playcount      || 0
@@ -876,6 +1475,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
 
 🎵 *Brano:* ${songTitle}
 👤 *Artista:* ${artistName}
+💿 *Album:* ${albumName}
 
 📊 *Statistiche*
 🔥 ${formatCount(playCount)} ascolti totali
@@ -897,7 +1497,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
     let cardError = null
 
     try {
-      imageBuffer = await renderCardWithJimp(track, user)
+      imageBuffer = await renderCard(track, user, art)
     } catch (e) {
       cardError = e
       console.error('[cur] render card jimp error:', e.message)
@@ -915,6 +1515,7 @@ const handler = async (m, { conn, args, usedPrefix, text, command }) => {
       }
       return conn.sendMessage(m.chat, buttonMessage, { quoted: m })
     }
+
 
     const buttonMessage = {
       image: imageBuffer,

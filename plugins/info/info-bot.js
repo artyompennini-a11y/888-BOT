@@ -19,36 +19,35 @@ Benvenuto nel pannello principale.
 👥 *Gruppi:* ${Object.keys(global.db.data.chats).length}  
 🧩 *Plugins:* ${Object.keys(global.plugins).length}  
 
-📜 *Comandi:* Usa .menu per vedere la lista completa
-
-Seleziona un’opzione qui sotto.`
+📜 *Comandi:* Usa .menu per vedere la lista completa`
 
   await conn.sendMessage(m.chat, {
     text: txt,
-    buttons: [
+    footer: 'Seleziona un’opzione qui sotto.',
+    templateButtons: [
       {
-        name: 'cta_url',
-        buttonParamsJson: JSON.stringify({
-          display_text: '🌐 Sito Ufficiale',
+        index: 1,
+        urlButton: {
+          displayText: '🌐 Sito Ufficiale',
           url: 'https://888bot.netlify.app'
-        })
+        }
       },
       {
-        name: 'cta_url',
-        buttonParamsJson: JSON.stringify({
-          display_text: '💻 Repository GitHub',
+        index: 2,
+        urlButton: {
+          displayText: '💻 Repository GitHub',
           url: 'https://github.com/artyompennini-a11y/888-BOT'
-        })
+        }
       },
       {
-        name: 'quick_reply',
-        buttonParamsJson: JSON.stringify({
-          display_text: '🟢 Menu Comandi',
+        index: 3,
+        quickReplyButton: {
+          displayText: '🟢 Menu Comandi',
           id: '.menu'
-        })
+        }
       }
     ]
-  })
+  }, { quoted: m })
 }
 
 handler.command = /^(infobot|info888)$/i

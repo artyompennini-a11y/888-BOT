@@ -50,27 +50,25 @@ let handler = async (m, { conn, text }) => {
       scanData.message.mediaQuality = analyzeMediaQuality(rawMsg);
     }
 
-    // Local data extraction (no API calls)
     try {
       let chat = conn.chats?.[who];
       if (chat) {
         scanData.account.isBusiness = chat.isBusiness || false;
         if (chat.isBusiness) scanData.device.client = 'business';
         scanData.account.activityScore = Math.min(chat.msgs || 0, 100);
-        // Check for bio/status from local store
+        
         if (chat.status) {
           scanData.profile.hasBio = true;
           scanData.profile.bio = chat.status;
           scanData.profile.bioLength = chat.status.length;
         }
-        // Check for profile photo indicator from local store
+        
         if (chat.imgUrl || chat.profilePictureUrl) {
           scanData.profile.hasPhoto = true;
         }
       }
     } catch {}
 
-    // Check DB for additional profile data
     try {
       let userDb = global.db?.data?.users?.[who];
       if (userDb) {

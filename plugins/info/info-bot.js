@@ -19,36 +19,38 @@ Benvenuto nel pannello principale.
 👥 *Gruppi:* ${Object.keys(global.db.data.chats).length}  
 🧩 *Plugins:* ${Object.keys(global.plugins).length}  
 
-📜 *Comandi:* Usa .menu per vedere la lista completa`
+📜 *Comandi:* Usa .menu per vedere la lista completa`;
 
   await conn.sendMessage(m.chat, {
     text: txt,
-    footer: 'Seleziona un’opzione qui sotto.',
+    footer: "Seleziona un’opzione qui sotto.",
     templateButtons: [
       {
-        index: 1,
         urlButton: {
-          displayText: '🌐 Sito Ufficiale',
-          url: 'https://888bot.netlify.app'
+          displayText: "🌐 Sito Ufficiale",
+          url: "https://888bot.netlify.app"
         }
       },
       {
-        index: 2,
         urlButton: {
-          displayText: '💻 Repository GitHub',
-          url: 'https://github.com/artyompennini-a11y/888-BOT'
+          displayText: "💻 Repository GitHub",
+          url: "https://github.com/artyompennini-a11y/888-BOT"
         }
       },
       {
-        index: 3,
         quickReplyButton: {
-          displayText: '🟢 Menu Comandi',
-          id: '.menu'
+          displayText: "🟢 Menu Comandi",
+          id: ".menu"
         }
       }
     ]
-  }, { quoted: m })
+  }, { quoted: m });
 }
 
+handler.help = ['infobot']
+handler.tags = ['info']
+handler.customPrefix = /^\./
 handler.command = /^(infobot|info888)$/i
+handler.fail = null
+
 export default handler

@@ -141,7 +141,11 @@ async function clearSessionFolderSelective(dir = sessionFolder) {
   }));
 }
 
-async function purgeSession(sessionDir, cleanPreKeys = false, maxPreKeyAgeDays = 7) {
+// Soglia oltre la quale si potano i file di sessione, mantenendo i piu' recenti.
+const SESSION_PRUNE_THRESHOLD = 500;
+const SESSION_KEEP_NEWEST = 100;
+
+async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, maxPreKeyAgeDays = 7) {
   try {
     await fsp.access(sessionDir);
   } catch {
@@ -154,6 +158,14 @@ async function purgeSession(sessionDir, cleanPreKeys = false, maxPreKeyAgeDays =
   } catch {
     return;
   }
+
+  const prunable = files.filter(f =>
+    f.startsWith('pre-key-') ||
+    f.startsWith('sender-key-') ||
+    f.startsWith('session-')
+  );
+
+  console.log(chalk.gray(`[purgeSession] File totali: ${files.length} | Prunable: ${prunable.length} | Soglia: ${SESSION_PRUNE_THRESHOLD}`));
 
   await Promise.all(files.map(async (file) => {
     if (file === 'creds.json') return;
@@ -182,11 +194,38 @@ async function purgeSession(sessionDir, cleanPreKeys = false, maxPreKeyAgeDays =
       // ignore failures
     }
   }));
+
+  // Potatura di sicurezza: solo se i file prunable sono tanti, e comunque
+  // si conservano sempre i piu' recenti per non invalidare la sessione.
+  if (prunable.length <= SESSION_PRUNE_THRESHOLD) return;
+
+  const sorted = (await Promise.all(prunable.map(async (name) => {
+    try {
+      const st = await fsp.stat(path.join(sessionDir, name));
+      return { name, mtime: st.mtimeMs };
+    } catch {
+      return null;
+    }
+  }))).filter(Boolean).sort((a, b) => a.mtime - b.mtime);
+
+  const toDelete = sorted.slice(0, sorted.length - SESSION_KEEP_NEWEST);
+
+  await Promise.all(toDelete.map(async ({ name }) => {
+    try { await fsp.unlink(path.join(sessionDir, name)); } catch {}
+  }));
+
+  console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐄𝐋𝐈𝐌𝐈𝐍𝐀𝐙𝐈𝐎𝐍𝐄 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐄𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 ${toDelete.length} 𝐟𝐢𝐥𝐞 𝐝𝐢 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞.\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
 }
 
 global.dbDirty = false;
 
 // flush periodico dello stato di sicurezza (raid, blocchi, contatori)
+const { flushAfk } = await import('./lib/afk.js');
+
+process.on('exit', () => { try { flushAfk() } catch {} });
+process.on('SIGINT', () => { try { flushAfk() } catch {} });
+process.on('SIGTERM', () => { try { flushAfk() } catch {} });
+
 persistentState.setInterval?.(async () => {
   try {
     await persistentState.flush()
@@ -828,44 +867,40 @@ if (!handlerLoaded) {
   process.exit(1);
 }
 
-async function clearDirectory(dirPath) {
-  try {
-    await ensureDir(dirPath);
-  } catch (e) {
-    console.error(chalk.red(`Errore creazione ${dirPath}:`, e));
-    return;
-  }
-
-  let entries;
-  try {
-    entries = await fsp.readdir(dirPath);
-  } catch (e) {
-    return;
-  }
-
-  await Promise.all(entries.map(async (file) => {
-    const filePath = join(dirPath, file);
-    try {
-      const stats = await fsp.stat(filePath);
-      if (stats.isFile()) await fsp.unlink(filePath);
-      else if (stats.isDirectory()) await fsp.rm(filePath, { recursive: true, force: true });
-    } catch (e) {
-      console.error(chalk.red(`Errore pulizia ${filePath}:`, e));
-    }
-  }));
-}
-
-function ripristinaTimer(conn) {
-  if (conn.timerReset) clearInterval(conn.timerReset);
-  conn.timerReset = setInterval(async () => {
-    if (stopped === 'close' || !conn || !conn.user) return;
-    await clearDirectory(join(__dirname, 'tmp'));
-    await clearDirectory(join(__dirname, 'temp'));
-  }, 1000 * 60 * 30);
-}
-
 let filePath = fileURLToPath(import.meta.url);
 const mainWatcher = watch(filePath, async () => {
   await global.reloadHandler(true).catch(console.error);
 });
 mainWatcher.setMaxListeners(20);
+
+// Pulizia periodica di tmp/ e temp/ (ogni 3 minuti).
+setInterval(async () => {
+  try {
+    if (global.stopped !== 'open' || !global.conn || !global.conn.user) {
+      console.log(chalk.gray(`[AUTOCLEARTMP] skip (stopped=${global.stopped}, user=${!!global.conn?.user})`));
+      return;
+    }
+    await clearDirectoryAsync(tmpDir);
+    await clearDirectoryAsync(tempDir);
+    console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎𝐂𝐋𝐄𝐀𝐑𝐓𝐌𝐏\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
+  } catch (e) {
+    console.error(chalk.red('[AUTOCLEARTMP] errore:'), e);
+  }
+}, 180000);
+
+// Controllo sessione: pota i file di sessione in eccesso (ogni 10 minuti).
+setInterval(async () => {
+  try {
+    if (global.stopped !== 'open' || !global.conn || !global.conn.user) {
+      console.log(chalk.gray(`[SESSION-CLEANUP] skip (stopped=${global.stopped}, user=${!!global.conn?.user})`));
+      return;
+    }
+    await runSessionCleanup(async () => {
+      await purgeSession(sessionFolder);
+      await clearSessionFolderSelective(sessionFolder);
+    });
+    console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐂𝐎𝐍𝐓𝐑𝐎𝐋𝐋𝐎 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐂𝐨𝐧𝐭𝐫𝐨𝐥𝐥𝐨 𝐞𝐟𝐟𝐞𝐭𝐭𝐮𝐚𝐭𝐨 ✅\n╰─────────────···`));
+  } catch (e) {
+    console.error(chalk.red('[SESSION-CLEANUP] errore:'), e);
+  }
+}, 1000 * 60 * 10);

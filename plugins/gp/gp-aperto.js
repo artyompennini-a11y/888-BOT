@@ -11,7 +11,7 @@ let handler = async (m, { conn }) => {
 
     const buttons = [
     {
-      buttonId: '.chiuso',
+      buttonId: '.chiudi',
       buttonText: { displayText: '🔒 𝐂𝐡𝐢𝐮𝐝𝐢 𝐆𝐫𝐮𝐩𝐩𝐨' },
       type: 1
     }

@@ -1,47 +1,50 @@
 //Plugin by Elixir, Punisher & 888 staff
 
 let handler = async (m, { conn }) => {
+  if (!m.isGroup) return;
+
+  let keysToClear = {};
+  let memoryToClear = {};
+
+
+  const meJid = conn.user?.id || conn.user?.jid || '';
+  const meUser = meJid ? meJid.split(':')[0].split('@')[0] : '';
+  const meDevice = meJid.includes(':') ? meJid.split(':')[1].split('@')[0] : '0';
+
   try {
-    let store = conn.msgStore || conn.ev?.msgStore || conn.sentMessages || [];
 
-    if (!Array.isArray(store)) {
-      return m.reply("⚠️ Nessun registro dei messaggi disponibile.");
+    if (meUser) {
+      keysToClear[`${m.chat}::${meUser}::${meDevice}`] = null;
+    }
+    memoryToClear[m.chat] = null;
+
+    if (conn.authState?.keys?.set) {
+      await conn.authState.keys.set({
+        'sender-key': keysToClear,
+        'sender-key-memory': memoryToClear
+      });
     }
 
-    let pending = store.filter(msg =>
-      msg &&
-      msg.status &&
-      (msg.status === "pending" || msg.status === "server_ack")
-    );
 
-    if (!pending.length) {
-      return m.reply("🟢 Nessun messaggio in attesa.\nIl bot è sincronizzato correttamente.");
-    }
+    await conn.groupMetadata(m.chat).catch(() => null);
 
-    let txt = `👁️ *Messaggi in Attesa*\nTotale: ${pending.length}\n\n`;
-
-    for (let msg of pending) {
-      let id = msg.key?.id || "Sconosciuto";
-      let ts = msg.messageTimestamp
-        ? new Date(msg.messageTimestamp * 1000).toLocaleString()
-        : "N/D";
-
-      txt +=
-        `📨 ID: ${id}\n` +
-        `⏳ Stato: ${msg.status}\n` +
-        `🕒 Timestamp: ${ts}\n\n`;
-    }
-
-    await m.reply(txt.trim());
-
-  } catch (err) {
-    await m.reply("❌ Errore interno durante la scansione dei messaggi.");
+  } catch (e) {
+    console.error('[guardami] Errore reset keys:', e);
+    return conn.reply(m.chat, "『 ❌ 』 `Errore:` Impossibile aggiornare le chiavi di sessione.", m);
   }
+
+  return conn.sendMessage(m.chat, { 
+    text: "*Messaggi e sessione di gruppo aggiornati con successo!*" 
+  }, { 
+    quoted: m 
+  });
 };
 
+handler.command = ['rs', 'ntevedo', 'guardami'];
+handler.tags = ['gruppo'];
 handler.help = ['guardami'];
-handler.tags = ['info'];
-handler.command = /^(guardami)$/i;
-handler.owner = true;
+handler.group = true;
+handler.admin = false;
+handler.botAdmin = false;
 
 export default handler;

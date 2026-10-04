@@ -698,14 +698,34 @@ async function epicStartup() {
 
 
 
+// Riavvio rapido: riavvia il bot saltando SOLO epicStartup() (animazione iniziale).
+// Viene usato quando il worker esce con codice 43 (plugin .restart / .riavvia).
+// index.js resta vivo: la supervisione e i riavvii automatici sui crash
+// continuano a funzionare come con npm start, ma il riavvio e' immediato.
+const fastRestart = (file) => {
+  console.log(
+    '\n\x1b[32m↻ Riavvio rapido: riavvio di 888.js senza animazione...\x1b[0m\n'
+  );
+
+  start(file, { skipAnimation: true });
+};
+
 let isRunning = false;
 
-async function start(file) {
+async function start(file, { skipAnimation = false } = {}) {
   if (isRunning) return;
 
   isRunning = true;
 
-  await epicStartup();
+  // L'animazione si mostra all'avvio normale e dopo un crash,
+  // ma viene saltata quando il riavvio e' richiesto dal plugin .restart.
+  if (skipAnimation) {
+    console.log(
+      '\n\x1b[32m✓ Bot online (avvio rapido)\x1b[0m\n'
+    );
+  } else {
+    await epicStartup();
+  }
 
   const args = [
     join(__dirname, file),
@@ -775,12 +795,22 @@ async function start(file) {
 
   processInstance.on(
     'exit',
-    (_, code) => {
+    (code, signal) => {
       isRunning = false;
+
+      // NB: la firma di 'exit' e' (code, signal): il primo argomento e' il
+      // codice di uscita, il secondo il segnale (null se uscita volontaria).
+
+      // Riavvio rapido richiesto dal plugin .restart: niente animazione,
+      // il bot riparte direttamente con "node 888.js".
+      if (code === 43) {
+        fastRestart(file);
+        return;
+      }
 
       console.error(
         '\n\x1b[31m✖ Processo terminato [' +
-        code +
+        (code ?? signal) +
         ']\x1b[0m\n'
       );
 

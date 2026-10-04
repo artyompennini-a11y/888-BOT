@@ -1,19 +1,25 @@
 import fetch from "node-fetch";
 
-let handler = async (m, { conn, usedPrefix, isOwner }) => {
-  const chatData = global.db.data.chats[m.chat] || {};
+let handler = async (m, { conn, usedPrefix }) => {
+  let users = [];
 
-  const target = m.quoted
-    ? m.quoted.sender
-    : m.mentionedJid?.[0]
-    ? m.mentionedJid[0]
-    : m.fromMe
-    ? conn.user.jid
-    : m.sender;
+  for (const [jid, data] of Object.entries(global.db.data.users)) {
+    if (
+      data.muto ||
+      data.muted ||
+      data.mute ||
+      data.isMuted ||
+      (data.settings && data.settings.muto)
+    ) {
+      users.push(jid);
+    }
+  }
 
-  const avatarUrl =
-    (await conn.profilePictureUrl(target, "image").catch(() => null)) ||
-    "https://qu.ax/DQsgr.png";
+  const chat = global.db.data.chats[m.chat] || {};
+  if (chat.mutedUsers) users.push(...Object.keys(chat.mutedUsers));
+  if (chat.muto) users.push(...Object.keys(chat.muto));
+
+  users = [...new Set(users)];
 
   const fake = {
     key: {
@@ -30,25 +36,17 @@ let handler = async (m, { conn, usedPrefix, isOwner }) => {
     participant: "0@s.whatsapp.net"
   };
 
-  const users = Object.entries(global.db.data.users).filter(
-    ([, data]) => data.muto
-  );
-
-  let text =
-    `🔇 *Utenti Mutati*\n` +
-    `Totale: *${users.length}*\n\n`;
+  let text = `🔇 *Utenti Mutati*\nTotale: *${users.length}*\n\n`;
 
   if (users.length === 0) {
-    text += `🟢 Nessun utente mutato nel database.\n`;
+    text += `🟢 Nessun utente risulta mutato.\n`;
   } else {
-    users.forEach(([jid], i) => {
-      const formatted = isOwner ? `@${jid.split("@")[0]}` : jid;
-      text += `${i + 1}. ${formatted}\n`;
+    users.forEach((jid, i) => {
+      text += `${i + 1}. @${jid.split("@")[0]}\n`;
     });
   }
 
-  text +=
-    `\n⚠️ In caso di problemi usa *${usedPrefix}segnala* per contattare lo staff.`;
+  text += `\n⚠️ Usa *${usedPrefix}segnala* per contattare lo staff.`;
 
   await conn.sendMessage(
     m.chat,
@@ -62,7 +60,7 @@ let handler = async (m, { conn, usedPrefix, isOwner }) => {
 
 handler.help = ["listamuti"];
 handler.tags = ["owner"];
-handler.command = /^listamuti?$/i;
+handler.command = /^listamuti$/i;
 handler.rowner = true;
 
 export default handler;

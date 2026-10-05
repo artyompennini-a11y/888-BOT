@@ -367,7 +367,7 @@ switch (optionName) {
       chat.talk = isEnabling;
       break;
 
-    case "provocazioni":
+    case "reazioni":
     case "provocatorio":
     case "provocazione":
       if (m.isGroup) {
@@ -376,7 +376,7 @@ switch (optionName) {
           throw false
         }
       }
-      chat.provocazioni = isEnabling;
+      chat.reazioni = isEnabling;
       break;
 
     case "autolevelup":

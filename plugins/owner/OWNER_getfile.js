@@ -1,14 +1,16 @@
 import fs from 'fs'
 import syntaxError from 'syntax-error'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 const _fs = fs.promises
 
 function normalizza(str) {
+
   return str
+    .replace(/\.js$/i, '')
     .toLowerCase()
     .replace(/[\-_\.\s]+/g, '')
-    .replace(/\.js$/i, '')
 }
 
 function levenshtein(a, b) {
@@ -36,21 +38,96 @@ function scoreSomiglianza(query, filename) {
   return Math.max(0, Math.round((1 - dist / maxLen) * 100))
 }
 
-async function cercaFileSimili(query, dir, top = 5) {
-  let files = []
-  try { files = await _fs.readdir(dir) } catch { return [] }
-  return files
-    .filter(f => f.endsWith('.js'))
-    .map(f => ({ file: f, score: scoreSomiglianza(query, f) }))
-    .filter(x => x.score > 25)
-    .sort((a, b) => b.score - a.score)
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+const PLUGINS_DIR = path.resolve(HERE, '..')
+
+const esiste = (p) => _fs.access(p).then(() => true).catch(() => false)
+
+let _cache = null
+let _cacheT = 0
+
+async function listaPlugin(root = PLUGINS_DIR, out = [], depth = 0) {
+  if (depth > 6) return out
+  let entries = []
+  try { entries = await _fs.readdir(root, { withFileTypes: true }) } catch { return out }
+  for (const e of entries) {
+    if (e.name.startsWith('.') || e.name === 'node_modules') continue
+    const full = path.join(root, e.name)
+    if (e.isDirectory()) await listaPlugin(full, out, depth + 1)
+    else if (e.isFile() && e.name.endsWith('.js')) out.push(full)
+  }
+  return out
+}
+
+async function tuttiIPlugin() {
+  const ora = Date.now()
+  if (_cache && ora - _cacheT < 30000) return _cache
+  _cache = await listaPlugin()
+  _cacheT = ora
+  return _cache
+}
+
+const percorsoRelativo = (full) => path.relative(PLUGINS_DIR, full).split(path.sep).join('/')
+
+
+async function cercaInPlugins(query, top = 6) {
+  const tutti = await tuttiIPlugin()
+  const qn = normalizza(query)
+  return tutti
+    .map((p) => ({
+      path: p,
+      file: path.basename(p),
+      rel: percorsoRelativo(p),
+      score: scoreSomiglianza(query, path.basename(p)),
+      esatto: normalizza(path.basename(p)) === qn
+    }))
+    .filter((x) => x.score > 30)
+    .sort((a, b) => b.score - a.score || a.rel.localeCompare(b.rel))
     .slice(0, top)
+}
+
+
+async function risolviFile(raw, isPlugin) {
+  const haCartella = raw.includes('/') || raw.includes('\\')
+  const nomeFile = path.basename(raw).replace(/^plugins?[/\\]/i, '').replace(/^\.\.?[/\\]/, '')
+  const filename = /\.[a-z0-9]+$/i.test(nomeFile) ? nomeFile : nomeFile + '.js'
+
+  let pathFile
+  if (isPlugin) {
+    if (haCartella) {
+
+      const dir = path.dirname(raw)
+      pathFile = path.isAbsolute(raw)
+        ? path.join(dir, filename)
+        : path.resolve(PLUGINS_DIR, dir, filename)
+    } else {
+      pathFile = path.join(HERE, filename)
+    }
+  } else {
+    pathFile = path.isAbsolute(raw) ? raw : path.resolve(raw)
+  }
+
+  let cartella = ''
+  const trovato = await esiste(pathFile)
+
+  if (!trovato && isPlugin) {
+    const candidati = await cercaInPlugins(raw)
+
+    const primo = candidati.find((x) => x.esatto)
+    if (primo) {
+      pathFile = primo.path
+      cartella = primo.rel
+    }
+  }
+
+  return { pathFile, filename: path.basename(pathFile), cartella, trovato: await esiste(pathFile) }
 }
 
 let handler = async (m, { text, usedPrefix, command, __dirname, conn }) => {
   const args = text ? text.trim().split(/\s+/) : []
 
-  // MENU — Grafica Premium 888
+
   if (!text || args.length === 0) {
     return m.reply(`
 📁 *FILE MANAGER 888*
@@ -71,54 +148,41 @@ Il sistema supporta ricerca flessibile.
   const fileArg  = args[0]
   const option   = args[1]?.toLowerCase() || null
 
-  let filename, pathFile
 
-  if (isPlugin) {
-    filename = fileArg.replace(/plugins?\//i, '') + (/\.js$/i.test(fileArg) ? '' : '.js')
-    pathFile  = path.join(__dirname, filename)
-  } else {
-    filename = path.basename(fileArg)
-    pathFile  = fileArg
-  }
+  const { pathFile, filename, cartella, trovato } = await risolviFile(fileArg.trim(), isPlugin)
 
-  const esiste = await _fs.access(pathFile).then(() => true).catch(() => false)
 
-  // FILE NON TROVATO — Suggerimenti 888
-  if (!esiste) {
-    const dir    = isPlugin ? __dirname : path.dirname(pathFile)
-    const simili = await cercaFileSimili(fileArg, dir)
+  if (!trovato) {
+    const simili = isPlugin ? await cercaInPlugins(fileArg) : []
 
     if (simili.length === 0) {
       return m.reply(`
 ❌ *FILE NON TROVATO*
 Target: ${filename}
-Nessun file simile rilevato.
+Nessun file simile in *plugins*.
 `.trim())
     }
 
-    const barre = simili.map((x, i) => {
-      const filled = Math.round(x.score / 10)
-      const bar    = '█'.repeat(filled) + '▒'.repeat(10 - filled)
-      return `${i + 1}. [${bar}] ${x.score}% — _${x.file}_`
+    const righe = simili.map((x, i) => {
+      const barra = '█'.repeat(Math.max(1, Math.round(x.score / 20))) + '▒'.repeat(10 - Math.max(1, Math.round(x.score / 20)))
+      return `${i + 1}. \`${x.file}\`  [${barra}] ${x.score}%\n    📂 ${x.rel}`
     }).join('\n')
 
     const buttons = simili.map(x => [
       `📄 ${x.file} (${x.score}%)`,
-      `${usedPrefix + command} ${x.file}`
+      `${usedPrefix + command} ${x.rel}`
     ])
 
     return await conn.sendButton(
       m.chat,
       `
-🔍 *FILE SUGGERITI 888*
-Corrispondenze parziali
+🔎 *FORSE CERCAVI*
+Non esiste \`${filename}\` dentro *plugins*.
+Questi i plugin simili:
 
-❓ Cercavi: ${filename}
+${righe}
 
-🎯 Elementi rilevati:
-${barre}
-
-Seleziona un'opzione sotto.
+Tocca quello giusto qui sotto.
 `.trim(),
       '888 File Manager',
       null,
@@ -127,13 +191,13 @@ Seleziona un'opzione sotto.
     )
   }
 
-  // FILE TROVATO — Scelta modalità 888
+
   if (!option) {
     return await conn.sendButton(
       m.chat,
       `
 📁 *FILE RILEVATO 888*
-File: ${filename}
+File: ${filename}${cartella ? '\nCartella: *' + cartella + '*' : ''}
 
 Scegli la modalità di output:
 `.trim(),
@@ -154,7 +218,7 @@ Scegli la modalità di output:
       ? await _fs.readFile(pathFile, 'utf8')
       : await _fs.readFile(pathFile)
 
-    // INVIO FILE — Grafica Premium 888
+  
     if (option === 'file') {
       await conn.sendMessage(
         m.chat,
@@ -168,7 +232,7 @@ Scegli la modalità di output:
       )
     }
 
-    // SCRIPT — Grafica Premium 888
+ 
     else if (option === 'script') {
       if (!isJS) throw 'L\'opzione script è disponibile solo per file JavaScript.'
       await m.reply(`// Codice di ${filename}\n\n${fileContent}`)
@@ -178,12 +242,13 @@ Scegli la modalità di output:
       throw 'Opzione non valida! Usa *file* o *script*.'
     }
 
-    // CHECK SINTASSI — Grafica Premium 888
+   
     if (isJS) {
       const error = syntaxError(fileContent, filename, {
         sourceType: 'module',
         allowReturnOutsideFunction: true,
-        allowAwaitOutsideFunction: true
+        allowAwaitOutsideFunction: true,
+        ecmaVersion: 12
       })
       if (error) {
         await m.reply(`

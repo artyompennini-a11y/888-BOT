@@ -266,15 +266,6 @@ switch (optionName) {
       chat.slowmode = isEnabling;
       break;
 
-    case "reaction":
-      if (m.isGroup) {
-        if (!isAdmin && !isOwner && !isROwner) {
-          global.dfail('admin', m, conn)
-          throw false
-        }
-      }
-      chat.reaction = isEnabling;
-      break;
 
     case "bestemmiometro":
       if (m.isGroup) {

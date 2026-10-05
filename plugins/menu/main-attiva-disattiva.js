@@ -1,267 +1,460 @@
-// Plugin by elixir, punisher & 888 staff
-import fetch from 'node-fetch'
 import fs from 'fs'
+let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => {
+  let isEnabling = /true|enable|attiva|(turn)?on|1/i.test(command)
+  if (/disable|disabilita|disattiva|off|0/i.test(command)) isEnabling = false
 
-let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isROwner }) => {
+  const chat = global.db.data.chats[m.chat] || (global.db.data.chats[m.chat] = {})
+  const bot = global.db.data.settings[conn.user.jid] || (global.db.data.settings[conn.user.jid] = {})
   const userName = m.pushName || 'Utente'
 
-  if (!isAdmin && !isOwner && !isROwner) {
-    return m.reply("⛔ Non hai abbastanza aura per usare questo comando.")
+  let imgBuffer
+  try {
+    imgBuffer = fs.readFileSync('icone/888.jpg')
+  } catch {
+    imgBuffer = Buffer.alloc(0)
   }
-
-  const imgBuffer = fs.readFileSync('media/888.jpeg.jpeg.jpg')
 
   const fake = {
     key: {
       participants: '0@s.whatsapp.net',
       fromMe: false,
-      id: '888Attiva'
+      id: 'ENABLE_888'
     },
     message: {
       locationMessage: {
-        name: '🤖 888 BOT • Signal Control',
-        jpegThumbnail: imgBuffer.toString('base64'),
-        vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;888;;;\nFN:888\nEND:VCARD'
+        name: '⚙️ 888 BOT • Gestione Funzioni',
+        jpegThumbnail: imgBuffer
       }
     },
     participant: '0@s.whatsapp.net'
   }
 
-  let isEnable = /true|enable|attiva|(turn)?on|1/.test(command)
-  if (/disable|disattiva|off|0/.test(command)) isEnable = false
+  let optionName = (args[0] || '').toLowerCase()
 
-  global.db.data.chats[m.chat] = global.db.data.chats[m.chat] || {}
-  global.db.data.users[m.sender] = global.db.data.users[m.sender] || {}
-  let chat = global.db.data.chats[m.chat]
-  let user = global.db.data.users[m.sender]
-  let bot = global.db.data.settings[conn.user.jid] || {}
-
-  const catalogs = {
-    security: ['antilink','antiporno','modoadmin','antispam','antimedia','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antitrava','slowmode','antinuke'],
-    protezione: ['antispam','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antitrava'],
-    media: ['antimedia','antiporno','antigore'],
-    full: ['antilink','antiporno','antigore','antispam','antitoxic','antibot','antiraid','antiraidlink','antivoip','antioneview','antimedia','antilinktg','antilinkig','antilinktiktok','modoadmin','antitrava','slowmode','antinuke']
-  }
-
-  const adminFeatures = [
-    { key: 'welcome', name: 'Welcome', desc: 'Messaggio di benvenuto' },
-    { key: 'antinuke', name: 'AntiNuke', desc: 'Protezione totale del gruppo' },
-    { key: 'antiraid', name: 'AntiRaid', desc: 'Blocca ingressi massicci' },
-    { key: 'antiraidlink', name: 'AntiRaidLink', desc: 'Blocca QR promo nelle immagini' },
-    { key: 'antiflood', name: 'AntiFlood', desc: 'Blocca raffica di comandi' },
-    { key: 'antimedia', name: 'AntiMedia', desc: 'Blocca media a rischio' },
-    { key: 'goodbye', name: 'Addio', desc: 'Messaggio di addio' },
-    { key: 'antispam', name: 'Antispam', desc: 'Blocca spam' },
-    { key: 'antitrava', name: 'AntiTrava', desc: 'Blocca messaggi trava' },
-    { key: 'antitoxic', name: 'Antitossici', desc: 'Rileva insulti' },
-    { key: 'antibot', name: 'Antibot', desc: 'Blocca bot indesiderati' },
-    { key: 'antioneview', name: 'Antiviewonce', desc: 'Blocca view-once' },
-    { key: 'rileva', name: 'Rileva', desc: 'Rileva eventi gruppo' },
-    { key: 'antiporno', name: 'Antiporno', desc: 'Blocca contenuti NSFW' },
-    { key: 'antigore', name: 'Antigore', desc: 'Blocca contenuti gore' },
-    { key: 'logrichieste', name: 'LogRichieste', desc: 'Log join request' },
-    { key: 'modoadmin', name: 'SoloAdmin', desc: 'Solo admin possono usare comandi' },
-    { key: 'slowmode', name: 'Slowmode', desc: 'Limita spam messaggi' },
-    { key: 'ai', name: 'IA', desc: 'Intelligenza artificiale' },
-    { key: 'vocali', name: 'Siri', desc: 'Risposte vocali automatiche' },
-    { key: 'antivoip', name: 'AntiVoip', desc: 'Blocca chiamate VoIP' },
-    { key: 'antilinktg', name: 'AntiTelegram', desc: 'Blocca link Telegram' },
-    { key: 'antilinkig', name: 'AntiInstagram', desc: 'Blocca link Instagram' },
-    { key: 'antilinktiktok', name: 'AntiTikTok', desc: 'Blocca link TikTok' },
-    { key: 'antilink', name: 'AntiLink', desc: 'Blocca link WhatsApp' },
-    { key: 'reaction', name: 'Reazioni', desc: 'Reazioni automatiche' },
-    { key: 'bestemmiometro', name: 'Bestemmiometro', desc: 'Conta bestemmie' },
-    { key: 'antifake', name: 'AntiFake', desc: 'Blocca numeri fake' }
-  ]
-
-  const ownerFeatures = [
-    { key: 'antiprivato', name: 'Antiprivato', desc: 'Blocca chi scrive in privato al bot' },
-    { key: 'soloCreatore', name: 'SoloCreatore', desc: 'Solo il creatore può usare comandi' },
-    { key: 'jadibotmd', name: 'Subbots', desc: 'Gestione sub-bot' },
-    { key: 'read', name: 'Lettura', desc: 'Il bot legge automaticamente i messaggi' },
-    { key: 'anticall', name: 'Antichiamate', desc: 'Blocca chiamate' }
-  ]
-
-  const toggleFeature = (type) => {
-    let result = { type, status: '', success: false }
-
-    const lowerKey = type ? type.toLowerCase() : null
-    const key = (() => {
-      const catalogKey = catalogs[lowerKey]
-      return catalogKey ? catalogKey : [lowerKey].filter(Boolean)
-    })()
-
-    const setChatField = (k) => {
-      const lower = k.toLowerCase()
-      const field = lower === 'antilink' ? 'antiLink' :
-                    lower === 'antibot' ? 'antiBot' :
-                    lower
-      if (chat[field] === isEnable) {
-        result.status = isEnable ? 'già attivo.' : 'già disattivato.'
-        return
+switch (optionName) {
+    // ---------- MODULI ADMIN ----------
+    case "welcome":
+    case "benvenuto":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
       }
-      chat[field] = isEnable
-      result.status = isEnable ? 'ATTIVATO' : 'DISATTIVATO'
-      result.success = true
-    }
+      chat.welcome = isEnabling;
+      break;
 
-    const setBotField = (k) => {
-      const field = k.toLowerCase()
-      if (bot[field] === isEnable) {
-        result.status = isEnable ? 'già attivo.' : 'già disattivato.'
-        return
+    case "goodbye":
+    case "addio":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
       }
-      bot[field] = isEnable
-      result.status = isEnable ? 'ATTIVATO' : 'DISATTIVATO'
-      result.success = true
-    }
+      chat.goodbye = isEnabling;
+      break;
 
-    const handlerMap = {
-      welcome: () => setChatField('welcome'),
-      benvenuto: () => setChatField('welcome'),
-      goodbye: () => setChatField('goodbye'),
-      addio: () => setChatField('goodbye'),
-      antinuke: () => setChatField('antinuke'),
-      antiraid: () => setChatField('antiraid'),
-      antiraidlink: () => setChatField('antiraidlink'),
-      antiflood: () => setChatField('antiflood'),
-      antiprivato: () => setBotField('antiprivato'),
-      antilinkig: () => setChatField('antilinkig'),
-      antilinktg: () => setChatField('antilinktg'),
-      antilinktiktok: () => setChatField('antilinktiktok'),
-      read: () => setBotField('read'),
-      anticall: () => setBotField('anticall'),
-      soloCreatore: () => setBotField('soloCreatore'),
-      modoadmin: () => setChatField('modoadmin'),
-      antimedia: () => setChatField('antimedia'),
-      antibot: () => setChatField('antibot'),
-      antiBot: () => setChatField('antibot'),
-      antivoip: () => setChatField('antivoip'),
-      antitoxic: () => setChatField('antitoxic'),
-      antioneview: () => setChatField('antioneview'),
-      reaction: () => setChatField('reaction'),
-      bestemmiometro: () => setChatField('bestemmiometro'),
-      antispam: () => setChatField('antispam'),
-      antitrava: () => setChatField('antitrava'),
-      antiporno: () => setChatField('antiporno'),
-      antigore: () => setChatField('antigore'),
-      slowmode: () => setChatField('slowmode'),
-      logrichieste: () => setChatField('logrichieste'),
-      ai: () => setChatField('ai'),
-      vocali: () => setChatField('vocali'),
-      subbots: () => setBotField('jadibotmd'),
-      jadibotmd: () => setBotField('jadibotmd'),
-      rileva: () => setChatField('rileva'),
-      antilink: () => setChatField('antilink'),
-      antiLink: () => setChatField('antilink'),
-      antifake: () => setChatField('antifake')
-    }
-
-    const lowerType = type ? type.toLowerCase() : null
-    const normalizedKey = lowerType || null
-
-    if (!normalizedKey) {
-      result.status = `Modulo non riconosciuto. Usa ${usedPrefix}funzioni per la lista completa.`
-      return result
-    }
-
-    const handler = handlerMap[normalizedKey] || handlerMap[type]
-    if (!handler) {
-      result.status = `Modulo non riconosciuto. Usa ${usedPrefix}funzioni per la lista completa.`
-      return result
-    }
-
-    handler()
-    return result
-  }
-
-  const buildMessage = (result) => {
-    let icon = result.success ? (isEnable ? '🟩' : '🟥') : result.status.includes('già') ? '🟨' : '⚠️'
-    let displayStatus = result.success ? `*${result.status}*` : result.status
-    return `⚙️ *Funzione:* ${result.type}\n${icon} Stato: ${displayStatus}\n👤 Operatore: ${userName}\n\n`
-  }
-
-  const createSections = (features) => [
-    {
-      title: '🟢 Attiva Modulo',
-      rows: features.map(f => ({
-        title: f.name,
-        description: f.desc,
-        id: `${usedPrefix}attiva ${f.key}`
-      }))
-    },
-    {
-      title: '🔴 Disattiva Modulo',
-      rows: features.map(f => ({
-        title: f.name,
-        description: f.desc,
-        id: `${usedPrefix}disattiva ${f.key}`
-      }))
-    }
-  ]
-
-  if (!args.length) {
-    const botImg = 'icone/888.jpg'
-
-    let cards = [
-      {
-        image: { url: botImg },
-        title: '⚙️ Pannello Gestione Gruppo',
-        body: 'Configura i moduli di sicurezza e utilità del gruppo.',
-        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧 • Security Panel',
-        buttons: [
-          {
-            name: 'single_select',
-            buttonParamsJson: JSON.stringify({
-              title: 'Apri Impostazioni',
-              sections: createSections(adminFeatures)
-            })
-          }
-        ]
+    case "antinuke":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
       }
-    ]
+      chat.antinuke = isEnabling;
+      break;
 
-    if (isOwner || isROwner) {
-      cards.push({
-        image: { url: botImg },
-        title: '👑 Pannello Owner',
-        body: 'Gestisci le funzioni globali del bot.',
-        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧 • Owner Panel',
-        buttons: [
-          {
-            name: 'single_select',
-            buttonParamsJson: JSON.stringify({
-              title: 'Apri Comandi Core',
-              sections: createSections(ownerFeatures)
-            })
-          }
-        ]
-      })
-    }
+    case "antiraid":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiraid = isEnabling;
+      break;
 
-    return conn.sendMessage(
-      m.chat,
-      {
-        text: '🤖 *Sistema Gestione Funzioni*\nConfigura il bot tramite i menù sottostanti.',
-        footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
-        cards
-      },
-      { quoted: fake }
-    )
+    case "antiraidlink":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiraidlink = isEnabling;
+      break;
+
+    case "antiflood":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiflood = isEnabling;
+      break;
+
+    case "antighost":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antighost = isEnabling;
+      break;
+
+    case "antimedia":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antimedia = isEnabling;
+      break;
+
+    case "antitoxic":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antitoxic = isEnabling;
+      break;
+
+    case "antispam":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antispam = isEnabling;
+      break;
+
+    case "antibot":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antibot = isEnabling;
+      break;
+
+    case "antioneview":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antioneview = isEnabling;
+      break;
+
+    case "antitrava":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antitrava = isEnabling;
+      break;
+
+    case "antiporno":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiporno = isEnabling;
+      break;
+
+    case "antigore":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antigore = isEnabling;
+      break;
+
+    case "antivoip":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antivoip = isEnabling;
+      break;
+
+    case "antilink":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiLink = isEnabling;
+      break;
+
+    case "antilinkig":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antilinkig = isEnabling;
+      break;
+
+    case "antilinktg":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antilinktg = isEnabling;
+      break;
+
+    case "antilinktiktok":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antilinktiktok = isEnabling;
+      break;
+
+    case "antipaki":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiArab = isEnabling;
+      break;
+
+    case "modoadmin":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.modoadmin = isEnabling;
+      break;
+
+    case "slowmode":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.slowmode = isEnabling;
+      break;
+
+    case "reaction":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.reaction = isEnabling;
+      break;
+
+    case "bestemmiometro":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.bestemmiometro = isEnabling;
+      break;
+
+    case "rileva":
+    case "detect":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.rileva = isEnabling;
+      break;
+
+    case "logrichieste":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.logrichieste = isEnabling;
+      break;
+
+    case "ai":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.ai = isEnabling;
+      break;
+
+    case "vocali":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.vocali = isEnabling;
+      break;
+
+    case "autosticker":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.autosticker = isEnabling;
+      break;
+
+    case "risposte":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.risposte = isEnabling;
+      break;
+
+    case "antiruba":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antiruba = isEnabling;
+      break;
+
+    case "talk":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.talk = isEnabling;
+      break;
+
+    case "provocazioni":
+    case "provocatorio":
+    case "provocazione":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.provocazioni = isEnabling;
+      break;
+
+    case "autolevelup":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.autolevelup = isEnabling;
+      break;
+
+    case "antifake":
+      if (m.isGroup) {
+        if (!isAdmin && !isOwner && !isROwner) {
+          global.dfail('admin', m, conn)
+          throw false
+        }
+      }
+      chat.antifake = isEnabling;
+      break;
+// ---------- MODULI OWNER ----------
+    case "antiprivato":
+      if (!isOwner && !isROwner) {
+        global.dfail('owner', m, conn)
+        throw false
+      }
+      bot.antiprivato = isEnabling;
+      break;
+
+    case "anticall":
+      if (!isOwner && !isROwner) {
+        global.dfail('owner', m, conn)
+        throw false
+      }
+      bot.anticall = isEnabling;
+      break;
+
+    case "solocreatore":
+      if (!isROwner) {
+        global.dfail('rowner', m, conn)
+        throw false
+      }
+      bot.soloCreatore = isEnabling;
+      break;
+
+    case "lettura":
+      if (!isOwner && !isROwner) {
+        global.dfail('owner', m, conn)
+        throw false
+      }
+      bot.read = isEnabling;
+      break;
+
+    case "subbots":
+      if (!isOwner && !isROwner) {
+        global.dfail('owner', m, conn)
+        throw false
+      }
+      bot.jadibotmd = isEnabling;
+      break;
+
+    case "restrict":
+      if (!isOwner && !isROwner) {
+        global.dfail('owner', m, conn)
+        throw false
+      }
+      bot.restrict = isEnabling;
+      break;
+
+    default:
+      throw false
   }
 
-  const firstArg = args[0].toLowerCase()
-
-  if (catalogs[firstArg]) {
-    const results = catalogs[firstArg].map(key => toggleFeature(key))
-    const msg = results.map(buildMessage).join('').trim()
-    return conn.sendMessage(m.chat, { text: msg }, { quoted: fake })
-  }
-
-  const results = args.map(arg => toggleFeature(arg.toLowerCase()))
-  const summaryMessage = results.map(buildMessage).join('').trim()
-
-  await conn.sendMessage(m.chat, { text: summaryMessage }, { quoted: fake })
+  await conn.sendMessage(m.chat, {
+    text: '⚙️ *Funzione:* ' + optionName + '\n' +
+      (isEnabling ? '🟩 *ATTIVATO*' : '🟥 *DISATTIVATO*') +
+      '\n👤 Operatore: ' + userName
+  }, { quoted: fake });
 }
 
 handler.help = ['attiva', 'disattiva']

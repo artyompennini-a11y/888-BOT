@@ -22,7 +22,7 @@ export async function all(m) {
     if (!m.isGroup || m.fromMe || m.isBaileys) return
 
     const chat = global.db?.data?.chats?.[m.chat]
-    if (!chat?.provocazioni || chat.isBanned) return
+    if (!chat?.reazioni || chat.isBanned) return
 
     const haTesto = typeof m.text === 'string' && m.text.trim().length > 0
     const haMedia = ['imageMessage', 'videoMessage', 'stickerMessage', 'audioMessage', 'pttMessage'].includes(m.mtype)
@@ -45,7 +45,7 @@ export async function all(m) {
       }
     }).catch(() => {})
   } catch (e) {
-    console.error('[provocazioni]', e?.message || e)
+    console.error('[reazioni]', e?.message || e)
   }
 }
 

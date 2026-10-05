@@ -6,8 +6,7 @@ import { fileURLToPath } from 'url'
 const _fs = fs.promises
 
 function normalizza(str) {
-  // togliere PRIMA il suffisso .js: altrimenti il punto verrebbe
-  // mangiato insieme ai separatori e "x.js" diventerebbe "xjs"
+
   return str
     .replace(/\.js$/i, '')
     .toLowerCase()
@@ -39,7 +38,7 @@ function scoreSomiglianza(query, filename) {
   return Math.max(0, Math.round((1 - dist / maxLen) * 100))
 }
 
-// ---- Ricerca ricorsiva in TUTTA la cartella plugins ----
+
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const PLUGINS_DIR = path.resolve(HERE, '..')
 
@@ -71,7 +70,7 @@ async function tuttiIPlugin() {
 
 const percorsoRelativo = (full) => path.relative(PLUGINS_DIR, full).split(path.sep).join('/')
 
-// ordina per somiglianza: nome esatto, prefisso, poi Levenshtein
+
 async function cercaInPlugins(query, top = 6) {
   const tutti = await tuttiIPlugin()
   const qn = normalizza(query)
@@ -88,7 +87,7 @@ async function cercaInPlugins(query, top = 6) {
     .slice(0, top)
 }
 
-// Risolve il file: percorso esplicito -> cartella del plugin -> ricerca in plugins/
+
 async function risolviFile(raw, isPlugin) {
   const haCartella = raw.includes('/') || raw.includes('\\')
   const nomeFile = path.basename(raw).replace(/^plugins?[/\\]/i, '').replace(/^\.\.?[/\\]/, '')
@@ -97,7 +96,7 @@ async function risolviFile(raw, isPlugin) {
   let pathFile
   if (isPlugin) {
     if (haCartella) {
-      // es. "gp/gp-afk" -> plugins/gp/gp-afk.js (aggiunge .js anche sul percorso)
+
       const dir = path.dirname(raw)
       pathFile = path.isAbsolute(raw)
         ? path.join(dir, filename)
@@ -114,8 +113,7 @@ async function risolviFile(raw, isPlugin) {
 
   if (!trovato && isPlugin) {
     const candidati = await cercaInPlugins(raw)
-    // apre da solo SOLO con il nome esatto: se l utente ha sbagliato a digitare
-    // non indoviniamo, gli mostriamo "forse cercavi"
+
     const primo = candidati.find((x) => x.esatto)
     if (primo) {
       pathFile = primo.path
@@ -129,7 +127,7 @@ async function risolviFile(raw, isPlugin) {
 let handler = async (m, { text, usedPrefix, command, __dirname, conn }) => {
   const args = text ? text.trim().split(/\s+/) : []
 
-  // MENU — Grafica Premium 888
+
   if (!text || args.length === 0) {
     return m.reply(`
 📁 *FILE MANAGER 888*
@@ -150,10 +148,10 @@ Il sistema supporta ricerca flessibile.
   const fileArg  = args[0]
   const option   = args[1]?.toLowerCase() || null
 
-  // Cerca il file in tutta la cartella plugins (percorso -> cartella locale -> ricerca globale)
+
   const { pathFile, filename, cartella, trovato } = await risolviFile(fileArg.trim(), isPlugin)
 
-  // FILE NON TROVATO — Suggerimenti 888
+
   if (!trovato) {
     const simili = isPlugin ? await cercaInPlugins(fileArg) : []
 
@@ -193,7 +191,7 @@ Tocca quello giusto qui sotto.
     )
   }
 
-  // FILE TROVATO — Scelta modalità 888
+
   if (!option) {
     return await conn.sendButton(
       m.chat,
@@ -220,7 +218,7 @@ Scegli la modalità di output:
       ? await _fs.readFile(pathFile, 'utf8')
       : await _fs.readFile(pathFile)
 
-    // INVIO FILE — Grafica Premium 888
+  
     if (option === 'file') {
       await conn.sendMessage(
         m.chat,
@@ -234,7 +232,7 @@ Scegli la modalità di output:
       )
     }
 
-    // SCRIPT — Grafica Premium 888
+ 
     else if (option === 'script') {
       if (!isJS) throw 'L\'opzione script è disponibile solo per file JavaScript.'
       await m.reply(`// Codice di ${filename}\n\n${fileContent}`)
@@ -244,7 +242,7 @@ Scegli la modalità di output:
       throw 'Opzione non valida! Usa *file* o *script*.'
     }
 
-    // CHECK SINTASSI — Grafica Premium 888
+   
     if (isJS) {
       const error = syntaxError(fileContent, filename, {
         sourceType: 'module',

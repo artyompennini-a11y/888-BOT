@@ -6,9 +6,9 @@ const EMOJI_PROVOCATORIE = [
   '💩', '🥱', '🤮', '🤥', '😵', '🤫', '🤐', '😱', '💀'
 ]
 
-const PROBABILITA = 0.25
-const COOLDOWN_CHAT = 1200
-const COOLDOWN_USER = 8000
+const PROBABILITA = 0.05
+const COOLDOWN_CHAT = 10000
+const COOLDOWN_USER = 10000
 
 const ultimoChat = new Map()
 const ultimoUser = new Map()

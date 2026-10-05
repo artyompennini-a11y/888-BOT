@@ -1,7 +1,8 @@
+// Plugin by elixir & Axtral_WiZaRd
 import fs from 'fs'
 let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => {
-  let isEnabling = /true|enable|attiva|(turn)?on|1/i.test(command)
-  if (/disable|disabilita|disattiva|off|0/i.test(command)) isEnabling = false
+  let isEnabling = /true|1|attiva|(turn)?on|1/i.test(command)
+  if (/0|disabilita|disattiva|off|0/i.test(command)) isEnabling = false
 
   const chat = global.db.data.chats[m.chat] || (global.db.data.chats[m.chat] = {})
   const bot = global.db.data.settings[conn.user.jid] || (global.db.data.settings[conn.user.jid] = {})
@@ -459,7 +460,8 @@ switch (optionName) {
 
 handler.help = ['attiva', 'disattiva']
 handler.tags = ['main']
-handler.command = ['enable', 'disable', 'attiva', 'disattiva', 'on', 'off']
+handler.command = ['1', '0', 'attiva', 'disattiva', 'on', 'off']
 handler.lowercaseOnly = true
 
 export default handler
+// Plugin by elixir & Axtral_WiZaRd

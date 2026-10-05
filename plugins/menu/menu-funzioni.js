@@ -12,15 +12,15 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
     rileva, jadibotmd, welcome, goodbye, modoadmin, antiporno,
     antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktiktok,
     antilinktg, antimedia, antispam, antitoxic, antiBot, antioneview,
-    antigore, reaction, bestemmiometro, ai, vocali, logrichieste,
-    slowmode, antinuke, antiraid, antiraidlink, antiflood
+    antigore, reaction, provocazioni, bestemmiometro, ai, vocali, logrichieste,
+    slowmode, antinuke, antiraid, antiraidlink, antiflood, antighost
   } = chat
 
   const { antiprivato, soloCreatore, read, anticall } = bot
 
   let imgBuffer
   try {
-    imgBuffer = fs.readFileSync('media/888.jpeg.jpeg.jpg')
+    imgBuffer = fs.readFileSync('icone/888.jpg')
   } catch {
     imgBuffer = Buffer.alloc(0)
   }
@@ -76,6 +76,8 @@ Stato pannello: Moduli di Sicurezza
 • [${s(goodbye)}] ${p}addio
 • [${s(modoadmin)}] ${p}modoadmin
 • [${s(slowmode)}] ${p}slowmode
+• [${s(reaction)}] ${p}reaction
+• [${s(provocazioni)}] ${p}provocazioni
 • [${s(bestemmiometro)}] ${p}bestemmiometro
 • [${s(logrichieste)}] ${p}logrichieste
 
@@ -85,6 +87,7 @@ Stato pannello: Moduli di Sicurezza
 • [${s(antiraid)}] ${p}antiraid
 • [${s(antiraidlink)}] ${p}antiraidlink
 • [${s(antiflood)}] ${p}antiflood
+• [${s(antighost)}] ${p}antighost
 • [${s(antiporno)}] ${p}antiporno
 • [${s(antigore)}] ${p}antigore
 • [${s(antispam)}] ${p}antispam

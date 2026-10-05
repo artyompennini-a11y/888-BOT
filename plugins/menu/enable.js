@@ -1,4 +1,4 @@
-// Plugin by elixir & Axtral_WiZaRd
+// Enable by elixir & Axtral_WiZaRd
 import fs from 'fs'
 let handler = async (m, { conn, command, args, isOwner, isAdmin, isROwner }) => {
   let isEnabling = /true|1|attiva|(turn)?on|1/i.test(command)

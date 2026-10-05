@@ -137,12 +137,12 @@ async function clearSessionFolderSelective(dir = sessionFolder) {
         await fsp.unlink(fullPath);
       }
     } catch {
-      // ignore individual failures
+
     }
   }));
 }
 
-// Soglia oltre la quale si potano i file di sessione, mantenendo i piu' recenti.
+// inizio eliminazione by Axtral 
 const SESSION_PRUNE_THRESHOLD = 500;
 const SESSION_KEEP_NEWEST = 100;
 
@@ -192,12 +192,11 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
         await fsp.unlink(filePath);
       }
     } catch {
-      // ignore failures
+      
     }
   }));
 
-  // Potatura di sicurezza: solo se i file prunable sono tanti, e comunque
-  // si conservano sempre i piu' recenti per non invalidare la sessione.
+
   if (prunable.length <= SESSION_PRUNE_THRESHOLD) return;
 
   const sorted = (await Promise.all(prunable.map(async (name) => {
@@ -217,10 +216,9 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
 
   console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐄𝐋𝐈𝐌𝐈𝐍𝐀𝐙𝐈𝐎𝐍𝐄 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐄𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 ${toDelete.length} 𝐟𝐢𝐥𝐞 𝐝𝐢 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞.\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
 }
-
+// fine auto eliminazione by Axtral 
 global.dbDirty = false;
 
-// flush periodico dello stato di sicurezza (raid, blocchi, contatori)
 const { flushAfk } = await import('./lib/afk.js');
 
 process.on('exit', () => { try { flushAfk() } catch {} });
@@ -658,7 +656,7 @@ async function connectionUpdate(update) {
 }
 
 process.on('uncaughtException', (err) => {
-  // Ignora errori IPC e timeout di Baileys che non devono crashare il bot
+  
   if (err.code === 'ERR_IPC_CHANNEL_CLOSED') return;
   if (err?.output?.statusCode === 408 || err?.message?.includes('Timed Out')) {
     console.log(chalk.yellow('[⚠️] Timeout di connessione rilevato, il bot continua a funzionare.'));
@@ -667,24 +665,23 @@ process.on('uncaughtException', (err) => {
   console.error(chalk.red('[❌] Eccezione non gestita:'), err);
 });
 
-// Handler per le promise rejection non gestite - FONDAMENTALE per evitare crash
+
 process.on('unhandledRejection', (reason, promise) => {
-  // Ignora errori IPC
+  
   if (reason?.code === 'ERR_IPC_CHANNEL_CLOSED') return;
 
-  // Gestisci timeout di Baileys senza crashare
+  
   if (reason?.output?.statusCode === 408 || reason?.message?.includes('Timed Out')) {
     console.log(chalk.yellow('[⚠] Timeout WhatsApp rilevato, riconnessione automatica in corso...'));
     return;
   }
 
-  // Gestisci errori di connessione Baileys
+  
   if (reason?.isBoom || reason?.message?.includes('connection')) {
     console.log(chalk.yellow('[⚠] Errore di connessione rilevato, il bot continua a funzionare.'));
     return;
   }
 
-  // Logga altri errori non gestiti senza crashare
   const errorMsg = reason instanceof Error ? reason.message : reason;
   console.log(chalk.yellow('[⚠] Promise rejection gestita:'), errorMsg);
 });
@@ -874,7 +871,7 @@ const mainWatcher = watch(filePath, async () => {
 });
 mainWatcher.setMaxListeners(20);
 
-// Pulizia periodica di tmp/ e temp/ (ogni 3 minuti).
+// By Axtral
 setInterval(async () => {
   try {
     if (global.stopped !== 'open' || !global.conn || !global.conn.user) {
@@ -889,7 +886,6 @@ setInterval(async () => {
   }
 }, 180000);
 
-// Controllo sessione: pota i file di sessione in eccesso (ogni 10 minuti).
 setInterval(async () => {
   try {
     if (global.stopped !== 'open' || !global.conn || !global.conn.user) {

@@ -42,7 +42,6 @@ async function ensureDir(dir) {
   try {
     await fsp.mkdir(dir, { recursive: true });
   } catch (e) {
-    // ignore
   }
 }
 
@@ -142,7 +141,6 @@ async function clearSessionFolderSelective(dir = sessionFolder) {
   }));
 }
 
-// inizio eliminazione by Axtral 
 const SESSION_PRUNE_THRESHOLD = 500;
 const SESSION_KEEP_NEWEST = 100;
 
@@ -216,7 +214,7 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
 
   console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐄𝐋𝐈𝐌𝐈𝐍𝐀𝐙𝐈𝐎𝐍𝐄 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐄𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 ${toDelete.length} 𝐟𝐢𝐥𝐞 𝐝𝐢 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞.\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
 }
-// fine auto eliminazione by Axtral 
+
 global.dbDirty = false;
 
 const { flushAfk } = await import('./lib/afk.js');
@@ -265,7 +263,7 @@ async function flushDatabase({ force = false } = {}) {
   }
 }
 
-const { useMultiFileAuthState, fetchLatestBaileysVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@888-BOT/888baileys');
+const { useMultiFileAuthState, fetchLatestBaileysVersion, fetchLatestWaWebVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@888-BOT/888baileys');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -371,7 +369,18 @@ global.creds = 'creds.json';
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
 const msgRetryCounterMap = (MessageRetryMap) => { };
 const msgRetryCounterCache = new NodeCache();
-const { version } = await fetchLatestBaileysVersion();
+
+let version;
+try {
+  const waWeb = await fetchLatestWaWebVersion();
+  version = waWeb.version;
+  console.log(chalk.green(`✅ Versione WhatsApp Web: ${version.join('.')}`));
+} catch {
+  const baileys = await fetchLatestBaileysVersion();
+  version = baileys.version;
+  console.log(chalk.yellow(`⚠️ Fallback versione Baileys: ${version.join('.')}`));
+}
+
 let rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
 
 const question = (t) => {
@@ -871,7 +880,6 @@ const mainWatcher = watch(filePath, async () => {
 });
 mainWatcher.setMaxListeners(20);
 
-// By Axtral
 setInterval(async () => {
   try {
     if (global.stopped !== 'open' || !global.conn || !global.conn.user) {

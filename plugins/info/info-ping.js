@@ -28,6 +28,10 @@ const BAILEYS_TTL_MS = 6 * 60 * 60 * 1000
 
 let handler = async (m, { conn, usedPrefix }) => {
 
+  // Nome e versione del bot da variabili globali
+  const nomeBot = global.nomebot || 'Bot'
+  const versioneBot = global.versione || 'N/D'
+
   // Baileys version cache
   const nowB = Date.now()
   if (!baileysCache.value || nowB - baileysCache.at > BAILEYS_TTL_MS) {
@@ -74,10 +78,11 @@ let handler = async (m, { conn, usedPrefix }) => {
   const cpuCount = os.cpus()?.length || 'N/D'
 
   const text = `
-⚡ *PING 888*
+⚡ *PING ${nomeBot}*
 📡 Ping: *${latency}ms*
 🌐 DNS: *${dnsPing}ms*
 ⏳ Uptime: *${uptime}*
+🏷️ Versione: *${versioneBot}*
 🔧 Baileys: *v${baileys}*
 
 💾 *RAM Totale:* ${formatBytes(ramtot)}
@@ -99,7 +104,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     m.chat,
     {
       text,
-      footer: '888 BOT',
+      footer: nomeBot,
       buttons,
       headerType: 1
     },

@@ -16,8 +16,6 @@ import NodeCache from 'node-cache';
 import { getAggregateVotesInPollMessage } from '@888-BOT/888baileys';
 import pkg from './package.json' with { type: 'json' };
 
-/* ───────────── helpers ───────────── */
-
 let _print;
 const printModule = async () => (_print ??= (await import('./lib/print.js')).default);
 
@@ -35,7 +33,6 @@ const respKey = (chat, sender) => `${digits(chat)}:${digits(sender)}`;
 const isAdm = u => ['admin', 'superadmin', true].includes(u.admin);
 const mention = jid => '@' + jid.split('@')[0];
 
-// owner (anche con LID): confronto sulle sole cifre
 const isBotOwnerNumber = (jid = '') => {
     const d = digits(jid);
     return !!d && (global.owner || []).some(e => digits(Array.isArray(e) ? e[0] : e) === d);
@@ -55,8 +52,6 @@ global.activeGiveaways ??= new Map();
 global.groupCache ??= mkCache(300, 60, 2000);
 global.jidCache ??= mkCache(3600, 600, 5000);
 global.nameCache ??= mkCache(3600, 600, 5000);
-
-/* ───────────── default DB ───────────── */
 
 const USER_BACKFILL = {
     messaggi: 0, warn: 0, warnCount: 0, blasphemy: 0, comandiEseguiti: 0, banned: false, muto: false,
@@ -80,8 +75,6 @@ const newChat = () => ({
 const newSettings = () => ({
     autoread: false, jadibotmd: false, antiprivato: true, soloCreatore: false, status: 0, anticall: false, anticallBlock: false
 });
-
-/* ───────────── plugin + gruppi ───────────── */
 
 export async function loadAllPlugins(pluginsDir = PLUGINS_DIR) {
     const results = {};
@@ -187,8 +180,6 @@ if (global.conn) {
     }
 }
 
-/* ───────────── anticall ───────────── */
-
 if (global.conn?.ws) {
     global.conn.ws.on('CB:call', async json => {
         try {
@@ -239,8 +230,6 @@ if (global.conn?.ws) {
 
 setInterval(() => { if (global.processedCalls.size > 10) global.processedCalls.clear(); }, 180_000);
 
-/* ───────────── admin / partecipanti ───────────── */
-
 function calcAdminFlags(conn, participants, meta, sender, bot) {
     const dec = typeof conn?.decodeJid === 'function' ? conn.decodeJid.bind(conn) : j => j;
     const rawOwner = meta.owner || meta.ownerLid || null;
@@ -260,9 +249,6 @@ const normParts = (conn, parts, withLid = false) => parts.map(u => {
 
 const canUseModoadmin = (chat, isGroup, ...privileged) => !isGroup || !chat.modoadmin || privileged.some(Boolean);
 
-/* ───────────── pezzi del handler ───────────── */
-
-// Messaggio non decifrato: riprova fino a 3 volte, poi scarta
 async function recoverUndecrypted(conn, m) {
     try {
         const who = m.key.participant ?? m.key.remoteJid;
@@ -300,7 +286,6 @@ async function closeGroup(conn, chatId, seconds) {
     }, seconds * 1000);
 }
 
-// Antispam messaggi/sticker. true = messaggio gestito (stop)
 async function groupAntiSpam(conn, m, sender) {
     const chatId = m.chat;
     const data = ((global.spamTracker[chatId] ??= {})[sender] ??= { messages: 0, stickers: 0, warns: 0, timeout: null, keys: [], stickerKeys: [] });
@@ -336,7 +321,6 @@ async function groupAntiSpam(conn, m, sender) {
     return false;
 }
 
-// Antispam comandi per gruppo (più di 5 in 10s → stop 20s). true = blocca il comando
 async function commandFlood(conn, m, exempt) {
     const g = (global.groupSpam[m.chat] ??= { count: 0, firstCommandTimestamp: 0, isSuspended: false, suspendedAt: 0 });
     const now = Date.now();
@@ -368,7 +352,6 @@ async function commandFlood(conn, m, exempt) {
     return false;
 }
 
-// Prefisso: RegExp, stringa o array di entrambi → [risultato exec, prefisso]
 function matchPrefix(text, pfx) {
     for (const p of [].concat(pfx)) {
         const re = p instanceof RegExp ? p : typeof p === 'string' ? new RegExp(str2Regex(p)) : null;
@@ -376,8 +359,6 @@ function matchPrefix(text, pfx) {
         if (res) return [res, p];
     }
 }
-
-/* ───────────── handler principale ───────────── */
 
 export async function handler(chatUpdate) {
     this.msgqueque ??= [];
@@ -432,7 +413,6 @@ export async function handler(chatUpdate) {
 
         initResponseHandler(this);
 
-        // pulsanti / liste: risolvono un waitForResponse oppure ripartono come comando testuale
         const btnId = buttonIdOf(m.message);
         if (typeof btnId === 'string' && btnId) {
             const sender = normalizeNumber(this.decodeJid(m.key.participant ?? m.sender));
@@ -460,7 +440,6 @@ export async function handler(chatUpdate) {
             continue;
         }
 
-        // risposte a eventi / giveaway
         if (m.message?.eventResponseMessage) {
             try {
                 const { eventId, response } = m.message.eventResponseMessage;
@@ -486,7 +465,6 @@ export async function handler(chatUpdate) {
             Object.defineProperty(m, 'sender', { value: normalizedSender, writable: true, configurable: true });
         } catch { m.normalizedSender = normalizedSender; }
 
-        /* utente */
         const user = (global.db.data.users[normalizedSender] ??= newUser(m.pushName));
         for (const [k, v] of Object.entries(USER_BACKFILL)) user[k] ??= v;
         if (user['888coin'] == null && typeof user.euro === 'number') user['888coin'] = user.euro;
@@ -500,7 +478,6 @@ export async function handler(chatUpdate) {
             continue;
         }
 
-        /* chat + impostazioni */
         const chat = (global.db.data.chats[m.chat] ??= newChat());
         for (const k of CHAT_FLAGS_ON) chat[k] ??= true;
         for (const k of CHAT_OBSOLETE) delete chat[k];
@@ -511,7 +488,6 @@ export async function handler(chatUpdate) {
 
         if (m.mtype === 'pollUpdateMessage' || m.mtype === 'reactionMessage') continue;
 
-        /* risposta attesa da waitForResponse */
         const rk = respKey(m.chat, normalizedSender);
         const rh = responseHandlers.get(rk);
         if (rh) {
@@ -529,7 +505,6 @@ export async function handler(chatUpdate) {
             }
         }
 
-        /* ruoli */
         const isElixir = isBotOwnerNumber(normalizedSender);
         const isROwner = isElixir;
         const isOwner = isElixir;
@@ -552,7 +527,6 @@ export async function handler(chatUpdate) {
             }
         }
 
-        /* protezioni di gruppo */
         if (m.isGroup && chat.antimedia && !isAdmin && !isOwner && ['imageMessage', 'videoMessage'].includes(m.mtype)) {
             await quiet(async () => {
                 await this.sendMessage(m.chat, { delete: m.key });
@@ -567,7 +541,6 @@ export async function handler(chatUpdate) {
 
         if (chat.isBanned && !isOwner) continue;
 
-        /* plugin.all */
         const pluginMap = pluginIndex(global.plugins, global.prefix ?? '.');
         await Promise.allSettled(
             Object.entries(global.plugins)
@@ -579,7 +552,6 @@ export async function handler(chatUpdate) {
                 })
         );
 
-        /* comandi */
         try {
             const pluginEntries = candidates(m.text, { index: pluginMap }).map(([name, plugin]) => ({
                 name, plugin,
@@ -594,7 +566,6 @@ export async function handler(chatUpdate) {
                 chatUpdate, __dirname: PLUGINS_DIR
             });
 
-            // hook before: se ritornano un valore truthy, il plugin viene saltato
             const beforeHooks = pluginEntries
                 .filter(e => typeof e.plugin.before === 'function')
                 .map(e => [e.name, () => e.plugin.before.call(this, m, { match: e.match, ...baseCtx(), __filename: e.__filename })]);
@@ -619,7 +590,6 @@ export async function handler(chatUpdate) {
                 const accepts = c => c instanceof RegExp ? c.test(command) : c === command;
                 if (![].concat(plugin.command ?? []).some(accepts)) continue;
 
-                // metadati freschi se il comando richiede admin/botAdmin
                 if (m.isGroup && (plugin.admin || plugin.botAdmin)) {
                     const fresh = global.groupCache.get(m.chat) ?? await safeMeta(this, m.chat);
                     if (fresh) {
@@ -667,7 +637,6 @@ export async function handler(chatUpdate) {
                 }
                 if (settings.soloCreatore && !isROwner) break;
 
-                // permessi extra assegnati dal DB (per nome plugin o comando)
                 const perms = global.db.data.pluginPerms?.[normalizedSender] ?? [];
                 const baseName = name.replace(/^.*[\\/]/, '').replace(/\.(js|mjs|cjs)$/, '').toLowerCase();
                 const cmd = plugin.command;
@@ -777,8 +746,6 @@ export async function handler(chatUpdate) {
         }
     }
 }
-
-/* ───────────── eventi gruppo / chiamate ───────────── */
 
 export async function participantsUpdate({ id, participants }) {
     if (global.db.data.chats[id]?.rileva === false) return;

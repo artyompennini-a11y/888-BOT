@@ -26,7 +26,7 @@ handler.all = async function (m) {
       },
       message: {
         locationMessage: {
-          name: '𝐏𝐫𝐨𝐦𝐨𝐳𝐢𝐨𝐧𝐞 𝐚𝐝𝐦𝐢𝐧 👑',
+          name: 'ℙ𝕣𝕠𝕞𝕠𝕫𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 👑',
           jpegThumbnail: ppBuffer.toString('base64'),
           vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Admin;;;\nFN:Admin\nEND:VCARD'
         }
@@ -35,7 +35,7 @@ handler.all = async function (m) {
     }
 
     conn.sendMessage(m.chat, {
-      text: `@${m.sender.split('@')[0]} 𝐡𝐚 𝐝𝐚𝐭𝐨 𝐢 𝐩𝐨𝐭𝐞𝐫𝐢 𝐚 @${m.messageStubParameters[0].split('@')[0]}`,
+      text: `@${m.sender.split('@')[0]} 𝕙𝕒 𝕕𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒 @${m.messageStubParameters[0].split('@')[0]}`,
       mentions: [m.sender, m.messageStubParameters[0]]
     }, { quoted: fake })
   }
@@ -60,7 +60,7 @@ handler.all = async function (m) {
       },
       message: {
         locationMessage: {
-          name: '𝐑𝐞𝐭𝐫𝐨𝐜𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐚𝐝𝐦𝐢𝐧 🙇🏻‍♂️',
+          name: 'ℝ𝕖𝕥𝕣𝕠𝕔𝕖𝕤𝕤𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 🙇🏻‍♂️',
           jpegThumbnail: ppBuffer.toString('base64'),
           vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Admin;;;\nFN:Admin\nEND:VCARD'
         }
@@ -69,7 +69,7 @@ handler.all = async function (m) {
     }
 
     conn.sendMessage(m.chat, {
-      text: `@${m.sender.split('@')[0]} 𝐡𝐚 𝐥𝐞𝐯𝐚𝐭𝐨 𝐢 𝐩𝐨𝐭𝐞𝐫𝐢 𝐚 @${m.messageStubParameters[0].split('@')[0]}`,
+      text: `@${m.sender.split('@')[0]} 𝕙𝕒 𝕝𝕖𝕧𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒 @${m.messageStubParameters[0].split('@')[0]}`,
       mentions: [m.sender, m.messageStubParameters[0]]
     }, { quoted: fake })
   }

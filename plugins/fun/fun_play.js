@@ -39,7 +39,82 @@ const buildButtons = (usedPrefix, url) => [
   }
 ]
 
-const sendCarousel = async (conn, m, usedPrefix, query, videos) => {
+const loadBaileys = async () => {
+  const names = [
+    '@realvare/baileys',
+    '@realvare/based',
+    '@whiskeysockets/baileys',
+    'baileys',
+    '@adiwajshing/baileys'
+  ]
+  for (const name of names) {
+    try {
+      const mod = await import(name)
+      const b = mod.default?.generateWAMessageFromContent ? mod.default : mod
+      if (b.generateWAMessageFromContent && b.prepareWAMessageMedia && b.proto) return b
+    } catch {}
+  }
+  return null
+}
+
+const sendCarouselProto = async (conn, m, usedPrefix, query, videos) => {
+  const b = await loadBaileys()
+  if (!b) throw new Error('Baileys non trovato')
+  const { generateWAMessageFromContent, prepareWAMessageMedia, proto } = b
+  const IM = proto.Message.InteractiveMessage
+
+  const cards = []
+  for (let i = 0; i < Math.min(videos.length, MAX_CARDS); i++) {
+    const v = videos[i]
+    let header = IM.Header.fromObject({ title: '', hasMediaAttachment: false })
+    try {
+      const media = await prepareWAMessageMedia(
+        { image: { url: v.thumbnail } },
+        { upload: conn.waUploadToServer }
+      )
+      header = IM.Header.fromObject({
+        title: '',
+        hasMediaAttachment: true,
+        imageMessage: media.imageMessage
+      })
+    } catch {}
+
+    cards.push({
+      header,
+      body: IM.Body.fromObject({
+        text: `*${i + 1}. ${cut(v.title, 60)}*\n\n👤 ${v.author?.name || '—'}\n⏱️ ${v.timestamp || '—'}  •  👁️ ${fmtViews(v.views)}`
+      }),
+      footer: IM.Footer.fromObject({ text: FOOTER }),
+      nativeFlowMessage: IM.NativeFlowMessage.fromObject({
+        buttons: buildButtons(usedPrefix, v.url)
+      })
+    })
+  }
+
+  const msg = generateWAMessageFromContent(
+    m.chat,
+    {
+      viewOnceMessage: {
+        message: {
+          messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
+          interactiveMessage: IM.fromObject({
+            body: IM.Body.fromObject({
+              text: `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n🔎 *Risultati per:*\n• ${query}\n\n👇 *Scegli il brano e il formato*`
+            }),
+            footer: IM.Footer.fromObject({ text: FOOTER }),
+            header: IM.Header.fromObject({ hasMediaAttachment: false }),
+            carouselMessage: IM.CarouselMessage.fromObject({ cards, messageVersion: 1 })
+          })
+        }
+      }
+    },
+    { quoted: m, userJid: conn.user?.jid || conn.user?.id }
+  )
+
+  await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id })
+}
+
+const sendCarouselCards = async (conn, m, usedPrefix, query, videos) => {
   const cards = videos.slice(0, MAX_CARDS).map((v, i) => ({
     image: { url: v.thumbnail },
     title: `${i + 1}. ${cut(v.title, 60)}`,
@@ -57,6 +132,15 @@ const sendCarousel = async (conn, m, usedPrefix, query, videos) => {
     },
     { quoted: m }
   )
+}
+
+const sendCarousel = async (conn, m, usedPrefix, query, videos) => {
+  try {
+    await sendCarouselProto(conn, m, usedPrefix, query, videos)
+  } catch (e1) {
+    console.error('Carousel proto error:', e1.message)
+    await sendCarouselCards(conn, m, usedPrefix, query, videos)
+  }
 }
 
 const sendSingleMenu = async (conn, m, usedPrefix, vid) => {

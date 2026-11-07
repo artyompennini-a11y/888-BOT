@@ -7,6 +7,9 @@ import os from 'os'
 
 const FOOTER = '𝟴𝟴𝟴 𝗕𝗢𝗧 • Downloader'
 const MAX_CARDS = 5
+const CACHE_TTL = 15 * 60 * 1000
+
+const cache = new Map()
 
 const run = (cmd) =>
   new Promise((resolve, reject) => {
@@ -22,19 +25,40 @@ const youtubeId = (url) => {
   return m ? m[1] : null
 }
 
-const buildButtons = (usedPrefix, url) => [
+const searchVideos = async (query) => {
+  const key = `search_${query.toLowerCase()}`
+  const hit = cache.get(key)
+  if (hit && Date.now() - hit.timestamp < CACHE_TTL) return hit.data
+  const search = await yts(query)
+  const videos = (search?.videos || []).filter((v) => v?.url).slice(0, MAX_CARDS)
+  if (videos.length) cache.set(key, { data: videos, timestamp: Date.now() })
+  return videos
+}
+
+const buildCardButtons = (usedPrefix, v) => [
   {
-    name: 'quick_reply',
+    name: 'single_select',
     buttonParamsJson: JSON.stringify({
-      display_text: '🎧 𝐌𝐏𝟑',
-      id: `${usedPrefix}playaud ${url}`
-    })
-  },
-  {
-    name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({
-      display_text: '📹 𝐌𝐏𝟒',
-      id: `${usedPrefix}playvid ${url}`
+      title: '🎵 Riproduci / Leggi',
+      sections: [
+        {
+          title: cut(v.title, 24),
+          rows: [
+            {
+              header: '🎧',
+              title: '🎵 Scarica Audio',
+              description: `👤 ${v.author?.name || '—'} | ⏱️ ${v.timestamp || '—'}`,
+              id: `${usedPrefix}playaud ${v.url}`
+            },
+            {
+              header: '📹',
+              title: '📹 Scarica Video',
+              description: `👤 ${v.author?.name || '—'} | ⏱️ ${v.timestamp || '—'}`,
+              id: `${usedPrefix}playvid ${v.url}`
+            }
+          ]
+        }
+      ]
     })
   }
 ]
@@ -57,14 +81,14 @@ const loadBaileys = async () => {
   return null
 }
 
-const sendCarouselProto = async (conn, m, usedPrefix, query, videos) => {
+const sendCarousel = async (conn, m, usedPrefix, query, videos) => {
   const b = await loadBaileys()
   if (!b) throw new Error('Baileys non trovato')
   const { generateWAMessageFromContent, prepareWAMessageMedia, proto } = b
   const IM = proto.Message.InteractiveMessage
 
   const cards = []
-  for (let i = 0; i < Math.min(videos.length, MAX_CARDS); i++) {
+  for (let i = 0; i < videos.length; i++) {
     const v = videos[i]
     let header = IM.Header.fromObject({ title: '', hasMediaAttachment: false })
     try {
@@ -82,11 +106,11 @@ const sendCarouselProto = async (conn, m, usedPrefix, query, videos) => {
     cards.push({
       header,
       body: IM.Body.fromObject({
-        text: `*${i + 1}. ${cut(v.title, 60)}*\n\n👤 ${v.author?.name || '—'}\n⏱️ ${v.timestamp || '—'}  •  👁️ ${fmtViews(v.views)}`
+        text: `*${i + 1}. ${cut(v.title, 60)}*\n\n『 👤 』 *${v.author?.name || '—'}*\n『 ⏱️ 』 *${v.timestamp || '—'}*  •  『 👁️ 』 *${fmtViews(v.views)}*`
       }),
       footer: IM.Footer.fromObject({ text: FOOTER }),
       nativeFlowMessage: IM.NativeFlowMessage.fromObject({
-        buttons: buildButtons(usedPrefix, v.url)
+        buttons: buildCardButtons(usedPrefix, v)
       })
     })
   }
@@ -99,7 +123,7 @@ const sendCarouselProto = async (conn, m, usedPrefix, query, videos) => {
           messageContextInfo: { deviceListMetadata: {}, deviceListMetadataVersion: 2 },
           interactiveMessage: IM.fromObject({
             body: IM.Body.fromObject({
-              text: `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n🔎 *Risultati per:*\n• ${query}\n\n👇 *Scegli il brano e il formato*`
+              text: `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n『 🔍 』 *Risultati trovati per:*\n• ↳ \`${query}\``
             }),
             footer: IM.Footer.fromObject({ text: FOOTER }),
             header: IM.Header.fromObject({ hasMediaAttachment: false }),
@@ -114,33 +138,26 @@ const sendCarouselProto = async (conn, m, usedPrefix, query, videos) => {
   await conn.relayMessage(m.chat, msg.message, { messageId: msg.key.id })
 }
 
-const sendCarouselCards = async (conn, m, usedPrefix, query, videos) => {
-  const cards = videos.slice(0, MAX_CARDS).map((v, i) => ({
-    image: { url: v.thumbnail },
-    title: `${i + 1}. ${cut(v.title, 60)}`,
-    body: `👤 ${v.author?.name || '—'}\n⏱️ ${v.timestamp || '—'}  •  👁️ ${fmtViews(v.views)}`,
-    footer: FOOTER,
-    buttons: buildButtons(usedPrefix, v.url)
-  }))
+const sendList = async (conn, m, usedPrefix, query, videos) => {
+  const rows = []
+  videos.forEach((v) => {
+    const desc = `👤 ${v.author?.name || '—'} | ⏱️ ${v.timestamp || '—'}`
+    const title = cut(v.title, 30)
+    rows.push({ title: `🎵 Audio: ${title}`, description: desc, rowId: `${usedPrefix}playaud ${v.url}` })
+    rows.push({ title: `📹 Video: ${title}`, description: desc, rowId: `${usedPrefix}playvid ${v.url}` })
+  })
 
   await conn.sendMessage(
     m.chat,
     {
-      text: `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n🔎 *Risultati per:*\n• ${query}\n\n👇 *Scegli il brano e il formato*`,
+      text: `─── 𝟴𝟴𝟴 𝗣𝗟𝗔𝗬𝗘𝗥 ───\n\n『 🔍 』 *Risultati trovati per:*\n• ↳ \`${query}\`\n\n👇 *Seleziona un'opzione dal menu*`,
       footer: FOOTER,
-      cards
+      title: 'Seleziona un Media',
+      buttonText: '📋 Mostra Risultati',
+      sections: [{ title: 'Risultati YouTube', rows }]
     },
     { quoted: m }
   )
-}
-
-const sendCarousel = async (conn, m, usedPrefix, query, videos) => {
-  try {
-    await sendCarouselProto(conn, m, usedPrefix, query, videos)
-  } catch (e1) {
-    console.error('Carousel proto error:', e1.message)
-    await sendCarouselCards(conn, m, usedPrefix, query, videos)
-  }
 }
 
 const sendSingleMenu = async (conn, m, usedPrefix, vid) => {
@@ -198,14 +215,19 @@ ${usedPrefix + command} <nome canzone>`
         return await sendSingleMenu(conn, m, usedPrefix, vid)
       }
 
-      const search = await yts(text)
-      const videos = (search?.videos || []).filter((v) => v?.url)
+      const videos = await searchVideos(text)
       if (!videos.length) return m.reply('❌ *Nessun risultato trovato per la ricerca.*')
 
       try {
         return await sendCarousel(conn, m, usedPrefix, text, videos)
-      } catch (err) {
-        console.error('Carousel Error:', err.message)
+      } catch (e1) {
+        console.error('Carousel error:', e1.message)
+      }
+
+      try {
+        return await sendList(conn, m, usedPrefix, text, videos)
+      } catch (e2) {
+        console.error('List error:', e2.message)
         return await sendSingleMenu(conn, m, usedPrefix, videos[0])
       }
     }

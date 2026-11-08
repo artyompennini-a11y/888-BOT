@@ -1,4 +1,6 @@
+//plugin by 888
 import fetch from 'node-fetch';
+import { getWarnEntry, getWarnConfig, formatWarnDate } from '../../lib/moderation.js';
 
 let handler = async (m, { conn }) => {
   const users = global.db.data.users;
@@ -23,11 +25,7 @@ let handler = async (m, { conn }) => {
     : await (await fetch('https://telegra.ph/file/8ca14ef9fa43e99d1d196.jpg')).buffer();
 
   const fake = {
-    key: {
-      participants: '0@s.whatsapp.net',
-      fromMe: false,
-      id: '888InfoUser'
-    },
+    key: { participants: '0@s.whatsapp.net', fromMe: false, id: '888InfoUser' },
     message: {
       locationMessage: {
         name: `Info di ${nome}`,
@@ -38,8 +36,31 @@ let handler = async (m, { conn }) => {
     participant: '0@s.whatsapp.net'
   };
 
+  // ── WARN (collegato al plugin warn) ──
+  let warnCount = 0;
+  let warnMax = 3;
+  let warnList = [];
+  try {
+    const cfg = getWarnConfig(m.chat);
+    const entry = getWarnEntry(m.chat, who);
+    warnMax = Number(cfg?.max) || 3;
+    warnCount = Number(entry?.count) || 0;
+    warnList = Array.isArray(entry?.list) ? entry.list : [];
+  } catch {}
+
+  const warnEmoji = warnCount === 0 ? '👌' : warnCount >= warnMax - 1 ? '‼️' : '⚠️';
+
+  let warnDetails = '';
+  if (warnList.length) {
+    warnDetails =
+      '\n' +
+      warnList
+        .slice(-3)
+        .map(w => `   ↳ ${w.id} • ${formatWarnDate(w.at)}\n     ${String(w.reason || '').slice(0, 40)}`)
+        .join('\n');
+  }
+
   const insta = u.nomeinsta ? `@${u.nomeinsta}` : 'Non impostato';
-  const warnEmoji = u.warn === 0 ? '👌' : u.warn === 1 ? '⚠️' : '‼️';
   const curse = u.blasphemy || 0;
 
   const regInfo = u.registered
@@ -53,7 +74,7 @@ let handler = async (m, { conn }) => {
     `📊 *Statistiche*\n` +
     `• Messaggi: ${u.messaggi || 0}\n` +
     `• Conto: ${u.bank || 0} 888COIN\n` +
-    `• Warn: ${u.warn || 0}/3 ${warnEmoji}\n` +
+    `• Warn: ${warnCount}/${warnMax} ${warnEmoji}${warnDetails}\n` +
     `• Segnalazioni: ${curse}\n\n` +
     `🤳 *Social*\n` +
     `• Instagram: ${insta}`;

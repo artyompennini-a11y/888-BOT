@@ -36,7 +36,7 @@ let handler = async (m, { conn }) => {
     participant: '0@s.whatsapp.net'
   };
 
-  // ── WARN (collegato al plugin warn) ──
+  
   let warnCount = 0;
   let warnMax = 3;
   let warnList = [];

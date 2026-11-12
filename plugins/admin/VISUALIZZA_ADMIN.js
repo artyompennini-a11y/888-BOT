@@ -1,78 +1,58 @@
-//Plugin by Punisher, Elixir & 888 staff
-
 import fetch from 'node-fetch'
 
-const handler = m => m
-handler.all = async function (m) {
-  const chat = global.db.data.chats[m.chat]
+const formatMention = jid => `@${String(jid).split('@')[0].split(':')[0]}`
 
-  if (m.messageStubType == 29) {
-    let pic
+const handler = () => {}
+
+handler.groupParticipantsUpdate = async function ({ id, participants = [], action, author, actor }) {
+  if (action !== 'promote' && action !== 'demote') return
+  if (!id || !Array.isArray(participants) || participants.length === 0) return
+
+  const conn = this
+  const decodeJid = jid => typeof conn.decodeJid === 'function' ? conn.decodeJid(jid) : jid
+  const targets = participants.map(decodeJid).filter(Boolean)
+  const moderator = decodeJid(author || actor)
+  const mentions = [...new Set([...targets, moderator].filter(Boolean))]
+  const promoted = action === 'promote'
+  const title = promoted
+    ? 'ℙ𝕣𝕠𝕞𝕠𝕫𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 👑'
+    : 'ℝ𝕖𝕥𝕣𝕠𝕔𝕖𝕤𝕤𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 🙇🏻‍♂️'
+  const fake = {
+    key: {
+      participants: '0@s.whatsapp.net',
+      fromMe: false,
+      id: promoted ? '888Promozione' : '888Retrocessione'
+    },
+    message: {
+      locationMessage: {
+        name: title,
+        jpegThumbnail: Buffer.alloc(0),
+        vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Admin;;;\nFN:Admin\nEND:VCARD'
+      }
+    },
+    participant: '0@s.whatsapp.net'
+  }
+  const profileTarget = targets[0]
+
+  if (profileTarget) {
     try {
-      pic = await conn.profilePictureUrl(m.messageStubParameters[0], 'image')
-    } catch {
-      pic = null
+      const pictureUrl = await conn.profilePictureUrl(profileTarget, 'image')
+      const response = await fetch(pictureUrl)
+      if (!response.ok) throw new Error(`Impossibile scaricare l'immagine profilo: HTTP ${response.status}`)
+      fake.message.locationMessage.jpegThumbnail = await response.buffer()
+    } catch (error) {
+      console.warn(`[VISUALIZZA_ADMIN] Immagine profilo non disponibile: ${error.message}`)
     }
-
-    const ppBuffer = pic
-      ? await (await fetch(pic)).buffer()
-      : await (await fetch('https://telegra.ph/file/17e7701f8b0a63806e312.png')).buffer()
-
-    const fake = {
-      key: {
-        participants: '0@s.whatsapp.net',
-        fromMe: false,
-        id: '888Promozione'
-      },
-      message: {
-        locationMessage: {
-          name: 'ℙ𝕣𝕠𝕞𝕠𝕫𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 👑',
-          jpegThumbnail: ppBuffer.toString('base64'),
-          vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Admin;;;\nFN:Admin\nEND:VCARD'
-        }
-      },
-      participant: '0@s.whatsapp.net'
-    }
-
-    conn.sendMessage(m.chat, {
-      text: `@${m.sender.split('@')[0]} 𝕙𝕒 𝕕𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒 @${m.messageStubParameters[0].split('@')[0]}`,
-      mentions: [m.sender, m.messageStubParameters[0]]
-    }, { quoted: fake })
   }
 
-  if (m.messageStubType == 30) {
-    let pic
-    try {
-      pic = await conn.profilePictureUrl(m.messageStubParameters[0], 'image')
-    } catch {
-      pic = null
-    }
+  const lines = targets.map(target => moderator
+    ? `${formatMention(moderator)} ${promoted ? '𝕙𝕒 𝕕𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒' : '𝕙𝕒 𝕝𝕖𝕧𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒'} ${formatMention(target)}`
+    : `${formatMention(target)} ${promoted ? 'è stato promosso admin' : 'non è più admin'}`)
 
-    const ppBuffer = pic
-      ? await (await fetch(pic)).buffer()
-      : await (await fetch('https://telegra.ph/file/17e7701f8b0a63806e312.png')).buffer()
-
-    const fake = {
-      key: {
-        participants: '0@s.whatsapp.net',
-        fromMe: false,
-        id: '888Retrocessione'
-      },
-      message: {
-        locationMessage: {
-          name: 'ℝ𝕖𝕥𝕣𝕠𝕔𝕖𝕤𝕤𝕚𝕠𝕟𝕖 𝕒𝕕𝕞𝕚𝕟 🙇🏻‍♂️',
-          jpegThumbnail: ppBuffer.toString('base64'),
-          vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:;Admin;;;\nFN:Admin\nEND:VCARD'
-        }
-      },
-      participant: '0@s.whatsapp.net'
-    }
-
-    conn.sendMessage(m.chat, {
-      text: `@${m.sender.split('@')[0]} 𝕙𝕒 𝕝𝕖𝕧𝕒𝕥𝕠 𝕚 𝕡𝕠𝕥𝕖𝕣𝕚 𝕒 @${m.messageStubParameters[0].split('@')[0]}`,
-      mentions: [m.sender, m.messageStubParameters[0]]
-    }, { quoted: fake })
-  }
+  await conn.sendMessage(id, {
+    text: lines.join('\n'),
+    mentions
+  }, { quoted: fake })
 }
 
 export default handler

@@ -14,10 +14,10 @@ const coloriHex = {
 const CANVAS_W = 1000
 const CANVAS_H = 600
 
-const gameButtons = () => [{
-    buttonId: 'pesca', buttonText: { displayText: '📥 𝐏𝐄𝐒𝐂𝐀' }, type: 1
+const gameButtons = (usedPrefix = global.prefix || '.') => [{
+    buttonId: `${usedPrefix}uno pesca`, buttonText: { displayText: '📥 𝐏𝐄𝐒𝐂𝐀' }, type: 1
 }, {
-    buttonId: 'enduno', buttonText: { displayText: '🛑 𝐀𝐁𝐁𝐀𝐍𝐃𝐎𝐍𝐀' }, type: 1
+    buttonId: `${usedPrefix}uno enduno`, buttonText: { displayText: '🛑 𝐀𝐁𝐁𝐀𝐍𝐃𝐎𝐍𝐀' }, type: 1
 }]
 
 
@@ -237,7 +237,7 @@ function botTurno(s, depth = 0) {
     return `🤖 888 BOT pesca.`
 }
 
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, usedPrefix = global.prefix || '.' }) => {
     let chat = m.chat
 
     const session = {
@@ -293,7 +293,7 @@ let handler = async (m, { conn }) => {
 📥 Premi il bottone per pescare
 🛑 Premi il bottone per uscire
 🎴 Oppure scrivi il numero della carta`,
-        buttons: gameButtons(),
+        buttons: gameButtons(usedPrefix),
         headerType: 1
     }, { quoted: m })
 }
@@ -304,31 +304,43 @@ handler.before = async (m, { conn }) => {
 
     if (!s || s.player !== m.sender) return
 
-        let msgText = (m.text || m.body || '').trim().toLowerCase()
+    let msgText = (m.text || m.body || '').trim().toLowerCase()
 
-    if (m.message?.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson) {
+    const nativeResponse = m.message?.interactiveResponseMessage
+    const paramsJson = nativeResponse?.nativeFlowResponseMessage?.paramsJson ?? nativeResponse?.paramsJson
+    if (typeof paramsJson === 'string' && paramsJson) {
         try {
-            const params = JSON.parse(
-                m.message.interactiveResponseMessage
-                .nativeFlowResponseMessage.paramsJson
-            )
-
-            msgText = params.id.toLowerCase()
+            const params = JSON.parse(paramsJson)
+            msgText = String(params.id ?? params.selectedId ?? params.selected_id ?? '').toLowerCase()
         } catch {}
     }
 
-    if (m.message?.buttonsResponseMessage?.selectedButtonId) {
-        msgText = m.message.buttonsResponseMessage.selectedButtonId.toLowerCase()
+    msgText = String(
+        m.message?.buttonsResponseMessage?.selectedButtonId ||
+        m.message?.templateButtonReplyMessage?.selectedId ||
+        m.message?.listResponseMessage?.singleSelectReply?.selectedRowId ||
+        msgText
+    ).trim().toLowerCase()
+
+    const prefix = String(global.prefix || '.')
+    const commandPrefix = `${prefix}uno `
+    if (msgText.startsWith(commandPrefix.toLowerCase())) {
+        msgText = msgText.slice(commandPrefix.length).trim()
     }
 
-    if (msgText === '.uno' || msgText === 'uno') return
+    if (msgText === '.uno' || msgText === 'uno' || msgText === `${prefix}uno`) return
+    if (msgText.startsWith(`${prefix}uno `)) {
+        msgText = msgText.slice(`${prefix}uno `.length).trim()
+    }
+    if (msgText !== 'pesca' && msgText !== 'enduno' && !/^\d+$/.test(msgText)) return
 
     if (msgText === 'enduno') {
         delete unoSession[chat]
-        return m.reply(
+        await m.reply(
 `🛑 *Partita terminata*
 Hai abbandonato la partita.`
         )
+        return true
     }
 
     let report = ''
@@ -340,7 +352,10 @@ Hai abbandonato la partita.`
 
         let p = pesca(s)
 
-        if (!p) return m.reply('❌ Il mazzo è vuoto, rimescola in corso...')
+        if (!p) {
+            await m.reply('❌ Il mazzo è vuoto, rimescola in corso...')
+            return true
+        }
         s.playerHand.push(p)
 
         report = `📥 Hai pescato: *${p}*`
@@ -355,17 +370,19 @@ Hai abbandonato la partita.`
         let idx = parseInt(msgText, 10) - 1
 
         if (isNaN(idx) || idx < 0 || idx >= s.playerHand.length) {
-            return m.reply(`🎳 *Carta non valida*🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳🎳
+            await m.reply(`🎳 *Carta non valida*
 Inserisci un numero da 1 a ${s.playerHand.length}.`)
+            return true
         }
 
         let carta = s.playerHand[idx]
 
         if (!puoGiocare(carta, s.tableCard, s.currentColor)) {
-            return m.reply(
+            await m.reply(
 `❌ *Carta non valida*
 Non puoi giocare questa carta.`
             )
+            return true
         }
 
         s.playerHand.splice(idx, 1)
@@ -403,32 +420,39 @@ Non puoi giocare questa carta.`
 
     if (s.playerHand.length === 0) {
         delete unoSession[chat]
-        return m.reply(
+        await m.reply(
 `🏆 *Vittoria!*
 Hai finito le carte, complimenti!`
         )
+        return true
     }
 
     if (s.botHand.length === 0) {
         delete unoSession[chat]
-        return m.reply(
+        await m.reply(
 `💀 *Sconfitta*
 888 BOT ha finito le carte.`
         )
+        return true
     }
 
     let img = await generaGrafica(s)
 
-    await conn.sendMessage(chat, {
-        image: img,
-        mimetype: 'image/jpeg',
-        fileName: 'uno_update.jpg',
-        caption:
+    const updateCaption =
 `🃏 *UNO MATCH*
 ${report}
 
 🎨 Colore attuale: *${s.currentColor}*`
-    }, { quoted: m })
+    if (img) {
+        await conn.sendMessage(chat, {
+            image: img,
+            mimetype: 'image/jpeg',
+            fileName: 'uno_update.jpg',
+            caption: updateCaption
+        }, { quoted: m })
+    } else {
+        await conn.sendMessage(chat, { text: updateCaption }, { quoted: m })
+    }
 
     await conn.sendMessage(chat, {
         text:
@@ -439,8 +463,10 @@ scrivi il numero della carta.`,
         buttons: gameButtons(),
         headerType: 1
     }, { quoted: m })
+    return true
 }
 
 handler.command = /^(uno)$/i
+handler.customPrefix = [/^[^\w\s]/, /^\d+$/]
 
 export default handler

@@ -10,8 +10,8 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
 
   const {
     rileva, jadibotmd, welcome, goodbye, modoadmin, antiporno,
-    antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktiktok,
-    antilinktg, antimedia, antispam, antitoxic, antiBot, antioneview,
+    antivoip, antitrava, antiArab, antiLink, antilinkig, antilinktg,
+    antimedia, antispam, antitoxic, antiBot, antioneview,
     antigore, reazioni, bestemmiometro, ai, vocali, logrichieste,
     slowmode, antinuke, antiraid, antiraidlink, antiflood, antighost
   } = chat
@@ -43,31 +43,7 @@ let handler = async (m, { conn, usedPrefix, isOwner, isROwner }) => {
   const s = (val) => val ? '🟩' : '🟥'
   const p = usedPrefix
 
-  const catalogs = `
-📦 *Cataloghi Rapidi*
-• ${p}attiva security
-  _(antilink + antiporno + modoadmin)_
-• ${p}attiva protezione
-  _(antispam + antitoxic + antibot + antivoip)_
-• ${p}attiva media
-  _(antimedia + antiporno + antigore)_
-• ${p}attiva antilink
-  _(antilink + tg + ig + tiktok)_
-• ${p}attiva full
-  _(attiva tutti i moduli sopra)_`
-
-  const ownerSection = (isOwner || isROwner) ? `
-👑 *Funzioni Owner*
-• [${s(antiprivato)}] ${p}antiprivato
-• [${s(soloCreatore)}] ${p}solocreatore
-• [${s(read)}] ${p}lettura
-• [${s(anticall)}] ${p}anticall
-
-👤 Operatore: ${userName}
-📱 ID: +${userNumber}
-` : ''
-
-  const menuFunzioniText = `
+  const menuText = `
 ⚙️ *MENU FUNZIONI 888*
 Stato pannello: Moduli di Sicurezza
 
@@ -79,7 +55,6 @@ Stato pannello: Moduli di Sicurezza
 • [${s(reazioni)}] ${p}reazioni
 • [${s(bestemmiometro)}] ${p}bestemmiometro
 • [${s(logrichieste)}] ${p}logrichieste
-
 
 🚫 *Moduli di Protezione (ANTI)*
 • [${s(antinuke)}] ${p}antinuke
@@ -96,25 +71,17 @@ Stato pannello: Moduli di Sicurezza
 • [${s(antimedia)}] ${p}antimedia
 • [${s(antiLink)}] ${p}antilink
 • [${s(antilinkig)}] ${p}antilinkig
-• [${s(antilinktiktok)}] ${p}antilinktiktok
-• [${s(antilinktg)}] ${p}antilinktg
-
-${catalogs}
-${ownerSection}
-
-🟩 = Attivato
-🟥 = Disattivato
 
 ℹ️ *Guida Rapida*
 • Attivare: ${p}attiva [modulo]
 • Disattivare: ${p}disattiva [modulo]
 `.trim()
 
-  await conn.sendMessage(m.chat, { text: menuFunzioniText }, { quoted: fake })
+  conn.sendMessage(m.chat, { text: menuText }, { quoted: fake })
 }
 
 handler.help = ['funzioni']
 handler.tags = ['menu']
-handler.command = /^(funzioni)$/i
+handler.command = /^(funzioni)$/i;
 
 export default handler

@@ -298,7 +298,7 @@ const checkOneSpec = (file, spec, issues, seen) => {
     }
     return
   }
-  if (BUILTIN.has(spec) || spec.startsWith('node:') || spec === '@888-BOT/888baileys' || spec.startsWith('@888-BOT/888baileys/')) return
+  if (BUILTIN.has(spec) || spec.startsWith('node:') || spec === '@whiskeysockets/baileys' || spec.startsWith('@whiskeysockets/baileys/')) return
   if (!hasNodeModules) return
   const top = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0]
   let ok = false

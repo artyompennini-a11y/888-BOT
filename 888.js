@@ -14,7 +14,7 @@ import { platform } from 'process';
 import fs, { promises as fsp, readdirSync, statSync, unlinkSync, existsSync, mkdirSync, rmSync, watch } from 'fs';
 import yargs from 'yargs';
 import crypto from 'crypto';
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import lodash from 'lodash';
 import chalk from 'chalk';
 import syntaxerror from 'syntax-error';
@@ -23,9 +23,21 @@ import { format } from 'util';
 import pino from 'pino';
 import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import storeHelper from './lib/store.js';
+import { cacheLidMapping, decodeCachedJid } from './lib/message-identity.js';
 import { Low, JSONFile } from 'lowdb';
 import readline from 'readline';
 import NodeCache from 'node-cache';
+import QRCode from 'qrcode';
+
+import pkg from './package.json' with { type: 'json' }
+
+if (platform === 'win32' && process.stdout.isTTY) {
+  try {
+    execSync('chcp 65001 >nul', { stdio: 'ignore' });
+  } catch (error) {
+    console.warn('[console] Could not switch the terminal to UTF-8:', error.message);
+  }
+}
 
 const authFolder = global.authFile || '888BotSession';
 global.authFile = authFolder;
@@ -141,10 +153,7 @@ async function clearSessionFolderSelective(dir = sessionFolder) {
   }));
 }
 
-const SESSION_PRUNE_THRESHOLD = 500;
-const SESSION_KEEP_NEWEST = 100;
-
-async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, maxPreKeyAgeDays = 7) {
+async function purgeSession(sessionDir = sessionFolder) {
   try {
     await fsp.access(sessionDir);
   } catch {
@@ -158,16 +167,9 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
     return;
   }
 
-  const prunable = files.filter(f =>
-    f.startsWith('pre-key-') ||
-    f.startsWith('sender-key-') ||
-    f.startsWith('session-')
-  );
-
-  console.log(chalk.gray(`[purgeSession] File totali: ${files.length} | Prunable: ${prunable.length} | Soglia: ${SESSION_PRUNE_THRESHOLD}`));
-
   await Promise.all(files.map(async (file) => {
-    if (file === 'creds.json') return;
+    // Signal sessions and pre-keys must not be pruned while the account is active.
+    if (isLikelyAuthStateFile(file)) return;
     const filePath = path.join(sessionDir, file);
     let stats;
     try {
@@ -175,18 +177,11 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
     } catch {
       return;
     }
-    const fileAge = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60 * 24);
-    if (file.startsWith('pre-key') && cleanPreKeys) {
-      if (fileAge > maxPreKeyAgeDays) {
-        try { await fsp.unlink(filePath); } catch {}
-      }
-      return;
-    }
 
     try {
       if (stats.isDirectory()) {
         await fsp.rm(filePath, { recursive: true, force: true });
-      } else if (!isLikelyAuthStateFile(file)) {
+      } else {
         await fsp.unlink(filePath);
       }
     } catch {
@@ -194,25 +189,6 @@ async function purgeSession(sessionDir = sessionFolder, cleanPreKeys = false, ma
     }
   }));
 
-
-  if (prunable.length <= SESSION_PRUNE_THRESHOLD) return;
-
-  const sorted = (await Promise.all(prunable.map(async (name) => {
-    try {
-      const st = await fsp.stat(path.join(sessionDir, name));
-      return { name, mtime: st.mtimeMs };
-    } catch {
-      return null;
-    }
-  }))).filter(Boolean).sort((a, b) => a.mtime - b.mtime);
-
-  const toDelete = sorted.slice(0, sorted.length - SESSION_KEEP_NEWEST);
-
-  await Promise.all(toDelete.map(async ({ name }) => {
-    try { await fsp.unlink(path.join(sessionDir, name)); } catch {}
-  }));
-
-  console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐄𝐋𝐈𝐌𝐈𝐍𝐀𝐙𝐈𝐎𝐍𝐄 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐄𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 ${toDelete.length} 𝐟𝐢𝐥𝐞 𝐝𝐢 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞.\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
 }
 
 global.dbDirty = false;
@@ -263,7 +239,7 @@ async function flushDatabase({ force = false } = {}) {
   }
 }
 
-const { useMultiFileAuthState, fetchLatestBaileysVersion, fetchLatestWaWebVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@888-BOT/888baileys');
+const { useMultiFileAuthState, fetchLatestBaileysVersion, fetchLatestWaWebVersion, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, DisconnectReason } = await import('@whiskeysockets/baileys');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -283,7 +259,7 @@ let successfulConnectionLogged = false;
 
 function logSystem(message, color = 'cyanBright') {
   const printer = chalk[color] || chalk.cyanBright;
-  console.log(printer(`〔𝟴𝟴𝟴 𝗕𝗢𝗧〕 ${message}`));
+  console.log(printer(`[${pkg.name}] ${message}`));
 }
 
 function normalizePhoneNumberInput(value = '') {
@@ -352,6 +328,19 @@ global.loadDatabase = async function loadDatabase() {
       global.db.data = { users: {}, chats: {}, stats: {}, msgs: {}, sticker: {}, settings: {}, ...(global.db.data || {}) };
       global.db.chain = chain(global.db.data);
       global.dbDirty = false;
+      try {
+        const DEFAULT_ON = ['antiporno', 'antigore', 'antitrava', 'antibot', 'antiBot', 'antinuke', 'modoadmin', 'antiLink', 'logrichieste'];
+        const REMOVED = ['antiraid', 'antiraidlink', 'antiraidlinkPunish', 'antiraidlinkSilent', 'antiraidWhitelist', 'antighost', 'antighostWindow', 'antighostIgnore', 'antighostLog', 'antipayment'];
+        for (const chat of Object.values(global.db.data.chats || {})) {
+          if (!chat || typeof chat !== 'object') continue;
+          for (const k of DEFAULT_ON) {
+            if (chat[k] === undefined || chat[k] === null) chat[k] = true;
+          }
+          for (const k of REMOVED) {
+            if (k in chat) delete chat[k];
+          }
+        }
+      } catch {}
       return global.db.data;
     } finally {
       global.db.READ = null;
@@ -374,11 +363,11 @@ let version;
 try {
   const waWeb = await fetchLatestWaWebVersion();
   version = waWeb.version;
-  console.log(chalk.green(`✅ Versione WhatsApp Web: ${version.join('.')}`));
+  console.log(chalk.green(`[OK] Versione WhatsApp Web: ${version.join('.')}`));
 } catch {
   const baileys = await fetchLatestBaileysVersion();
   version = baileys.version;
-  console.log(chalk.yellow(`⚠️ Fallback versione Baileys: ${version.join('.')}`));
+  console.log(chalk.yellow(`[WARN] Fallback versione Baileys: ${version.join('.')}`));
 }
 
 let rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
@@ -429,7 +418,7 @@ async function requestPairingCodeFlow() {
     const pairingCode = await global.conn.requestPairingCode(normalizedNumber, randomCode);
     const formattedCode = formatPairingCode(pairingCode);
 
-    console.log(chalk.bold.white(chalk.bgBlueBright('꒰🩸꒱ ◦•≫ CODICE DI COLLEGAMENTO:')), chalk.bold.white(formattedCode));
+    console.log(chalk.bold.white(chalk.bgBlueBright('CODICE DI COLLEGAMENTO:')), chalk.bold.white(formattedCode));
     logSystem('Inserisci il codice su WhatsApp > Dispositivi collegati > Collega un dispositivo.', 'greenBright');
   } catch (error) {
     pairingCodeRequested = false;
@@ -440,27 +429,27 @@ async function requestPairingCodeFlow() {
 let opzione;
 if (!pairingMode && !hasExistingSession) {
   const menu = `
-${chalk.bgBlue.white('┏━━━━━━━━━━━━━━━━━━━━━━━┓')}
-${chalk.bgBlue.white('┃     888 BOT 2026      ┃')}
-${chalk.bgBlue.white('┃         V1.4          ┃')}
-${chalk.bgBlue.white('┗━━━━━━━━━━━━━━━━━━━━━━━┛')}
+${chalk.bgBlue.white('+--------------------------+')}
+${chalk.bgBlue.white(`|       ${pkg.name} 2026       |`)}
+${chalk.bgBlue.white('|           V1.5           |')}
+${chalk.bgBlue.white('+--------------------------+')}
 ${chalk.yellow('Seleziona come collegarti:')}
 
-${chalk.green('[1] 📲 QR CODE')}
-${chalk.gray('    → Scansiona con la fotocamera')}
+${chalk.green('[1] QR CODE')}
+${chalk.gray('    Scansiona con la fotocamera')}
 
-${chalk.green('[2] 🔐 CODICE (8 caratteri)')}
-${chalk.gray('    → Codice da inserire')}
+${chalk.green('[2] CODICE (8 caratteri)')}
+${chalk.gray('    Codice da inserire')}
 
-${chalk.gray('────────────────────────')}
+${chalk.gray('--------------------------')}
 
-${chalk.cyan('Scegli solo 1 o 2 ↓')}
+${chalk.cyan('Scegli solo 1 o 2')}
 `;
 
   opzione = await askValidatedChoice(
-    menu + '\n➤ ',
+    menu + '\n> ',
     value => /^[1-2]$/.test(value),
-    '⛔ Inserisci solo 1 o 2, non inventarti nuovi numeri.'
+    'Inserisci solo 1 o 2.'
   );
 
   pairingMode = opzione === '1' ? 'qr' : 'code';
@@ -469,9 +458,9 @@ ${chalk.cyan('Scegli solo 1 o 2 ↓')}
 if (hasExistingSession) {
   logSystem(`Sessione trovata in ${global.authFile}. Avvio con credenziali esistenti.`, 'whiteBright');
 } else if (pairingMode === 'qr') {
-  logSystem('Modalita pairing selezionata: QR code.', 'whiteBright');
+  logSystem('Modalita di pairing selezionata: QR code.', 'whiteBright');
 } else if (pairingMode === 'code') {
-  logSystem('Modalita pairing selezionata: codice a 8 caratteri.', 'whiteBright');
+  logSystem('Modalita di pairing selezionata: codice a 8 caratteri.', 'whiteBright');
 }
 
 const filterStrings = [
@@ -516,7 +505,6 @@ global.store = {
 
 const connectionOptions = {
   logger,
-  printQRInTerminal: pairingMode === 'qr',
   mobile: MethodMobile,
   auth: {
     creds: state.creds,
@@ -552,18 +540,11 @@ const connectionOptions = {
     } catch { return {}; }
   },
   decodeJid: (jid) => {
-    if (!jid) return jid;
-    const cached = global.jidCache.get(jid);
-    if (cached) return cached;
-    let decoded = jid;
-    if (/:\d+@/gi.test(jid)) decoded = jidNormalizedUser(jid);
-    if (typeof decoded === 'object' && decoded.user && decoded.server) decoded = `${decoded.user}@${decoded.server}`;
-    if (typeof decoded === 'string' && decoded.endsWith('@lid')) {
-      const mapped = global.lidCache.get(decoded);
-      decoded = typeof mapped === 'string' && mapped ? mapped : decoded;
-    }
-    global.jidCache.set(jid, decoded);
-    return decoded;
+    return decodeCachedJid(jid, {
+      jidCache: global.jidCache,
+      lidCache: global.lidCache,
+      normalizeJid: jidNormalizedUser
+    });
   },
   msgRetryCounterCache,
   retryRequestDelayMs: 500,
@@ -573,6 +554,11 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn);
+global.conn.ev.on('chats.phoneNumberShare', ({ lid, jid } = {}) => {
+  if (!cacheLidMapping(lid, jid)) {
+    console.warn('[LID] Mappatura telefono non valida ricevuta da Baileys.');
+  }
+});
 
 if (!hasExistingSession && pairingMode === 'code') {
   await requestPairingCodeFlow();
@@ -612,16 +598,9 @@ async function connectionUpdate(update) {
     logConnectionState('Connessione a WhatsApp in corso...', 'whiteBright');
   }
 
-   if (qr && pairingMode === 'qr' && !global.qrGenerated) {
-    console.log(chalk.bold.hex('#8b5cf6')(`
-           𝟴𝟴𝟴 𝗕𝗢𝗧                  
-        CONNESSIONE QR            
-
-📲 Scansiona il QR qui sotto
-⏳ Valido per ~45 secondi
-
-───────────────
-`));
+  if (qr && pairingMode === 'qr' && !global.qrGenerated) {
+    console.log(chalk.bold.hex('#8b5cf6')(`\n${pkg.name} - CONNESSIONE QR\nScansiona il codice con WhatsApp entro 45 secondi.\n`));
+    console.log(await QRCode.toString(qr, { type: 'terminal', small: true }));
     logSystem('Apri WhatsApp > Dispositivi collegati > Collega un dispositivo e scansiona il QR.', 'whiteBright');
     global.qrGenerated = true;
   }
@@ -631,6 +610,10 @@ async function connectionUpdate(update) {
     global.qrGenerated = false;
     global.connectionMessagesPrinted = {};
     successfulConnectionLogged = true;
+
+    // FIX: dal momento in cui il bot si avvia, legge SOLO i messaggi nuovi.
+    // Il backlog vecchio (pre-riavvio) viene scartato in handler.js -> riavvio veloce.
+    global.bootTime = Date.now();
 
     logSystem(`Bot collegato con successo come ${getConnectionLabel()}`, 'whiteBright');
     logSystem(`Sessione attiva: ${global.authFile} | Pairing: ${hasExistingSession ? 'sessione esistente' : pairingMode || 'automatico'}`, 'whiteBright');
@@ -643,22 +626,22 @@ async function connectionUpdate(update) {
     if (!global.conn?.authState?.creds?.registered) pairingCodeRequested = false;
     const reason = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.output?.payload?.statusCode;
     if (reason === DisconnectReason.badSession && !global.connectionMessagesPrinted.badSession) {
-      console.log(chalk.bold.redBright(`\n[ ⚠️ ] 𝐒𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐞𝐫𝐫𝐚𝐭𝐚, 𝐞𝐥𝐢𝐦𝐢𝐧𝐚 𝐥𝐚 𝐜𝐚𝐫𝐭𝐞𝐥𝐥𝐚 ${global.authFile} 𝐞𝐝 𝐞𝐬𝐞𝐠𝐮𝐢 𝐧𝐮𝐨𝐯𝐚𝐦𝐞𝐧𝐭𝐞 𝐥𝐚 𝐬𝐜𝐚𝐧𝐬𝐢𝐨𝐧𝐞.`));
+      console.log(chalk.bold.redBright(`\nSessione non valida o scaduta. Elimina la cartella ${global.authFile} e scansiona nuovamente il QR code.`));
       global.connectionMessagesPrinted.badSession = true;
       process.exit(1);
     } else if (reason === DisconnectReason.loggedOut && !global.connectionMessagesPrinted.loggedOut) {
-      console.log(chalk.bold.redBright(`\n[ ⚠️ ] 𝐂𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐜𝐡𝐢𝐮𝐬𝐚, 𝐞𝐥𝐢𝐦𝐢𝐧𝐚 𝐥𝐚 𝐜𝐚𝐫𝐭𝐞𝐥𝐥𝐚 ${global.authFile} 𝐞𝐝 𝐞𝐬𝐞𝐠𝐮𝐢 𝐧𝐮𝐨𝐯𝐚𝐦𝐞𝐧𝐭𝐞 𝐥𝐚 𝐬𝐜𝐚𝐧𝐬𝐢𝐨𝐧𝐞.`));
+      console.log(chalk.bold.redBright(`\nDisconnesso da WhatsApp. Elimina la cartella ${global.authFile} e ripeti l'abbinamento.`));
       global.connectionMessagesPrinted.loggedOut = true;
       process.exit(1);
     } else if (reason === DisconnectReason.connectionReplaced && !global.connectionMessagesPrinted.connectionReplaced) {
-      console.log(chalk.bold.yellowBright(`[ ⚠️ ] 𝐂𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐬𝐨𝐬𝐭𝐢𝐭𝐮𝐢𝐭𝐚, 𝐞' 𝐬𝐭𝐚𝐭𝐚 𝐚𝐩𝐞𝐫𝐭𝐚 𝐮𝐧'𝐚𝐥𝐭𝐫𝐚 𝐧𝐮𝐨𝐯𝐚 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞. 𝐏𝐞𝐫 𝐩𝐫𝐢𝐦𝐚 𝐜𝐨𝐬𝐚 𝐝𝐢𝐬𝐜𝐨𝐧𝐧𝐞𝐭𝐭𝐢𝐭𝐢 𝐝𝐚𝐥𝐥𝐚 𝐬𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐜𝐨𝐫𝐫𝐞𝐧𝐭𝐞.`));
+      console.log(chalk.bold.yellowBright("Connessione sostituita da un altro dispositivo. Disconnetti l'altra sessione e riprova."));
       global.connectionMessagesPrinted.connectionReplaced = true;
       process.exit(1);
     } else if (reason === DisconnectReason.connectionLost && !global.connectionMessagesPrinted.connectionLost) {
-      console.log(chalk.bold.blueBright(`\n[ ⚠️ ] 𝐂𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐩𝐞𝐫𝐬𝐚 𝐚𝐥 𝐬𝐞𝐫𝐯𝐞𝐫, 𝐫𝐢𝐜𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐢𝐧 𝐜𝐨𝐫𝐬𝐨...`));
+      console.log(chalk.bold.blueBright('Connessione al server persa, riconnessione in corso...'));
       global.connectionMessagesPrinted.connectionLost = true;
     } else if (reason === DisconnectReason.timedOut && !global.connectionMessagesPrinted.timedOut) {
-      console.log(chalk.bold.yellowBright(`\n[ ⚠️ ] 𝐂𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐬𝐜𝐚𝐝𝐮𝐭𝐚, 𝐫𝐢𝐜𝐨𝐧𝐧𝐞𝐬𝐬𝐢𝐨𝐧𝐞 𝐢𝐧 𝐜𝐨𝐫𝐬𝐨...`));
+      console.log(chalk.bold.yellowBright('Connessione scaduta, riconnessione in corso...'));
       global.connectionMessagesPrinted.timedOut = true;
     }
   }
@@ -668,10 +651,10 @@ process.on('uncaughtException', (err) => {
   
   if (err.code === 'ERR_IPC_CHANNEL_CLOSED') return;
   if (err?.output?.statusCode === 408 || err?.message?.includes('Timed Out')) {
-    console.log(chalk.yellow('[⚠️] Timeout di connessione rilevato, il bot continua a funzionare.'));
+    console.log(chalk.yellow('[WARN] Timeout di connessione rilevato, il bot continua a funzionare.'));
     return;
   }
-  console.error(chalk.red('[❌] Eccezione non gestita:'), err);
+  console.error(chalk.red('[ERRORE] Eccezione non gestita:'), err);
 });
 
 
@@ -681,23 +664,23 @@ process.on('unhandledRejection', (reason, promise) => {
 
   
   if (reason?.output?.statusCode === 408 || reason?.message?.includes('Timed Out')) {
-    console.log(chalk.yellow('[⚠] Timeout WhatsApp rilevato, riconnessione automatica in corso...'));
+    console.log(chalk.yellow('[WARN] Timeout WhatsApp rilevato, riconnessione automatica in corso...'));
     return;
   }
 
   
   if (reason?.isBoom || reason?.message?.includes('connection')) {
-    console.log(chalk.yellow('[⚠] Errore di connessione rilevato, il bot continua a funzionare.'));
+    console.log(chalk.yellow('[WARN] Errore di connessione rilevato, il bot continua a funzionare.'));
     return;
   }
 
   const errorMsg = reason instanceof Error ? reason.message : reason;
-  console.log(chalk.yellow('[⚠] Promise rejection gestita:'), errorMsg);
+  console.log(chalk.yellow('[WARN] Promise rejection gestita:'), errorMsg);
 });
 
 let isInit = true;
 let handler = await import('./handler.js').catch(e => {
-    console.error('❌ ERRORE IMPORT HANDLER:', e || 'Unknown error')
+    console.error('[ERRORE] Import handler non riuscito:', e || 'Errore sconosciuto');
     process.exit(1)
 })
 
@@ -705,24 +688,24 @@ let handler = await import('./handler.js').catch(e => {
 global.reloadHandler = async function (restatConn) {
   try {
     const loaded = await import(`./handler.js?update=${Date.now()}`).catch(e => {
-      console.error('❌ ERRORE IMPORT HANDLER.JS:', e || 'Unknown error')
+    console.error('[ERRORE] Import handler non riuscito:', e || 'Errore sconosciuto');
       return null
     })
 
     const Handler = loaded?.default || loaded
     if (!Handler) {
-      console.error('❌ Handler è null, import fallito')
+      console.error('[ERRORE] Handler nullo, import fallito');
       return false
     }
 
     if (typeof Handler.handler !== 'function') {
-      console.error('❌ Handler.handler è undefined o non è una funzione! Keys disponibili:', Object.keys(Handler))
+      console.error('[ERRORE] Handler.handler non e una funzione. Chiavi disponibili:', Object.keys(Handler));
       return false
     }
 
     handler = Handler
   } catch (e) { 
-    console.error('❌ ERRORE in reloadHandler:', e || 'Unknown error')
+    console.error('[ERRORE] Ricaricamento handler non riuscito:', e || 'Errore sconosciuto');
     return false
   }
 
@@ -732,6 +715,11 @@ global.reloadHandler = async function (restatConn) {
     conn.ev.removeAllListeners()
     global.conn = makeWASocket(connectionOptions, { chats: oldChats })
     global.store.bind(global.conn)
+    global.conn.ev.on('chats.phoneNumberShare', ({ lid, jid } = {}) => {
+      if (!cacheLidMapping(lid, jid)) {
+        console.warn('[LID] Mappatura telefono non valida ricevuta da Baileys.');
+      }
+    })
     isInit = true
   }
 
@@ -747,8 +735,8 @@ global.reloadHandler = async function (restatConn) {
 
   conn.welcome = '@user benvenuto/a in @subject'
   conn.bye = '@user ha abbandonato il gruppo'
-  conn.spromote = '@user è stato promosso ad amministratore'
-  conn.sdemote = '@user non è più amministratore'
+  conn.spromote = '@user promosso ad amministratore'
+  conn.sdemote = '@user non e piu amministratore'
   conn.sIcon = 'immagine gruppo modificata'
   conn.sRevoke = 'link reimpostato, nuovo link: @revoke'
 
@@ -763,6 +751,13 @@ global.reloadHandler = async function (restatConn) {
   conn.ev.on('messages.upsert', conn.handler)
   conn.ev.on('group-participants.update', conn.participantsUpdate)
   conn.ev.on('groups.update', conn.groupsUpdate)
+  try {
+    if (typeof handler.ensureGroupCacheListeners === 'function') handler.ensureGroupCacheListeners(conn)
+    else {
+      conn.ev.on('group-participants.update', (u) => { try { if (u?.id) global.groupCache?.del?.(u.id) } catch {} })
+      conn.ev.on('groups.update', (us) => { try { for (const u of (Array.isArray(us) ? us : [us])) if (u?.id) global.groupCache?.del?.(u.id) } catch {} })
+    }
+  } catch {}
   conn.ev.on('message.delete', conn.onDelete)
   conn.ev.on('call', conn.onCall)
   conn.ev.on('connection.update', conn.connectionUpdate)
@@ -773,6 +768,7 @@ global.reloadHandler = async function (restatConn) {
 
 
 const pluginFolder = join(__dirname, 'plugins');
+mkdirSync(pluginFolder, { recursive: true });
 const pluginFilter = (filename) => /\.js$/i.test(filename);
 global.plugins = {};
 
@@ -831,15 +827,15 @@ global.reload = async (_ev, filename) => {
 
   if (pluginKey in global.plugins) {
     if (fileExists) {
-      conn.logger.info(chalk.green(`✅ AGGIORNATO - '${pluginKey}'`));
+      conn.logger.info(`AGGIORNATO - '${pluginKey}'`);
     } else {
-      conn.logger.warn(chalk.yellow(`⚠️ PLUGIN RIMOSSO: '${pluginKey}'. Il bot continua a funzionare.`));
+      conn.logger.warn(`PLUGIN RIMOSSO: '${pluginKey}'. Il bot continua a funzionare.`);
       delete global.plugins[pluginKey];
       global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
       return;
     }
   } else if (fileExists) {
-    conn.logger.info(`🆕 NUOVO PLUGIN: '${pluginKey}'`);
+    conn.logger.info(`NUOVO PLUGIN: '${pluginKey}'`);
   }
 
   if (!fileExists) return;
@@ -848,18 +844,18 @@ global.reload = async (_ev, filename) => {
   try {
     source = await fsp.readFile(filePath, 'utf8');
   } catch (e) {
-    conn.logger.error(`⚠️ ERRORE LETTURA PLUGIN: '${pluginKey}'\n${format(e)}`);
+    conn.logger.error(`ERRORE LETTURA PLUGIN: '${pluginKey}'\n${format(e)}`);
     return;
   }
 
   const err = syntaxerror(source, pluginKey, { sourceType: 'module', allowAwaitOutsideFunction: true, ecmaVersion: 12 });
-  if (err) conn.logger.error(`❌ ERRORE SINTASSI: '${pluginKey}'\n${format(err)}`);
+  if (err) conn.logger.error(`ERRORE SINTASSI: '${pluginKey}'\n${format(err)}`);
   else {
     try {
       const module = (await import(`${global.__filename(filePath)}?update=${Date.now()}`));
       global.plugins[pluginKey] = module.default || module;
     } catch (e) {
-      conn.logger.error(`⚠️ ERRORE PLUGIN: '${pluginKey}\n${format(e)}'`);
+      conn.logger.error(`ERRORE PLUGIN: '${pluginKey}'\n${format(e)}`);
     } finally {
       global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
     }
@@ -870,7 +866,7 @@ const pluginWatcher = watch(pluginFolder, { recursive: true }, global.reload);
 pluginWatcher.setMaxListeners(20);
 const handlerLoaded = await global.reloadHandler();
 if (!handlerLoaded) {
-  console.error(chalk.bold.bgRedBright('❌ Impossibile avviare il bot: handler non caricato'));
+  console.error(chalk.bold.bgRedBright('Errore: impossibile avviare il bot, handler non caricato'));
   process.exit(1);
 }
 
@@ -888,7 +884,7 @@ setInterval(async () => {
     }
     await clearDirectoryAsync(tmpDir);
     await clearDirectoryAsync(tempDir);
-    console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎𝐂𝐋𝐄𝐀𝐑𝐓𝐌𝐏\n│ ⓘ 𝐀𝐫𝐜𝐡𝐢𝐯𝐢 𝐞𝐥𝐢𝐦𝐢𝐧𝐚𝐭𝐢 𝐜𝐨𝐧 𝐬𝐮𝐜𝐜𝐞𝐬𝐬𝐨. ✅\n╰─────────────···`));
+    console.log(chalk.blueBright('[CLEANUP] Pulizia completata.'));
   } catch (e) {
     console.error(chalk.red('[AUTOCLEARTMP] errore:'), e);
   }
@@ -904,8 +900,29 @@ setInterval(async () => {
       await purgeSession(sessionFolder);
       await clearSessionFolderSelective(sessionFolder);
     });
-    console.log(chalk.blueBright(`\n╭─────────────────···\n│ 𝐀𝐔𝐓𝐎 𝐂𝐎𝐍𝐓𝐑𝐎𝐋𝐋𝐎 𝐒𝐄𝐒𝐒𝐈𝐎𝐍𝐈\n│ ⓘ 𝐂𝐨𝐧𝐭𝐫𝐨𝐥𝐥𝐨 𝐞𝐟𝐟𝐞𝐭𝐭𝐮𝐚𝐭𝐨 ✅\n╰─────────────···`));
+    console.log(chalk.blueBright('[CLEANUP] Pulizia completata.'));
   } catch (e) {
     console.error(chalk.red('[SESSION-CLEANUP] errore:'), e);
   }
 }, 1000 * 60 * 10);
+let axbotAutoStarted = false;
+const axbotWaitInterval = setInterval(async () => {
+  if (axbotAutoStarted) return clearInterval(axbotWaitInterval);
+  if (!global.conn?.user?.id) return;
+
+  clearInterval(axbotWaitInterval);
+  axbotAutoStarted = true;
+
+  try {
+    const AxBot = await import('./axbot-manager.js');
+    if (fs.existsSync('./sessioni_axbot/creds.json')) {
+      console.log(chalk.cyan('Sessione AxBot trovata, avvio automatico...'));
+      const res = await AxBot.start();
+      if (!res.ok) console.log(chalk.yellow(`[AxBot] ${res.msg}`));
+    } else {
+      console.log(chalk.yellow('Nessuna sessione AxBot. Usa .avvia axbot <numero>'));
+    }
+  } catch (e) {
+    console.error('Errore auto-start AxBot:', e.message);
+  }
+}, 2000);

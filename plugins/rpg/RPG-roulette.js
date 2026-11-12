@@ -1,11 +1,12 @@
-let handler = async (m, { conn, args }) => {
-  let bet = parseInt(args[0])
-  let choice = args[1] // rosso o nero
+let handler = async (m, { conn, args, usedPrefix = '.' }) => {
+  const bet = Number(args[0])
+  const choice = args[1]?.toLowerCase()
+  const user = global.db.data.users[m.sender]
 
-  let user = global.db.data.users[m.sender]
-
-  if (!bet || bet < 50) return m.reply("💸 Puntata minima: *50 888COIN*")
-  if (user.money < bet) return m.reply(`💸 Ti servono almeno *${bet} 888COIN*`)
+  if (!user) return m.reply('❌ Non trovo il tuo profilo nel database.')
+  if (!Number.isSafeInteger(bet) || bet < 50) return m.reply(`💸 Puntata minima: *50 888COIN*.\nEsempio: ${usedPrefix}rouletteplay 100`)
+  const money = Math.max(0, Number(user.money) || 0)
+  if (money < bet) return m.reply(`💸 Ti servono almeno *${bet} 888COIN*. Saldo: *${money} 888COIN*.`)
 
   // Se non ha scelto rosso/nero → mostra menu
   if (!choice) {
@@ -17,11 +18,15 @@ let handler = async (m, { conn, args }) => {
 Scegli dove puntare:
 `.trim(),
       buttons: [
-        { buttonId: `.rouletteplay ${bet} rosso`, buttonText: { displayText: "🔴 Rosso" }, type: 1 },
-        { buttonId: `.rouletteplay ${bet} nero`,  buttonText: { displayText: "⚫ Nero" },  type: 1 }
+  { buttonId: `${usedPrefix}rouletteplay ${bet} rosso`, buttonText: { displayText: "🔴 Rosso" }, type: 1 },
+  { buttonId: `${usedPrefix}rouletteplay ${bet} nero`,  buttonText: { displayText: "⚫ Nero" },  type: 1 }
       ],
       headerType: 1
     }, { quoted: m })
+  }
+
+  if (choice !== 'rosso' && choice !== 'nero') {
+    return m.reply(`Scegli *rosso* o *nero*.\nEsempio: ${usedPrefix}rouletteplay ${bet} rosso`)
   }
 
   // Risultato casuale
@@ -60,7 +65,7 @@ Scegli dove puntare:
   await conn.sendMessage(m.chat, {
     text,
     buttons: [
-      { buttonId: `.rouletteplay ${bet}`, buttonText: { displayText: "🔁 Gioca di nuovo" }, type: 1 }
+    { buttonId: `${usedPrefix}rouletteplay ${bet}`, buttonText: { displayText: "🔁 Gioca di nuovo" }, type: 1 }
     ],
     headerType: 1
   }, { quoted: m })

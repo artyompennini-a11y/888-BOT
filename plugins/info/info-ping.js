@@ -1,7 +1,7 @@
 // Plugin by elixir, punisher & 888 staff
 import speed from 'performance-now'
 import process from 'process'
-import { fetchLatestBaileysVersion } from '@888-BOT/888baileys'
+import { fetchLatestBaileysVersion } from '@whiskeysockets/baileys'
 
 const uptimeFmt = ms => {
   const d = Math.floor(ms / 86400000)

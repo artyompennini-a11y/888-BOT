@@ -3,7 +3,7 @@ import {
   DisconnectReason,
   makeCacheableSignalKeyStore,
   fetchLatestBaileysVersion
-} from '@888-BOT/888baileys';
+} from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
 import NodeCache from 'node-cache';
 import fs from 'fs';
@@ -194,7 +194,7 @@ let handler = async (m, { conn, args, usedPrefix, command }) => {
 
       let mParsed = msg;
       try {
-        const simpleMod = await import('../lib/simple.js').catch(() => null);
+        const simpleMod = await import('../../lib/simple.js').catch(() => null);
         if (simpleMod && typeof simpleMod.smsg === 'function') {
           mParsed = simpleMod.smsg(sock, msg, global.store);
         } else if (typeof sock.serializeM === 'function') {

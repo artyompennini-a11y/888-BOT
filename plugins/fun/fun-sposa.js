@@ -1,3 +1,67 @@
+import fs from 'fs'
+
+const GIF_PATH = './icone/sposa.mp4'
+
+function getButtonId(message) {
+  const native = message?.interactiveResponseMessage?.nativeFlowResponseMessage
+  const paramsJson = native?.paramsJson
+  if (typeof paramsJson === 'string' && paramsJson) {
+    try {
+      const params = JSON.parse(paramsJson)
+      return params?.id ?? params?.selectedId ?? params?.selected_id ?? null
+    } catch {
+      return paramsJson
+    }
+  }
+
+  return message?.buttonsResponseMessage?.selectedButtonId
+    || message?.templateButtonReplyMessage?.selectedId
+    || null
+}
+
+function collectMarriageResponse(conn, chat, target, validIds, timeoutMs) {
+  let timeoutId
+  let settled = false
+  let finish
+
+  const promise = new Promise(resolve => {
+    finish = value => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeoutId)
+      conn.ev.off('messages.upsert', listener)
+      resolve(value)
+    }
+
+    const normalize = jid => {
+      if (!jid) return ''
+      return typeof conn.decodeJid === 'function' ? conn.decodeJid(jid) : jid
+    }
+
+    const listener = ({ messages = [] } = {}) => {
+      for (const msg of messages) {
+        const replyChat = normalize(msg.key?.remoteJid)
+        const replySender = normalize(msg.key?.participant || msg.key?.remoteJid)
+        if (replyChat !== normalize(chat) || replySender !== normalize(target)) continue
+
+        const id = getButtonId(msg.message)
+        if (validIds.includes(id)) {
+          finish(id)
+          return
+        }
+      }
+    }
+
+    conn.ev.on('messages.upsert', listener)
+    timeoutId = setTimeout(() => finish(null), timeoutMs)
+  })
+
+  return {
+    promise,
+    cancel: () => finish?.(null)
+  }
+}
+
 let handler = async (m, { conn, command }) => {
   const users = global.db.data.users
   const sender = m.sender
@@ -6,7 +70,6 @@ let handler = async (m, { conn, command }) => {
   if (!users[sender]) users[sender] = {}
   const user = users[sender]
 
-  // SPOSA — 888 Minimal
   if (command === 'sposa') {
     if (!target)
       return m.reply(
@@ -39,9 +102,13 @@ Questa persona è già sposata.`
       )
     }
 
-    // Richiesta matrimonio — 888 Minimal
-    const msg = await conn.sendMessage(m.chat, {
-      text:
+    const acceptedId = `accetta_${sender}`
+    const rejectedId = `rifiuta_${sender}`
+    const response = collectMarriageResponse(conn, m.chat, target, [acceptedId, rejectedId], 60000)
+
+    try {
+      await conn.sendMessage(m.chat, {
+        text:
 `💍 *Richiesta di matrimonio*
 ━━━━━━━━━━━━━━━━━━
 @${target.split('@')[0]}
@@ -52,37 +119,17 @@ Hai ricevuto una proposta da:
 ⏳ Tempo: *60 secondi*`,
       mentions: [sender, target],
       buttons: [
-        { buttonId: `accetta_${sender}`, buttonText: { displayText: '💖 Accetta' }, type: 1 },
-        { buttonId: `rifiuta_${sender}`, buttonText: { displayText: '💔 Rifiuta' }, type: 1 }
+        { buttonId: acceptedId, buttonText: { displayText: '💖 Accetta' }, type: 1 },
+        { buttonId: rejectedId, buttonText: { displayText: '💔 Rifiuta' }, type: 1 }
       ],
       headerType: 1
-    }, { quoted: m })
+      }, { quoted: m })
+    } catch (error) {
+      response.cancel()
+      throw error
+    }
 
-    // Attesa risposta
-    const collected = await new Promise(resolve => {
-      const listener = async ({ messages }) => {
-        const msg = messages[0]
-        if (!msg?.message) return
-
-        const from = msg.key.participant || msg.key.remoteJid
-        if (from !== target) return
-
-        const id = msg.message?.buttonsResponseMessage?.selectedButtonId
-        if (!id) return
-
-        if (id === `accetta_${sender}` || id === `rifiuta_${sender}`) {
-          conn.ev.off('messages.upsert', listener)
-          resolve(id)
-        }
-      }
-
-      conn.ev.on('messages.upsert', listener)
-
-      setTimeout(() => {
-        conn.ev.off('messages.upsert', listener)
-        resolve(null)
-      }, 60000)
-    })
+    const collected = await response.promise
 
     if (!collected) {
       return conn.sendMessage(m.chat, {
@@ -94,7 +141,6 @@ Proposta annullata.`,
       })
     }
 
-    // Matrimonio accettato
     if (collected.startsWith('accetta')) {
 
       user.sposato = true
@@ -105,20 +151,27 @@ Proposta annullata.`,
       partner.coniuge = sender
       partner.ex = partner.ex || []
 
-      await conn.sendMessage(m.chat, {
-        text:
+      const caption =
 `💖 *Matrimonio celebrato*
 @${sender.split('@')[0]}
      🤍
 @${target.split('@')[0]}
 ━━━━━━━━━━━━━━━━━━
 ✨ *Si sono sposati!* ✨
-💣 Il matrimonio durerà 5 minuti.`,
-        mentions: [sender, target]
-      })
+💣 Il matrimonio durerà 5 minuti.`
+
+      if (fs.existsSync(GIF_PATH)) {
+        await conn.sendMessage(m.chat, {
+          video: fs.readFileSync(GIF_PATH),
+          gifPlayback: true,
+          caption,
+          mentions: [sender, target]
+        })
+      } else {
+        await conn.sendMessage(m.chat, { text: caption, mentions: [sender, target] })
+      }
 
     } else {
-      // Matrimonio rifiutato
       await conn.sendMessage(m.chat, {
         text:
 `💔 *Rifiuto matrimonio*
@@ -128,7 +181,6 @@ Proposta annullata.`,
     }
   }
 
-  // DIVORZIA — 888 Minimal
   if (command === 'divorzia') {
     if (!user.sposato || !user.coniuge)
       return m.reply(

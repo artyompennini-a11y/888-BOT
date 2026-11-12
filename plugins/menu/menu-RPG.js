@@ -1,13 +1,10 @@
 //Plugin by Elixir, Punisher & 888 staff
-import fetch from 'node-fetch';
+import fetch from 'node-fetch'
 
 let handler = async (m, { conn, usedPrefix }) => {
-  const target = m.quoted?.sender 
-    || m.mentionedJid?.[0] 
-    || (m.fromMe ? conn.user.jid : m.sender);
+  const target = m.quoted?.sender || m.mentionedJid?.[0] || (m.fromMe ? conn.user.jid : m.sender)
 
-  const pfp = (await conn.profilePictureUrl(target, "image").catch(_ => null)) 
-    || "https://i.postimg.cc/3JwB9YkX/default-avatar.png";
+  const pfp = (await conn.profilePictureUrl(target, "image").catch(_ => null)) || "https://i.postimg.cc/3JwB9YkX/default-avatar.png"
 
   let avatar;
   try {
@@ -91,4 +88,4 @@ handler.help = ["rpg"];
 handler.tags = ["menu"];
 handler.command = /^(rpg)$/i;
 
-export default handler;
+export default handler

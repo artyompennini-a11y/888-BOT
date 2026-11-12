@@ -1,26 +1,26 @@
-let handler = async (m, { conn }) => {
-  let user = global.db.data.users[m.sender]
-  let money = user.money || 0
-
-  const bet = (x) => money >= x ? `.rouletteplay ${x}` : `no_${x}`
+let handler = async (m, { conn, usedPrefix = '.' }) => {
+  const user = global.db.data.users[m.sender]
+  if (!user) return m.reply('❌ Non trovo il tuo profilo nel database.')
+  const money = Math.max(0, Number(user.money) || 0)
+  const bets = [100, 500, 1000, 10000].filter(amount => amount <= money).slice(-3)
 
   const text = `
 🎰 *ROULETTE 888*
 💰 Portafoglio: *${money} 888COIN*
 
-Scegli l'importo da puntare:
+Scegli l'importo da puntare.${bets.length ? '' : `\n\nPuoi puntare almeno 50 888COIN scrivendo:\n${usedPrefix}rouletteplay 50`}
 `.trim()
 
   await conn.sendMessage(m.chat, {
     text,
-    buttons: [
-      { buttonId: bet(100), buttonText: { displayText: "100 888COIN" }, type: 1 },
-      { buttonId: bet(200), buttonText: { displayText: "200 888COIN" }, type: 1 },
-      { buttonId: bet(500), buttonText: { displayText: "500 888COIN" }, type: 1 },
-      { buttonId: bet(1000), buttonText: { displayText: "1000 888COIN" }, type: 1 },
-      { buttonId: bet(10000), buttonText: { displayText: "10000 888COIN" }, type: 1 }
-    ],
-    headerType: 1
+    ...(bets.length ? {
+      buttons: bets.map(amount => ({
+        buttonId: `${usedPrefix}rouletteplay ${amount}`,
+        buttonText: { displayText: `${amount} 888COIN` },
+        type: 1
+      })),
+      headerType: 1
+    } : {})
   }, { quoted: m })
 }
 

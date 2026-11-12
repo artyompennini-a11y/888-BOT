@@ -1,22 +1,26 @@
-//Plugin by Elixir, Punisher & 888 staff
+import fs from 'fs'
+
+const GIF_PATH = './icone/kick.mp4'
+const PROTETTI = ['79524931364'] // Punisher (+7 952 493-13-64)
 
 var handler = async (m, { conn, participants }) => {
     try {
-        let user = m.mentionedJid[0]
-            ? m.mentionedJid[0]
-            : (m.quoted ? m.quoted.sender : null)
+        let user = m.mentionedJid[0] ? m.mentionedJid[0] : (m.quoted ? m.quoted.sender : null)
 
         if (!user) {
             return m.reply('*Chi vuoi rimuovere? Menziona qualcuno o rispondi a un suo messaggio.*')
+        }
+
+        // Protezione: nessuno (owner compresi) può rimuovere gli utenti protetti
+        if (PROTETTI.includes(user.split('@')[0])) {
+            return conn.reply(m.chat, '『 🛡️ 』 `monocellulato del cazzo cosa pensavi di fare?`', m)
         }
 
         const groupInfo = await conn.groupMetadata(m.chat)
         const groupAdmins = participants.filter(p => p.admin).map(p => p.id)
 
         const ownerGroup = groupInfo.owner || m.chat.split`-`[0] + '@s.whatsapp.net'
-        const ownerBot = global.owner[0] && global.owner[0][0]
-            ? global.owner[0][0] + '@s.whatsapp.net'
-            : ''
+        const ownerBot = global.owner[0] && global.owner[0][0] ? global.owner[0][0] + '@s.whatsapp.net' : ''
         const isTargetAdmin = groupAdmins.includes(user)
 
         if (user === conn.user.jid) {
@@ -32,16 +36,26 @@ var handler = async (m, { conn, participants }) => {
         }
 
         if (isTargetAdmin) {
-            return conn.reply(
-                m.chat,
-                '『 🤒 』 `Non posso rimuovere un altro admin. Devi prima togliergli i privilegi.`',
-                m
-            )
+            return conn.reply(m.chat, '『 🤒 』 `Non posso rimuovere un altro admin. Devi prima togliergli i privilegi.`', m)
         }
 
         await conn.groupParticipantsUpdate(m.chat, [user], 'remove')
 
+        const caption = `@${user.split('@')[0]} *è stato sbattuto fuori a calci in culo*`
+
+        if (fs.existsSync(GIF_PATH)) {
+            await conn.sendMessage(m.chat, {
+                video: fs.readFileSync(GIF_PATH),
+                gifPlayback: true,
+                caption,
+                mentions: [user]
+            }, { quoted: m })
+        } else {
+            await conn.sendMessage(m.chat, { text: caption, mentions: [user] }, { quoted: m })
+        }
+
     } catch (e) {
+        console.error(e)
         return m.reply(`${global.errore || 'Errore durante l\'esecuzione del comando.'}`)
     }
 }

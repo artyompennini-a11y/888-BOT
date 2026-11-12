@@ -1,3 +1,10 @@
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const videoPath = path.resolve(__dirname, '../../media/anime/abbraccio.mp4')
+
 const tag = (jid = '') => '@' + String(jid).split('@')[0].split(':')[0]
 
 function buildContextMsg(title) {
@@ -83,7 +90,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   const senderNumero = String(sender).split('@')[0].split(':')[0]
 
-  await conn.sendMessage(chat, {
+  const message = {
     text: `*🫂 ${fraseRandom}*\n\n*🏆 Abbracci ricevuti da ${tag(target)}: ${globalThis.abbracciRank[target]} 🫂*`,
     contextInfo: {
       ...(global.rcanal?.contextInfo || {}),
@@ -98,7 +105,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
       }
     ],
     headerType: 1
-  }, { quoted: q })
+  }
+  if (fs.existsSync(videoPath)) message.video = fs.readFileSync(videoPath)
+
+  await conn.sendMessage(chat, message, { quoted: q })
 }
 
 handler.help = ['abbraccia @user']

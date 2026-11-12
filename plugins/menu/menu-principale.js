@@ -1,100 +1,78 @@
-import fetch from 'node-fetch'
-import fs from 'fs'
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-let handler = async (m, { conn, usedPrefix }) => {
-  const targetJid = m.mentionedJid?.[0] || m.quoted?.sender || m.sender
-  const p = usedPrefix || '.'
+const MENU_SECTIONS = [
+  {
+    title: 'MENU PRINCIPALE',
+    video: 'menu-funzioni.mp4',
+    image: 'settings.png',
+    rows: [
+      { title: '⚙️ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐢', command: 'funzioni' },
+      { title: '🛡️ 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫𝐢', command: 'mods' },
+      { title: '👑 𝐀𝐝𝐦𝐢𝐧', command: 'admin' },
+    ],
+  },
+  {
+    title: 'GIOCHI, RPG E AUDIO',
+    video: 'menu-giochi.mp4',
+    image: 'pokemon_battle.png',
+    rows: [
+      { title: '🎮 𝐆𝐢𝐨𝐜𝐡𝐢', command: 'giochi' },
+      { title: '🎰 𝐑𝐏𝐆', command: 'rpg' },
+      { title: '🎵 𝐀𝐮𝐝𝐢𝐨', command: 'menuaudio' },
+    ],
+  },
+  {
+    title: 'STATS E OWNER',
+    video: 'menu-stats.mp4',
+    image: 'admin.png',
+    rows: [
+      { title: '📊 𝐒𝐭𝐚𝐭𝐬', command: 'modstats' },
+      { title: '🔐 𝐎𝐰𝐧𝐞𝐫', command: 'owner' },
+    ],
+  },
+];
 
-  const menuButton = (displayText, command) => ({
-    buttonId: `${p}${command}`,
-    buttonText: { displayText },
+const handler = async (m, { conn, usedPrefix = '.' }) => {
+  const botName = global.db?.data?.nomedelbot || '𝟴𝟴𝟴 BOT';
+  const botVersion = global.db?.data?.version || '1.5';
+  const menuText = `⚡ *${botName}*\n*VERSIONE*: ${botVersion}\n\n🛡️ *Staff & Moderatori:* ${usedPrefix}mods\n\n📂 *Scorri il carosello e scegli una categoria.*`;
+  const mediaDir = path.join(__dirname, '..', '..', 'media');
+  const iconsDir = path.join(__dirname, '..', '..', 'icone');
+  const cards = MENU_SECTIONS.map(section => ({
+    ...(fs.existsSync(path.join(mediaDir, section.video))
+      ? { video: fs.readFileSync(path.join(mediaDir, section.video)) }
+      : { image: fs.readFileSync(path.join(iconsDir, section.image)) }),
+    title: section.title,
+    text: section.rows.map(({ title, command }) => `${title}\n${usedPrefix}${command}`).join('\n\n'),
+    footer: botName,
+    buttons: section.rows.map(({ title, command }) => ({
+    buttonId: `${usedPrefix}${command}`,
+    buttonText: { displayText: title },
     type: 1
-  })
+    }))
+  }));
+  const textFallback = `${menuText}\n\n${MENU_SECTIONS.map(({ title, rows }) =>
+    `📂 *${title}*\n${rows.map(({ title: rowTitle, command }) => `• ${rowTitle}: ${usedPrefix}${command}`).join('\n')}`
+  ).join('\n\n')}`;
 
-  let imageBuffer = null
   try {
-    imageBuffer = fs.readFileSync('./media/888.jpeg.jpeg.jpg')
-  } catch {
-    try {
-      imageBuffer = await (await fetch('https://telegra.ph/file/22b3e3d2a7b9f346e21b3.png')).buffer()
-    } catch {
-      imageBuffer = null
-    }
+    return await conn.sendMessage(m.chat, {
+      text: menuText,
+      footer: botName,
+      cards
+    }, { quoted: m });
+  } catch (error) {
+    console.warn(`[MENU] Carosello non inviato: ${error.message}`);
+    return conn.sendMessage(m.chat, { text: textFallback }, { quoted: m });
   }
+};
 
-  const botName = global.db.data.nomedelbot || "𝟴𝟴𝟴 BOT"
-  const botVersion = global.db.data.version || "*1.4*"
+handler.help = ['menu'];
+handler.tags = ['menu'];
+handler.command = /^(menu|comandi|commands|help)$/i;
 
-  const fake = {
-    key: {
-      participants: '0@s.whatsapp.net',
-      fromMe: false,
-      id: 'MENU'
-    },
-    message: {
-      contactMessage: {
-        displayName: `Menu`,
-        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:Sy;Bot;;;\\nFN:y\nitem1.TEL;waid=${targetJid.split('@')[0]}:${targetJid.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`
-      }
-    },
-    participant: "0@s.whatsapp.net"
-  }
-
-  const menuText = `
-⚡ *${botName}*
-*VERSIONE*: ${botVersion}
-
-🛡️ *Staff & Moderatori:* ${p}mods
-
-📂 *Altre sezioni*
-• ${p}giochi
-• ${p}rpg
-• ${p}menuaudio
-• ${p}modstats
-• ${p}owner
-`.trim()
-
-  const mainButtons = [
-    menuButton('⚙️ 𝐅𝐮𝐧𝐳𝐢𝐨𝐧𝐢', 'funzioni'),
-    menuButton('🛡️ 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫𝐢', 'mods'),
-    menuButton('👑 𝐀𝐝𝐦𝐢𝐧', 'admin')
-  ]
-  const playButtons = [
-    menuButton('🎮 𝐆𝐢𝐨𝐜𝐡𝐢', 'giochi'),
-    menuButton('🎰 𝐑𝐏𝐆', 'rpg'),
-    menuButton('🎵 𝐀𝐮𝐝𝐢𝐨', 'menuaudio')
-  ]
-  const staffButtons = [
-    menuButton('📊 𝐒𝐭𝐚𝐭𝐬', 'modstats'),
-    menuButton('🔐 𝐎𝐰𝐧𝐞𝐫', 'owner')
-  ]
-
-  const payload = {
-    caption: menuText,
-    footer: botName,
-    buttons: mainButtons,
-    headerType: 4
-  }
-  if (imageBuffer) payload.image = imageBuffer
-
-  await conn.sendMessage(m.chat, payload, { quoted: fake })
-  await conn.sendMessage(m.chat, {
-    text: '🎮 *GIOCHI, RPG E AUDIO*\nScegli direttamente la sezione che ti interessa.',
-    footer: botName,
-    buttons: playButtons,
-    headerType: 1
-  })
-  await conn.sendMessage(m.chat, {
-    text: '🛡️ *STATS E OWNER*\nAccesso ai pannelli riservati.',
-    footer: botName,
-    buttons: staffButtons,
-    headerType: 1
-  })
-}
-
-handler.help = ["menu"]
-handler.tags = ['menu']
-handler.command = /^(menu|comandi)$/i
-
-export default handler
+export default handler;

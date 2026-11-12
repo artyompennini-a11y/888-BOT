@@ -1,3 +1,10 @@
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const videoPath = path.resolve(__dirname, '../../media/anime/bacio.mp4')
+
 //Plugin by Elixir, Punisher & 888 staff
 
 const tag = (jid = '') => '@' + String(jid).split('@')[0].split(':')[0]
@@ -72,7 +79,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   const senderNumero = String(sender).split('@')[0].split(':')[0]
 
-  await conn.sendMessage(chat, {
+  const message = {
     text: `*💋 ${tag(sender)} 𝐡𝐚 𝐛𝐚𝐜𝐢𝐚𝐭𝐨 ${tag(target)} 😘*`,
     contextInfo: {
       ...(global.rcanal?.contextInfo || {}),
@@ -87,7 +94,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
       }
     ],
     headerType: 1
-  }, { quoted: q })
+  }
+  if (fs.existsSync(videoPath)) message.video = fs.readFileSync(videoPath)
+
+  await conn.sendMessage(chat, message, { quoted: q })
 }
 
 handler.help = ['bacia @user']

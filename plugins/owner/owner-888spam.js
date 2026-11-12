@@ -10,7 +10,7 @@ const manually = `𝐂𝐎𝐌𝐌𝐔𝐍𝐈𝐓𝐘 & 𝐂𝐀𝐍𝐀𝐋�
 │ https://whatsapp.com/channel/0029Vb8Y0igGufJ0xMYJmU40
 ╰───⭓`;
 
-import { generateWAMessageFromContent } from '@888-BOT/888baileys';
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
 const handler = async (m, { conn, args, text }) => {
   // Controllo owner dal config.js

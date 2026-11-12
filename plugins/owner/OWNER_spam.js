@@ -19,7 +19,7 @@ const manually = `𝐆𝐑𝐔𝐏𝐏𝐈 𝐔𝐅𝐅𝐈𝐂𝐈𝐀𝐋𝐈:
 │ https://chat.whatsapp.com/LOo9DVb3uNn7AVKkOfv22k
 ╰───⭓`;
 
-import { generateWAMessageFromContent } from '@888-BOT/888baileys'
+import { generateWAMessageFromContent } from '@whiskeysockets/baileys'
 
 const handler = async (m, { conn, args, text }) => {
   if (parseInt(args[1])) return m.reply(`Inserisci prima la quantità di messaggi da inviare e poi il testo`)

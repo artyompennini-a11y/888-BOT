@@ -1,4 +1,17 @@
 import fetch from 'node-fetch'
+import fs from 'fs'
+import path from 'path'
+
+const ICONE_DIR = path.join(process.cwd(), 'icone')
+const GIF_NAME = 'famiglia' 
+
+const findGif = () => {
+  for (const ext of ['mp4', 'gif']) {
+    const p = path.join(ICONE_DIR, `${GIF_NAME}.${ext}`)
+    if (fs.existsSync(p)) return p
+  }
+  return null
+}
 
 const handler = async (m, { conn }) => {
   const users = global.db.data.users
@@ -17,6 +30,7 @@ const handler = async (m, { conn }) => {
 
   const user = users[who]
   const tag = '@' + who.split('@')[0]
+  const tagOf = (j) => '@' + j.split('@')[0]
 
   let adottatoDa = null
   for (const jid in users) {
@@ -26,8 +40,8 @@ const handler = async (m, { conn }) => {
     }
   }
 
-  const exList = (user.ex || []).map(j => '@' + j.split('@')[0])
-  const adopList = (user.adottati || []).map(j => '@' + j.split('@')[0])
+  const exList = (user.ex || []).map(tagOf)
+  const adopList = (user.adottati || []).map(tagOf)
 
   let pic
   try {
@@ -55,35 +69,50 @@ const handler = async (m, { conn }) => {
   }
 
   const testo =
-`👨‍👩‍👧 *Famiglia 888*
-━━━━━━━━━━━━━━━━━━
+`👨‍👩‍👧 *𝐅𝐀𝐌𝐈𝐆𝐋𝐈𝐀 𝟖𝟖𝟖*
+
 👤 *Utente:* ${tag}
 
-💍 *Sposato:* ${user.sposato ? 'Sì' : 'No'}
-❤️ *Coniuge:* ${user.coniuge ? '@' + user.coniuge.split('@')[0] : 'Nessuno'}
-━━━━━━━━━━━━━━━━━━
-💔 *Ex Coniugi:* ${exList.length ? exList.join(', ') : 'Nessuno'}
-━━━━━━━━━━━━━━━━━━
-👪 *Adottato da:* ${adottatoDa ? '@' + adottatoDa.split('@')[0] : 'Nessuno'}
-👶 *Figli adottati:* ${adopList.length ? adopList.join(', ') : 'Nessuno'}
-━━━━━━━━━━━━━━━━━━
-⭐ *Migliore amico:* ${user.miglioreamico ? '@' + user.miglioreamico.split('@')[0] : 'Nessuno'}`
+💍 *𝐌𝐀𝐓𝐑𝐈𝐌𝐎𝐍𝐈𝐎*
+• *Sposato:* ${user.sposato ? 'Sì' : 'No'}
+• *Coniuge:* ${user.coniuge ? tagOf(user.coniuge) : 'Nessuno'}
+• *Ex:* ${exList.length ? exList.join(', ') : 'Nessuno'}
 
-  await conn.sendMessage(
-    m.chat,
-    {
-      text: testo,
-      mentions: [
-        who,
-        user.coniuge,
-        user.miglioreamico,
-        adottatoDa,
-        ...(user.ex || []),
-        ...(user.adottati || [])
-      ].filter(Boolean)
-    },
-    { quoted: fake }
-  )
+👪 *𝐅𝐀𝐌𝐈𝐆𝐋𝐈𝐀*
+• *Adottato da:* ${adottatoDa ? tagOf(adottatoDa) : 'Nessuno'}
+• *Figli:* ${adopList.length ? adopList.join(', ') : 'Nessuno'}
+
+⭐ *𝐀𝐌𝐈𝐂𝐈𝐙𝐈𝐀*
+• *Migliore amico:* ${user.miglioreamico ? tagOf(user.miglioreamico) : 'Nessuno'}`
+
+  const mentions = [
+    who,
+    user.coniuge,
+    user.miglioreamico,
+    adottatoDa,
+    ...(user.ex || []),
+    ...(user.adottati || [])
+  ].filter(Boolean)
+
+  const gifPath = findGif()
+
+  if (gifPath) {
+    try {
+      await conn.sendMessage(
+        m.chat,
+        {
+          video: fs.readFileSync(gifPath),
+          gifPlayback: true,
+          caption: testo,
+          mentions
+        },
+        { quoted: fake }
+      )
+      return
+    } catch {}
+  }
+
+  await conn.sendMessage(m.chat, { text: testo, mentions }, { quoted: fake })
 }
 
 handler.help = ['famiglia']

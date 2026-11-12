@@ -45,39 +45,37 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 Modificatori vocali ed effetti
 
 🔍 *Download & Ricerca*
-• ${prefix}play  
-• ${prefix}playlist  
+• ${prefix}play 
+• ${prefix}playlist 
 • ${prefix}audio (testo)
 
 ⚡ *Velocità & Struttura*
-• ${prefix}fast  
-• ${prefix}slow  
-• ${prefix}reverse  
-• ${prefix}smooth  
-• ${prefix}nightcore  
+• ${prefix}fast 
+• ${prefix}slow 
+• ${prefix}reverse 
+• ${prefix}smooth 
+• ${prefix}nightcore 
 
 🎛️ *Tonalità & Filtri*
-• ${prefix}bass  
-• ${prefix}deep  
-• ${prefix}fat  
-• ${prefix}chipmunk  
-• ${prefix}chip  
-• ${prefix}robot  
+• ${prefix}bass 
+• ${prefix}deep 
+• ${prefix}fat 
+• ${prefix}chipmunk 
+• ${prefix}chip 
+• ${prefix}robot 
 
 🔊 *Ambiente & Spazio*
-• ${prefix}cur  
-• ${prefix}echo  
-• ${prefix}vibrato  
-• ${prefix}reverb  
+• ${prefix}cur 
+• ${prefix}echo 
+• ${prefix}vibrato 
 
 💥 *Distorsione & Overdrive*
-• ${prefix}blown  
-• ${prefix}earrape  
-• ${prefix}distort  
+• ${prefix}blown 
+• ${prefix}earrape 
+• ${prefix}distort 
 
 ━━━━━━━━━━━━━━━━━━━━━━
-💡 Rispondi a un messaggio vocale o audio  
-con il comando dell’effetto da applicare.
+💡 Rispondi a un messaggio vocale o audio con il comando dell'effetto da applicare.
 `.trim()
 
   conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation })
@@ -85,6 +83,6 @@ con il comando dell’effetto da applicare.
 
 handler.help = ["menuaudio"]
 handler.tags = ["menu"]
-handler.command = /^(menuaudio)$/i
+handler.command = /^(menuaudio)$/i;
 
 export default handler

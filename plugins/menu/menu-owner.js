@@ -45,60 +45,57 @@ let handler = async (m, { conn, usedPrefix: prefix }) => {
 Livello: Sviluppatore / Creatore Core
 
 ⚙️ *Gestione Bot & Credenziali*
-• ${prefix}impostanome  
-• ${prefix}resettanome  
-• ${prefix}addowner  
-• ${prefix}delowner  
-• ${prefix}addperms  
-• ${prefix}setppbot  
-• ${prefix}prefisso  
-• ${prefix}resettaprefisso  
+• ${prefix}impostanome 
+• ${prefix}resettanome 
+• ${prefix}addowner 
+• ${prefix}delowner 
+• ${prefix}addperms 
+• ${prefix}setppbot 
+• ${prefix}prefisso 
+• ${prefix}resettaprefisso 
 
-🛡️ *Sicurezza & Protezione*  
-• ${prefix}banchat  
-• ${prefix}banuser (@)  
-• ${prefix}unbanuser (@)  
-• ${prefix}addblacklist @user | motivo  
-• ${prefix}delblacklist @user  
-• ${prefix}listblacklist  
-• ${prefix}block (@)  
-• ${prefix}unblock (@)  
-• ${prefix}banlist  
-• ${prefix}listamuti  
-• ${prefix}delprem  
+🛡️ *Sicurezza & Protezione* 
+• ${prefix}banchat 
+• ${prefix}banuser (@) 
+• ${prefix}unbanuser (@) 
+• ${prefix}addblacklist @user | motivo 
+• ${prefix}delblacklist @user 
+• ${prefix}listblacklist 
+• ${prefix}listamuti 
+• ${prefix}delprem 
 
 💻 *Gestione Sviluppo & Plugin*
-• ${prefix}getfile  
-• ${prefix}saveplugin  
-• ${prefix}getplugin  
-• ${prefix}editplugin  
-• ${prefix}listpl  
-• ${prefix}disablepl  
-• ${prefix}enablepl  
-• ${prefix}dp (plugin)  
-• ${prefix}codifica  
-• ${prefix}offusca  
+• ${prefix}getfile 
+• ${prefix}saveplugin 
+• ${prefix}getplugin 
+• ${prefix}editplugin 
+• ${prefix}listpl 
+• ${prefix}disablepl 
+• ${prefix}enablepl 
+• ${prefix}dp (plugin) 
+• ${prefix}codifica 
+• ${prefix}offusca 
 
 🚪 *Controllo Gruppi & Spostamenti*
-• ${prefix}hidetag testo  
-• ${prefix}ispeziona <link>  
-• ${prefix}join <link>  
-• ${prefix}gruppi  
-• ${prefix}adminall  
-• ${prefix}out  
-• ${prefix}outall  
+• ${prefix}hidetag testo 
+• ${prefix}ispeziona <link> 
+• ${prefix}join <link> 
+• ${prefix}gruppi 
+• ${prefix}adminall 
+• ${prefix}out 
+• ${prefix}outall 
 
 🔧 *Modifiche Database & Logica*
-• ${prefix}azzera (@)  
-• ${prefix}aggiungi (messaggi)  
-• ${prefix}rimuovi (messaggi)  
-• ${prefix}addrank (livelli) (@user)  
-• ${prefix}delrank (livelli) (@user)  
-• ${prefix}lock  
+• ${prefix}azzera (@) 
+• ${prefix}aggiungi (messaggi) 
+• ${prefix}rimuovi (messaggi) 
+• ${prefix}addrank (livelli) (@user) 
+• ${prefix}delrank (livelli) (@user) 
+• ${prefix}lock 
 
-📊 *Diagnostica & Server*  
-• ${prefix}sistema  
-• ${prefix}dio  
+📊 *Diagnostica & Server* 
+• ${prefix}sistema 
+• ${prefix}dio 
 
 ━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ In caso di bug usa: *${prefix}segnala*

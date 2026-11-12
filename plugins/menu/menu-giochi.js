@@ -67,8 +67,7 @@ Intrattenimento & Funzioni Community
 • ${prefix}rigore
 • ${prefix}screenshot
 • ${prefix}screenshotgp
- • ${prefix}snake
-• ${prefix}canta
+• ${prefix}snake
 
 🔞 *Hard Interattivi*
 • ${prefix}lesbica
@@ -78,8 +77,7 @@ Intrattenimento & Funzioni Community
 • ${prefix}porca
 • ${prefix}porco
 • ${prefix}alcolizzato
-• ${prefix}negro
-• ${prefix}sbiro
+• ${prefix}sbirro
 • ${prefix}figa
 • ${prefix}pene
 • ${prefix}ditalino
@@ -100,7 +98,6 @@ Intrattenimento & Funzioni Community
 • ${prefix}bacia
 • ${prefix}abbraccia
 • ${prefix}crush
-• ${prefix}trovafid
 • ${prefix}odio
 • ${prefix}clan
 
@@ -117,7 +114,6 @@ Intrattenimento & Funzioni Community
 • ${prefix}traduci
 • ${prefix}nota
 • ${prefix}scarica
-• ${prefix}ricetta
 • ${prefix}quiz
 • ${prefix}quizpatente
 • ${prefix}calcioquiz
@@ -138,9 +134,6 @@ Intrattenimento & Funzioni Community
 • ${prefix}barzelletta
 • ${prefix}saluta
 • ${prefix}segreto
-
-━━━━━━━━━━━━━━━━━━━━━━
-⚠️ In caso di bug usa: *${prefix}segnala*
 `.trim()
 
   conn.sendMessage(m.chat, { text: menuText }, { quoted: fakeLocation })
@@ -148,6 +141,6 @@ Intrattenimento & Funzioni Community
 
 handler.help = ["giochi"]
 handler.tags = ["menu"]
-handler.command = /^(giochi)$/i
+handler.command = /^(giochi)$/i;
 
 export default handler

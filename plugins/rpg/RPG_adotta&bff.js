@@ -1,28 +1,64 @@
-import fetch from 'node-fetch'
+const getButtonId = message => {
+  const native = message?.interactiveResponseMessage?.nativeFlowResponseMessage
+  const paramsJson = native?.paramsJson
+  if (typeof paramsJson === 'string' && paramsJson) {
+    try {
+      const params = JSON.parse(paramsJson)
+      return params?.id ?? params?.selectedId ?? params?.selected_id ?? null
+    } catch {
+      return paramsJson
+    }
+  }
+
+  return message?.buttonsResponseMessage?.selectedButtonId
+    || message?.templateButtonReplyMessage?.selectedId
+    || null
+}
+
+const normalizeJid = (conn, jid) => {
+  if (!jid) return ''
+  return typeof conn.decodeJid === 'function' ? conn.decodeJid(jid) : jid
+}
 
 const waitButton = (conn, chatId, target, time = 60000) => {
-  return new Promise(resolve => {
-    const handler = async ({ messages }) => {
-      const msg = messages[0]
-      if (!msg?.message) return
+  let timeoutId
+  let settled = false
+  let finish
 
-      const from = msg.key.participant || msg.key.remoteJid
-      if (from !== target) return
+  const promise = new Promise(resolve => {
+    const normalizedChat = normalizeJid(conn, chatId)
+    const normalizedTarget = normalizeJid(conn, target)
 
-      const btn = msg.message?.buttonsResponseMessage?.selectedButtonId
-      if (btn === 'yes' || btn === 'no') {
-        conn.ev.off('messages.upsert', handler)
-        resolve(btn)
+    const listener = ({ messages = [] } = {}) => {
+      for (const msg of messages) {
+        const chat = normalizeJid(conn, msg.key?.remoteJid)
+        const from = normalizeJid(conn, msg.key?.participant || msg.key?.remoteJid)
+        if (chat !== normalizedChat || from !== normalizedTarget) continue
+
+        const buttonId = getButtonId(msg.message)
+        if (buttonId === 'yes' || buttonId === 'no') {
+          finish(buttonId)
+          return
+        }
       }
     }
 
-    conn.ev.on('messages.upsert', handler)
+    finish = value => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeoutId)
+      conn.ev.off('messages.upsert', listener)
+      resolve(value)
+    }
 
-    setTimeout(() => {
-      conn.ev.off('messages.upsert', handler)
-      resolve(null)
-    }, time)
+    conn.ev.on('messages.upsert', listener)
+    timeoutId = setTimeout(() => finish(null), time)
   })
+
+  return {
+    promise,
+    cancel: () => finish?.(null)
+  }
 }
 
 // ───────────────────────────────
@@ -56,8 +92,10 @@ Non puoi adottare te stesso.
 Hai già adottato questa persona.
 `.trim())
 
-  await conn.sendMessage(m.chat, {
-    text: `
+  const response = waitButton(conn, m.chat, mention)
+  try {
+    await conn.sendMessage(m.chat, {
+      text: `
 👶 *Richiesta di adozione*
 @${m.sender.split('@')[0]} vuole adottarti.
 
@@ -69,9 +107,13 @@ Scegli un'opzione:
       { buttonId: 'no',  buttonText: { displayText: '❌ Rifiuta' }, type: 1 }
     ],
     headerType: 1
-  }, { quoted: m })
+    }, { quoted: m })
+  } catch (error) {
+    response.cancel()
+    throw error
+  }
 
-  const res = await waitButton(conn, m.chat, mention)
+  const res = await response.promise
 
   if (!res)
     return conn.reply(m.chat, `
@@ -130,8 +172,10 @@ Non puoi essere migliore amico di te stesso.
 Siete già BFF.
 `.trim())
 
-  await conn.sendMessage(m.chat, {
-    text: `
+  const response = waitButton(conn, m.chat, mention)
+  try {
+    await conn.sendMessage(m.chat, {
+      text: `
 🤝 *Richiesta migliore amico*
 @${m.sender.split('@')[0]} vuole diventare il tuo BFF.
 
@@ -143,9 +187,13 @@ Scegli un'opzione:
       { buttonId: 'no',  buttonText: { displayText: '❌ Rifiuta' }, type: 1 }
     ],
     headerType: 1
-  }, { quoted: m })
+    }, { quoted: m })
+  } catch (error) {
+    response.cancel()
+    throw error
+  }
 
-  const res = await waitButton(conn, m.chat, mention)
+  const res = await response.promise
 
   if (!res)
     return conn.reply(m.chat, `

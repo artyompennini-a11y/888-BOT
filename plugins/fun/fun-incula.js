@@ -24,19 +24,23 @@ async function editMessage(conn, chatId, key, text, mentions = []) {
   )
 }
 
-let handler = async (m, { conn, text }) => {
+let handler = async (m, { conn, text, usedPrefix = '.' }) => {
   const chatId = m.chat
   if (!chatId) return
 
   const args = (text || '').trim().split(/\s+/)
 
   let destinatario =
-    args.find(v => v.includes('@s.whatsapp.net')) ||
+    args.find(v => /@(s\.whatsapp\.net|lid|c\.us)$/.test(v)) ||
     m.quoted?.sender ||
     (Array.isArray(m.mentionedJid) && m.mentionedJid[0]) ||
     m?.message?.extendedTextMessage?.contextInfo?.participant ||
     m?.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0] ||
     null
+
+  if (destinatario && typeof conn.decodeJid === 'function') {
+    destinatario = conn.decodeJid(destinatario)
+  }
 
   if (!destinatario) {
     await conn.sendMessage(
@@ -71,22 +75,22 @@ let handler = async (m, { conn, text }) => {
         footer: '𝟴𝟴𝟴 𝗕𝗢𝗧',
         buttons: [
           {
-            buttonId: `.incula lentamente ${mentionTarget}`,
+            buttonId: `${usedPrefix}incula lentamente ${mentionTarget}`,
             buttonText: { displayText: '🥱 Lentamente' },
             type: 1
           },
           {
-            buttonId: `.incula normalmente ${mentionTarget}`,
+            buttonId: `${usedPrefix}incula normalmente ${mentionTarget}`,
             buttonText: { displayText: '😏 Normale' },
             type: 1
           },
           {
-            buttonId: `.incula forte ${mentionTarget}`,
+            buttonId: `${usedPrefix}incula forte ${mentionTarget}`,
             buttonText: { displayText: '🔥 Forte' },
             type: 1
           },
           {
-            buttonId: `.incula massimo ${mentionTarget}`,
+            buttonId: `${usedPrefix}incula massimo ${mentionTarget}`,
             buttonText: { displayText: '💀 Sfondala' },
             type: 1
           }
@@ -164,25 +168,39 @@ const frames = [
     loops = 4
   }
 
-  for (let i = 0; i < loops; i++) {
-    for (const frame of frames) {
-      await editMessage(conn, chatId, key, frame, [destinatario])
-      await sleep(frameDelay)
+  let animationError
+  try {
+    for (let i = 0; i < loops; i++) {
+      for (const frame of frames) {
+        await editMessage(conn, chatId, key, frame, [destinatario])
+        await sleep(frameDelay)
+      }
     }
+    await editMessage(conn, chatId, key, finalFrame, [destinatario])
+    await sleep(900)
+  } catch (error) {
+    animationError = error
+    console.error('[FUN INCULA] Animazione non aggiornata:', error)
   }
-
-  await editMessage(conn, chatId, key, finalFrame, [destinatario])
-  await sleep(900)
 
   const end = performance.now()
   const elapsed = ((end - start) / 1000).toFixed(2)
 
-  await editMessage(
-    conn,
+  const finalText = `🥵 *${tag(mittente)} 𝐡𝐚 inculato${modeLabel} 𝐪𝐮𝐞𝐥𝐥𝐚 𝐩𝐮𝐭𝐭𝐚𝐧𝐚 𝐝𝐢 ${tag(destinatario)} 𝐢𝐧 ${elapsed} 𝐬𝐞𝐜𝐨𝐧𝐝𝐢, 𝐥𝐚𝐬𝐜𝐢𝐚𝐧𝐝𝐨𝐥𝐚/𝐨 𝐩𝐞𝐫 𝐭𝐞𝐫𝐫𝐚 𝐩𝐢𝐞𝐧𝐚/𝐨 𝐝𝐢 𝐬𝐛𝐨𝐫𝐫𝐚!💦*`
+  if (!animationError) {
+    try {
+      await editMessage(conn, chatId, key, finalText, [mittente, destinatario])
+      return
+    } catch (error) {
+      animationError = error
+      console.error('[FUN INCULA] Testo finale non modificato:', error)
+    }
+  }
+
+  await conn.sendMessage(
     chatId,
-    key,
-    `🥵 *${tag(mittente)} 𝐡𝐚 inculato${modeLabel} 𝐪𝐮𝐞𝐥𝐥𝐚 𝐩𝐮𝐭𝐭𝐚𝐧𝐚 𝐝𝐢 ${tag(destinatario)} 𝐢𝐧 ${elapsed} 𝐬𝐞𝐜𝐨𝐧𝐝𝐢, 𝐥𝐚𝐬𝐜𝐢𝐚𝐧𝐝𝐨𝐥𝐚/𝐨 𝐩𝐞𝐫 𝐭𝐞𝐫𝐫𝐚 𝐩𝐢𝐞𝐧𝐚/𝐨 𝐝𝐢 𝐬𝐛𝐨𝐫𝐫𝐚!💦*`,
-    [mittente, destinatario]
+    { text: finalText, mentions: [mittente, destinatario] },
+    { quoted: m }
   )
 }
 

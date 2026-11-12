@@ -1,6 +1,6 @@
 // Plugin by elixir, punisher & 888 staff
 import { join, dirname } from 'path';
-import { createRequire } from 'module';
+import pkg from './package.json' with { type: 'json' };
 import { fileURLToPath } from 'url';
 import { setupMaster, fork } from 'cluster';
 import { watchFile, unwatchFile, existsSync, readFileSync } from 'fs';
@@ -11,7 +11,6 @@ import { execSync } from 'child_process';
 process.env.SUPPRESS_BANNER = 'true';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(__dirname);
 
 
 
@@ -42,7 +41,7 @@ checkAndInstallModules();
 
 
 
-const { name, author } = require(join(__dirname, './package.json'));
+const { name, author } = pkg;
 
 
 
@@ -330,7 +329,7 @@ const giantTitle = async () => {
   console.log(
     centerText(
       '\x1b[1m\x1b[97m' +
-      'v 1 . 4   •   2 K 2 6' +
+      'v 1 . 5   •   2 K 2 6' +
       '\x1b[0m'
     )
   );
@@ -551,7 +550,7 @@ async function epicStartup() {
 
     console.log(
       centerText(
-        '\x1b[90m888 BOT\x1b[0m'
+        `\x1b[90m${name}\x1b[0m`
       )
     );
 
@@ -559,7 +558,7 @@ async function epicStartup() {
 
     console.log(
       centerText(
-        '\x1b[97mVERSION 1.4 • 2K26\x1b[0m'
+        '\x1b[97mVERSION 1.5 • 2K26\x1b[0m'
       )
     );
 
@@ -662,7 +661,7 @@ async function epicStartup() {
 
     console.log(
       centerText(
-        '\x1b[95m888 BOT\x1b[0m'
+        `\x1b[95m${name}\x1b[0m`
       )
     );
 
@@ -676,7 +675,7 @@ async function epicStartup() {
 
     console.log(
       centerText(
-        '\x1b[90mVersion 1.4 • 2K26 • Stable • Ready\x1b[0m'
+        '\x1b[90mVersion 1.5 • 2K26 • Stable • Ready\x1b[0m'
       )
     );
 

@@ -15,9 +15,9 @@ import { unwatchFile, watchFile } from 'fs';
 import fs from 'fs';
 import chalk from 'chalk';
 import NodeCache from 'node-cache';
-import { getAggregateVotesInPollMessage } from '@whiskeysockets/baileys';
+import { getAggregateVotesInPollMessage } from './baileys/index.js';
 
-const { proto } = await import('@whiskeysockets/baileys');
+const { proto } = await import('./baileys/index.js');
 import pkg from './package.json' with { type: 'json' };
 
 let _printModule = null;
@@ -52,7 +52,8 @@ const getMsgTimestampMs = msg => {
 const isOwnerJid = (senderJid, ownerEntry) => {
     const ownerClean = String(ownerEntry).replace(/\D/g, '');
     if (!ownerClean) return false;
-    const senderClean = String(senderJid).replace(/\D/g, '');
+    const mappedSender = global.lidCache?.get?.(senderJid) ?? global.jidCache?.get?.(senderJid) ?? senderJid;
+    const senderClean = String(mappedSender).replace(/\D/g, '');
     
     return senderClean === ownerClean;
 };

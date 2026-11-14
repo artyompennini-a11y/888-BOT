@@ -1,6 +1,20 @@
 //Plugin fatto da Axtral_WiZaRd
 import fs from 'fs';
 
+const getOwnerNumbers = (conn, value) => {
+  const candidates = [value];
+  if (typeof conn.decodeJid === 'function') candidates.push(conn.decodeJid(value));
+  return new Set(candidates
+    .map(candidate => String(candidate ?? '').replace(/\D/g, ''))
+    .filter(Boolean));
+};
+
+const isSameOwner = (conn, owner, target) => {
+  const ownerValue = Array.isArray(owner) ? owner[0] : owner;
+  const targetNumbers = getOwnerNumbers(conn, target);
+  return [...getOwnerNumbers(conn, ownerValue)].some(number => targetNumbers.has(number));
+};
+
 const handler = async (m, { conn, text, args, usedPrefix, command }) => {
 
   const esempio = 
@@ -15,7 +29,7 @@ const handler = async (m, { conn, text, args, usedPrefix, command }) => {
     : m.quoted
       ? m.quoted.sender
       : text
-        ? text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+      ? (text.includes('@') ? text.trim().split(/\s+/)[0] : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net')
         : false;
 
   if (!numeroJid) {
@@ -28,7 +42,7 @@ const handler = async (m, { conn, text, args, usedPrefix, command }) => {
 
   switch (command) {
     case 'addowner': {
-      if (global.owner.some(o => o[0] === numeroJid)) {
+      if (global.owner.some(owner => isSameOwner(conn, owner, numeroJid))) {
         return conn.reply(m.chat, '⚠️ Questo numero è già nella lista degli owner!', m);
       }
 
@@ -75,7 +89,7 @@ END:VCARD`
     }
 
     case 'delowner': {
-      const index = global.owner.findIndex(o => o[0] === numeroJid);
+      const index = global.owner.findIndex(owner => isSameOwner(conn, owner, numeroJid));
       if (index !== -1) {
         global.owner.splice(index, 1);
 
@@ -83,7 +97,7 @@ END:VCARD`
         if (fs.existsSync('./owner.json')) {
           try { rawOwners = JSON.parse(fs.readFileSync('./owner.json', 'utf-8')); } catch (e) {}
         }
-        rawOwners = rawOwners.filter(o => o[0].replace(/[^0-9]/g, '') !== cleanNum);
+        rawOwners = rawOwners.filter(owner => !isSameOwner(conn, owner, numeroJid));
         fs.writeFileSync('./owner.json', JSON.stringify(rawOwners, null, 2));
 
         let fakeMsg = {

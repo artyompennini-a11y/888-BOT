@@ -905,24 +905,3 @@ setInterval(async () => {
     console.error(chalk.red('[SESSION-CLEANUP] errore:'), e);
   }
 }, 1000 * 60 * 10);
-let axbotAutoStarted = false;
-const axbotWaitInterval = setInterval(async () => {
-  if (axbotAutoStarted) return clearInterval(axbotWaitInterval);
-  if (!global.conn?.user?.id) return;
-
-  clearInterval(axbotWaitInterval);
-  axbotAutoStarted = true;
-
-  try {
-    const AxBot = await import('./axbot-manager.js');
-    if (fs.existsSync('./sessioni_axbot/creds.json')) {
-      console.log(chalk.cyan('Sessione AxBot trovata, avvio automatico...'));
-      const res = await AxBot.start();
-      if (!res.ok) console.log(chalk.yellow(`[AxBot] ${res.msg}`));
-    } else {
-      console.log(chalk.yellow('Nessuna sessione AxBot. Usa .avvia axbot <numero>'));
-    }
-  } catch (e) {
-    console.error('Errore auto-start AxBot:', e.message);
-  }
-}, 2000);

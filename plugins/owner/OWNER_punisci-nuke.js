@@ -1,13 +1,22 @@
 //plugin by the punisher 
-let handler = async (m, { conn, participants, isBotAdmin }) => {
+let handler = async (m, { conn, participants, isBotAdmin, isOwner }) => {
     if (!m.isGroup) return;
-
-    const ownerJids = global.owner.map(o => o[0] + '@s.whatsapp.net');
-    if (!ownerJids.includes(m.sender)) return;
-
+    if (!isOwner) return;
     if (!isBotAdmin) return;
 
     const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+    const ownerNumbers = new Set((global.owner || []).map(owner =>
+        String(Array.isArray(owner) ? owner[0] : owner).replace(/\D/g, '')
+    ).filter(Boolean));
+    const getParticipantJids = participant => [participant.id, participant.jid, participant.lid, participant.phoneNumber]
+        .filter(Boolean);
+    const isOwnerParticipant = participant => getParticipantJids(participant).some(jid => {
+            const decoded = conn.decodeJid(jid);
+            return ownerNumbers.has(String(decoded).replace(/\D/g, ''));
+        });
+    const isBotParticipant = participant => getParticipantJids(participant).some(jid =>
+        conn.decodeJid(jid) === conn.decodeJid(botId)
+    );
 
     try {
         let metadata = await conn.groupMetadata(m.chat);
@@ -28,12 +37,8 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     }
 
     let usersToRemove = participants
-        .map(p => p.jid)
-        .filter(jid =>
-            jid &&
-            jid !== botId &&
-            !ownerJids.includes(jid)
-        );
+        .filter(p => p.jid && !isBotParticipant(p) && !isOwnerParticipant(p))
+        .map(p => p.jid);
 
     if (!usersToRemove.length) return;
 

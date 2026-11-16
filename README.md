@@ -7,7 +7,7 @@
 </h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Versione-1.4-3da5ff?style=flat-square&logo=semanticrelease&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Versione-1.5-3da5ff?style=flat-square&logo=semanticrelease&logoColor=white"/>
   <img src="https://img.shields.io/badge/Licenza-Apache--2.0-111?style=flat-square&logo=apache&logoColor=ff6b9d"/>
   <img src="https://img.shields.io/badge/Node.js-%E2%89%A5_20.2-339933?style=flat-square&logo=nodedotjs&logoColor=white"/>
   <img src="https://img.shields.io/badge/WhatsApp-Multi--Device-25d366?style=flat-square&logo=whatsapp&logoColor=white"/>
@@ -329,7 +329,7 @@ Prima di un uso reale, apri `config.js` e imposta i tuoi dati: numero del propri
 <p align="center">
   <sub><b>888 BOT</b> è un progetto indipendente, non affiliato a WhatsApp o a Meta.</sub><br/>
   <sub>Installalo, usalo nei tuoi gruppi, rispetta i termini di servizio.</sub><br/>
-  <sub>v1.4 · Apache-2.0 · © 2026</sub>
+  <sub>v1.5 · Apache-2.0 · © 2026</sub>
 </p>
 
 <p align="center">

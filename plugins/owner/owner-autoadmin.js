@@ -2,8 +2,9 @@
 
 
 
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, isOwner }) => {
   if (m.fromMe) return;
+  if (!isOwner) return;
 
 
   const groupMetadata = await conn.groupMetadata(m.chat);

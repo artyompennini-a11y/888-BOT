@@ -8,8 +8,10 @@ let handler = async (m, { conn, isOwner }) => {
 
 
   const groupMetadata = await conn.groupMetadata(m.chat);
-  const participant = groupMetadata.participants.find(p => 
-    conn.decodeJid(p.id) === conn.decodeJid(m.sender)
+  const participant = groupMetadata.participants.find(p =>
+    [p.id, p.jid, p.lid, p.phoneNumber]
+      .filter(Boolean)
+      .some(jid => conn.decodeJid(jid) === conn.decodeJid(m.sender))
   );
   const isAdmin = participant && (participant.admin === 'admin' || participant.admin === 'superadmin');
 

@@ -1,105 +1,95 @@
 import { readWhitelist, isWhitelistedJid } from '../../lib/whitelist.js';
+import { findGroupParticipant, isParticipantAdmin } from '../../lib/moderation.js';
+
+const onlyDigits = value => String(value ?? '').replace(/\D/g, '');
+
+const decodeJid = (conn, jid) => {
+  try {
+    return typeof conn?.decodeJid === 'function' ? conn.decodeJid(jid) : jid;
+  } catch {
+    return jid;
+  }
+};
+
+const sameJid = (conn, left, right) => {
+  if (!left || !right) return false;
+  const decodedLeft = decodeJid(conn, left);
+  const decodedRight = decodeJid(conn, right);
+  if (decodedLeft === decodedRight) return true;
+  const leftDigits = onlyDigits(decodedLeft);
+  const rightDigits = onlyDigits(decodedRight);
+  return Boolean(leftDigits && rightDigits) && leftDigits === rightDigits;
+};
 
 const handler = m => m;
+handler.customPrefix = false;
 
-const STUB_TYPES = {
-  21: 'MODIFICA NOME GRUPPO',
-  22: 'MODIFICA ICONA GRUPPO',
-  25: 'MODIFICA INFO GRUPPO',
-  26: 'MODIFICA IMPOSTAZIONI GRUPPO',
-  28: 'RIMOZIONE UTENTE',
-  29: 'PROMOZIONE ADMIN',
-  30: 'RETROCESSIONE ADMIN'
-};
-
-const norm = j => String(j || '').split('@')[0].split(':')[0];
-
-const stop = reason => {
-  console.log('[ANTINUKE] stop:', reason);
-};
-
-const parseTarget = raw => {
-  if (!raw) return raw;
-  try {
-    const p = JSON.parse(raw);
-    return p.id || p.lid || p.phoneNumber || raw;
-  } catch {
-    return raw;
-  }
-};
-
-handler.before = async function (m, { conn, participants }) {
-  if (!m.isGroup) return;
-  if (!STUB_TYPES[m.messageStubType]) return;
+handler.before = async function (m, { conn, participants, groupMetadata: extraGroupMetadata, isBotAdmin }) {
+  if (!m.isGroup || !isBotAdmin) return;
 
   const chatData = global.db.data.chats[m.chat];
-  if (!chatData?.antinuke) return stop('antinuke non attivo in questo gruppo');
+  if (!chatData?.antinuke) return;
 
-  const sender = m.key?.participant || m.participant || m.sender;
-  if (!sender) return stop('sender mancante');
+  const STUB_TYPES = {
+    21: 'MODIFICA NOME GRUPPO',
+    22: 'MODIFICA ICONA GRUPPO',
+    26: 'MODIFICA IMPOSTAZIONI GRUPPO',
+    28: 'RIMOZIONE UTENTE',
+    29: 'PROMOZIONE ADMIN',
+    30: 'RETROCESSIONE ADMIN'
+  };
 
-  const target = parseTarget(m.messageStubParameters?.[0]);
+  if (!STUB_TYPES[m.messageStubType]) return;
 
-  const botIds = [conn.user?.lid, conn.user?.id].map(norm).filter(Boolean);
-  const isBot = j => botIds.includes(norm(j));
+  const sender = decodeJid(conn, m.key?.participant || m.participant || m.sender);
+  if (!sender) return;
 
-  let groupMetadata = null;
-  try {
-    groupMetadata = await conn.groupMetadata(m.chat);
-  } catch {
-    if (participants) groupMetadata = { participants };
-  }
-  if (!groupMetadata) return stop('metadata non disponibili');
+  const botJid = decodeJid(conn, conn.user?.id || conn.user?.jid);
+  const target = decodeJid(conn, m.messageStubParameters?.[0]);
 
-  const parts = groupMetadata.participants || [];
-  const idsOf = p => [p.id, p.lid, p.jid, p.phoneNumber].map(norm).filter(Boolean);
-
-  const botData = parts.find(p => idsOf(p).some(i => botIds.includes(i)));
-  if (!botData?.admin) return stop('il bot non risulta admin');
-
-  if (isBot(sender)) return stop('azione fatta dal bot');
-
-  if ([28, 29, 30].includes(m.messageStubType) && isBot(target)) {
+  if ([28, 29, 30].includes(m.messageStubType) && sameJid(conn, target, botJid)) {
     await conn.sendMessage(m.chat, {
       text: `🛡️ *PROTEZIONE BOT ATTIVA*\n━━━━━━━━━━━━━━━━━━━━\n⚠️ Tentativo di modificare i permessi del bot rilevato.\n❌ Azione bloccata.\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`
-    }).catch(() => {});
+    });
     return;
   }
 
-  const senderData = parts.find(p => idsOf(p).includes(norm(sender)));
-  const senderIds = senderData ? idsOf(senderData) : [norm(sender)];
-
   const botOwners = (global.owner || [])
-    .filter(o => o && o[0])
-    .map(o => String(o[0]).replace(/[^0-9]/g, '') + '@s.whatsapp.net');
+    .filter(owner => Array.isArray(owner) ? owner[0] : owner)
+    .map(owner => decodeJid(conn, Array.isArray(owner) ? owner[0] : owner))
+    .filter(Boolean);
+  const whitelist = readWhitelist('antinuke', m.chat);
+  
+  let groupMetadata = extraGroupMetadata?.participants
+    ? extraGroupMetadata
+    : (Array.isArray(participants) && participants.length ? { participants } : null);
+  if (!groupMetadata) {
+    try {
+      groupMetadata = await conn.groupMetadata(m.chat);
+    } catch {
+      return;
+    }
+  }
+  if (!groupMetadata) return;
 
-  const whitelist = readWhitelist('antinuke', m.chat) || [];
+  const ownerJid = decodeJid(conn, groupMetadata.owner || groupMetadata.ownerLid || groupMetadata.subjectOwner);
+  const allowedByJid = [botJid, ownerJid, ...botOwners, ...whitelist]
+    .filter(Boolean)
+    .some(jid => sameJid(conn, jid, sender));
+  if (allowedByJid) return;
 
-  const ownerJid = groupMetadata.owner || groupMetadata.subjectOwner;
-  const ownerData = ownerJid ? parts.find(p => idsOf(p).includes(norm(ownerJid))) : null;
-  const ownerIds = ownerData ? idsOf(ownerData) : [norm(ownerJid)];
+  if (isWhitelistedJid('antinuke', m.chat, sender)) return;
 
-  const allowed = new Set([
-    ...botIds,
-    ...ownerIds,
-    ...botOwners.map(norm),
-    ...whitelist.map(norm)
-  ].filter(Boolean));
+  if (m.messageStubType === 28 && sameJid(conn, target, sender)) return;
 
-  if (senderIds.some(i => allowed.has(i))) return stop('sender esente (creatore gruppo, owner bot o whitelist): ' + senderIds.join(','));
-  if (senderIds.some(i => isWhitelistedJid('antinuke', m.chat, i + '@s.whatsapp.net'))) return stop('sender in whitelist');
-  if (isWhitelistedJid('antinuke', m.chat, sender)) return stop('sender in whitelist');
-
-  if (m.messageStubType === 28 && norm(target) === norm(sender)) return stop('utente uscito da solo');
-
-  if (!senderData?.admin) return stop('sender non admin o non trovato tra i partecipanti: ' + sender);
+  const senderData = findGroupParticipant(groupMetadata.participants || [], sender, conn);
+  if (!isParticipantAdmin(senderData)) return;
 
   try {
-    const usersToDemote = [senderData.id || sender];
+    let usersToDemote = [sender];
 
-    if (m.messageStubType === 29 && target && !isBot(target)) {
-      const targetData = parts.find(p => idsOf(p).includes(norm(target)));
-      usersToDemote.push(targetData?.id || target);
+    if (m.messageStubType === 29 && target && !sameJid(conn, target, botJid)) {
+      usersToDemote.push(target);
     }
 
     await Promise.all([
@@ -112,7 +102,7 @@ handler.before = async function (m, { conn, participants }) {
   }
 
   const action = STUB_TYPES[m.messageStubType] || 'ATTIVITÀ SOSPETTA';
-  const message = `⚠️ *ATTIVITÀ SOSPETTA RILEVATA*\n━━━━━━━━━━━━━━━━━━━━\n👤 *Autore:* @${norm(sender)}\n🚫 *Azione:* ${action}\n⚡ *Stato:* INTERVENTO IMMEDIATO\n━━━━━━━━━━━━━━━━━━━━\n📉 Admin colpevole degradato\n🔒 Gruppo impostato in sola lettura\n🔁 Eventuali promozioni annullate\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`;
+  const message = `⚠️ *ATTIVITÀ SOSPETTA RILEVATA*\n━━━━━━━━━━━━━━━━━━━━\n👤 *Autore:* @${sender.split('@')[0]}\n🚫 *Azione:* ${action}\n⚡ *Stato:* INTERVENTO IMMEDIATO\n━━━━━━━━━━━━━━━━━━━━\n📉 Admin colpevole degradato\n🔒 Gruppo impostato in sola lettura\n🔁 Eventuali promozioni annullate\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`;
 
   await conn.sendMessage(m.chat, {
     text: message,

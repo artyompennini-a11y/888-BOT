@@ -13,9 +13,6 @@ const STAFF_GROUP = "120363403774208578@g.us"
 const isDev = (jid) =>
   (global.db.data.pluginPerms?.[jid] ?? []).includes('developer')
 
-const isOwner = (jid) =>
-  global.owner.some(([num]) => num === jid.split('@')[0])
-
 const fixFilename = (name) => {
   if (!name) return null
   name = name.trim()
@@ -50,11 +47,11 @@ ${code ? code.slice(0, 3500) : 'Nessun codice (eliminazione)'}
   })
 }
 
-let handler = async (m, { conn, text, command }) => {
+let handler = async (m, { conn, text, command, isOwner: senderIsOwner }) => {
   const cmd = command?.toLowerCase()
 
   if (cmd === 'approva' || cmd === 'rifiuta') {
-    if (!isOwner(m.sender)) return
+    if (!senderIsOwner) return
 
     const approvalId = text?.trim()
     if (!approvalId) return m.reply('❌ ID approvazione mancante.')

@@ -12,14 +12,8 @@ const manually = `𝐂𝐎𝐌𝐌𝐔𝐍𝐈𝐓𝐘 & 𝐂𝐀𝐍𝐀𝐋�
 
 import { generateWAMessageFromContent } from '@whiskeysockets/baileys';
 
-const handler = async (m, { conn, args, text }) => {
-  // Controllo owner dal config.js
-  const senderNumber = m.sender.split('@')[0];
-  const ownerNumbers = global.owner.map(o =>
-    Array.isArray(o) ? o[0].replace(/[^0-9]/g, '') : String(o).replace(/[^0-9]/g, '')
-  );
-
-  if (!ownerNumbers.includes(senderNumber)) {
+const handler = async (m, { conn, args, text, isOwner }) => {
+  if (!isOwner) {
     return m.reply("❌ Solo gli *owner del bot* possono usare questo comando.");
   }
 

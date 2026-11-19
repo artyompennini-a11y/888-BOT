@@ -21,6 +21,29 @@ const sameJid = (conn, left, right) => {
   return Boolean(leftDigits && rightDigits) && leftDigits === rightDigits;
 };
 
+const resolveIdentityDigits = (conn, jid, participants = []) => {
+  const resolved = decodeJid(conn, jid);
+  const digits = new Set([onlyDigits(jid), onlyDigits(resolved)].filter(Boolean));
+
+  if (global.lidCache?.get && typeof jid === 'string') {
+    const cached = global.lidCache.get(jid);
+    if (cached) digits.add(onlyDigits(decodeJid(conn, cached)));
+  }
+
+  const participant = (Array.isArray(participants) ? participants : []).find(p =>
+    [p.id, p.jid, p.lid, p.phoneNumber]
+      .filter(Boolean)
+      .some(value => sameJid(conn, value, jid) || sameJid(conn, value, resolved))
+  );
+  if (participant) {
+    [participant.id, participant.jid, participant.lid, participant.phoneNumber]
+      .filter(Boolean)
+      .forEach(value => digits.add(onlyDigits(decodeJid(conn, value))));
+  }
+
+  return digits;
+};
+
 const handler = m => m;
 handler.customPrefix = false;
 
@@ -45,6 +68,8 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
   const sender = decodeJid(conn, actor);
   const botJid = decodeJid(conn, conn.user?.id || conn.user?.jid);
 
+  if ([29, 30].includes(action) && sameJid(conn, sender, botJid)) return;
+
   if ([28, 29, 30].includes(action) && targets.some(targetJid => sameJid(conn, targetJid, botJid))) {
     await conn.sendMessage(chat, {
       text: `🛡️ *PROTEZIONE BOT ATTIVA*\n━━━━━━━━━━━━━━━━━━━━\n⚠️ Tentativo di modificare i permessi del bot rilevato.\n❌ Azione bloccata.\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`
@@ -60,7 +85,6 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
     ...botOwners.map(jid => onlyDigits(jid)),
     ...(global.owner || []).map(owner => onlyDigits(Array.isArray(owner) ? owner[0] : owner))
   ].filter(Boolean));
-  const actorIsOwner = botOwnerNumbers.has(onlyDigits(sender));
   const whitelist = readWhitelist('antinuke', chat);
   
   let groupMetadata = null;
@@ -71,6 +95,8 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
   }
   if (!groupMetadata) return;
 
+  const actorIdentityDigits = resolveIdentityDigits(conn, sender, groupMetadata.participants);
+  const actorIsOwner = [...actorIdentityDigits].some(digits => botOwnerNumbers.has(digits));
   const ownerJid = decodeJid(conn, groupMetadata.owner || groupMetadata.ownerLid || groupMetadata.subjectOwner);
   const allowedByJid = [botJid, ownerJid, ...botOwners, ...whitelist]
     .filter(Boolean)
@@ -101,11 +127,13 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
 
     if ([29, 30].includes(action)) {
       for (const targetJid of targets) {
+        const targetIdentityDigits = resolveIdentityDigits(conn, targetJid, groupMetadata.participants);
+        const targetIsOwner = [...targetIdentityDigits].some(digits => botOwnerNumbers.has(digits));
         if (
           targetJid &&
           !sameJid(conn, targetJid, botJid) &&
           !sameJid(conn, targetJid, sender) &&
-          !botOwnerNumbers.has(onlyDigits(decodeJid(conn, targetJid)))
+          !targetIsOwner
         ) {
           usersToDemote.push(decodeJid(conn, targetJid));
         }
@@ -152,31 +180,3 @@ handler.before = async function (m, { conn, isBotAdmin }) {
     actor,
     targets,
     action: stubAction,
-    isBotAdmin
-  });
-};
-
-handler.groupParticipantsUpdate = async function (update) {
-  if (!update?.id) return;
-  if (!['promote', 'demote'].includes(update.action)) return;
-  const conn = this;
-  const botParticipant = await conn.groupMetadata(update.id).then(meta =>
-    meta.participants?.find(participant =>
-      [participant.id, participant.jid, participant.lid, participant.phoneNumber]
-        .filter(Boolean)
-        .some(jid => decodeJid(conn, jid) === decodeJid(conn, conn.user?.id || conn.user?.jid))
-    )
-  ).catch(() => null);
-  const isBotAdmin = !!botParticipant?.admin || botParticipant?.admin === 'superadmin';
-  const actor = update.author || update.authorPn || update.authorLid || update.participant;
-  await processAntinuke({
-    conn,
-    chat: update.id,
-    actor,
-    targets: Array.isArray(update.participants) ? update.participants : [],
-    action: update.action === 'promote' ? 29 : 30,
-    isBotAdmin
-  });
-};
-
-export default handler;

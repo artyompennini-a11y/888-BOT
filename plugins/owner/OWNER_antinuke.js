@@ -56,6 +56,11 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
     .filter(owner => Array.isArray(owner) ? owner[0] : owner)
     .map(owner => decodeJid(conn, Array.isArray(owner) ? owner[0] : owner))
     .filter(Boolean);
+  const botOwnerNumbers = new Set([
+    ...botOwners.map(jid => onlyDigits(jid)),
+    ...(global.owner || []).map(owner => onlyDigits(Array.isArray(owner) ? owner[0] : owner))
+  ].filter(Boolean));
+  const actorIsOwner = botOwnerNumbers.has(onlyDigits(sender));
   const whitelist = readWhitelist('antinuke', chat);
   
   let groupMetadata = null;
@@ -70,7 +75,7 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
   const allowedByJid = [botJid, ownerJid, ...botOwners, ...whitelist]
     .filter(Boolean)
     .some(jid => sameJid(conn, jid, sender));
-  if (allowedByJid) return;
+  if (actorIsOwner || allowedByJid) return;
 
   if (isWhitelistedJid('antinuke', chat, sender)) return;
 
@@ -96,7 +101,12 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
 
     if ([29, 30].includes(action)) {
       for (const targetJid of targets) {
-        if (targetJid && !sameJid(conn, targetJid, botJid) && !sameJid(conn, targetJid, sender)) {
+        if (
+          targetJid &&
+          !sameJid(conn, targetJid, botJid) &&
+          !sameJid(conn, targetJid, sender) &&
+          !botOwnerNumbers.has(onlyDigits(decodeJid(conn, targetJid)))
+        ) {
           usersToDemote.push(decodeJid(conn, targetJid));
         }
       }

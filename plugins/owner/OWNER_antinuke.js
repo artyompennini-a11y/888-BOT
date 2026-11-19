@@ -24,10 +24,12 @@ const sameJid = (conn, left, right) => {
 const handler = m => m;
 handler.customPrefix = false;
 
-handler.before = async function (m, { conn, participants, groupMetadata: extraGroupMetadata, isBotAdmin }) {
-  if (!m.isGroup || !isBotAdmin) return;
+const recentAntinukeEvents = new Map();
 
-  const chatData = global.db.data.chats[m.chat];
+const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotAdmin = true }) => {
+  if (!chat || !actor || !isBotAdmin) return;
+
+  const chatData = global.db.data.chats[chat];
   if (!chatData?.antinuke) return;
 
   const STUB_TYPES = {
@@ -38,17 +40,13 @@ handler.before = async function (m, { conn, participants, groupMetadata: extraGr
     29: 'PROMOZIONE ADMIN',
     30: 'RETROCESSIONE ADMIN'
   };
+  if (!STUB_TYPES[action]) return;
 
-  if (!STUB_TYPES[m.messageStubType]) return;
-
-  const sender = decodeJid(conn, m.key?.participant || m.participant || m.sender);
-  if (!sender) return;
-
+  const sender = decodeJid(conn, actor);
   const botJid = decodeJid(conn, conn.user?.id || conn.user?.jid);
-  const target = decodeJid(conn, m.messageStubParameters?.[0]);
 
-  if ([28, 29, 30].includes(m.messageStubType) && sameJid(conn, target, botJid)) {
-    await conn.sendMessage(m.chat, {
+  if ([28, 29, 30].includes(action) && targets.some(targetJid => sameJid(conn, targetJid, botJid))) {
+    await conn.sendMessage(chat, {
       text: `🛡️ *PROTEZIONE BOT ATTIVA*\n━━━━━━━━━━━━━━━━━━━━\n⚠️ Tentativo di modificare i permessi del bot rilevato.\n❌ Azione bloccata.\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`
     });
     return;
@@ -58,17 +56,13 @@ handler.before = async function (m, { conn, participants, groupMetadata: extraGr
     .filter(owner => Array.isArray(owner) ? owner[0] : owner)
     .map(owner => decodeJid(conn, Array.isArray(owner) ? owner[0] : owner))
     .filter(Boolean);
-  const whitelist = readWhitelist('antinuke', m.chat);
+  const whitelist = readWhitelist('antinuke', chat);
   
-  let groupMetadata = extraGroupMetadata?.participants
-    ? extraGroupMetadata
-    : (Array.isArray(participants) && participants.length ? { participants } : null);
-  if (!groupMetadata) {
-    try {
-      groupMetadata = await conn.groupMetadata(m.chat);
-    } catch {
-      return;
-    }
+  let groupMetadata = null;
+  try {
+    groupMetadata = await conn.groupMetadata(chat);
+  } catch {
+    return;
   }
   if (!groupMetadata) return;
 
@@ -78,33 +72,49 @@ handler.before = async function (m, { conn, participants, groupMetadata: extraGr
     .some(jid => sameJid(conn, jid, sender));
   if (allowedByJid) return;
 
-  if (isWhitelistedJid('antinuke', m.chat, sender)) return;
+  if (isWhitelistedJid('antinuke', chat, sender)) return;
 
-  if (m.messageStubType === 28 && sameJid(conn, target, sender)) return;
+  if (action === 28 && targets.some(targetJid => sameJid(conn, targetJid, sender))) return;
 
   const senderData = findGroupParticipant(groupMetadata.participants || [], sender, conn);
-  if (!isParticipantAdmin(senderData)) return;
+  if (!isParticipantAdmin(senderData)) {
+    const actorDigits = onlyDigits(decodeJid(conn, sender));
+    const ownerNumbers = new Set(botOwners.map(jid => onlyDigits(jid)).filter(Boolean));
+    if (!ownerNumbers.has(actorDigits)) return;
+  }
+
+  const dedupeKey = `${chat}:${sender}:${action}:${targets.map(targetJid => onlyDigits(targetJid)).join(',')}`;
+  const now = Date.now();
+  if ((recentAntinukeEvents.get(dedupeKey) || 0) > now - 4000) return;
+  recentAntinukeEvents.set(dedupeKey, now);
+  for (const [key, timestamp] of recentAntinukeEvents) {
+    if (timestamp < now - 10000) recentAntinukeEvents.delete(key);
+  }
 
   try {
     let usersToDemote = [sender];
 
-    if (m.messageStubType === 29 && target && !sameJid(conn, target, botJid)) {
-      usersToDemote.push(target);
+    if ([29, 30].includes(action)) {
+      for (const targetJid of targets) {
+        if (targetJid && !sameJid(conn, targetJid, botJid) && !sameJid(conn, targetJid, sender)) {
+          usersToDemote.push(decodeJid(conn, targetJid));
+        }
+      }
     }
 
     await Promise.all([
-      conn.groupParticipantsUpdate(m.chat, usersToDemote, 'demote'),
-      conn.groupSettingUpdate(m.chat, 'announcement')
+      conn.groupParticipantsUpdate(chat, [...new Set(usersToDemote)], 'demote'),
+      conn.groupSettingUpdate(chat, 'announcement')
     ]);
   } catch (e) {
     console.error('[ANTINUKE ERROR]:', e);
     return;
   }
 
-  const action = STUB_TYPES[m.messageStubType] || 'ATTIVITÀ SOSPETTA';
-  const message = `⚠️ *ATTIVITÀ SOSPETTA RILEVATA*\n━━━━━━━━━━━━━━━━━━━━\n👤 *Autore:* @${sender.split('@')[0]}\n🚫 *Azione:* ${action}\n⚡ *Stato:* INTERVENTO IMMEDIATO\n━━━━━━━━━━━━━━━━━━━━\n📉 Admin colpevole degradato\n🔒 Gruppo impostato in sola lettura\n🔁 Eventuali promozioni annullate\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`;
+  const actionLabel = STUB_TYPES[action] || 'ATTIVITÀ SOSPETTA';
+  const message = `⚠️ *ATTIVITÀ SOSPETTA RILEVATA*\n━━━━━━━━━━━━━━━━━━━━\n👤 *Autore:* @${sender.split('@')[0]}\n🚖 *Azione:* ${actionLabel}\n⚡ *Stato:* INTERVENTO IMMEDIATO\n━━━━━━━━━━━━━━━━━━━━\n📉 Admin colpevole degradato\n🔒 Gruppo impostato in sola lettura\n🔁 Eventuali promozioni annullate\n━━━━━━━━━━━━━━━━━━━━\n🔐 *888 SECURITY SYSTEM*`;
 
-  await conn.sendMessage(m.chat, {
+  await conn.sendMessage(chat, {
     text: message,
     contextInfo: {
       mentionedJid: [sender, ...botOwners].filter(Boolean),
@@ -118,6 +128,45 @@ handler.before = async function (m, { conn, participants, groupMetadata: extraGr
       }
     }
   }).catch(() => {});
+};
+
+handler.before = async function (m, { conn, isBotAdmin }) {
+  if (!m.isGroup || !isBotAdmin) return;
+  const stubAction = m.messageStubType;
+  if (![21, 22, 26, 28, 29, 30].includes(stubAction)) return;
+  const actor = m.key?.participant || m.participant || m.sender;
+  const targets = Array.isArray(m.messageStubParameters) ? m.messageStubParameters : [];
+  await processAntinuke({
+    conn,
+    chat: m.chat,
+    actor,
+    targets,
+    action: stubAction,
+    isBotAdmin
+  });
+};
+
+handler.groupParticipantsUpdate = async function (update) {
+  if (!update?.id) return;
+  if (!['promote', 'demote'].includes(update.action)) return;
+  const conn = this;
+  const botParticipant = await conn.groupMetadata(update.id).then(meta =>
+    meta.participants?.find(participant =>
+      [participant.id, participant.jid, participant.lid, participant.phoneNumber]
+        .filter(Boolean)
+        .some(jid => decodeJid(conn, jid) === decodeJid(conn, conn.user?.id || conn.user?.jid))
+    )
+  ).catch(() => null);
+  const isBotAdmin = !!botParticipant?.admin || botParticipant?.admin === 'superadmin';
+  const actor = update.author || update.authorPn || update.authorLid || update.participant;
+  await processAntinuke({
+    conn,
+    chat: update.id,
+    actor,
+    targets: Array.isArray(update.participants) ? update.participants : [],
+    action: update.action === 'promote' ? 29 : 30,
+    isBotAdmin
+  });
 };
 
 export default handler;

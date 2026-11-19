@@ -65,8 +65,16 @@ let handler = async (m, { conn, isAdmin, command, text }) => {
   if (!jailTarget) return await conn.reply(m.chat, 'Menziona un utente valido.', m)
   if (jailTarget === conn.user.jid) return await conn.reply(m.chat, 'Non puoi usare il comando su se stesso.', m)
 
-  const isOwner = (jid) => global.owner.some(([number]) => jid.includes(number))
-  if (isOwner(jailTarget)) return await conn.reply(m.chat, 'Impossibile usare questo comando su un owner.', m)
+  const jailTargetNumber = jailTarget.replace(/\D/g, '')
+  const isOwnerTarget = (global.owner || []).some(owner => {
+    const number = Array.isArray(owner) ? owner[0] : owner
+    let decoded = String(number ?? '').replace(/[^0-9]/g, '')
+    try {
+      decoded = conn.decodeJid(number)
+    } catch {}
+    return String(decoded).replace(/\D/g, '') === jailTargetNumber
+  })
+  if (isOwnerTarget) return await conn.reply(m.chat, 'Impossibile usare questo comando su un owner.', m)
 
   let user = global.db.data.users[jailTarget]
   if (!user) user = global.db.data.users[jailTarget] = { exp: 0, '888coin': 0, muto: false, registered: false, arrestoExpire: null }

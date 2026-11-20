@@ -1,7 +1,7 @@
 import fs from 'fs'
 
 const GIF_PATH = './icone/kick.mp4'
-const PROTETTI = ['79524931364'] // Punisher (+7 952 493-13-64)
+const PROTETTI = ['79524931364']
 
 var handler = async (m, { conn, participants }) => {
     try {
@@ -11,7 +11,6 @@ var handler = async (m, { conn, participants }) => {
             return m.reply('*Chi vuoi rimuovere? Menziona qualcuno o rispondi a un suo messaggio.*')
         }
 
-        // Protezione: nessuno (owner compresi) può rimuovere gli utenti protetti
         if (PROTETTI.includes(user.split('@')[0])) {
             return conn.reply(m.chat, '『 🛡️ 』 `monocellulato del cazzo cosa pensavi di fare?`', m)
         }
@@ -22,6 +21,7 @@ var handler = async (m, { conn, participants }) => {
         const ownerGroup = groupInfo.owner || m.chat.split`-`[0] + '@s.whatsapp.net'
         const ownerBot = global.owner[0] && global.owner[0][0] ? global.owner[0][0] + '@s.whatsapp.net' : ''
         const isTargetAdmin = groupAdmins.includes(user)
+        const isOwner = global.owner.some(o => (Array.isArray(o) ? o[0] : o) + '@s.whatsapp.net' === m.sender)
 
         if (user === conn.user.jid) {
             return conn.reply(m.chat, '『 🤨 』 `Non posso rimuovermi da solo`', m)
@@ -35,7 +35,7 @@ var handler = async (m, { conn, participants }) => {
             return conn.reply(m.chat, '『 ⁉️ 』 `A chi vuoi togliere????`', m)
         }
 
-        if (isTargetAdmin) {
+        if (isTargetAdmin && !isOwner) {
             return conn.reply(m.chat, '『 🤒 』 `Non posso rimuovere un altro admin. Devi prima togliergli i privilegi.`', m)
         }
 

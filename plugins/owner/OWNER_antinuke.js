@@ -86,7 +86,7 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
     ...(global.owner || []).map(owner => onlyDigits(Array.isArray(owner) ? owner[0] : owner))
   ].filter(Boolean));
   const whitelist = readWhitelist('antinuke', chat);
-  
+
   let groupMetadata = null;
   try {
     groupMetadata = await conn.groupMetadata(chat);
@@ -180,3 +180,8 @@ handler.before = async function (m, { conn, isBotAdmin }) {
     actor,
     targets,
     action: stubAction,
+    isBotAdmin
+  });
+};
+
+export default handler;

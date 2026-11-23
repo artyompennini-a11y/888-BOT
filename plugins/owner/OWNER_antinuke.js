@@ -86,7 +86,7 @@ const processAntinuke = async ({ conn, chat, actor, targets = [], action, isBotA
     ...(global.owner || []).map(owner => onlyDigits(Array.isArray(owner) ? owner[0] : owner))
   ].filter(Boolean));
   const whitelist = readWhitelist('antinuke', chat);
-
+  
   let groupMetadata = null;
   try {
     groupMetadata = await conn.groupMetadata(chat);
@@ -180,6 +180,29 @@ handler.before = async function (m, { conn, isBotAdmin }) {
     actor,
     targets,
     action: stubAction,
+    isBotAdmin
+  });
+};
+
+handler.groupParticipantsUpdate = async function (update) {
+  if (!update?.id) return;
+  if (!['promote', 'demote'].includes(update.action)) return;
+  const conn = this;
+  const botParticipant = await conn.groupMetadata(update.id).then(meta =>
+    meta.participants?.find(participant =>
+      [participant.id, participant.jid, participant.lid, participant.phoneNumber]
+        .filter(Boolean)
+        .some(jid => decodeJid(conn, jid) === decodeJid(conn, conn.user?.id || conn.user?.jid))
+    )
+  ).catch(() => null);
+  const isBotAdmin = !!botParticipant?.admin || botParticipant?.admin === 'superadmin';
+  const actor = update.author || update.authorPn || update.authorLid;
+  await processAntinuke({
+    conn,
+    chat: update.id,
+    actor,
+    targets: Array.isArray(update.participants) ? update.participants : [],
+    action: update.action === 'promote' ? 29 : 30,
     isBotAdmin
   });
 };

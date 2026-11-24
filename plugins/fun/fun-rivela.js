@@ -40,11 +40,32 @@ let handler = async (m, { conn }) => {
             throw '❌ Formato non supportato o non è un View Once valido'
         }
 
-        const buffer = typeof conn.downloadM === 'function'
-            ? await conn.downloadM(media, type.replace(/Message$/i, ''))
-            : await quoted.download?.()
+        let buffer
+        let downloadError
+        if (typeof conn.downloadMedia === 'function') {
+            try {
+                buffer = await conn.downloadMedia(quoted.vM, 'buffer')
+            } catch (error) {
+                downloadError = error
+            }
+        }
+        if ((!buffer || buffer.length === 0) && typeof conn.downloadM === 'function') {
+            try {
+                buffer = await conn.downloadM(media, type.replace(/Message$/i, ''))
+            } catch (error) {
+                downloadError = error
+            }
+        }
+        if ((!buffer || buffer.length === 0) && typeof quoted.download === 'function') {
+            try {
+                buffer = await quoted.download()
+            } catch (error) {
+                downloadError = error
+            }
+        }
 
         if (!buffer || buffer.length === 0) {
+            if (downloadError) console.error('Download View Once fallito:', downloadError)
             throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
         }
 
@@ -76,4 +97,5 @@ handler.group = false
 handler.admin = false
 
 export default handler
+
 

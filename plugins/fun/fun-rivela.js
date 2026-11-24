@@ -66,6 +66,9 @@ let handler = async (m, { conn }) => {
 
         if (!buffer || buffer.length === 0) {
             if (downloadError) console.error('Download View Once fallito:', downloadError)
+            if (!media.url && !media.directPath) {
+                throw '❌ Il messaggio citato non contiene i dati media scaricabili. Se nei log compare “No matching sessions found for message”, la sessione WhatsApp del bot non ha decifrato il messaggio: ricollega il bot e chiedi di inviare di nuovo il contenuto.'
+            }
             throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
         }
 
@@ -97,5 +100,6 @@ handler.group = false
 handler.admin = false
 
 export default handler
+
 
 

@@ -1,181 +1,81 @@
-const BAILEYS_PKGS = ['@whiskeysockets/baileys', 'baileys', '@realvare/baileys', '@adiwajshing/baileys']
-const MAX_ITEMS = 30
-const TTL = 60 * 60 * 1000 // 1 ora
-const FALLBACK_WINDOW = 10 * 60 * 1000 // 10 minuti
-const DEBUG = true
-
-// id messaggio -> { buffer, type, caption, ptt, chat, ts }
-const viewOnceCache = new Map()
-const inProgress = new Set()
-
-const log = (...args) => DEBUG && console.log('[RIVELA]', ...args)
-
-const loadDownloader = async () => {
-    for (const pkg of BAILEYS_PKGS) {
-        try {
-            const mod = await import(pkg)
-            const fn = mod.downloadContentFromMessage || mod.default?.downloadContentFromMessage
-            if (fn) return fn
-        } catch {}
-    }
-    return null
-}
-
-const unwrap = message => {
-    let msg = message
-    for (let i = 0; i < 6; i++) {
-        const inner =
-            msg?.viewOnceMessage?.message ||
-            msg?.viewOnceMessageV2?.message ||
-            msg?.viewOnceMessageV2Extension?.message ||
-            msg?.ephemeralMessage?.message ||
-            msg?.documentWithCaptionMessage?.message
-        if (!inner) break
-        msg = inner
-    }
-    return msg
-}
-
-const streamToBuffer = async stream => {
-    const chunks = []
-    for await (const chunk of stream) chunks.push(chunk)
-    return Buffer.concat(chunks)
-}
-
-const cleanup = () => {
-    const now = Date.now()
-    for (const [id, item] of viewOnceCache) {
-        if (now - item.ts > TTL) viewOnceCache.delete(id)
-    }
-    while (viewOnceCache.size > MAX_ITEMS) {
-        viewOnceCache.delete(viewOnceCache.keys().next().value)
-    }
-}
-
-// Cattura i View Once appena arrivano, quando la chiave media e' ancora presente
-const capture = async m => {
-    try {
-        const raw = m.message
-        if (!raw) return
-
-        const inner = unwrap(raw)
-        const type = Object.keys(inner || {}).find(k => /^(image|video|audio)Message$/.test(k))
-        if (!type) return
-
-        const media = inner[type]
-        const isVo = Boolean(media?.viewOnce || inner !== raw || m.msg?.viewOnce || m.viewOnce)
-        const id = m.key?.id || m.id
-
-        log('media ricevuto:', { type, id, viewOnce: isVo, mediaKey: Boolean(media?.mediaKey), wrapped: inner !== raw })
-
-        if (!isVo || !id) return
-        if (viewOnceCache.has(id) || inProgress.has(id)) return
-        inProgress.add(id)
-
-        try {
-            let buffer = null
-
-            try {
-                const downloadContentFromMessage = await loadDownloader()
-                if (downloadContentFromMessage && media?.mediaKey) {
-                    const stream = await downloadContentFromMessage(media, type.replace('Message', ''))
-                    buffer = await streamToBuffer(stream)
-                }
-            } catch (err) {
-                log('download diretto fallito:', err?.message || err)
-            }
-
-            if (!buffer?.length && typeof m.download === 'function') {
-                buffer = await m.download().catch(err => {
-                    log('m.download fallito:', err?.message || err)
-                    return null
-                })
-            }
-
-            if (!buffer?.length) {
-                log('nessun buffer ottenuto per', id)
-                return
-            }
-
-            viewOnceCache.set(id, {
-                buffer,
-                type,
-                caption: media?.caption || '',
-                ptt: media?.ptt || false,
-                chat: m.chat || m.key?.remoteJid,
-                ts: Date.now()
-            })
-            log('salvato in cache:', id, buffer.length, 'byte')
-            cleanup()
-        } finally {
-            inProgress.delete(id)
-        }
-    } catch (e) {
-        log('errore capture:', e?.message || e)
-    }
-}
-
 let handler = async (m, { conn }) => {
     try {
-        if (!m.quoted) throw '『 ⚠️ 』- `Rispondi a un contenuto visualizzabile una volta`'
+        if (!m.quoted) {
+            throw '『 ⚠️ 』- `Rispondi a un contenuto visualizzabile una volta`'
+        }
 
-        const candidates = [
-            m.quoted.id,
-            m.quoted.key?.id,
-            m.quoted.fakeObj?.key?.id,
-            m.quoted.stanzaId,
-            m.msg?.contextInfo?.stanzaId
-        ].filter(Boolean)
+        const quoted = m.quoted
+        let type = quoted.mediaType || quoted.mtype
+        let msg = quoted.mediaMessage || null
 
-        log('cerco id:', candidates, '| in cache:', [...viewOnceCache.keys()])
-
-        let cached = null
-        for (const id of candidates) {
-            if (viewOnceCache.has(id)) {
-                cached = viewOnceCache.get(id)
-                break
+        if (type === 'viewOnceMessage' || type === 'viewOnceMessageV2') {
+            const wrapper = quoted[type] || quoted.message?.[type] || quoted.message || msg?.[type]
+            const inner = wrapper?.message
+            if (inner) {
+                type = Object.keys(inner).find(key => /(?:image|video|audio)Message/.test(key))
+                msg = { [type]: inner[type] }
             }
+        } else if (quoted.mtype === 'viewOnceMessage' || quoted.mtype === 'viewOnceMessageV2') {
+            const wrapper = quoted[quoted.mtype] || quoted.message?.[quoted.mtype] || msg?.[quoted.mtype]
+            const inner = wrapper?.message
+            if (inner) {
+                type = Object.keys(inner).find(key => /(?:image|video|audio)Message/.test(key))
+                msg = { [type]: inner[type] }
+            }
+        } else if (msg && !msg[type]) {
+            type = Object.keys(msg).find(key => /(?:image|video|audio)Message/.test(key)) || type
         }
 
-        // Fallback: ultimo View Once catturato in questa chat negli ultimi minuti
-        if (!cached) {
-            const now = Date.now()
-            const inChat = [...viewOnceCache.values()]
-                .filter(item => item.chat === m.chat && now - item.ts < FALLBACK_WINDOW)
-            cached = inChat[inChat.length - 1] || null
-            if (cached) log('uso fallback: ultimo View Once della chat')
+        if (!type && quoted.mtype) type = quoted.mtype
+        if (msg && !msg[type] && quoted[type]) msg = { [type]: quoted[type] }
+
+        const isVo = quoted.viewOnce
+            || quoted.mediaMessage?.[type]?.viewOnce
+            || quoted.message?.[quoted.mtype]?.viewOnce
+            || msg?.[type]?.viewOnce
+            || quoted.mtype === 'viewOnceMessage'
+            || quoted.mtype === 'viewOnceMessageV2'
+            || type === 'viewOnceMessage'
+            || type === 'viewOnceMessageV2'
+        if (!isVo) {
+            throw '『 ⚠️ 』- `Questo non è un contenuto visualizzabile una volta`'
         }
 
-        if (!cached) {
-            throw '❌ Non ho questo contenuto in memoria. Il bot può rivelare solo i View Once ricevuti mentre era attivo (ultima ora).'
+        if (!/videoMessage|imageMessage|audioMessage/.test(type)) {
+            throw '❌ Formato non supportato o non è un View Once valido'
         }
 
-        const { buffer, type, caption, ptt } = cached
+        let buffer = await quoted.download?.().catch(() => null)
+        if (!buffer && typeof conn.downloadMediaMessage === 'function') {
+            buffer = await conn.downloadMediaMessage(quoted.vM || {
+                key: { remoteJid: quoted.chat, id: quoted.id, fromMe: quoted.fromMe },
+                message: msg
+            }).catch(() => null)
+        }
 
-        if (type === 'imageMessage') {
-            await conn.sendMessage(m.chat, { image: buffer, caption }, { quoted: m })
-        } else if (type === 'videoMessage') {
-            await conn.sendMessage(m.chat, { video: buffer, caption }, { quoted: m })
-        } else {
+        if (!buffer || buffer.length === 0) {
+            throw '❌ Impossibile scaricare il contenuto, i server WhatsApp potrebbero averlo già rimosso.'
+        }
+
+        const caption = msg?.[type]?.caption || m.quoted?.caption || ''
+        
+        if (/imageMessage/.test(type)) {
+            await conn.sendMessage(m.chat, { image: buffer, caption: caption }, { quoted: m })
+        } else if (/videoMessage/.test(type)) {
+            await conn.sendMessage(m.chat, { video: buffer, caption: caption }, { quoted: m })
+        } else if (/audioMessage/.test(type)) {
             await conn.sendMessage(m.chat, {
                 audio: buffer,
                 mimetype: 'audio/mp4',
-                ptt: Boolean(ptt)
+                ptt: msg?.[type]?.ptt || m.quoted?.ptt || false
             }, { quoted: m })
         }
+
     } catch (e) {
         console.error(e)
-        const errorMessage = typeof e === 'string' ? e : '❌ Si è verificato un errore nel recupero del View Once.'
+        const errorMessage = typeof e === 'string' ? e : '❌ Si è verificato un errore nel download del View Once.'
         await conn.sendMessage(m.chat, { text: errorMessage }, { quoted: m })
     }
-}
-
-// Registrato su entrambi gli hook: il primo che scatta cattura, l'altro viene ignorato
-handler.before = async function (m) {
-    await capture(m)
-}
-handler.all = async function (m) {
-    await capture(m)
 }
 
 handler.help = ['rivela']

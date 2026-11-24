@@ -12,7 +12,7 @@ let handler = async (m, { conn }) => {
             'viewOnceMessageV2Extension'
         ])
         const mediaTypes = ['imageMessage', 'videoMessage', 'audioMessage']
-        let content = { [quoted.mtype]: quoted[quoted.mtype] }
+        let content = { [quoted.mtype]: quoted }
         let type = quoted.mtype
         let isVo = Boolean(quoted.viewOnce)
 
@@ -76,3 +76,4 @@ handler.group = false
 handler.admin = false
 
 export default handler
+
